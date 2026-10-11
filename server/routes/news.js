@@ -66,6 +66,10 @@ router.post(
         videoPath = `${baseUrl}/uploads/${req.files.video[0].filename}`;
       }
 
+      // If posted by an admin, approve immediately; otherwise set to pending for review
+      const isAuthorAdmin = req.user?.role === "admin";
+      const initialStatus = isAuthorAdmin ? "approved" : "pending";
+
       const news = await News.create({
         title,
         titleHi: titleHi || "",
@@ -74,9 +78,15 @@ router.post(
         image: imagePath,
         video: videoPath,
         author: req.user?.id,
+        status: initialStatus,
       });
 
-      res.status(201).json(news);
+      res.status(201).json({
+        ...news.toObject(),
+        moderationMessage: isAuthorAdmin
+          ? "News published directly by administrator."
+          : "News submitted successfully and is pending admin review.",
+      });
     } catch (err) {
       console.error("Create News Error:", err);
       res.status(500).json({ message: "Failed to publish news article." });
@@ -85,15 +95,82 @@ router.post(
 );
 
 // @route   GET /api/news
-// @desc    Get all news articles sorted by newest first
+// @desc    Get news articles. Citizens get approved articles; Admins can filter by status
 // @access  Public
 router.get("/", async (req, res) => {
   try {
-    const news = await News.find().populate("author", "name email").sort({ createdAt: -1 });
+    const { status, all } = req.query;
+    let query = {};
+
+    if (all === "true" || status === "all") {
+      // Return all regardless of status
+      query = {};
+    } else if (status) {
+      query = { status };
+    } else {
+      // By default, only public/approved news (or legacy items without status)
+      query = { status: { $in: ["approved", null] } };
+    }
+
+    const news = await News.find(query).populate("author", "name email role").sort({ createdAt: -1 });
     res.status(200).json(news);
   } catch (err) {
     console.error("Fetch All News Error:", err);
     res.status(500).json({ message: "Error fetching news articles." });
+  }
+});
+
+// @route   PATCH /api/news/:id/status
+// @desc    Admin moderation endpoint to approve or reject a news item
+// @access  Private (Admin)
+router.patch("/:id/status", verifyToken, async (req, res) => {
+  try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ message: "Admin privileges required." });
+    }
+
+    const { status } = req.body;
+    if (!["approved", "rejected", "pending"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value." });
+    }
+
+    const article = await News.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+
+    if (!article) {
+      return res.status(404).json({ message: "News article not found." });
+    }
+
+    res.status(200).json({ message: `News status updated to ${status}.`, article });
+  } catch (err) {
+    console.error("News Status Update Error:", err);
+    res.status(500).json({ message: "Server error updating news status." });
+  }
+});
+
+// @route   DELETE /api/news/:id
+// @desc    Delete a news article
+// @access  Private (Admin or Author)
+router.delete("/:id", verifyToken, async (req, res) => {
+  try {
+    const article = await News.findById(req.params.id);
+    if (!article) {
+      return res.status(404).json({ message: "News article not found." });
+    }
+
+    // Only admin or the author can delete
+    if (req.user.role !== "admin" && String(article.author) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Not authorized to delete this article." });
+    }
+
+    await News.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: "News article deleted successfully." });
+  } catch (err) {
+    console.error("Delete News Error:", err);
+    res.status(500).json({ message: "Failed to delete article." });
   }
 });
 
@@ -102,7 +179,7 @@ router.get("/", async (req, res) => {
 // @access  Public
 router.get("/:id", async (req, res) => {
   try {
-    const article = await News.findById(req.params.id);
+    const article = await News.findById(req.params.id).populate("author", "name email");
     if (!article) {
       return res.status(404).json({ message: "Article not found." });
     }

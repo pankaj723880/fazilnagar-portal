@@ -48,7 +48,38 @@ app.get(["/", "/health", "/api/health"], (req, res) => {
   });
 });
 
+import submissionsRoutes from "./routes/submissions.js";
+import bcrypt from "bcryptjs";
+import User from "./models/User.js";
 import Place from "./models/Place.js";
+
+async function seedAdminUser() {
+  try {
+    const adminEmail = (process.env.ADMIN_EMAIL || "admin@fazilnagar.com").trim().toLowerCase();
+    const adminPassword = process.env.ADMIN_PASSWORD || "Admin@Fazilnagar2026";
+    const adminName = process.env.ADMIN_NAME || "Fazilnagar Portal Administrator";
+
+    const existingAdmin = await User.findOne({ email: adminEmail });
+    if (!existingAdmin) {
+      console.log(`[AdminSeed] Creating default Admin user: ${adminEmail}...`);
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(adminPassword, salt);
+      await User.create({
+        name: adminName,
+        email: adminEmail,
+        password: hashedPassword,
+        role: "admin",
+      });
+      console.log(`[AdminSeed] Default Admin created successfully (${adminEmail}).`);
+    } else if (existingAdmin.role !== "admin") {
+      existingAdmin.role = "admin";
+      await existingAdmin.save();
+      console.log(`[AdminSeed] Existing user ${adminEmail} elevated to admin.`);
+    }
+  } catch (err) {
+    console.warn("[AdminSeed] Admin seed warning:", err.message);
+  }
+}
 
 async function autoSeedPlaces() {
   try {
@@ -74,16 +105,19 @@ async function autoSeedPlaces() {
 // Connect DB & Routes
 connectDB().then(() => {
   autoSeedPlaces();
+  seedAdminUser();
 });
 
 app.use("/api/auth", authRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/places", placesRoutes);
+app.use("/api/submissions", submissionsRoutes);
 
 // Fallback mounts in case client calls without /api prefix
 app.use("/auth", authRoutes);
 app.use("/news", newsRoutes);
 app.use("/places", placesRoutes);
+app.use("/submissions", submissionsRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

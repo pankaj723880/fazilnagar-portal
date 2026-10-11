@@ -9,6 +9,12 @@ const newsSchema = new mongoose.Schema(
     image: { type: String, default: "" },
     video: { type: String, default: "" },
     author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+      index: true,
+    },
   },
   { timestamps: true }
 );

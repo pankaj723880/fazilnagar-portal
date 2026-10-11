@@ -35,14 +35,15 @@ export default function UploadForm() {
     if (videoFile) formData.append("video", videoFile);
 
     try {
-      await API.post("/news", formData, {
+      const res = await API.post("/news", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
-      setMessage("News posted successfully!");
-      setTimeout(() => navigate("/news"), 1500);
+      const msg = res.data?.moderationMessage || "News submitted successfully!";
+      setMessage(msg);
+      setTimeout(() => navigate("/news"), 2000);
     } catch (err) {
       setMessage(err.response?.data?.message || "Failed to post news. Try again.");
     } finally {

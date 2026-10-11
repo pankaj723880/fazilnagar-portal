@@ -37,7 +37,7 @@ router.post("/register", async (req, res) => {
 
     // Create JWT Token
     const token = jwt.sign(
-      { id: newUser._id, name: newUser.name, email: newUser.email },
+      { id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role || "user" },
       process.env.JWT_SECRET || "fallback_secret_key",
       { expiresIn: "7d" }
     );
@@ -49,6 +49,7 @@ router.post("/register", async (req, res) => {
         id: newUser._id,
         name: newUser.name,
         email: newUser.email,
+        role: newUser.role || "user",
       },
     });
   } catch (err) {
@@ -90,7 +91,7 @@ router.post("/login", async (req, res) => {
 
     // Create JWT Token
     const token = jwt.sign(
-      { id: user._id, name: user.name, email: user.email },
+      { id: user._id, name: user.name, email: user.email, role: user.role || "user" },
       process.env.JWT_SECRET || "fallback_secret_key",
       { expiresIn: "7d" }
     );
@@ -102,6 +103,7 @@ router.post("/login", async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role || "user",
       },
     });
   } catch (err) {

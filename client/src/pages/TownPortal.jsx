@@ -432,14 +432,39 @@ export default function TownPortal() {
     }
   };
 
-  const handleFormSubmit = (e, type) => {
+  const handleFormSubmit = async (e, type) => {
     e.preventDefault();
-    setModalType(null);
-    let msg = "Establishment submitted to town verification moderation queue.";
-    if (type === "correction") msg = "Thank you! Information correction recorded for review.";
-    if (type === "event") msg = "Local event announcement submitted for publishing.";
-    showToast(msg);
-    e.target.reset();
+    const form = e.target;
+    const formData = new FormData(form);
+
+    const payload = {
+      type,
+      title: formData.get("title") || "",
+      category: formData.get("category") || "",
+      phone: formData.get("phone") || "",
+      landmark: formData.get("landmark") || "",
+      venue: formData.get("venue") || "",
+      eventDate: formData.get("eventDate") || "",
+      organizer: formData.get("organizer") || "",
+      details: formData.get("details") || "",
+      submittedBy: {
+        name: currentUser?.name || "Local Resident",
+        email: currentUser?.email || "",
+      },
+    };
+
+    try {
+      await API.post("/submissions", payload);
+      setModalType(null);
+      let msg = "Establishment submitted to town admin review queue!";
+      if (type === "correction") msg = "Thank you! Information correction submitted for Admin review.";
+      if (type === "event") msg = "Event announcement submitted for Admin approval!";
+      showToast(msg);
+      form.reset();
+    } catch (err) {
+      console.error("Submission error:", err);
+      showToast("Submission failed. Please check connection and try again.");
+    }
   };
 
   // Filtered Schools preview
@@ -487,8 +512,18 @@ export default function TownPortal() {
             <div className="hidden sm:flex items-center gap-2.5 shrink-0">
               {currentUser ? (
                 <>
+                  {currentUser.role === "admin" && (
+                    <Link
+                      to="/admin/review"
+                      className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1"
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>🛡️ Review Desk</span>
+                    </Link>
+                  )}
                   <span className="text-xs font-bold text-[#168568] bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
-                    👤 {currentUser.name || currentUser.email}
+                    {currentUser.role === "admin" ? "👑 Admin: " : "👤 "}
+                    {currentUser.name || currentUser.email}
                   </span>
                   <Link
                     to="/create-news"
@@ -498,7 +533,7 @@ export default function TownPortal() {
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition"
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer"
                   >
                     Logout
                   </button>
@@ -594,6 +629,15 @@ export default function TownPortal() {
               <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
                 {currentUser ? (
                   <>
+                    {currentUser.role === "admin" && (
+                      <Link
+                        to="/admin/review"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="bg-amber-500 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-xl text-center shadow-xs"
+                      >
+                        🛡️ Review
+                      </Link>
+                    )}
                     <Link
                       to="/create-news"
                       onClick={() => setMobileMenuOpen(false)}
@@ -606,7 +650,7 @@ export default function TownPortal() {
                         handleLogout();
                         setMobileMenuOpen(false);
                       }}
-                      className="bg-slate-100 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl"
+                      className="bg-slate-100 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl cursor-pointer"
                     >
                       Logout
                     </button>
@@ -2099,6 +2143,7 @@ export default function TownPortal() {
                     <label className="block font-semibold text-[#18232E] mb-1">Establishment Name *</label>
                     <input
                       type="text"
+                      name="title"
                       required
                       placeholder="e.g. Mahavir Peda Bhandar, Sharma Optical"
                       className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#B8323C]"
@@ -2107,7 +2152,7 @@ export default function TownPortal() {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block font-semibold text-[#18232E] mb-1">Category *</label>
-                      <select required className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none bg-white">
+                      <select name="category" required className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none bg-white">
                         <option value="">Select Category</option>
                         {EXPLORE_21_CATEGORIES.map((c) => (
                           <option key={c.id} value={c.name}>{c.name}</option>
@@ -2118,6 +2163,7 @@ export default function TownPortal() {
                       <label className="block font-semibold text-[#18232E] mb-1">Public Phone</label>
                       <input
                         type="tel"
+                        name="phone"
                         placeholder="Verified 10 digits"
                         className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#B8323C]"
                       />
@@ -2127,6 +2173,7 @@ export default function TownPortal() {
                     <label className="block font-semibold text-[#18232E] mb-1">Town Landmark / Road *</label>
                     <input
                       type="text"
+                      name="landmark"
                       required
                       placeholder="e.g. Near Kasya Highway Crossing, Babu Bazar"
                       className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#B8323C]"
@@ -2134,7 +2181,7 @@ export default function TownPortal() {
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-[#18232E] hover:bg-[#B8323C] text-white font-bold py-2.5 rounded-xl transition mt-2 shadow-xs"
+                    className="w-full bg-[#18232E] hover:bg-[#B8323C] text-white font-bold py-2.5 rounded-xl transition mt-2 shadow-xs cursor-pointer"
                   >
                     Submit Place for Moderation
                   </button>
@@ -2159,6 +2206,7 @@ export default function TownPortal() {
                     <label className="block font-semibold text-[#18232E] mb-1">Listing Name *</label>
                     <input
                       type="text"
+                      name="title"
                       required
                       placeholder="Name of school, clinic, or shop"
                       className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-amber-600"
@@ -2168,6 +2216,7 @@ export default function TownPortal() {
                     <label className="block font-semibold text-[#18232E] mb-1">Correction Details *</label>
                     <textarea
                       rows={3}
+                      name="details"
                       required
                       placeholder="Describe what is wrong (e.g. wrong phone number, closed, or located outside town boundary)..."
                       className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-amber-600"
@@ -2175,7 +2224,7 @@ export default function TownPortal() {
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-[#18232E] hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl transition shadow-xs"
+                    className="w-full bg-[#18232E] hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl transition shadow-xs cursor-pointer"
                   >
                     Send Correction Report
                   </button>
@@ -2200,6 +2249,7 @@ export default function TownPortal() {
                     <label className="block font-semibold text-[#18232E] mb-1">Event Title *</label>
                     <input
                       type="text"
+                      name="title"
                       required
                       placeholder="e.g. Free Blood Donation Camp, Sports Meet"
                       className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#168568]"
@@ -2210,6 +2260,7 @@ export default function TownPortal() {
                       <label className="block font-semibold text-[#18232E] mb-1">Date *</label>
                       <input
                         type="date"
+                        name="eventDate"
                         required
                         className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#168568]"
                       />
@@ -2218,6 +2269,7 @@ export default function TownPortal() {
                       <label className="block font-semibold text-[#18232E] mb-1">Venue in Town *</label>
                       <input
                         type="text"
+                        name="venue"
                         required
                         placeholder="e.g. College Ground, CHC"
                         className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#168568]"
@@ -2228,6 +2280,7 @@ export default function TownPortal() {
                     <label className="block font-semibold text-[#18232E] mb-1">Organizer / Source *</label>
                     <input
                       type="text"
+                      name="organizer"
                       required
                       placeholder="Name of school, hospital, or trust"
                       className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#168568]"
@@ -2235,7 +2288,7 @@ export default function TownPortal() {
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-[#168568] hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition shadow-xs"
+                    className="w-full bg-[#168568] hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition shadow-xs cursor-pointer"
                   >
                     Broadcast Event
                   </button>

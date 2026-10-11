@@ -22,6 +22,7 @@ import CreateNews from "./pages/CreateNews";
 import TownPortal from "./pages/TownPortal";
 import Directory from "./pages/Directory";
 import About from "./pages/About";
+import AdminReview from "./pages/AdminReview";
 
 const MAIN_NAV_ITEMS = [
   { path: "/", label: "Home" },
@@ -236,8 +237,17 @@ export default function App() {
           <div className="hidden sm:flex items-center gap-2.5 shrink-0">
             {user ? (
               <>
+                {user.role === "admin" && (
+                  <Link
+                    to="/admin/review"
+                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1"
+                  >
+                    <span>🛡️ Review Desk</span>
+                  </Link>
+                )}
                 <span className="text-xs font-bold text-[#168568] bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
-                  👤 {user.name || user.email}
+                  {user.role === "admin" ? "👑 Admin: " : "👤 "}
+                  {user.name || user.email}
                 </span>
                 <Link
                   to="/create-news"
@@ -247,7 +257,7 @@ export default function App() {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer"
                 >
                   Logout
                 </button>
@@ -468,6 +478,8 @@ export default function App() {
           <Route path="/register" element={<Register setUser={setUser} />} />
           <Route path="/create-news" element={<CreateNews user={user} />} />
           <Route path="/upload" element={<CreateNews user={user} />} />
+          <Route path="/admin/review" element={<AdminReview user={user} />} />
+          <Route path="/admin" element={<AdminReview user={user} />} />
         </Routes>
       </main>
 
@@ -505,6 +517,7 @@ export default function App() {
               <li><Link to="/create-news" className="hover:text-white">Submit Local News</Link></li>
               <li><Link to="/login" className="hover:text-white">Citizen / Reporter Login</Link></li>
               <li><Link to="/register" className="hover:text-white">Register Resident Account</Link></li>
+              <li><Link to="/admin/review" className="hover:text-amber-400 text-amber-300 font-bold flex items-center gap-1"><span>🛡️</span> Admin Review Desk</Link></li>
             </ul>
           </div>
 
