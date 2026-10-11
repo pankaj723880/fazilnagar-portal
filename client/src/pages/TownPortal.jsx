@@ -506,12 +506,6 @@ export default function TownPortal() {
               <a href="#town-map-section" className="text-[#647180] hover:text-[#18232E] transition">Map</a>
               <a href="#local-updates-section" className="text-[#647180] hover:text-[#18232E] transition">Local Updates</a>
               <a href="#about-fazilnagar-section" className="text-[#647180] hover:text-[#18232E] transition">About</a>
-              <Link
-                to="/admin/review"
-                className="text-amber-900 hover:text-amber-950 font-extrabold bg-amber-100 hover:bg-amber-200 px-2.5 py-1.5 rounded-xl border border-amber-300 transition flex items-center gap-1"
-              >
-                <span>🛡️ Admin Review</span>
-              </Link>
             </div>
 
             {/* Primary Action & Citizen Auth Bar */}
@@ -520,10 +514,10 @@ export default function TownPortal() {
                 <>
                   <Link
                     to="/admin/review"
-                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1"
+                    className="bg-amber-100 hover:bg-amber-200 text-amber-900 hover:text-amber-950 border border-amber-300 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5"
                   >
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>🛡️ Review Desk</span>
+                    <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Review Desk</span>
                   </Link>
                   <span className="text-xs font-bold text-[#168568] bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
                     {currentUser.role === "admin" ? "Admin" : (currentUser.name || currentUser.email)}
@@ -545,10 +539,10 @@ export default function TownPortal() {
                 <>
                   <Link
                     to="/admin/review"
-                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1"
+                    className="bg-amber-100 hover:bg-amber-200 text-amber-900 hover:text-amber-950 border border-amber-300 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5"
                   >
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>🛡️ Review Desk</span>
+                    <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Review Desk</span>
                   </Link>
                   <Link
                     to="/login"

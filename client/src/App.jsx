@@ -31,7 +31,6 @@ const MAIN_NAV_ITEMS = [
   { path: "/#town-map-section", label: "Map", isHash: true },
   { path: "/news", label: "Local Updates" },
   { path: "/#about-fazilnagar-section", label: "About", isHash: true },
-  { path: "/admin/review", label: "🛡️ Admin Review", badge: "Admin" },
 ];
 
 const DIRECTORY_SUB_NAV = [
@@ -232,12 +231,6 @@ export default function App() {
             >
               About
             </a>
-            <Link
-              to="/admin/review"
-              className="text-amber-900 hover:text-amber-950 font-extrabold bg-amber-100 hover:bg-amber-200 px-2.5 py-1.5 rounded-xl border border-amber-300 transition flex items-center gap-1"
-            >
-              <span>🛡️ Admin Review</span>
-            </Link>
           </nav>
 
           {/* Auth & Post Actions Bar */}
@@ -246,7 +239,7 @@ export default function App() {
               <>
                 <Link
                   to="/admin/review"
-                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1"
+                  className="bg-amber-100 hover:bg-amber-200 text-amber-900 hover:text-amber-950 border border-amber-300 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5"
                 >
                   <span>🛡️ Review Desk</span>
                 </Link>
@@ -270,7 +263,7 @@ export default function App() {
               <>
                 <Link
                   to="/admin/review"
-                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1"
+                  className="bg-amber-100 hover:bg-amber-200 text-amber-900 hover:text-amber-950 border border-amber-300 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5"
                 >
                   <span>🛡️ Review Desk</span>
                 </Link>
