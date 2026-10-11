@@ -344,26 +344,39 @@ export default function TownPortal() {
   // Initialize Leaflet Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
-    if (mapInstanceRef.current) return;
 
-    const townCenterLat = 26.6827;
-    const townCenterLng = 84.0498;
+    if (mapContainerRef.current._leaflet_id && !mapInstanceRef.current) {
+      delete mapContainerRef.current._leaflet_id;
+    }
 
-    const map = L.map(mapContainerRef.current, {
-      center: [townCenterLat, townCenterLng],
-      zoom: 15,
-      scrollWheelZoom: false,
-    });
+    if (!mapInstanceRef.current) {
+      const townCenterLat = 26.6827;
+      const townCenterLng = 84.0498;
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "&copy; OpenStreetMap contributors",
-    }).addTo(map);
+      const map = L.map(mapContainerRef.current, {
+        center: [townCenterLat, townCenterLng],
+        zoom: 15,
+        scrollWheelZoom: true,
+      });
 
-    mapInstanceRef.current = map;
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+
+      mapInstanceRef.current = map;
+    }
+
+    const timer = setTimeout(() => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    }, 150);
+
     renderMarkers(places);
 
     return () => {
+      clearTimeout(timer);
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -380,7 +393,11 @@ export default function TownPortal() {
   const renderMarkers = (items) => {
     if (!mapInstanceRef.current) return;
 
-    markersRef.current.forEach((m) => mapInstanceRef.current.removeLayer(m));
+    markersRef.current.forEach((m) => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.removeLayer(m);
+      }
+    });
     markersRef.current = [];
 
     let filtered = items;
@@ -390,12 +407,32 @@ export default function TownPortal() {
       );
     }
 
+    const createTownMarkerIcon = () => {
+      const svgHtml = `
+        <div style="display:flex;align-items:center;justify-content:center;width:28px;height:36px;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+          <svg viewBox="0 0 24 24" width="28" height="36" fill="#B8323C" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+            <circle cx="12" cy="9" r="2.8" fill="#ffffff" />
+          </svg>
+        </div>
+      `;
+      return L.divIcon({
+        html: svgHtml,
+        className: "townportal-custom-pin",
+        iconSize: [28, 36],
+        iconAnchor: [14, 36],
+        popupAnchor: [0, -34],
+      });
+    };
+
     filtered.forEach((place) => {
       if (!place.lat || !place.lng) return;
-      const marker = L.marker([place.lat, place.lng]).addTo(mapInstanceRef.current);
+      const marker = L.marker([place.lat, place.lng], {
+        icon: createTownMarkerIcon(),
+      }).addTo(mapInstanceRef.current);
 
       marker.bindPopup(`
-        <div style="font-family: Inter, sans-serif; font-size: 12px; min-width: 170px; color: #18232E;">
+        <div style="font-family: Inter, sans-serif; font-size: 12px; min-width: 180px; color: #18232E;">
           <span style="font-size: 9px; font-weight: 800; color: #B8323C; text-transform: uppercase; letter-spacing: 0.5px;">${place.category}</span>
           <h4 style="margin: 2px 0 4px; font-size: 13px; font-weight: 700; color: #18232E;">${place.name}</h4>
           <p style="margin: 0; font-size: 11px; color: #647180;">${place.landmark}</p>

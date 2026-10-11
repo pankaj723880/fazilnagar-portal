@@ -456,8 +456,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<TownPortal />} />
           <Route path="/news" element={<News />} />
-          <Route path="/directory" element={<Directory />} />
-          <Route path="/local-directory" element={<Directory />} />
+          <Route path="/directory" element={<Directory user={user} />} />
+          <Route path="/local-directory" element={<Directory user={user} />} />
           <Route path="/town" element={<TownPortal />} />
           <Route path="/portal" element={<TownPortal />} />
           <Route path="/fazilnagar" element={<TownPortal />} />
