@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import L from "leaflet";
 import API from "../api";
+import seedPlaces from "../data/places.json";
 import { openGoogleMapsDirections } from "../utils/directions";
 import {
   Search,
@@ -49,12 +50,56 @@ const CATEGORIES = [
   { id: "Shopping & Services", name: "Shopping & Trade", icon: ShoppingBag, color: "orange" },
 ];
 
+// Helper to filter embedded verified places
+function filterPlaces(list, category, locality, search, sort) {
+  let filtered = Array.isArray(list) ? [...list] : [];
+  if (category && category !== "all") {
+    const catLower = category.toLowerCase();
+    filtered = filtered.filter(
+      (p) =>
+        (p.category && p.category.toLowerCase() === catLower) ||
+        (p.subcategory && p.subcategory.toLowerCase() === catLower)
+    );
+  }
+  if (locality && locality !== "all") {
+    const locLower = locality.toLowerCase();
+    filtered = filtered.filter(
+      (p) =>
+        (p.locality && p.locality.toLowerCase().includes(locLower)) ||
+        (p.streetOrLandmark && p.streetOrLandmark.toLowerCase().includes(locLower)) ||
+        (p.addressFull && p.addressFull.toLowerCase().includes(locLower))
+    );
+  }
+  if (search && search.trim()) {
+    const q = search.trim().toLowerCase();
+    filtered = filtered.filter(
+      (p) =>
+        p.name?.toLowerCase().includes(q) ||
+        p.alternateNames?.some((a) => a.toLowerCase().includes(q)) ||
+        p.addressFull?.toLowerCase().includes(q) ||
+        p.category?.toLowerCase().includes(q) ||
+        p.subcategory?.toLowerCase().includes(q) ||
+        p.locality?.toLowerCase().includes(q) ||
+        p.streetOrLandmark?.toLowerCase().includes(q) ||
+        p.description?.toLowerCase().includes(q)
+    );
+  }
+  if (sort === "name") {
+    filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  } else if (sort === "category") {
+    filtered.sort((a, b) => (a.category || "").localeCompare(b.category || ""));
+  }
+  return filtered;
+}
+
 export default function Directory() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [places, setPlaces] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "all");
+  const initialCat = searchParams.get("category") || "all";
+  const initialSearch = searchParams.get("search") || "";
+  const [places, setPlaces] = useState(() => filterPlaces(seedPlaces, initialCat, "all", initialSearch, "name"));
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [selectedCategory, setSelectedCategory] = useState(initialCat);
   const [selectedLocality, setSelectedLocality] = useState("all");
   const [viewMode, setViewMode] = useState(searchParams.get("view") || "map"); // "map" | "list"
   const [sortBy, setSortBy] = useState("name"); // "name" | "category"
@@ -63,7 +108,18 @@ export default function Directory() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAdminQueue, setShowAdminQueue] = useState(false);
   const [adminQueuePlaces, setAdminQueuePlaces] = useState([]);
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState(() => {
+    const catMap = {};
+    seedPlaces.forEach((p) => {
+      catMap[p.category] = (catMap[p.category] || 0) + 1;
+    });
+    return {
+      total: seedPlaces.length,
+      published: seedPlaces.length,
+      inReview: 0,
+      categoryCounts: Object.keys(catMap).map((c) => ({ _id: c, count: catMap[c] })),
+    };
+  });
   const [toastMessage, setToastMessage] = useState("");
 
   const mapContainerRef = useRef(null);
@@ -107,13 +163,21 @@ export default function Directory() {
       params.sort = sortBy;
 
       const res = await API.get("/places", { params });
-      setPlaces(res.data);
-      if (res.data.length > 0 && !selectedPlace) {
-        setSelectedPlace(res.data[0]);
+      let data = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+      if (data.length === 0) {
+        data = filterPlaces(seedPlaces, selectedCategory, selectedLocality, searchQuery, sortBy);
+      }
+      setPlaces(data);
+      if (data.length > 0 && !selectedPlace) {
+        setSelectedPlace(data[0]);
       }
     } catch (err) {
-      console.error("Failed to load directory places:", err);
-      showToast("Unable to load directory data. Please check connection.");
+      console.warn("API unavailable, loading from local verified places:", err.message);
+      const fallback = filterPlaces(seedPlaces, selectedCategory, selectedLocality, searchQuery, sortBy);
+      setPlaces(fallback);
+      if (fallback.length > 0 && !selectedPlace) {
+        setSelectedPlace(fallback[0]);
+      }
     } finally {
       setLoading(false);
     }
@@ -122,10 +186,23 @@ export default function Directory() {
   const fetchStats = async () => {
     try {
       const res = await API.get("/places/stats/summary");
-      setStats(res.data);
+      if (res.data && (res.data.total || res.data.published)) {
+        setStats(res.data);
+        return;
+      }
     } catch (err) {
-      console.error("Failed to load stats:", err);
+      // ignore
     }
+    const catMap = {};
+    seedPlaces.forEach((p) => {
+      catMap[p.category] = (catMap[p.category] || 0) + 1;
+    });
+    setStats({
+      total: seedPlaces.length,
+      published: seedPlaces.length,
+      inReview: 0,
+      categoryCounts: Object.keys(catMap).map((c) => ({ _id: c, count: catMap[c] })),
+    });
   };
 
   const fetchAdminQueue = async () => {
@@ -303,7 +380,7 @@ export default function Directory() {
           </button>
 
           <a
-            href="http://localhost:5000/api/places/export/csv"
+            href={`${API.defaults.baseURL || "https://fazilnagar-portal.onrender.com/api"}/places/export/csv`}
             className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-700 transition"
           >
             <Download className="w-3.5 h-3.5 text-emerald-400" />
