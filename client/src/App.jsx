@@ -135,7 +135,7 @@ export default function App() {
 
   if (isPortalPage) {
     return (
-      <div className="min-h-screen bg-[#F5F7F8] text-[#18232E] font-sans selection:bg-[#B8323C] selection:text-white">
+      <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#F5F7F8] text-[#18232E] font-sans selection:bg-[#B8323C] selection:text-white">
         <Routes>
           <Route path="/" element={<TownPortal />} />
           <Route path="/town" element={<TownPortal />} />
@@ -147,7 +147,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F7F8] text-[#18232E] flex flex-col font-sans selection:bg-[#B8323C] selection:text-white">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#F5F7F8] text-[#18232E] flex flex-col font-sans selection:bg-[#B8323C] selection:text-white">
       {/* Top Alert & User Status Bar - Modern Civic Deep Slate & Crimson */}
       <div className="bg-[#18232E] text-slate-300 text-[11px] font-semibold py-1.5 px-4 flex justify-between items-center border-b border-slate-800 shadow-xs">
         <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">

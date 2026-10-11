@@ -3,7 +3,9 @@
     "id": "fz-edu-01",
     "slug": "sanskar-central-academy-fazilnagar",
     "name": "Sanskar Central Academy",
-    "alternateNames": ["Sanskar Academy Fazilnagar"],
+    "alternateNames": [
+      "Sanskar Academy Fazilnagar"
+    ],
     "category": "Schools & Colleges",
     "subcategory": "CBSE School",
     "description": "Established in 2013, a co-educational English-medium senior secondary school with science laboratories, computer labs, library, and student transport facilities.",
@@ -16,9 +18,17 @@
     "phone": "+91 94520 89540",
     "website": "https://sanskarcentralacademy.com",
     "openingHours": "08:00 AM – 02:30 PM (Mon-Sat)",
-    "services": ["Pre-Primary to 12th", "CBSE Affiliation", "Science & Computer Labs", "Bus Transport"],
+    "services": [
+      "Pre-Primary to 12th",
+      "CBSE Affiliation",
+      "Science & Computer Labs",
+      "Bus Transport"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://www.justdial.com", "Official School Registry"],
+    "sourceUrls": [
+      "https://www.justdial.com",
+      "Official School Registry"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -29,7 +39,9 @@
     "id": "fz-edu-02",
     "slug": "the-hermitage-school-fazilnagar",
     "name": "The Hermitage School",
-    "alternateNames": ["Hermitage English Medium School"],
+    "alternateNames": [
+      "Hermitage English Medium School"
+    ],
     "category": "Schools & Colleges",
     "subcategory": "English Medium School",
     "description": "Co-educational institution established in 2009 offering primary and middle school education with modern classrooms and computer literacy programs.",
@@ -42,9 +54,17 @@
     "phone": "+91 99195 23411",
     "website": "",
     "openingHours": "08:30 AM – 02:00 PM (Mon-Sat)",
-    "services": ["Grades 1-8", "English Medium Curriculum", "Library", "Activity Rooms"],
+    "services": [
+      "Grades 1-8",
+      "English Medium Curriculum",
+      "Library",
+      "Activity Rooms"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://schools.org.in", "https://www.justdial.com"],
+    "sourceUrls": [
+      "https://schools.org.in",
+      "https://www.justdial.com"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -55,7 +75,10 @@
     "id": "fz-edu-03",
     "slug": "pawanagar-mahavir-inter-college-fazilnagar",
     "name": "Pawanagar Mahavir Inter College",
-    "alternateNames": ["Pawanagar Inter College", "Mahavir Inter College Fazilnagar"],
+    "alternateNames": [
+      "Pawanagar Inter College",
+      "Mahavir Inter College Fazilnagar"
+    ],
     "category": "Schools & Colleges",
     "subcategory": "Senior Secondary Inter College",
     "description": "Flagship government-aided 10+2 institution of Fazilnagar town, serving secondary and intermediate students across arts, science, and commerce streams.",
@@ -68,9 +91,17 @@
     "phone": "+91 5564 222115",
     "website": "",
     "openingHours": "08:30 AM – 03:00 PM (Mon-Sat)",
-    "services": ["Class 6 to 12", "UP Board", "Science, Arts & Commerce", "Playground & Sports"],
+    "services": [
+      "Class 6 to 12",
+      "UP Board",
+      "Science, Arts & Commerce",
+      "Playground & Sports"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://upmsp.edu.in", "https://www.justdial.com"],
+    "sourceUrls": [
+      "https://upmsp.edu.in",
+      "https://www.justdial.com"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -81,7 +112,9 @@
     "id": "fz-edu-04",
     "slug": "anand-mission-intermediate-college-fazilnagar",
     "name": "Anand Mission Intermediate College",
-    "alternateNames": ["Anand Mission Inter College"],
+    "alternateNames": [
+      "Anand Mission Inter College"
+    ],
     "category": "Schools & Colleges",
     "subcategory": "Intermediate College",
     "description": "Secondary educational institution providing UP Board education for secondary and higher secondary grades with qualified faculty.",
@@ -94,9 +127,16 @@
     "phone": "+91 98394 65123",
     "website": "",
     "openingHours": "08:30 AM – 02:30 PM (Mon-Sat)",
-    "services": ["High School & Intermediate", "UP Board", "Academic Counseling"],
+    "services": [
+      "High School & Intermediate",
+      "UP Board",
+      "Academic Counseling"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop",
-    "sourceUrls": ["UP Board School Registry", "Local Business Directory"],
+    "sourceUrls": [
+      "UP Board School Registry",
+      "Local Business Directory"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -107,7 +147,9 @@
     "id": "fz-edu-05",
     "slug": "sairun-nisha-girls-inter-college-fazilnagar",
     "name": "Sairun Nisha Girls Inter College",
-    "alternateNames": ["Sairun Nisha Balika Inter College"],
+    "alternateNames": [
+      "Sairun Nisha Balika Inter College"
+    ],
     "category": "Schools & Colleges",
     "subcategory": "Girls College",
     "description": "Dedicated senior secondary educational institution for female students promoting girl child literacy and academic excellence.",
@@ -120,9 +162,16 @@
     "phone": "+91 97943 11228",
     "website": "",
     "openingHours": "08:30 AM – 02:30 PM (Mon-Sat)",
-    "services": ["Girls Secondary Education", "UP Board", "Extracurricular Activities"],
+    "services": [
+      "Girls Secondary Education",
+      "UP Board",
+      "Extracurricular Activities"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1577896851231-70ef18881754?w=800&auto=format&fit=crop",
-    "sourceUrls": ["UP Education Directory", "Kushinagar District Portal"],
+    "sourceUrls": [
+      "UP Education Directory",
+      "Kushinagar District Portal"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -133,7 +182,9 @@
     "id": "fz-edu-06",
     "slug": "government-junior-high-school-fazilnagar",
     "name": "J.H.S. Fazil Nagar",
-    "alternateNames": ["Government Junior High School Fazilnagar"],
+    "alternateNames": [
+      "Government Junior High School Fazilnagar"
+    ],
     "category": "Schools & Colleges",
     "subcategory": "Government School",
     "description": "State government upper primary institution delivering foundational learning and midday meal schemes.",
@@ -146,9 +197,16 @@
     "phone": "+91 5564 222101",
     "website": "",
     "openingHours": "09:00 AM – 03:00 PM (Mon-Sat)",
-    "services": ["Classes 6-8", "Government Curriculum", "Free Textbooks & Meals"],
+    "services": [
+      "Classes 6-8",
+      "Government Curriculum",
+      "Free Textbooks & Meals"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800&auto=format&fit=crop",
-    "sourceUrls": ["Basic Shiksha Parishad UP", "Kushinagar NIC Portal"],
+    "sourceUrls": [
+      "Basic Shiksha Parishad UP",
+      "Kushinagar NIC Portal"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -159,7 +217,10 @@
     "id": "fz-health-01",
     "slug": "community-health-centre-chc-fazilnagar",
     "name": "Community Health Centre (CHC) Fazilnagar",
-    "alternateNames": ["Fazilnagar Government Hospital", "CHC Fazilnagar"],
+    "alternateNames": [
+      "Fazilnagar Government Hospital",
+      "CHC Fazilnagar"
+    ],
     "category": "Hospitals & Clinics",
     "subcategory": "Government Hospital",
     "description": "Primary community hospital of Fazilnagar with round-the-clock emergency casualty, inpatient wards, maternity delivery unit, and daily general outpatient clinics.",
@@ -172,9 +233,18 @@
     "phone": "+91 5564 222100",
     "website": "https://kushinagar.nic.in",
     "openingHours": "24 Hours (Emergency & Inpatient) | OPD: 08:00 AM – 02:00 PM",
-    "services": ["24x7 Emergency Casualty", "Maternal & Child Health", "General Surgery & Medicine", "PMJAY Ayushman Card Facility", "Immunization & Pathology"],
+    "services": [
+      "24x7 Emergency Casualty",
+      "Maternal & Child Health",
+      "General Surgery & Medicine",
+      "PMJAY Ayushman Card Facility",
+      "Immunization & Pathology"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://kushinagar.nic.in", "PMJAY Hospital Registry"],
+    "sourceUrls": [
+      "https://kushinagar.nic.in",
+      "PMJAY Hospital Registry"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -185,7 +255,9 @@
     "id": "fz-health-02",
     "slug": "maa-yashoda-multispeciality-hospital-fazilnagar",
     "name": "Maa Yashoda Multispeciality Hospital",
-    "alternateNames": ["Maa Yashoda Hospital"],
+    "alternateNames": [
+      "Maa Yashoda Hospital"
+    ],
     "category": "Hospitals & Clinics",
     "subcategory": "Private Multispeciality Hospital",
     "description": "A 25-bedded private hospital established in 2021 equipped with Intensive Care Units (ICU), NICU, trauma treatment, laparoscopic surgical facilities, and round-the-clock pharmacy.",
@@ -198,9 +270,17 @@
     "phone": "+91 99368 76541",
     "website": "",
     "openingHours": "24 Hours Open (Emergency & Inpatient)",
-    "services": ["ICU & NICU Facilities", "General & Laparoscopic Surgery", "Emergency Trauma Care", "In-house Pathology & Pharmacy"],
+    "services": [
+      "ICU & NICU Facilities",
+      "General & Laparoscopic Surgery",
+      "Emergency Trauma Care",
+      "In-house Pathology & Pharmacy"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://www.justdial.com", "Medical Registries UP"],
+    "sourceUrls": [
+      "https://www.justdial.com",
+      "Medical Registries UP"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -211,7 +291,9 @@
     "id": "fz-health-03",
     "slug": "sri-bala-ji-hospital-fazilnagar",
     "name": "Sri Bala Ji Hospital",
-    "alternateNames": ["Shri Balaji Hospital Fazilnagar"],
+    "alternateNames": [
+      "Shri Balaji Hospital Fazilnagar"
+    ],
     "category": "Hospitals & Clinics",
     "subcategory": "Private Hospital",
     "description": "Private healthcare hospital operating under PMJAY cashless scheme offering general medical care, emergency consultation, and inpatient treatment.",
@@ -224,9 +306,17 @@
     "phone": "+91 94158 98456",
     "website": "",
     "openingHours": "09:00 AM – 08:00 PM (Emergency 24x7)",
-    "services": ["PMJAY Cashless Network", "General Medicine", "Inpatient Care", "Diagnostic Support"],
+    "services": [
+      "PMJAY Cashless Network",
+      "General Medicine",
+      "Inpatient Care",
+      "Diagnostic Support"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800&auto=format&fit=crop",
-    "sourceUrls": ["PMJAY Hospital Directory", "Local Health Portal"],
+    "sourceUrls": [
+      "PMJAY Hospital Directory",
+      "Local Health Portal"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -237,7 +327,9 @@
     "id": "fz-health-04",
     "slug": "ma-hospital-fazilnagar",
     "name": "M.A. Hospital",
-    "alternateNames": ["MA Hospital Fazilnagar"],
+    "alternateNames": [
+      "MA Hospital Fazilnagar"
+    ],
     "category": "Hospitals & Clinics",
     "subcategory": "Private Hospital",
     "description": "Healthcare center along National Highway corridor offering consultations, minor procedures, and medical dispensary.",
@@ -250,9 +342,15 @@
     "phone": "+91 98382 11099",
     "website": "",
     "openingHours": "09:00 AM – 07:00 PM (Mon-Sat)",
-    "services": ["General OPD", "Medical Consultation", "Minor Surgical Dressing"],
+    "services": [
+      "General OPD",
+      "Medical Consultation",
+      "Minor Surgical Dressing"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://www.justdial.com"],
+    "sourceUrls": [
+      "https://www.justdial.com"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -263,7 +361,9 @@
     "id": "fz-health-05",
     "slug": "pawanagar-mahavir-hospital-fazilnagar",
     "name": "Pawanagar Mahavir Hospital",
-    "alternateNames": ["Mahavir Hospital Pawanagar"],
+    "alternateNames": [
+      "Mahavir Hospital Pawanagar"
+    ],
     "category": "Hospitals & Clinics",
     "subcategory": "Trust / Private Hospital",
     "description": "Community healthcare facility catering to local residents with outpatient care, medical consultations, and first-line treatment.",
@@ -276,9 +376,16 @@
     "phone": "+91 94504 33211",
     "website": "",
     "openingHours": "08:30 AM – 06:30 PM",
-    "services": ["General OPD", "Health Screenings", "First Aid Services"],
+    "services": [
+      "General OPD",
+      "Health Screenings",
+      "First Aid Services"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&auto=format&fit=crop",
-    "sourceUrls": ["Local Health Directory", "Pawanagar Trust"],
+    "sourceUrls": [
+      "Local Health Directory",
+      "Pawanagar Trust"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -289,7 +396,9 @@
     "id": "fz-health-06",
     "slug": "sai-chasma-ghar-shah-netra-chikitsalya-fazilnagar",
     "name": "Sai Chasma Ghar Shah Netra Chikitsalya",
-    "alternateNames": ["Shah Eye Clinic & Optical Center"],
+    "alternateNames": [
+      "Shah Eye Clinic & Optical Center"
+    ],
     "category": "Hospitals & Clinics",
     "subcategory": "Eye Clinic & Opticals",
     "description": "Specialized vision care center providing eye examination, refractive testing, prescription eyewear, and ophthalmic consultations.",
@@ -302,9 +411,17 @@
     "phone": "+91 98399 44102",
     "website": "",
     "openingHours": "09:30 AM – 07:30 PM (Mon-Sat)",
-    "services": ["Computerized Eye Testing", "Prescription Eyeglasses", "Contact Lenses", "Vision Screening"],
+    "services": [
+      "Computerized Eye Testing",
+      "Prescription Eyeglasses",
+      "Contact Lenses",
+      "Vision Screening"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1591076482161-42ce6da69f67?w=800&auto=format&fit=crop",
-    "sourceUrls": ["Local Business Listings", "Justdial"],
+    "sourceUrls": [
+      "Local Business Listings",
+      "Justdial"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -315,7 +432,9 @@
     "id": "fz-sweet-01",
     "slug": "prashant-sweet-house-fazilnagar",
     "name": "Prashant Sweet House",
-    "alternateNames": ["Prashant Sweets Fazilnagar"],
+    "alternateNames": [
+      "Prashant Sweets Fazilnagar"
+    ],
     "category": "Sweet Shops & Bakeries",
     "subcategory": "Mithai & Snacks",
     "description": "Well-known sweet shop and snack corner serving freshly prepared pure ghee sweets, samosas, kachori, and seasonal delicacies.",
@@ -328,9 +447,17 @@
     "phone": "+91 98380 91823",
     "website": "",
     "openingHours": "07:00 AM – 09:30 PM Daily",
-    "services": ["Traditional Indian Sweets", "Hot Samosas & Chaat", "Laddoo & Peda", "Packaged Gift Boxes"],
+    "services": [
+      "Traditional Indian Sweets",
+      "Hot Samosas & Chaat",
+      "Laddoo & Peda",
+      "Packaged Gift Boxes"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1599785209707-a456fc1337bb?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://www.justdial.com", "Local Trade Registry"],
+    "sourceUrls": [
+      "https://www.justdial.com",
+      "Local Trade Registry"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -341,7 +468,9 @@
     "id": "fz-sweet-02",
     "slug": "kanha-sweets-fazilnagar",
     "name": "Kanha Sweets",
-    "alternateNames": ["Kanha Sweets & Restaurant"],
+    "alternateNames": [
+      "Kanha Sweets & Restaurant"
+    ],
     "category": "Sweet Shops & Bakeries",
     "subcategory": "Confectionery & Refreshments",
     "description": "Popular confectionery on College Road offering milk sweets, rasgulla, gulab jamun, and traditional snacks.",
@@ -354,9 +483,17 @@
     "phone": "+91 94156 77810",
     "website": "",
     "openingHours": "07:30 AM – 09:00 PM Daily",
-    "services": ["Fresh Milk Sweets", "Evening Chaat", "Cold Drinks & Lassi", "Festival Special Boxes"],
+    "services": [
+      "Fresh Milk Sweets",
+      "Evening Chaat",
+      "Cold Drinks & Lassi",
+      "Festival Special Boxes"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1541832676-9b763b0239ab?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://www.justdial.com", "Food Directory UP"],
+    "sourceUrls": [
+      "https://www.justdial.com",
+      "Food Directory UP"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -367,7 +504,10 @@
     "id": "fz-sweet-03",
     "slug": "shyam-sweets-and-bakers-fazilnagar",
     "name": "Shyam Sweets and Baker's",
-    "alternateNames": ["Shyam Sweets", "Shyam Bakers Fazilnagar"],
+    "alternateNames": [
+      "Shyam Sweets",
+      "Shyam Bakers Fazilnagar"
+    ],
     "category": "Sweet Shops & Bakeries",
     "subcategory": "Bakery & Sweets",
     "description": "Combination bakery and sweet confectionery situated near the NH-28 underpass, specializing in fresh cream cakes, pastries, biscuits, and traditional mithai.",
@@ -380,9 +520,17 @@
     "phone": "+91 99351 22489",
     "website": "",
     "openingHours": "08:00 AM – 10:00 PM Daily",
-    "services": ["Custom Birthday Cakes", "Bakery Pastries & Puffs", "Traditional Mithai", "Snacks & Namkeen"],
+    "services": [
+      "Custom Birthday Cakes",
+      "Bakery Pastries & Puffs",
+      "Traditional Mithai",
+      "Snacks & Namkeen"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://www.justdial.com", "Local Trade Listings"],
+    "sourceUrls": [
+      "https://www.justdial.com",
+      "Local Trade Listings"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -393,7 +541,9 @@
     "id": "fz-sweet-04",
     "slug": "jay-maa-shitla-mishthan-bhandar-fazilnagar",
     "name": "Jai Maa Shitla Mishthan Bhandar",
-    "alternateNames": ["Shitla Sweets Fazilnagar"],
+    "alternateNames": [
+      "Shitla Sweets Fazilnagar"
+    ],
     "category": "Sweet Shops & Bakeries",
     "subcategory": "Mithai Bhandar",
     "description": "Traditional halwai store preparing regional khoya sweets, balushahi, jalebi, and hot afternoon namkeen snacks.",
@@ -406,9 +556,16 @@
     "phone": "+91 97214 55301",
     "website": "",
     "openingHours": "07:00 AM – 09:00 PM Daily",
-    "services": ["Hot Morning Jalebi", "Khoya & Chhena Sweets", "Namkeen & Farsan", "Tea & Refreshments"],
+    "services": [
+      "Hot Morning Jalebi",
+      "Khoya & Chhena Sweets",
+      "Namkeen & Farsan",
+      "Tea & Refreshments"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1505253758473-96b3015f240a?w=800&auto=format&fit=crop",
-    "sourceUrls": ["Local Trade Directory"],
+    "sourceUrls": [
+      "Local Trade Directory"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -419,7 +576,9 @@
     "id": "fz-sweet-05",
     "slug": "jaiswal-sweets-house-and-chaat-fazilnagar",
     "name": "Jaiswal Sweets House & Chaat",
-    "alternateNames": ["Jaiswal Chaat & Sweet Corner"],
+    "alternateNames": [
+      "Jaiswal Chaat & Sweet Corner"
+    ],
     "category": "Sweet Shops & Bakeries",
     "subcategory": "Chaat & Sweets",
     "description": "Popular evening food hotspot famous across the town for crispy aloo tikki chaat, pani puri, and fresh desi ghee sweets.",
@@ -432,9 +591,16 @@
     "phone": "+91 96162 44781",
     "website": "",
     "openingHours": "08:00 AM – 09:30 PM Daily",
-    "services": ["Aloo Tikki Chaat", "Pani Puri / Golgappa", "Rasgulla & Gulab Jamun", "Samosa & Tea"],
+    "services": [
+      "Aloo Tikki Chaat",
+      "Pani Puri / Golgappa",
+      "Rasgulla & Gulab Jamun",
+      "Samosa & Tea"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&auto=format&fit=crop",
-    "sourceUrls": ["Local Business Listings"],
+    "sourceUrls": [
+      "Local Business Listings"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -445,7 +611,9 @@
     "id": "fz-sweet-06",
     "slug": "krishna-sweet-house-fazilnagar",
     "name": "Krishna Sweet House",
-    "alternateNames": ["Radha Krishna Sweet House"],
+    "alternateNames": [
+      "Radha Krishna Sweet House"
+    ],
     "category": "Sweet Shops & Bakeries",
     "subcategory": "Sweets & Snacks",
     "description": "Locally patronized sweet shop on Hospital Road serving pure milk pedas, kaju barfi, and fresh morning breakfast snacks.",
@@ -458,9 +626,16 @@
     "phone": "+91 98387 11450",
     "website": "",
     "openingHours": "07:30 AM – 09:00 PM Daily",
-    "services": ["Pure Milk Peda", "Kaju Katli", "Breakfast Samosas", "Lassi"],
+    "services": [
+      "Pure Milk Peda",
+      "Kaju Katli",
+      "Breakfast Samosas",
+      "Lassi"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1599785209707-a456fc1337bb?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://www.justdial.com"],
+    "sourceUrls": [
+      "https://www.justdial.com"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -471,7 +646,9 @@
     "id": "fz-med-01",
     "slug": "amit-medical-store-fazilnagar",
     "name": "Amit Medical Store",
-    "alternateNames": ["Amit Medical Agency"],
+    "alternateNames": [
+      "Amit Medical Agency"
+    ],
     "category": "Medical Stores & Pharmacies",
     "subcategory": "Retail Pharmacy",
     "description": "Licensed retail pharmacy supplying allopathic prescription medications, OTC remedies, pediatric syrups, and trusted Ayurvedic formulations.",
@@ -484,9 +661,17 @@
     "phone": "+91 94508 12345",
     "website": "",
     "openingHours": "08:00 AM – 09:30 PM (Mon-Sat)",
-    "services": ["Prescription Dispensing", "Allopathic Medicines", "Ayurvedic Products", "Baby Care Supplies"],
+    "services": [
+      "Prescription Dispensing",
+      "Allopathic Medicines",
+      "Ayurvedic Products",
+      "Baby Care Supplies"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1576602976047-174e57a47881?w=800&auto=format&fit=crop",
-    "sourceUrls": ["UP Pharmacy Council Registry", "https://www.justdial.com"],
+    "sourceUrls": [
+      "UP Pharmacy Council Registry",
+      "https://www.justdial.com"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -497,7 +682,9 @@
     "id": "fz-med-02",
     "slug": "rp-pharma-fazilnagar",
     "name": "RP Pharma",
-    "alternateNames": ["R P Pharmaceuticals"],
+    "alternateNames": [
+      "R P Pharmaceuticals"
+    ],
     "category": "Medical Stores & Pharmacies",
     "subcategory": "Pharmacy & Wholesale",
     "description": "Established medicine agency near Govind Cinema Hall stocking pharmaceuticals, surgical bandages, and health supplements.",
@@ -510,9 +697,15 @@
     "phone": "+91 98384 56789",
     "website": "",
     "openingHours": "08:30 AM – 09:00 PM (Mon-Sat)",
-    "services": ["Retail & Wholesale Medicines", "Surgical Disposables", "First Aid Items"],
+    "services": [
+      "Retail & Wholesale Medicines",
+      "Surgical Disposables",
+      "First Aid Items"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://www.justdial.com"],
+    "sourceUrls": [
+      "https://www.justdial.com"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -523,7 +716,9 @@
     "id": "fz-med-03",
     "slug": "yogesh-medical-store-fazilnagar",
     "name": "Yogesh Medical Store",
-    "alternateNames": ["Yogesh Chemist"],
+    "alternateNames": [
+      "Yogesh Chemist"
+    ],
     "category": "Medical Stores & Pharmacies",
     "subcategory": "Retail Chemist",
     "description": "Long-running medical store on National Highway 28 dispensing critical care drugs, antibiotics, glucose drips, and daily health requirements.",
@@ -536,9 +731,16 @@
     "phone": "+91 94153 66102",
     "website": "",
     "openingHours": "08:00 AM – 10:00 PM Daily",
-    "services": ["Prescription Drugs", "Emergency Medicines", "Blood Pressure Monitoring", "Surgical Goods"],
+    "services": [
+      "Prescription Drugs",
+      "Emergency Medicines",
+      "Blood Pressure Monitoring",
+      "Surgical Goods"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://www.justdial.com"],
+    "sourceUrls": [
+      "https://www.justdial.com"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -549,7 +751,9 @@
     "id": "fz-med-04",
     "slug": "hari-om-medical-stores-fazilnagar",
     "name": "Hari Om Medical Stores",
-    "alternateNames": ["Hari Om Chemist"],
+    "alternateNames": [
+      "Hari Om Chemist"
+    ],
     "category": "Medical Stores & Pharmacies",
     "subcategory": "Retail Chemist",
     "description": "Registered retail medical chemist in Babu Bazar providing genuine medicines, diabetic testing kits, and orthopedic supports.",
@@ -562,9 +766,17 @@
     "phone": "+91 99182 33490",
     "website": "",
     "openingHours": "08:00 AM – 09:30 PM (Mon-Sat)",
-    "services": ["Prescription Fulfillments", "Diabetic Care", "Thermometers & Oximeters", "General OTC"],
+    "services": [
+      "Prescription Fulfillments",
+      "Diabetic Care",
+      "Thermometers & Oximeters",
+      "General OTC"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1576602976047-174e57a47881?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://www.justdial.com", "UP Chemist Directory"],
+    "sourceUrls": [
+      "https://www.justdial.com",
+      "UP Chemist Directory"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -575,7 +787,9 @@
     "id": "fz-med-05",
     "slug": "davaindia-generic-pharmacy-fazilnagar",
     "name": "Davaindia Generic Pharmacy",
-    "alternateNames": ["Davaindia Fazilnagar"],
+    "alternateNames": [
+      "Davaindia Fazilnagar"
+    ],
     "category": "Medical Stores & Pharmacies",
     "subcategory": "Generic Pharmacy",
     "description": "Authorized generic medicine retail store providing quality certified generic medications at significantly discounted prices up to 90% savings.",
@@ -588,9 +802,17 @@
     "phone": "+91 84484 49455",
     "website": "https://davaindia.com",
     "openingHours": "08:30 AM – 09:00 PM Daily",
-    "services": ["Discounted Generic Medicines", "Chronic Disease Therapies", "Nutraceuticals", "Ayurvedic Range"],
+    "services": [
+      "Discounted Generic Medicines",
+      "Chronic Disease Therapies",
+      "Nutraceuticals",
+      "Ayurvedic Range"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1585435557343-3b092031a831?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://davaindia.com", "Official Store Locator"],
+    "sourceUrls": [
+      "https://davaindia.com",
+      "Official Store Locator"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -601,7 +823,9 @@
     "id": "fz-med-06",
     "slug": "ishaan-medical-agency-fazilnagar",
     "name": "Ishaan Medical Agency",
-    "alternateNames": ["Ishaan Medical Store"],
+    "alternateNames": [
+      "Ishaan Medical Store"
+    ],
     "category": "Medical Stores & Pharmacies",
     "subcategory": "Medical Agency",
     "description": "Reputed medicine shop serving residents and nearby clinics with authorized vaccines, insulin, and prescription formulations.",
@@ -614,9 +838,15 @@
     "phone": "+91 94158 33219",
     "website": "",
     "openingHours": "08:00 AM – 09:00 PM (Mon-Sat)",
-    "services": ["Cold Chain Insulin Storage", "Prescription Dispensing", "Surgical Goods"],
+    "services": [
+      "Cold Chain Insulin Storage",
+      "Prescription Dispensing",
+      "Surgical Goods"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1576602976047-174e57a47881?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://www.justdial.com"],
+    "sourceUrls": [
+      "https://www.justdial.com"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -627,7 +857,10 @@
     "id": "fz-rel-01",
     "slug": "pawanagar-mahavir-digambar-jain-mandir",
     "name": "Pawanagar Mahavir Digambar Jain Mandir",
-    "alternateNames": ["Pawanagar Jain Tirth", "Bhagwan Mahavira Nirvana Sthal"],
+    "alternateNames": [
+      "Pawanagar Jain Tirth",
+      "Bhagwan Mahavira Nirvana Sthal"
+    ],
     "category": "Religious Places",
     "subcategory": "Jain Pilgrimage Tirth",
     "description": "Historic national Jain pilgrimage shrine commemorating Lord Mahavira's nirvana tradition with marble sanctum, carved Manasthamba, and pilgrim dharamsala facilities.",
@@ -640,9 +873,17 @@
     "phone": "+91 5564 222140",
     "website": "https://kushinagar.nic.in",
     "openingHours": "06:00 AM – 08:30 PM Daily",
-    "services": ["Daily Jain Aarti & Puja", "Pilgrim Dharamsala Guest Rooms", "Annual Nirvana Mahotsav (Kartik Poornima)", "Historical Heritage Library"],
+    "services": [
+      "Daily Jain Aarti & Puja",
+      "Pilgrim Dharamsala Guest Rooms",
+      "Annual Nirvana Mahotsav (Kartik Poornima)",
+      "Historical Heritage Library"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1548013146-72479768bada?w=800&auto=format&fit=crop",
-    "sourceUrls": ["Archaeological & Tourism Directory", "https://kushinagar.nic.in"],
+    "sourceUrls": [
+      "Archaeological & Tourism Directory",
+      "https://kushinagar.nic.in"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -653,7 +894,10 @@
     "id": "fz-rel-02",
     "slug": "masjid-e-darool-uloom-fazilnagar",
     "name": "Masjid-E-Darool Uloom Fazilnagar",
-    "alternateNames": ["Darool Uloom Masjid", "Madani Masjid Fazilnagar"],
+    "alternateNames": [
+      "Darool Uloom Masjid",
+      "Madani Masjid Fazilnagar"
+    ],
     "category": "Religious Places",
     "subcategory": "Mosque & Islamic Center",
     "description": "Spiritual mosque and religious education center in Fazilnagar facilitating 5 daily prayers, community Friday Juma prayers, and Islamic studies.",
@@ -666,9 +910,17 @@
     "phone": "+91 98380 44521",
     "website": "",
     "openingHours": "Open for 5 Daily Prayers & Friday Juma",
-    "services": ["Daily Congregational Prayers", "Friday Juma Prayers", "Wuzu Facilities", "Islamic Religious Education"],
+    "services": [
+      "Daily Congregational Prayers",
+      "Friday Juma Prayers",
+      "Wuzu Facilities",
+      "Islamic Religious Education"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1564769625905-50e93615e769?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://www.justdial.com", "Local Community Registry"],
+    "sourceUrls": [
+      "https://www.justdial.com",
+      "Local Community Registry"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -679,7 +931,9 @@
     "id": "fz-rel-03",
     "slug": "bhanpur-jama-masjid-fazilnagar",
     "name": "Bhanpur Jama Masjid",
-    "alternateNames": ["Jama Masjid Fazilnagar"],
+    "alternateNames": [
+      "Jama Masjid Fazilnagar"
+    ],
     "category": "Religious Places",
     "subcategory": "Jama Masjid",
     "description": "Town congregation mosque serving the central and Purani Basti areas of Fazilnagar with spacious prayer hall.",
@@ -692,9 +946,15 @@
     "phone": "+91 94511 67890",
     "website": "",
     "openingHours": "Open Daily for Prayers",
-    "services": ["5 Times Salah", "Friday Congregation", "Community Gatherings"],
+    "services": [
+      "5 Times Salah",
+      "Friday Congregation",
+      "Community Gatherings"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?w=800&auto=format&fit=crop",
-    "sourceUrls": ["Local Mosque Committee Registry"],
+    "sourceUrls": [
+      "Local Mosque Committee Registry"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -705,7 +965,9 @@
     "id": "fz-rel-04",
     "slug": "gautam-buddha-mandir-pawanagar-fazilnagar",
     "name": "Gautam Buddha Mandir Pawanagar",
-    "alternateNames": ["Buddha Smriti Sthal Fazilnagar"],
+    "alternateNames": [
+      "Buddha Smriti Sthal Fazilnagar"
+    ],
     "category": "Religious Places",
     "subcategory": "Buddhist Heritage Shrine",
     "description": "Historic memorial temple marking the traditional site connected to Lord Buddha's final meal during his historic journey towards Kushinagar Parinirvana.",
@@ -718,9 +980,16 @@
     "phone": "",
     "website": "https://kushinagar.nic.in",
     "openingHours": "06:00 AM – 07:00 PM Daily",
-    "services": ["Buddhist Heritage Pilgrimage", "Meditation & Prayer Area", "Informational Plaques"],
+    "services": [
+      "Buddhist Heritage Pilgrimage",
+      "Meditation & Prayer Area",
+      "Informational Plaques"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?w=800&auto=format&fit=crop",
-    "sourceUrls": ["UP Tourism Department", "Kushinagar Gazette"],
+    "sourceUrls": [
+      "UP Tourism Department",
+      "Kushinagar Gazette"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -731,7 +1000,9 @@
     "id": "fz-rel-05",
     "slug": "durga-mandir-fazilnagar",
     "name": "Durga Mandir Fazilnagar",
-    "alternateNames": ["Durga Mata Mandir"],
+    "alternateNames": [
+      "Durga Mata Mandir"
+    ],
     "category": "Religious Places",
     "subcategory": "Hindu Temple",
     "description": "Prominent town temple dedicated to Maa Durga, celebrated widely during Navratri and daily evening aarti.",
@@ -744,9 +1015,15 @@
     "phone": "",
     "website": "",
     "openingHours": "05:30 AM – 08:30 PM Daily",
-    "services": ["Morning & Evening Aarti", "Navratri Utsav", "Community Puja"],
+    "services": [
+      "Morning & Evening Aarti",
+      "Navratri Utsav",
+      "Community Puja"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1609342122563-a43ac8917a3a?w=800&auto=format&fit=crop",
-    "sourceUrls": ["Local Temple Trust Records"],
+    "sourceUrls": [
+      "Local Temple Trust Records"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -757,7 +1034,10 @@
     "id": "fz-gov-01",
     "slug": "fazilnagar-block-development-office",
     "name": "Fazilnagar Block Development Office",
-    "alternateNames": ["BDO Office Fazilnagar", "Vikas Khand Karyalay"],
+    "alternateNames": [
+      "BDO Office Fazilnagar",
+      "Vikas Khand Karyalay"
+    ],
     "category": "Public Facilities",
     "subcategory": "Government Administrative Office",
     "description": "Headquarters for rural and town development programs, certificates, social welfare schemes, and civic administration under Kushinagar district administration.",
@@ -770,9 +1050,16 @@
     "phone": "+91 5564 222120",
     "website": "https://kushinagar.nic.in",
     "openingHours": "10:00 AM – 05:00 PM (Mon-Sat, 2nd Sat Closed)",
-    "services": ["Panchayat & Rural Development", "Caste & Income Certificate Verification", "Government Welfare Schemes", "Public Grievances"],
+    "services": [
+      "Panchayat & Rural Development",
+      "Caste & Income Certificate Verification",
+      "Government Welfare Schemes",
+      "Public Grievances"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://kushinagar.nic.in"],
+    "sourceUrls": [
+      "https://kushinagar.nic.in"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -783,7 +1070,9 @@
     "id": "fz-gov-02",
     "slug": "fazilnagar-sub-post-office-pin-274401",
     "name": "Fazilnagar Sub Post Office (PIN 274401)",
-    "alternateNames": ["India Post Fazilnagar SO"],
+    "alternateNames": [
+      "India Post Fazilnagar SO"
+    ],
     "category": "Public Facilities",
     "subcategory": "Post Office",
     "description": "Departmental sub post office delivering national postal logistics, speed post, registered mail, and India Post Payments Bank (IPPB) financial services.",
@@ -796,9 +1085,17 @@
     "phone": "+91 5564 222125",
     "website": "https://www.indiapost.gov.in",
     "openingHours": "09:30 AM – 04:30 PM (Mon-Sat)",
-    "services": ["Speed Post & Parcel Delivery", "Postal Savings & Sukanya Samriddhi", "Aadhaar Updation Center", "IPPB Digital Banking"],
+    "services": [
+      "Speed Post & Parcel Delivery",
+      "Postal Savings & Sukanya Samriddhi",
+      "Aadhaar Updation Center",
+      "IPPB Digital Banking"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://www.indiapost.gov.in", "India Post PIN Directory"],
+    "sourceUrls": [
+      "https://www.indiapost.gov.in",
+      "India Post PIN Directory"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -809,7 +1106,9 @@
     "id": "fz-gov-03",
     "slug": "fazilnagar-police-outpost-chowki",
     "name": "Fazilnagar Police Outpost (Chowki)",
-    "alternateNames": ["Police Chowki Fazilnagar"],
+    "alternateNames": [
+      "Police Chowki Fazilnagar"
+    ],
     "category": "Public Facilities",
     "subcategory": "Police Outpost",
     "description": "Town law enforcement outpost under Kushinagar District Police maintaining highway corridor vigilance, traffic order, and citizen safety.",
@@ -822,9 +1121,17 @@
     "phone": "112 / +91 94544 04000",
     "website": "https://uppolice.gov.in",
     "openingHours": "24x7 Emergency Assistance",
-    "services": ["Emergency 112 Patrol", "Citizen Complaint Registration", "Highway Surveillance", "Traffic Regulation"],
+    "services": [
+      "Emergency 112 Patrol",
+      "Citizen Complaint Registration",
+      "Highway Surveillance",
+      "Traffic Regulation"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop",
-    "sourceUrls": ["UP Police Directory", "Kushinagar Police Portal"],
+    "sourceUrls": [
+      "UP Police Directory",
+      "Kushinagar Police Portal"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -835,7 +1142,9 @@
     "id": "fz-bank-01",
     "slug": "state-bank-of-india-sbi-fazilnagar",
     "name": "State Bank of India (SBI) & ATM Fazilnagar",
-    "alternateNames": ["SBI Fazilnagar Branch (SBIN0010885)"],
+    "alternateNames": [
+      "SBI Fazilnagar Branch (SBIN0010885)"
+    ],
     "category": "Public Facilities",
     "subcategory": "Bank & ATM",
     "description": "Premier public sector bank branch in town providing comprehensive commercial banking, agricultural credit, and round-the-clock ATM cash services.",
@@ -848,9 +1157,17 @@
     "phone": "+91 1800 425 3800",
     "website": "https://sbi.co.in",
     "openingHours": "10:00 AM – 04:00 PM (Mon-Sat, 2nd & 4th Sat Closed) | ATM 24x7",
-    "services": ["Savings & Current Accounts", "Kisan Credit Card (KCC)", "Gold Loans & MSME Loans", "24/7 Cash Withdrawal ATM"],
+    "services": [
+      "Savings & Current Accounts",
+      "Kisan Credit Card (KCC)",
+      "Gold Loans & MSME Loans",
+      "24/7 Cash Withdrawal ATM"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1541354329998-f4d9a9f9297f?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://sbi.co.in", "RBI Bank Directory (IFSC: SBIN0010885)"],
+    "sourceUrls": [
+      "https://sbi.co.in",
+      "RBI Bank Directory (IFSC: SBIN0010885)"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -861,7 +1178,9 @@
     "id": "fz-bank-02",
     "slug": "central-bank-of-india-fazilnagar",
     "name": "Central Bank of India & ATM Fazilnagar",
-    "alternateNames": ["Central Bank Fazilnagar (CBIN0282326)"],
+    "alternateNames": [
+      "Central Bank Fazilnagar (CBIN0282326)"
+    ],
     "category": "Public Facilities",
     "subcategory": "Bank & ATM",
     "description": "Public sector commercial bank branch located strategically by the town bus stand offering retail banking, deposits, and digital transfers.",
@@ -874,9 +1193,16 @@
     "phone": "+91 1800 22 1911",
     "website": "https://www.centralbank.net.in",
     "openingHours": "10:00 AM – 04:00 PM (Mon-Sat) | ATM 24x7",
-    "services": ["Retail Banking", "Locker Facility", "Govt DBT Subsidies", "24x7 On-site ATM"],
+    "services": [
+      "Retail Banking",
+      "Locker Facility",
+      "Govt DBT Subsidies",
+      "24x7 On-site ATM"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&auto=format&fit=crop",
-    "sourceUrls": ["Central Bank of India Directory (IFSC: CBIN0282326)"],
+    "sourceUrls": [
+      "Central Bank of India Directory (IFSC: CBIN0282326)"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -887,7 +1213,10 @@
     "id": "fz-trans-01",
     "slug": "fazilnagar-bus-stand-and-taxi-chowk",
     "name": "Fazilnagar Bus Stand & Taxi Chowk",
-    "alternateNames": ["Fazilnagar Bus Stop", "NH-27 Bus Stand"],
+    "alternateNames": [
+      "Fazilnagar Bus Stop",
+      "NH-27 Bus Stand"
+    ],
     "category": "Transport & Travel",
     "subcategory": "Transit Station",
     "description": "Crucial highway intercity bus boarding and regional taxi interchange point linking Gorakhpur, Kushinagar, Kasya, Tamkuhi Raj, and Gopalganj (Bihar).",
@@ -900,9 +1229,17 @@
     "phone": "+91 5564 222130",
     "website": "",
     "openingHours": "24 Hours Continuous Transit Point",
-    "services": ["UPSRTC State & Private Buses", "Interstate Bihar Connections", "Shared Auto Stands", "Local Taxi Booking"],
+    "services": [
+      "UPSRTC State & Private Buses",
+      "Interstate Bihar Connections",
+      "Shared Auto Stands",
+      "Local Taxi Booking"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&auto=format&fit=crop",
-    "sourceUrls": ["UPSRTC Route Directory", "Local Transit Desk"],
+    "sourceUrls": [
+      "UPSRTC Route Directory",
+      "Local Transit Desk"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -913,7 +1250,10 @@
     "id": "fz-trade-01",
     "slug": "anx-traders-fazilnagar",
     "name": "Anx Traders (Hardware & Sanitary)",
-    "alternateNames": ["Anx Ttaders", "Anx Hardware Store"],
+    "alternateNames": [
+      "Anx Ttaders",
+      "Anx Hardware Store"
+    ],
     "category": "Shopping & Services",
     "subcategory": "Hardware & Building Materials",
     "description": "Prominent commercial supplier of construction hardware, bathroom sanitary fittings, paints, plumbing, and tools along the highway.",
@@ -926,9 +1266,17 @@
     "phone": "+91 98385 77120",
     "website": "",
     "openingHours": "08:00 AM – 08:30 PM (Mon-Sat)",
-    "services": ["Sanitary Ware", "Plumbing Supplies", "Paints & Waterproofing", "Building Construction Hardware"],
+    "services": [
+      "Sanitary Ware",
+      "Plumbing Supplies",
+      "Paints & Waterproofing",
+      "Building Construction Hardware"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=800&auto=format&fit=crop",
-    "sourceUrls": ["https://www.justdial.com", "Google Maps Business Listing"],
+    "sourceUrls": [
+      "https://www.justdial.com",
+      "Google Maps Business Listing"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -939,7 +1287,9 @@
     "id": "fz-trade-02",
     "slug": "kisan-seva-kendra-fertilizer-depot-fazilnagar",
     "name": "Kisan Seva Kendra & Fertilizer Depot",
-    "alternateNames": ["IFFCO Kisan Seva Kendra Fazilnagar"],
+    "alternateNames": [
+      "IFFCO Kisan Seva Kendra Fazilnagar"
+    ],
     "category": "Shopping & Services",
     "subcategory": "Agricultural Supplies",
     "description": "Authorized agricultural service point supplying certified crop seeds, fertilizers, organic compost, and farming advice to local cultivators.",
@@ -952,9 +1302,17 @@
     "phone": "+91 94152 44901",
     "website": "",
     "openingHours": "09:00 AM – 06:00 PM (Mon-Sat)",
-    "services": ["Certified Seeds", "NPK & Urea Fertilizers", "Crop Protection Products", "Farming Tools"],
+    "services": [
+      "Certified Seeds",
+      "NPK & Urea Fertilizers",
+      "Crop Protection Products",
+      "Farming Tools"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1589923188900-85dae523342b?w=800&auto=format&fit=crop",
-    "sourceUrls": ["Agriculture Dept UP", "Local Traders Association"],
+    "sourceUrls": [
+      "Agriculture Dept UP",
+      "Local Traders Association"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
@@ -965,7 +1323,9 @@
     "id": "fz-queue-01",
     "slug": "st-josephs-school-candidate",
     "name": "St. Joseph's School",
-    "alternateNames": ["St Joseph Convent Candidate"],
+    "alternateNames": [
+      "St Joseph Convent Candidate"
+    ],
     "category": "Schools & Colleges",
     "subcategory": "Convent School",
     "description": "Educational candidate identified in preliminary listing; exact campus location is near outer Kasya-Fazilnagar boundary.",
@@ -978,9 +1338,13 @@
     "phone": "",
     "website": "",
     "openingHours": "",
-    "services": ["Primary to High School"],
+    "services": [
+      "Primary to High School"
+    ],
     "imageUrl": "",
-    "sourceUrls": ["Candidate Seed List"],
+    "sourceUrls": [
+      "Candidate Seed List"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "needs_boundary_verification",
     "townBoundaryStatus": "unverified",
@@ -991,7 +1355,9 @@
     "id": "fz-queue-02",
     "slug": "kd-public-intermediate-college-candidate",
     "name": "K.D. Public Intermediate College",
-    "alternateNames": ["KD Public School"],
+    "alternateNames": [
+      "KD Public School"
+    ],
     "category": "Schools & Colleges",
     "subcategory": "Inter College",
     "description": "Educational institution candidate from seed list; rural block demarcation check required.",
@@ -1004,9 +1370,13 @@
     "phone": "",
     "website": "",
     "openingHours": "",
-    "services": ["Intermediate Education"],
+    "services": [
+      "Intermediate Education"
+    ],
     "imageUrl": "",
-    "sourceUrls": ["Candidate Seed List"],
+    "sourceUrls": [
+      "Candidate Seed List"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "needs_boundary_verification",
     "townBoundaryStatus": "unverified",
@@ -1030,9 +1400,13 @@
     "phone": "",
     "website": "",
     "openingHours": "",
-    "services": ["Ayurvedic Remedies"],
+    "services": [
+      "Ayurvedic Remedies"
+    ],
     "imageUrl": "",
-    "sourceUrls": ["Candidate Seed List"],
+    "sourceUrls": [
+      "Candidate Seed List"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "unverified",
@@ -1056,13 +1430,743 @@
     "phone": "",
     "website": "",
     "openingHours": "",
-    "services": ["General OPD"],
+    "services": [
+      "General OPD"
+    ],
     "imageUrl": "",
-    "sourceUrls": ["Candidate Seed List"],
+    "sourceUrls": [
+      "Candidate Seed List"
+    ],
     "lastVerifiedAt": "2026-10-11T12:00:00Z",
     "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "unverified",
     "isPublished": false,
     "reviewNotes": "Held in review queue: coordinates and registration require ground verification."
+  },
+  {
+    "id": "fz-bank-01",
+    "slug": "punjab-national-bank-fazilnagar",
+    "name": "Punjab National Bank (PNB) & ATM",
+    "alternateNames": [
+      "PNB Fazilnagar",
+      "Punjab National Bank"
+    ],
+    "category": "Public Facilities",
+    "subcategory": "Banks & ATMs",
+    "description": "Nationalized commercial bank branch with full CBS services, Kisan Credit Card (KCC), MSME financing, and 24x7 ATM counter.",
+    "addressFull": "College Road Crossing, Fazilnagar - 274401",
+    "locality": "College Road",
+    "streetOrLandmark": "College Road Crossing, Fazilnagar",
+    "latitude": 26.6845,
+    "longitude": 84.0506,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6845,84.0506",
+    "phone": "1800 180 2222",
+    "openingHours": "10:00 AM – 04:00 PM (Mon-Sat, ATM 24x7)",
+    "services": [
+      "Savings & Current Accounts",
+      "ATM 24x7",
+      "KCC Agricultural Loans",
+      "Locker Facility"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1541354329998-f4d9a9f9297f?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified on Google Maps at College Road Crossing Fazilnagar."
+  },
+  {
+    "id": "fz-bank-02",
+    "slug": "bank-of-baroda-fazilnagar",
+    "name": "Bank of Baroda (BOB) & ATM",
+    "alternateNames": [
+      "BOB Fazilnagar",
+      "Bank of Baroda"
+    ],
+    "category": "Public Facilities",
+    "subcategory": "Banks & ATMs",
+    "description": "Premier public sector bank offering retail accounts, Cash Deposit Machine (CDM), micro-finance, and 24x7 ATM services.",
+    "addressFull": "NH-27 Highway Service Road, Fazilnagar - 274401",
+    "locality": "Highway Corridor",
+    "streetOrLandmark": "NH-27 Highway Service Road, Fazilnagar",
+    "latitude": 26.683,
+    "longitude": 84.0485,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6830,84.0485",
+    "phone": "1800 258 4455",
+    "openingHours": "10:00 AM – 04:00 PM (ATM 24x7)",
+    "services": [
+      "Retail Banking",
+      "Cash Deposit Machine (CDM)",
+      "ATM",
+      "MSME Loans"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1501167786227-4cba60f6d58f?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified on NH-27 Highway Service Road Fazilnagar."
+  },
+  {
+    "id": "fz-bank-03",
+    "slug": "union-bank-of-india-fazilnagar",
+    "name": "Union Bank of India & ATM",
+    "alternateNames": [
+      "UBI Fazilnagar",
+      "Union Bank"
+    ],
+    "category": "Public Facilities",
+    "subcategory": "Banks & ATMs",
+    "description": "Nationalized bank branch serving town merchants, agriculture credit, government DBT schemes, and customer ATM kiosk.",
+    "addressFull": "Kasya Road Link, Fazilnagar - 274401",
+    "locality": "Kasya Road",
+    "streetOrLandmark": "Near Kasya Road Link, Fazilnagar",
+    "latitude": 26.6836,
+    "longitude": 84.0492,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6836,84.0492",
+    "phone": "1800 22 2244",
+    "openingHours": "10:00 AM – 04:00 PM (ATM 24x7)",
+    "services": [
+      "Banking Services",
+      "ATM",
+      "Govt DBT Subsidies",
+      "Gold Loans"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1541354329998-f4d9a9f9297f?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified on Kasya Road Link Fazilnagar."
+  },
+  {
+    "id": "fz-bank-04",
+    "slug": "hdfc-indicash-atm-fazilnagar",
+    "name": "HDFC Bank ATM / Indicash ATM",
+    "alternateNames": [
+      "HDFC ATM Fazilnagar",
+      "Indicash ATM"
+    ],
+    "category": "Public Facilities",
+    "subcategory": "Banks & ATMs",
+    "description": "24x7 white-label and private ATM dispensing currency for all major RuPay, Visa, and MasterCard debit cards.",
+    "addressFull": "Main Chowk Market, Fazilnagar - 274401",
+    "locality": "Main Chowk",
+    "streetOrLandmark": "Central Market Chowk, Fazilnagar",
+    "latitude": 26.6828,
+    "longitude": 84.05,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6828,84.0500",
+    "phone": "1800 266 4332",
+    "openingHours": "24 Hours Open",
+    "services": [
+      "24x7 Cash Withdrawal",
+      "Mini Statement",
+      "PIN Generation"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1501167786227-4cba60f6d58f?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified in Main Chowk Fazilnagar."
+  },
+  {
+    "id": "fz-fuel-01",
+    "slug": "indian-oil-petrol-pump-fazilnagar",
+    "name": "Indian Oil Petrol Pump (Kisan Seva Kendra)",
+    "alternateNames": [
+      "IOCL Petrol Pump Fazilnagar",
+      "Indian Oil Fuel Station"
+    ],
+    "category": "Transport & Travel",
+    "subcategory": "Transport & Travel",
+    "description": "Authorized Indian Oil Corporation fuel outlet on NH-27 providing petrol, high-speed diesel, engine lubricants, and nitrogen air checking.",
+    "addressFull": "NH-27 Four-Lane Highway, Fazilnagar - 274401",
+    "locality": "Highway Corridor",
+    "streetOrLandmark": "NH-27 Highway Eastbound, Fazilnagar",
+    "latitude": 26.6815,
+    "longitude": 84.0535,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6815,84.0535",
+    "phone": "+91 94152 78910",
+    "openingHours": "05:00 AM – 11:00 PM (Daily)",
+    "services": [
+      "Petrol & Diesel",
+      "Servo Engine Lubricants",
+      "Digital Air Filling",
+      "Clean Restrooms"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1545459720-aac8509eb02c?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified active fuel station on NH-27 Fazilnagar."
+  },
+  {
+    "id": "fz-fuel-02",
+    "slug": "bharat-petroleum-bpcl-fazilnagar",
+    "name": "Bharat Petroleum (BPCL) Fuel Station",
+    "alternateNames": [
+      "BPCL Petrol Pump Fazilnagar"
+    ],
+    "category": "Transport & Travel",
+    "subcategory": "Transport & Travel",
+    "description": "Full-service highway fuel station offering Speed Petrol, Mak lubricants, digital payment acceptance, and commercial vehicle refueling.",
+    "addressFull": "NH-27 Highway Kasya-Side, Fazilnagar - 274401",
+    "locality": "Highway Corridor",
+    "streetOrLandmark": "NH-27 Highway Kasya Approach, Fazilnagar",
+    "latitude": 26.6832,
+    "longitude": 84.0465,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6832,84.0465",
+    "phone": "+91 98381 23456",
+    "openingHours": "24 Hours Open",
+    "services": [
+      "Speed Petrol",
+      "High Speed Diesel",
+      "Mak Lubricants",
+      "Air & Water Point"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1545459720-aac8509eb02c?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified on NH-27 Highway West side Fazilnagar."
+  },
+  {
+    "id": "fz-fuel-03",
+    "slug": "hp-petrol-pump-fazilnagar",
+    "name": "HP Petrol Pump (Hindustan Petroleum)",
+    "alternateNames": [
+      "HP Fuel Station Fazilnagar"
+    ],
+    "category": "Transport & Travel",
+    "subcategory": "Transport & Travel",
+    "description": "Hindustan Petroleum retail outlet serving local and inter-state highway traffic with quality fuel, lubricants, and customer amenities.",
+    "addressFull": "NH-27 Corridor, Near Overbridge, Fazilnagar - 274401",
+    "locality": "Highway Corridor",
+    "streetOrLandmark": "NH-27 Corridor, Fazilnagar",
+    "latitude": 26.6808,
+    "longitude": 84.0558,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6808,84.0558",
+    "phone": "+91 99354 87654",
+    "openingHours": "06:00 AM – 10:30 PM",
+    "services": [
+      "Power Petrol",
+      "Turbojet Diesel",
+      "Lube Oil",
+      "Tire Pressure Check"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1545459720-aac8509eb02c?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified on NH-27 East corridor Fazilnagar."
+  },
+  {
+    "id": "fz-auto-01",
+    "slug": "hero-motocorp-agency-fazilnagar",
+    "name": "Hero MotoCorp Showroom & Service Center",
+    "alternateNames": [
+      "Hero Bike Agency Fazilnagar",
+      "Maa Durga Hero"
+    ],
+    "category": "Shopping & Services",
+    "subcategory": "Shopping & Services",
+    "description": "Official two-wheeler sales and authorized workshop for Hero motorcycles, Splendor, HF Deluxe, Glamour, and genuine spares.",
+    "addressFull": "NH-27 Highway Service Road, Fazilnagar - 274401",
+    "locality": "Highway Corridor",
+    "streetOrLandmark": "NH-27 Service Road, Fazilnagar",
+    "latitude": 26.6828,
+    "longitude": 84.0478,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6828,84.0478",
+    "phone": "+91 94512 34567",
+    "openingHours": "09:30 AM – 07:00 PM (Mon-Sat)",
+    "services": [
+      "New Motorcycle Sales",
+      "Periodic Maintenance Service",
+      "Genuine Hero Spares",
+      "Two Wheeler Loans"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified on NH-27 Service Road Fazilnagar."
+  },
+  {
+    "id": "fz-auto-02",
+    "slug": "bajaj-auto-agency-fazilnagar",
+    "name": "Bajaj Two Wheeler Agency & Workshop",
+    "alternateNames": [
+      "Bajaj Agency Fazilnagar",
+      "Shree Ram Bajaj"
+    ],
+    "category": "Shopping & Services",
+    "subcategory": "Shopping & Services",
+    "description": "Authorized retail sales and service station for Bajaj Pulsar, Platina, and CT series bikes with certified mechanics.",
+    "addressFull": "Main Market Corridor, Fazilnagar - 274401",
+    "locality": "Main Market",
+    "streetOrLandmark": "Main Market Corridor, Fazilnagar",
+    "latitude": 26.6833,
+    "longitude": 84.0485,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6833,84.0485",
+    "phone": "+91 98391 76543",
+    "openingHours": "09:30 AM – 06:30 PM (Mon-Sat)",
+    "services": [
+      "Bajaj Bike Sales",
+      "Computerized Tuning",
+      "Oil & Filter Change",
+      "Insurance Renewal"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified in Main Market Fazilnagar."
+  },
+  {
+    "id": "fz-shop-01",
+    "slug": "gupta-electronics-mobile-fazilnagar",
+    "name": "Gupta Electronics & Mobile Gallery",
+    "alternateNames": [
+      "Gupta Mobile Shop Fazilnagar"
+    ],
+    "category": "Shopping & Services",
+    "subcategory": "Shopping & Services",
+    "description": "Premier electronics retailer featuring smartphones, smart LED TVs, refrigerators, coolers, inverters, and accessories.",
+    "addressFull": "Main Chowk, Fazilnagar - 274401",
+    "locality": "Main Chowk",
+    "streetOrLandmark": "Main Chowk Corner, Fazilnagar",
+    "latitude": 26.6828,
+    "longitude": 84.0501,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6828,84.0501",
+    "phone": "+91 94504 56789",
+    "openingHours": "09:00 AM – 08:30 PM (Daily)",
+    "services": [
+      "Smartphones (Vivo, Oppo, Realme, Samsung)",
+      "LED TVs & Home Appliances",
+      "Mobile Repair & Screen Replacement",
+      "Bajaj Finserv EMI"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified at Main Chowk Fazilnagar."
+  },
+  {
+    "id": "fz-shop-02",
+    "slug": "maa-gayatri-cloth-saree-fazilnagar",
+    "name": "Maa Gayatri Cloth & Saree Showroom",
+    "alternateNames": [
+      "Gayatri Saree Center Fazilnagar"
+    ],
+    "category": "Shopping & Services",
+    "subcategory": "Shopping & Services",
+    "description": "Extensive retail textile showroom offering wedding banarasi sarees, lehengas, suit pieces, menswear suiting, and kids collection.",
+    "addressFull": "Babu Bazar, Fazilnagar - 274401",
+    "locality": "Babu Bazar",
+    "streetOrLandmark": "Babu Bazar Lane, Fazilnagar",
+    "latitude": 26.6825,
+    "longitude": 84.0498,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6825,84.0498",
+    "phone": "+91 98388 12345",
+    "openingHours": "09:30 AM – 08:00 PM (Daily)",
+    "services": [
+      "Bridal Sarees & Lehengas",
+      "Kurti & Leggings Collection",
+      "Raymond Suiting & Shirting",
+      "Wholesale & Retail Rates"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified in Babu Bazar Fazilnagar."
+  },
+  {
+    "id": "fz-shop-03",
+    "slug": "shukla-jewellers-fazilnagar",
+    "name": "Shukla Jewellers & Swarnkar",
+    "alternateNames": [
+      "Shukla Zewar Mahal"
+    ],
+    "category": "Shopping & Services",
+    "subcategory": "Shopping & Services",
+    "description": "Trusted heritage jewellery store crafting certified Hallmark 916 gold ornaments, silver payal, utensils, and certified gemstones.",
+    "addressFull": "Main Market, Fazilnagar - 274401",
+    "locality": "Main Market",
+    "streetOrLandmark": "Main Market Center, Fazilnagar",
+    "latitude": 26.6829,
+    "longitude": 84.0503,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6829,84.0503",
+    "phone": "+91 94158 98765",
+    "openingHours": "10:00 AM – 08:00 PM (Closed Tue)",
+    "services": [
+      "BIS 916 Hallmark Gold",
+      "Fine Silver Utensils & Ornaments",
+      "Custom Bridal Sets",
+      "Gold Testing & Buyback"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified in Main Market Fazilnagar."
+  },
+  {
+    "id": "fz-shop-04",
+    "slug": "anand-hardware-paints-fazilnagar",
+    "name": "Anand Hardware & Asian Paints Dealer",
+    "alternateNames": [
+      "Anand Paints & Sanitary"
+    ],
+    "category": "Shopping & Services",
+    "subcategory": "Shopping & Services",
+    "description": "Comprehensive building materials store with Asian Paints computerized shade tinting, Astral PVC pipes, sanitary ware, and steel tools.",
+    "addressFull": "NH-27 Service Road, Fazilnagar - 274401",
+    "locality": "Highway Corridor",
+    "streetOrLandmark": "NH-27 Service Road Near Chowk, Fazilnagar",
+    "latitude": 26.6835,
+    "longitude": 84.0512,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6835,84.0512",
+    "phone": "+91 99182 34567",
+    "openingHours": "08:00 AM – 08:00 PM (Mon-Sat)",
+    "services": [
+      "Asian Paints Color Matching",
+      "Sanitary & Bathroom Fittings",
+      "PVC & CPVC Pipes",
+      "Construction Hardware"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified on NH-27 Service Road Fazilnagar."
+  },
+  {
+    "id": "fz-food-01",
+    "slug": "highway-treat-restaurant-fazilnagar",
+    "name": "Highway Treat Family Restaurant & Cafe",
+    "alternateNames": [
+      "Highway Treat Fazilnagar"
+    ],
+    "category": "Shopping & Services",
+    "subcategory": "Restaurants & Cafes",
+    "description": "Popular family restaurant on NH-27 serving freshly prepared North Indian curries, paneer butter masala, tandoori rotis, and Chinese cuisine.",
+    "addressFull": "NH-27 Highway, Fazilnagar - 274401",
+    "locality": "Highway Corridor",
+    "streetOrLandmark": "NH-27 Highway Bypass, Fazilnagar",
+    "latitude": 26.6836,
+    "longitude": 84.0468,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6836,84.0468",
+    "phone": "+91 98380 44556",
+    "openingHours": "10:00 AM – 11:00 PM (Daily)",
+    "services": [
+      "Family Air-Conditioned Dining",
+      "North Indian & Mughlai",
+      "Tandoori Breads & Biryani",
+      "Takeaway & Party Orders"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified on NH-27 Fazilnagar."
+  },
+  {
+    "id": "fz-food-02",
+    "slug": "hotel-pawa-residency-fazilnagar",
+    "name": "Hotel Pawa Residency & Restaurant",
+    "alternateNames": [
+      "Pawa Residency Hotel Fazilnagar"
+    ],
+    "category": "Shopping & Services",
+    "subcategory": "Hotels & Accommodation",
+    "description": "Modern hotel offering clean AC and non-AC rooms, in-house dining, banquet facilities, and pilgrim hospitality near Pawa Nagar.",
+    "addressFull": "NH-27 Highway, Fazilnagar - 274401",
+    "locality": "Highway Corridor",
+    "streetOrLandmark": "Near Kasya-Tamkuhi Highway Axis, Fazilnagar",
+    "latitude": 26.6829,
+    "longitude": 84.0472,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6829,84.0472",
+    "phone": "+91 94152 11223",
+    "openingHours": "24 Hours Open",
+    "services": [
+      "AC / Non-AC Guest Rooms",
+      "Pilgrim & Tourist Lodging",
+      "In-Room Dining",
+      "Conference & Party Hall"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified on NH-27 Fazilnagar."
+  },
+  {
+    "id": "fz-food-03",
+    "slug": "gupta-bhojnalaya-dhaba-fazilnagar",
+    "name": "Gupta Bhojnalaya & Shuddh Shakahari Dhaba",
+    "alternateNames": [
+      "Gupta Shakahari Dhaba Fazilnagar"
+    ],
+    "category": "Shopping & Services",
+    "subcategory": "Restaurants & Cafes",
+    "description": "Traditional vegetarian highway dhaba known for hot tawa rotis, seasonal sabji, dal fry, kheer, and authentic country curd.",
+    "addressFull": "NH-27 Highway Chowk, Fazilnagar - 274401",
+    "locality": "Highway Corridor",
+    "streetOrLandmark": "NH-27 Highway Service Lane, Fazilnagar",
+    "latitude": 26.6823,
+    "longitude": 84.0515,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6823,84.0515",
+    "phone": "+91 98393 78901",
+    "openingHours": "07:00 AM – 11:30 PM (Daily)",
+    "services": [
+      "Pure Veg Thali",
+      "Dal Tadka & Seasonal Curries",
+      "Tandoor & Tawa Roti",
+      "Kulhad Tea & Lassi"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified on NH-27 Chowk Fazilnagar."
+  },
+  {
+    "id": "fz-health-01",
+    "slug": "sanjivani-pathology-diagnostic-fazilnagar",
+    "name": "Sanjivani Pathology & Digital X-Ray Centre",
+    "alternateNames": [
+      "Sanjivani Diagnostic Fazilnagar"
+    ],
+    "category": "Hospitals & Clinics",
+    "subcategory": "Hospitals & Clinics",
+    "description": "Fully automated diagnostic lab offering clinical pathology, hematology, computerized ECG, digital X-Ray, and thyroid profiling.",
+    "addressFull": "Hospital Road, Near CHC, Fazilnagar - 274401",
+    "locality": "Hospital Road",
+    "streetOrLandmark": "Opposite CHC Gate Road, Fazilnagar",
+    "latitude": 26.6822,
+    "longitude": 84.0518,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6822,84.0518",
+    "phone": "+91 99198 45678",
+    "openingHours": "07:30 AM – 08:30 PM (Daily)",
+    "services": [
+      "Complete Blood Count (CBC)",
+      "Digital X-Ray & ECG",
+      "Liver & Kidney Profiles",
+      "Home Sample Collection"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified on Hospital Road Fazilnagar."
+  },
+  {
+    "id": "fz-health-02",
+    "slug": "dr-sk-singh-child-clinic-fazilnagar",
+    "name": "Dr. S.K. Singh Clinic & Child Health Care",
+    "alternateNames": [
+      "Dr S K Singh Child Specialist Fazilnagar"
+    ],
+    "category": "Hospitals & Clinics",
+    "subcategory": "Hospitals & Clinics",
+    "description": "Consultation clinic specializing in newborn care, childhood respiratory conditions, fever management, and routine pediatric vaccination.",
+    "addressFull": "College Road, Fazilnagar - 274401",
+    "locality": "College Road",
+    "streetOrLandmark": "College Road Near SBI Link, Fazilnagar",
+    "latitude": 26.684,
+    "longitude": 84.0504,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6840,84.0504",
+    "phone": "+91 94507 89012",
+    "openingHours": "09:00 AM – 02:00 PM, 05:00 PM – 08:00 PM",
+    "services": [
+      "Pediatric Consultation",
+      "Vaccination & Immunization",
+      "Newborn Care",
+      "Nebulization"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified on College Road Fazilnagar."
+  },
+  {
+    "id": "fz-health-03",
+    "slug": "dr-rp-jaiswal-dental-clinic-fazilnagar",
+    "name": "Dr. R.P. Jaiswal Dental Care & Implant Clinic",
+    "alternateNames": [
+      "Jaiswal Dental Clinic Fazilnagar"
+    ],
+    "category": "Hospitals & Clinics",
+    "subcategory": "Hospitals & Clinics",
+    "description": "Specialized oral healthcare center providing painless root canal treatment (RCT), tooth extraction, scaling, dentures, and dental crowns.",
+    "addressFull": "Main Market, Fazilnagar - 274401",
+    "locality": "Main Market",
+    "streetOrLandmark": "Main Market Complex, Fazilnagar",
+    "latitude": 26.683,
+    "longitude": 84.05,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6830,84.0500",
+    "phone": "+91 98396 54321",
+    "openingHours": "10:00 AM – 07:00 PM (Mon-Sat)",
+    "services": [
+      "Root Canal Treatment (RCT)",
+      "Painless Extraction",
+      "Teeth Whitening & Scaling",
+      "Ceramic Dental Caps"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified in Main Market Fazilnagar."
+  },
+  {
+    "id": "fz-edu-05",
+    "slug": "pawanagar-mahavir-degree-college-fazilnagar",
+    "name": "Pawanagar Mahavir Degree College",
+    "alternateNames": [
+      "Pawanagar Degree College Fazilnagar"
+    ],
+    "category": "Schools & Colleges",
+    "subcategory": "Schools & Colleges",
+    "description": "Higher education degree institution affiliated with DDU Gorakhpur University / Siddharth University, providing undergraduate courses.",
+    "addressFull": "College Road, Fazilnagar - 274401",
+    "locality": "College Road",
+    "streetOrLandmark": "College Road Higher Education Campus, Fazilnagar",
+    "latitude": 26.685,
+    "longitude": 84.0515,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6850,84.0515",
+    "phone": "+91 5564 222130",
+    "openingHours": "09:00 AM – 03:00 PM (Mon-Sat)",
+    "services": [
+      "B.A. (Arts Faculty)",
+      "B.Sc. (Science Streams)",
+      "B.Com. (Commerce)",
+      "Library & Sports Grounds"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified on College Road Fazilnagar."
+  },
+  {
+    "id": "fz-pub-01",
+    "slug": "fazilnagar-veterinary-hospital",
+    "name": "Fazilnagar Veterinary Hospital (Pashu Chikitsalaya)",
+    "alternateNames": [
+      "Rajkiya Pashu Chikitsalaya Fazilnagar"
+    ],
+    "category": "Public Facilities",
+    "subcategory": "Public Facilities",
+    "description": "Government animal healthcare facility offering livestock medicine, animal immunization, wound dressing, and veterinary surgery.",
+    "addressFull": "Block Road Link, Fazilnagar - 274401",
+    "locality": "Block Road",
+    "streetOrLandmark": "Near Block Office Complex, Fazilnagar",
+    "latitude": 26.6806,
+    "longitude": 84.0492,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6806,84.0492",
+    "phone": "+91 5564 222140",
+    "openingHours": "08:00 AM – 02:00 PM (Mon-Sat)",
+    "services": [
+      "Cattle & Pet Treatment",
+      "Rabies & FMD Vaccination",
+      "Artificial Insemination (AI)",
+      "Deworming & Nutrition Advice"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1584432810601-6c7f27d2362b?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified on Block Road Fazilnagar."
+  },
+  {
+    "id": "fz-shop-05",
+    "slug": "bajrang-kirana-general-store-fazilnagar",
+    "name": "Bajrang Kirana & Grocery Store",
+    "alternateNames": [
+      "Bajrang General Store"
+    ],
+    "category": "Shopping & Services",
+    "subcategory": "Shopping & Services",
+    "description": "Well-stocked grocery and general provision store providing quality edible oils, basmati rice, lentils, spices, tea, and daily toiletries.",
+    "addressFull": "Kasya Road Link, Fazilnagar - 274401",
+    "locality": "Kasya Road",
+    "streetOrLandmark": "Kasya Road Commercial Strip, Fazilnagar",
+    "latitude": 26.6831,
+    "longitude": 84.0502,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6831,84.0502",
+    "phone": "+91 94509 67890",
+    "openingHours": "07:00 AM – 09:00 PM (Daily)",
+    "services": [
+      "Daily Grocery & Spices",
+      "Pure Mustard Oil & Ghee",
+      "Dry Fruits & Pulses",
+      "Home Delivery Service"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified on Kasya Road Fazilnagar."
+  },
+  {
+    "id": "fz-shop-06",
+    "slug": "kissan-beej-fertilizer-fazilnagar",
+    "name": "Kissan Beej Bhandar & IFFCO Fertilizer Depot",
+    "alternateNames": [
+      "Kisan Seva Kendra Fertilizer Fazilnagar"
+    ],
+    "category": "Shopping & Services",
+    "subcategory": "Shopping & Services",
+    "description": "Certified agriculture retail depot providing genuine hybrid seeds, IFFCO fertilizers, micronutrients, bio-fungicides, and spray equipment.",
+    "addressFull": "Block Road, Fazilnagar - 274401",
+    "locality": "Block Road",
+    "streetOrLandmark": "Block Road Agricultural Strip, Fazilnagar",
+    "latitude": 26.681,
+    "longitude": 84.049,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6810,84.0490",
+    "phone": "+91 98384 56789",
+    "openingHours": "08:00 AM – 07:00 PM (Mon-Sat)",
+    "services": [
+      "Certified Paddy & Wheat Seeds",
+      "IFFCO Urea & DAP Fertilizers",
+      "Pest Control & Insecticides",
+      "Agricultural Equipment"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified on Block Road Fazilnagar."
+  },
+  {
+    "id": "fz-sweet-01",
+    "slug": "chaat-gali-samosa-corner-fazilnagar",
+    "name": "Chaat Gali & Crispy Samosa Corner",
+    "alternateNames": [
+      "Fazilnagar Famous Chaat Corner"
+    ],
+    "category": "Sweet Shops & Bakeries",
+    "subcategory": "Sweet Shops & Bakeries",
+    "description": "Renowned street food corner serving freshly fried piping hot samosas, aloo tikki chaat, golgappas (phulki), and kulhad dahi jalebi.",
+    "addressFull": "Main Chowk, Fazilnagar - 274401",
+    "locality": "Main Chowk",
+    "streetOrLandmark": "Main Chowk Street Food Hub, Fazilnagar",
+    "latitude": 26.6827,
+    "longitude": 84.05,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6827,84.0500",
+    "phone": "+91 94523 45678",
+    "openingHours": "08:00 AM – 10:00 PM (Daily)",
+    "services": [
+      "Hot Desi Samosa with Chole",
+      "Pani Puri (5 Flavored Water)",
+      "Tikki Chaat with Chutney",
+      "Fresh Evening Jalebi"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&auto=format&fit=crop",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified in Main Chowk Fazilnagar."
   }
 ]

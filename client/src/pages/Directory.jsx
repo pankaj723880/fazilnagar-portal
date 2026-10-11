@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import L from "leaflet";
 import API from "../api";
+import { openGoogleMapsDirections } from "../utils/directions";
 import {
   Search,
   MapPin,
@@ -180,7 +181,7 @@ export default function Directory() {
           <h4 style="margin: 2px 0 4px; font-size: 13px; font-weight: 800; color: #0f172a;">${place.name}</h4>
           <p style="margin: 0; font-size: 11px; color: #64748b;">${place.streetOrLandmark || place.locality}</p>
           <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between;">
-            <a href="https://www.google.com/maps/dir/?api=1&destination=${place.latitude},${place.longitude}" target="_blank" style="color: #0284c7; text-decoration: underline; font-weight: 700; font-size: 10px;">Get Directions</a>
+            <a href="https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${place.latitude},${place.longitude}&travelmode=driving" target="_blank" rel="noreferrer" style="color: #0284c7; text-decoration: underline; font-weight: 700; font-size: 10px;">Get Directions</a>
           </div>
         </div>
       `);
@@ -653,29 +654,14 @@ export default function Directory() {
                     </button>
                   )}
 
-                  {selectedPlace.latitude && selectedPlace.longitude ? (
-                    <a
-                      href={`https://www.google.com/maps/dir/?api=1&destination=${selectedPlace.latitude},${selectedPlace.longitude}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition text-center flex items-center justify-center gap-1.5 shadow-xs"
-                    >
-                      <Navigation className="w-3.5 h-3.5" />
-                      <span>Directions</span>
-                    </a>
-                  ) : (
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                        selectedPlace.name + " Fazilnagar"
-                      )}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition text-center flex items-center justify-center gap-1.5 shadow-xs"
-                    >
-                      <Navigation className="w-3.5 h-3.5" />
-                      <span>Directions</span>
-                    </a>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => openGoogleMapsDirections(selectedPlace)}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition text-center flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                  >
+                    <Navigation className="w-3.5 h-3.5" />
+                    <span>Live GPS Directions</span>
+                  </button>
                 </div>
 
                 <button
@@ -739,17 +725,14 @@ export default function Directory() {
                     </span>
                   )}
 
-                  <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${
-                      place.latitude ? `${place.latitude},${place.longitude}` : encodeURIComponent(place.name + " Fazilnagar")
-                    }`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-xs py-2 rounded-xl transition text-center flex items-center justify-center gap-1 shadow-xs"
+                  <button
+                    type="button"
+                    onClick={() => openGoogleMapsDirections(place)}
+                    className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-xs py-2 rounded-xl transition text-center flex items-center justify-center gap-1 shadow-xs cursor-pointer"
                   >
                     <Navigation className="w-3 h-3" />
                     <span>Directions</span>
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
@@ -868,19 +851,14 @@ export default function Directory() {
                   </button>
                 )}
 
-                <a
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${
-                    detailModalPlace.latitude
-                      ? `${detailModalPlace.latitude},${detailModalPlace.longitude}`
-                      : encodeURIComponent(detailModalPlace.name + " Fazilnagar")
-                  }`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs py-3 rounded-xl transition text-center flex items-center justify-center gap-2"
+                <button
+                  type="button"
+                  onClick={() => openGoogleMapsDirections(detailModalPlace)}
+                  className="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs py-3 rounded-xl transition text-center flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                 >
                   <Navigation className="w-4 h-4" />
-                  <span>Open in Google Maps</span>
-                </a>
+                  <span>Navigate from My Location</span>
+                </button>
               </div>
             </div>
           </div>

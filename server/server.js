@@ -48,8 +48,34 @@ app.get(["/", "/health", "/api/health"], (req, res) => {
   });
 });
 
+import Place from "./models/Place.js";
+
+async function autoSeedPlaces() {
+  try {
+    const raw = fs.readFileSync(path.join(__dirname, "data/places.json"), "utf8");
+    const places = JSON.parse(raw);
+    const count = await Place.countDocuments();
+    if (count < places.length) {
+      console.log(`[AutoSeed] Seeding ${places.length} places into MongoDB...`);
+      for (const p of places) {
+        await Place.findOneAndUpdate(
+          { slug: p.slug },
+          { ...p },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+      }
+      console.log(`[AutoSeed] Database verified with ${places.length} places.`);
+    }
+  } catch (e) {
+    console.warn("[AutoSeed] Background seed error:", e.message);
+  }
+}
+
 // Connect DB & Routes
-connectDB();
+connectDB().then(() => {
+  autoSeedPlaces();
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/places", placesRoutes);

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import L from "leaflet";
 import API from "../api";
+import { openGoogleMapsDirections } from "../utils/directions";
 import {
   MapPin,
   ShieldCheck,
@@ -302,10 +303,11 @@ export default function TownPortal() {
 
   // Fetch live places & news from backend if available
   useEffect(() => {
-    API.get("/places?limit=50")
+    API.get("/places?limit=100")
       .then((res) => {
-        if (res.data?.data && res.data.data.length > 0) {
-          const apiPlaces = res.data.data.map((p) => ({
+        const rawList = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+        if (rawList.length > 0) {
+          const apiPlaces = rawList.map((p) => ({
             id: p._id || p.id,
             name: p.name,
             nameHindi: p.alternateNames?.[0] || p.name,
@@ -313,8 +315,8 @@ export default function TownPortal() {
             subcategory: p.subcategory,
             address: p.addressFull,
             landmark: p.streetOrLandmark || p.locality,
-            lat: p.latitude,
-            lng: p.longitude,
+            lat: p.latitude || p.lat,
+            lng: p.longitude || p.lng,
             hours: p.openingHours || "General Hours",
             phone: p.phone || "Public Listing",
             desc: p.description,
@@ -446,7 +448,7 @@ export default function TownPortal() {
   );
 
   return (
-    <div className="-mt-6 -mx-4 sm:-mx-6 bg-[#F5F7F8] font-sans text-[#18232E] selection:bg-[#B8323C] selection:text-white">
+    <div className="w-full max-w-full overflow-x-hidden bg-[#F5F7F8] font-sans text-[#18232E] selection:bg-[#B8323C] selection:text-white">
       {/* ========================================================
           SECTION 1: STICKY NAVIGATION (Modern Civic & Editorial)
           ======================================================== */}
@@ -863,14 +865,13 @@ export default function TownPortal() {
                 <a href="tel:05564222102" className="text-xs font-bold text-[#18232E] hover:text-[#B8323C]">
                   📞 05564-222102
                 </a>
-                <a
-                  href="https://www.google.com/maps/dir/?api=1&destination=26.6818,84.0531"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs font-bold text-[#168568] hover:underline"
+                <button
+                  type="button"
+                  onClick={() => openGoogleMapsDirections({ name: "Community Health Centre (CHC)", lat: 26.6818, lng: 84.0531, landmark: "Hospital Road, Fazilnagar" })}
+                  className="text-xs font-bold text-[#168568] hover:underline cursor-pointer"
                 >
                   Directions
-                </a>
+                </button>
               </div>
             </div>
 
@@ -890,14 +891,13 @@ export default function TownPortal() {
                 <a href="tel:112" className="text-xs font-bold text-[#18232E] hover:text-[#B8323C]">
                   🚨 Helpline: 112
                 </a>
-                <a
-                  href="https://www.google.com/maps/dir/?api=1&destination=26.6839,84.0501"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs font-bold text-[#168568] hover:underline"
+                <button
+                  type="button"
+                  onClick={() => openGoogleMapsDirections({ name: "Fazilnagar Police Chowki", lat: 26.6839, lng: 84.0501, landmark: "NH-27 Highway Chowk, Fazilnagar" })}
+                  className="text-xs font-bold text-[#168568] hover:underline cursor-pointer"
                 >
                   Directions
-                </a>
+                </button>
               </div>
             </div>
 
@@ -1064,15 +1064,14 @@ export default function TownPortal() {
                 </div>
 
                 <div className="pt-4 border-t border-[#E1E6EA] mt-4 space-y-2">
-                  <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${selectedPlace.lat},${selectedPlace.lng}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full inline-flex items-center justify-center gap-2 bg-[#168568] hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-xs"
+                  <button
+                    type="button"
+                    onClick={() => openGoogleMapsDirections(selectedPlace)}
+                    className="w-full inline-flex items-center justify-center gap-2 bg-[#168568] hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-xs cursor-pointer"
                   >
                     <Navigation className="w-3.5 h-3.5" />
                     <span>Get Directions in Google Maps</span>
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1096,14 +1095,13 @@ export default function TownPortal() {
                     </div>
                     <div className="pt-3 border-t border-[#E1E6EA] mt-3 flex items-center justify-between text-xs">
                       <span className="text-[#647180] text-[11px]">{p.hours}</span>
-                      <a
-                        href={`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-[#168568] font-bold hover:underline flex items-center gap-1"
+                      <button
+                        type="button"
+                        onClick={() => openGoogleMapsDirections(p)}
+                        className="text-[#168568] font-bold hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         Directions <ChevronRight className="w-3 h-3" />
-                      </a>
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -1154,14 +1152,13 @@ export default function TownPortal() {
                 <a href="tel:09839245678" className="font-bold text-[#18232E] hover:text-[#B8323C]">
                   Call Shop
                 </a>
-                <a
-                  href="https://www.google.com/maps/dir/?api=1&destination=26.6833,84.0502"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-bold text-[#168568] hover:underline"
+                <button
+                  type="button"
+                  onClick={() => openGoogleMapsDirections({ name: "Prashant Sweet House", lat: 26.6833, lng: 84.0502, landmark: "Main Market, NH-27 Chowk, Fazilnagar" })}
+                  className="font-bold text-[#168568] hover:underline cursor-pointer"
                 >
                   Directions
-                </a>
+                </button>
               </div>
             </div>
 
@@ -1179,14 +1176,13 @@ export default function TownPortal() {
                 <a href="tel:09450987654" className="font-bold text-[#18232E] hover:text-[#B8323C]">
                   Call Shop
                 </a>
-                <a
-                  href="https://www.google.com/maps/dir/?api=1&destination=26.6844,84.0506"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-bold text-[#168568] hover:underline"
+                <button
+                  type="button"
+                  onClick={() => openGoogleMapsDirections({ name: "Kanha Sweets", lat: 26.6844, lng: 84.0506, landmark: "College Road Crossing, Fazilnagar" })}
+                  className="font-bold text-[#168568] hover:underline cursor-pointer"
                 >
                   Directions
-                </a>
+                </button>
               </div>
             </div>
 
@@ -1204,14 +1200,13 @@ export default function TownPortal() {
                 <a href="tel:09450812345" className="font-bold text-[#18232E] hover:text-[#B8323C]">
                   Call Chemist
                 </a>
-                <a
-                  href="https://www.google.com/maps/dir/?api=1&destination=26.6846,84.0503"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-bold text-[#168568] hover:underline"
+                <button
+                  type="button"
+                  onClick={() => openGoogleMapsDirections({ name: "Amit Medical Store", lat: 26.6846, lng: 84.0503, landmark: "College Road, Fazilnagar" })}
+                  className="font-bold text-[#168568] hover:underline cursor-pointer"
                 >
                   Directions
-                </a>
+                </button>
               </div>
             </div>
 
@@ -1229,14 +1224,13 @@ export default function TownPortal() {
                 <a href="tel:09838877665" className="font-bold text-[#18232E] hover:text-[#B8323C]">
                   Call Store
                 </a>
-                <a
-                  href="https://www.google.com/maps/dir/?api=1&destination=26.6827,84.0486"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-bold text-[#168568] hover:underline"
+                <button
+                  type="button"
+                  onClick={() => openGoogleMapsDirections({ name: "Maurya Electronics & Mobile", lat: 26.6827, lng: 84.0486, landmark: "Babu Bazar, Fazilnagar" })}
+                  className="font-bold text-[#168568] hover:underline cursor-pointer"
                 >
                   Directions
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -1289,14 +1283,13 @@ export default function TownPortal() {
                 <a href="tel:09452089540" className="font-bold text-[#18232E] hover:text-[#B8323C]">
                   📞 094520 89540
                 </a>
-                <a
-                  href="https://www.google.com/maps/dir/?api=1&destination=26.6852,84.0508"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-bold text-[#168568] hover:underline"
+                <button
+                  type="button"
+                  onClick={() => openGoogleMapsDirections({ name: "Sanskar Central Academy", lat: 26.6852, lng: 84.0508, landmark: "Durga Bhawan Campus, College Road, Fazilnagar" })}
+                  className="font-bold text-[#168568] hover:underline cursor-pointer"
                 >
                   Directions
-                </a>
+                </button>
               </div>
             </div>
 
@@ -1319,14 +1312,13 @@ export default function TownPortal() {
                 <a href="tel:05564222115" className="font-bold text-[#18232E] hover:text-[#B8323C]">
                   📞 05564-222115
                 </a>
-                <a
-                  href="https://www.google.com/maps/dir/?api=1&destination=26.6848,84.0510"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-bold text-[#168568] hover:underline"
+                <button
+                  type="button"
+                  onClick={() => openGoogleMapsDirections({ name: "Pawanagar Mahavir Inter College", lat: 26.6848, lng: 84.0510, landmark: "College Road, Fazilnagar" })}
+                  className="font-bold text-[#168568] hover:underline cursor-pointer"
                 >
                   Directions
-                </a>
+                </button>
               </div>
             </div>
 
@@ -1349,14 +1341,13 @@ export default function TownPortal() {
                 <a href="tel:09919523411" className="font-bold text-[#18232E] hover:text-[#B8323C]">
                   📞 099195 23411
                 </a>
-                <a
-                  href="https://www.google.com/maps/dir/?api=1&destination=26.6821,84.0526"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-bold text-[#168568] hover:underline"
+                <button
+                  type="button"
+                  onClick={() => openGoogleMapsDirections({ name: "The Hermitage School", lat: 26.6821, lng: 84.0526, landmark: "Hospital Road, Fazilnagar" })}
+                  className="font-bold text-[#168568] hover:underline cursor-pointer"
                 >
                   Directions
-                </a>
+                </button>
               </div>
             </div>
           </div>
