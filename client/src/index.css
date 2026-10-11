@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --deep-slate: #18232E;
+    --crimson: #B8323C;
+    --emerald: #168568;
+    --soft-white: #F5F7F8;
+    --pure-white: #FFFFFF;
+    --border-grey: #E1E6EA;
+    --secondary-text: #647180;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #F5F7F8;
+    color: #18232E;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  .font-hindi {
+    font-family: 'Noto Sans Devanagari', sans-serif;
+  }
+}
+
+/* Modern Civic & Editorial Custom Color Utilities */
+.bg-deep-slate { background-color: #18232E; }
+.bg-crimson { background-color: #B8323C; }
+.bg-emerald-civic { background-color: #168568; }
+.bg-soft-white { background-color: #F5F7F8; }
+.bg-pure-white { background-color: #FFFFFF; }
+
+.text-deep-slate { color: #18232E; }
+.text-crimson { color: #B8323C; }
+.text-emerald-civic { color: #168568; }
+.text-secondary { color: #647180; }
+
+.border-civic { border-color: #E1E6EA; }
+.border-crimson { border-color: #B8323C; }
+.border-emerald-civic { border-color: #168568; }
+
+/* Editorial Card & Precision Geometry */
+.civic-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E1E6EA;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(24, 35, 46, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.civic-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 12px 0 rgba(24, 35, 46, 0.08);
+}
+
+/* Minimal editorial scrollbar */
+.civic-scrollbar::-webkit-scrollbar {
+  height: 5px;
+  width: 5px;
+}
+.civic-scrollbar::-webkit-scrollbar-track {
+  background: #F5F7F8;
+  border-radius: 9999px;
+}
+.civic-scrollbar::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+.civic-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}

@@ -1,0 +1,16 @@
+node_modules/
+client/node_modules/
+server/node_modules/
+.env
+.env.local
+.env.*.local
+client/.env
+server/.env
+!.env.example
+client/.env.example
+dist/
+client/dist/
+server/uploads/*
+!server/uploads/.gitkeep
+.DS_Store
+*.log

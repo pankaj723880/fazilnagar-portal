@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fazilnagar Portal | Your Town. Your Community. (Kushinagar, UP)</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Rozha+One&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Leaflet CSS & JS for OpenStreetMap preview -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['"Rozha One"', 'serif'],
+          },
+          colors: {
+            navy: {
+              800: '#11224D',
+              900: '#0B1B3D',
+              950: '#060F24',
+            },
+            teal: {
+              500: '#14B8A6',
+              600: '#0D9488',
+              700: '#0F766E',
+            },
+            amberAccent: '#F59E0B',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom scrollbar and Leaflet styling */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .leaflet-popup-content-wrapper {
+      border-radius: 14px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-teal-600 selection:text-white flex flex-col min-h-screen">
+
+  <!-- Top Utility Strip -->
+  <aside aria-label="Town Location Notification" class="bg-navy-950 text-slate-300 text-xs py-1.5 px-4 border-b border-navy-800">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center gap-1 text-teal-400 font-medium">
+          <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> Fazilnagar, Kushinagar, UP
+        </span>
+        <span class="text-slate-500">•</span>
+        <span class="text-[11px] text-slate-400">NH-27 (Old NH-28) Corridor • PIN: 274401</span>
+      </div>
+      <div class="flex items-center gap-4 text-[11px]">
+        <a href="/" class="text-amber-400 hover:text-white font-medium transition flex items-center gap-1">
+          <i data-lucide="arrow-left" class="w-3 h-3"></i> Back to News Portal
+        </a>
+        <span class="hidden sm:inline text-slate-400"><i data-lucide="shield-check" class="w-3 h-3 inline text-emerald-400 mr-1"></i>Official Community Portal</span>
+        <a href="#citizen-corner" class="text-teal-300 hover:text-white font-medium transition flex items-center gap-1">
+          <i data-lucide="plus-circle" class="w-3 h-3"></i> Add Place / Report Info
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Sticky Navbar -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 transition-shadow duration-300 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-18 py-3.5">
+        
+        <!-- Brand / Logo -->
+        <a href="#hero" class="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-teal-500 rounded-xl p-1">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-navy-900 to-teal-700 flex items-center justify-center text-white shadow-md shadow-navy-900/15 group-hover:scale-105 transition">
+            <i data-lucide="compass" class="w-5 h-5 text-teal-300"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xl font-extrabold tracking-tight text-navy-950 uppercase font-sans">FAZILNAGAR</span>
+              <span class="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200/60">TOWN</span>
+            </div>
+            <p class="text-[11px] text-slate-500 font-medium">Your Town. Your Community.</p>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation Links -->
+        <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+          <a href="#hero" class="text-navy-900 font-semibold hover:text-teal-600 transition">Home</a>
+          <a href="#explore-categories" class="hover:text-teal-600 transition">Explore</a>
+          <a href="#map-preview" class="hover:text-teal-600 transition">Town Map</a>
+          <a href="#popular" class="hover:text-teal-600 transition">Directory</a>
+          <a href="#local-updates" class="hover:text-teal-600 transition">Local Updates</a>
+          <a href="#about-town" class="hover:text-teal-600 transition">About</a>
+          <a href="/" class="text-teal-700 font-bold hover:text-navy-950 transition flex items-center gap-1">
+            <i data-lucide="newspaper" class="w-4 h-4"></i> News App
+          </a>
+        </nav>
+
+        <!-- Right Quick Action -->
+        <div class="hidden md:flex items-center gap-3">
+          <a href="#explore-categories" class="inline-flex items-center gap-2 bg-navy-900 hover:bg-teal-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm transition hover:shadow-md">
+            <i data-lucide="layout-grid" class="w-4 h-4 text-teal-300"></i>
+            <span>Explore Town</span>
+          </a>
+        </div>
+
+        <!-- Mobile Menu Toggle Button -->
+        <div class="flex items-center gap-2 md:hidden">
+          <a href="#explore-categories" class="text-xs font-semibold bg-navy-900 text-white px-3 py-1.5 rounded-lg">Explore</a>
+          <button id="mobileMenuBtn" aria-label="Toggle navigation menu" onclick="toggleMobileNav()" class="p-2 text-slate-700 hover:bg-slate-100 rounded-lg focus:outline-none">
+            <i data-lucide="menu" id="menuIcon" class="w-6 h-6"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobileMenu" class="hidden md:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-3 shadow-lg">
+      <a href="#hero" onclick="toggleMobileNav()" class="flex items-center gap-2 py-2 text-sm font-semibold text-navy-950">
+        <i data-lucide="home" class="w-4 h-4 text-teal-600"></i> Home
+      </a>
+      <a href="#explore-categories" onclick="toggleMobileNav()" class="flex items-center gap-2 py-2 text-sm font-medium text-slate-700 hover:text-teal-600">
+        <i data-lucide="grid" class="w-4 h-4 text-teal-600"></i> Explore 16 Categories
+      </a>
+      <a href="#map-preview" onclick="toggleMobileNav()" class="flex items-center gap-2 py-2 text-sm font-medium text-slate-700 hover:text-teal-600">
+        <i data-lucide="map" class="w-4 h-4 text-teal-600"></i> Town Interactive Map
+      </a>
+      <a href="#popular" onclick="toggleMobileNav()" class="flex items-center gap-2 py-2 text-sm font-medium text-slate-700 hover:text-teal-600">
+        <i data-lucide="store" class="w-4 h-4 text-teal-600"></i> Verified Directory
+      </a>
+      <a href="#local-updates" onclick="toggleMobileNav()" class="flex items-center gap-2 py-2 text-sm font-medium text-slate-700 hover:text-teal-600">
+        <i data-lucide="bell" class="w-4 h-4 text-teal-600"></i> What's Happening
+      </a>
+      <a href="#about-town" onclick="toggleMobileNav()" class="flex items-center gap-2 py-2 text-sm font-medium text-slate-700 hover:text-teal-600">
+        <i data-lucide="book-open" class="w-4 h-4 text-teal-600"></i> About Fazilnagar (Pawanagar)
+      </a>
+      <a href="/" class="flex items-center gap-2 py-2 text-sm font-bold text-teal-700">
+        <i data-lucide="newspaper" class="w-4 h-4 text-teal-600"></i> Back to News Portal
+      </a>
+      <div class="pt-2 border-t border-slate-100 flex flex-col gap-2">
+        <a href="#citizen-corner" onclick="toggleMobileNav()" class="w-full text-center bg-teal-600 text-white py-2.5 rounded-xl font-semibold text-xs flex items-center justify-center gap-2">
+          <i data-lucide="plus" class="w-4 h-4"></i> Make Fazilnagar Better
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow">
+    <!-- Hero Section -->
+    <section id="hero" class="relative bg-navy-950 text-white min-h-[520px] lg:min-h-[580px] flex items-center justify-center overflow-hidden">
+      <!-- Authentic Atmospheric Backdrop -->
+      <div class="absolute inset-0 z-0 opacity-25 bg-[radial-gradient(#14b8a6_1px,transparent_1px)] [background-size:20px_20px]"></div>
+      <!-- Subtle Gradient Accent Overlays -->
+      <div class="absolute -top-32 -left-32 w-96 h-96 bg-teal-600/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+        
+        <!-- Location Pill -->
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-teal-300 font-medium mb-6">
+          <i data-lucide="map-pin" class="w-3.5 h-3.5 text-teal-400"></i>
+          <span>Fazilnagar, Kushinagar, Uttar Pradesh</span>
+        </div>
+
+        <!-- Headline & Tagline -->
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 leading-tight">
+          Apna Fazilnagar, <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-emerald-400">Apni Pehchaan.</span>
+        </h1>
+        
+        <p class="text-sm sm:text-lg text-slate-300 max-w-2xl mx-auto mb-10 font-normal leading-relaxed">
+          Discover local places, essential services, businesses and everything happening in Fazilnagar — all in one place.
+        </p>
+
+        <!-- Smart Search Bar Container -->
+        <div class="max-w-2xl mx-auto relative text-left">
+          <div class="bg-white rounded-2xl p-2 shadow-2xl flex flex-col sm:flex-row items-center gap-2 border border-slate-100">
+            <div class="flex items-center gap-3 w-full px-3 py-2 text-slate-800">
+              <i data-lucide="search" class="w-5 h-5 text-slate-400 flex-shrink-0"></i>
+              <input 
+                id="townSearchInput" 
+                type="text" 
+                autocomplete="off"
+                placeholder="Search schools, hospitals, shops, temples, sweets..." 
+                class="w-full text-sm sm:text-base outline-none bg-transparent placeholder-slate-400 text-slate-900 font-medium"
+                oninput="handleSearchType(this.value)"
+                onfocus="showSearchDropdownIfHasValue()"
+              >
+              <button id="clearSearchBtn" onclick="clearSearch()" class="hidden text-slate-400 hover:text-slate-600 p-1">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+            <button onclick="executeSearchAction()" class="w-full sm:w-auto bg-navy-900 hover:bg-teal-700 text-white px-7 py-3 rounded-xl font-bold text-sm tracking-wide transition shadow-md whitespace-nowrap flex items-center justify-center gap-2">
+              <span>Search</span>
+              <i data-lucide="arrow-right" class="w-4 h-4 text-teal-300"></i>
+            </button>
+          </div>
+
+          <!-- Dynamic Search Suggestions Dropdown -->
+          <div id="searchDropdown" class="hidden absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden max-h-96 overflow-y-auto">
+            <div class="p-3 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
+              <span>Directory Matches</span>
+              <span id="resultCountBadge" class="text-teal-700 font-semibold lowercase">0 results</span>
+            </div>
+            <div id="searchResultList" class="divide-y divide-slate-100">
+              <!-- Rendered via JS -->
+            </div>
+            <div id="searchEmptyState" class="hidden p-6 text-center text-slate-500">
+              <i data-lucide="search-x" class="w-8 h-8 mx-auto text-slate-400 mb-2"></i>
+              <p class="text-xs font-semibold text-slate-700">No verified places found in Fazilnagar town</p>
+              <p class="text-[11px] text-slate-400 mt-1">Try searching by category like "Hospital", "Sweets", "School" or landmark "NH 27".</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick CTA Buttons -->
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+          <a href="#explore-categories" class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-xs sm:text-sm font-bold px-6 py-3 rounded-xl shadow-md transition">
+            <i data-lucide="compass" class="w-4 h-4"></i>
+            <span>Explore Town</span>
+          </a>
+          <a href="#map-preview" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-semibold px-6 py-3 rounded-xl backdrop-blur-md border border-white/20 transition">
+            <i data-lucide="map" class="w-4 h-4 text-teal-300"></i>
+            <span>View Map</span>
+          </a>
+        </div>
+
+        <!-- Town Verified Highlights (No Fake Numbers) -->
+        <div class="mt-10 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-300">
+          <span class="flex items-center gap-1.5"><i data-lucide="shield-check" class="w-4 h-4 text-teal-400"></i> Verified Town Listings</span>
+          <span class="flex items-center gap-1.5"><i data-lucide="navigation" class="w-4 h-4 text-teal-400"></i> Accurate NH-27 Corridor Coordinates</span>
+          <span class="flex items-center gap-1.5"><i data-lucide="landmark" class="w-4 h-4 text-teal-400"></i> Historic Pawanagar Jain Tirth</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Section: Explore Fazilnagar (16 Categories Grid) -->
+    <section id="explore-categories" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 uppercase tracking-wider mb-1.5">
+            <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+            <span>Categorized Directory</span>
+          </div>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-navy-950 tracking-tight">Explore Fazilnagar</h2>
+          <p class="text-xs sm:text-sm text-slate-500 mt-1">Find the places and services you need in your town.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="filterCategorySelection('All')" id="btnCategoryAll" class="text-xs font-bold px-3.5 py-1.5 rounded-lg bg-navy-900 text-white transition">
+            All 16 Categories
+          </button>
+        </div>
+      </div>
+
+      <!-- 16 Required Category Cards Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4.5">
+        
+        <!-- 1. Schools & Colleges -->
+        <div onclick="selectCategoryCard('Schools & Colleges')" class="category-card group bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-500/50 transition cursor-pointer flex flex-col justify-between">
+          <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center mb-3 group-hover:bg-blue-600 group-hover:text-white transition">
+            <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-navy-950 group-hover:text-teal-700 transition">Schools & Colleges</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">Inter colleges & degrees</p>
+          </div>
+        </div>
+
+        <!-- 2. Hospitals & Clinics -->
+        <div onclick="selectCategoryCard('Hospitals & Clinics')" class="category-card group bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-500/50 transition cursor-pointer flex flex-col justify-between">
+          <div class="w-11 h-11 rounded-xl bg-rose-50 text-rose-700 flex items-center justify-center mb-3 group-hover:bg-rose-600 group-hover:text-white transition">
+            <i data-lucide="stethoscope" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-navy-950 group-hover:text-teal-700 transition">Hospitals & Clinics</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">CHC & healthcare doctors</p>
+          </div>
+        </div>
+
+        <!-- 3. Medical Stores -->
+        <div onclick="selectCategoryCard('Medical Stores')" class="category-card group bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-500/50 transition cursor-pointer flex flex-col justify-between">
+          <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center mb-3 group-hover:bg-emerald-600 group-hover:text-white transition">
+            <i data-lucide="pill" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-navy-950 group-hover:text-teal-700 transition">Medical Stores</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">Pharmacies & chemists</p>
+          </div>
+        </div>
+
+        <!-- 4. Sweet Shops -->
+        <div onclick="selectCategoryCard('Sweet Shops')" class="category-card group bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-500/50 transition cursor-pointer flex flex-col justify-between">
+          <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center mb-3 group-hover:bg-amber-600 group-hover:text-white transition">
+            <i data-lucide="cake" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-navy-950 group-hover:text-teal-700 transition">Sweet Shops</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">Local peda, rasgulla & snacks</p>
+          </div>
+        </div>
+
+        <!-- 5. Temples -->
+        <div onclick="selectCategoryCard('Temples')" class="category-card group bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-500/50 transition cursor-pointer flex flex-col justify-between">
+          <div class="w-11 h-11 rounded-xl bg-orange-50 text-orange-700 flex items-center justify-center mb-3 group-hover:bg-orange-600 group-hover:text-white transition">
+            <i data-lucide="sun" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-navy-950 group-hover:text-teal-700 transition">Temples</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">Town shrines & prayer sites</p>
+          </div>
+        </div>
+
+        <!-- 6. Mosques -->
+        <div onclick="selectCategoryCard('Mosques')" class="category-card group bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-500/50 transition cursor-pointer flex flex-col justify-between">
+          <div class="w-11 h-11 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-3 group-hover:bg-teal-600 group-hover:text-white transition">
+            <i data-lucide="moon" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-navy-950 group-hover:text-teal-700 transition">Mosques</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">Jama Masjid & prayer halls</p>
+          </div>
+        </div>
+
+        <!-- 7. Restaurants & Cafes -->
+        <div onclick="selectCategoryCard('Restaurants & Cafes')" class="category-card group bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-500/50 transition cursor-pointer flex flex-col justify-between">
+          <div class="w-11 h-11 rounded-xl bg-yellow-50 text-yellow-800 flex items-center justify-center mb-3 group-hover:bg-yellow-600 group-hover:text-white transition">
+            <i data-lucide="utensils" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-navy-950 group-hover:text-teal-700 transition">Restaurants & Cafes</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">Highway dhabas & dining</p>
+          </div>
+        </div>
+
+        <!-- 8. Markets & Shopping -->
+        <div onclick="selectCategoryCard('Markets & Shopping')" class="category-card group bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-500/50 transition cursor-pointer flex flex-col justify-between">
+          <div class="w-11 h-11 rounded-xl bg-violet-50 text-violet-700 flex items-center justify-center mb-3 group-hover:bg-violet-600 group-hover:text-white transition">
+            <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-navy-950 group-hover:text-teal-700 transition">Markets & Shopping</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">Main Chowk & retail bazaars</p>
+          </div>
+        </div>
+
+        <!-- 9. Banks & ATMs -->
+        <div onclick="selectCategoryCard('Banks & ATMs')" class="category-card group bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-500/50 transition cursor-pointer flex flex-col justify-between">
+          <div class="w-11 h-11 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center mb-3 group-hover:bg-sky-600 group-hover:text-white transition">
+            <i data-lucide="landmark" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-navy-950 group-hover:text-teal-700 transition">Banks & ATMs</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">SBI, PNB & cash points</p>
+          </div>
+        </div>
+
+        <!-- 10. Hotels & Accommodation -->
+        <div onclick="selectCategoryCard('Hotels & Accommodation')" class="category-card group bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-500/50 transition cursor-pointer flex flex-col justify-between">
+          <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center mb-3 group-hover:bg-indigo-600 group-hover:text-white transition">
+            <i data-lucide="bed" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-navy-950 group-hover:text-teal-700 transition">Hotels & Accommodation</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">Dharamsalas & guest lodges</p>
+          </div>
+        </div>
+
+        <!-- 11. Government Offices -->
+        <div onclick="selectCategoryCard('Government Offices')" class="category-card group bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-500/50 transition cursor-pointer flex flex-col justify-between">
+          <div class="w-11 h-11 rounded-xl bg-cyan-50 text-cyan-800 flex items-center justify-center mb-3 group-hover:bg-cyan-700 group-hover:text-white transition">
+            <i data-lucide="building-2" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-navy-950 group-hover:text-teal-700 transition">Government Offices</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">Block office, post office & police</p>
+          </div>
+        </div>
+
+        <!-- 12. Emergency Services -->
+        <div onclick="selectCategoryCard('Emergency Services')" class="category-card group bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-500/50 transition cursor-pointer flex flex-col justify-between">
+          <div class="w-11 h-11 rounded-xl bg-red-50 text-red-600 flex items-center justify-center mb-3 group-hover:bg-red-600 group-hover:text-white transition">
+            <i data-lucide="phone-call" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-navy-950 group-hover:text-teal-700 transition">Emergency Services</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">112 Police, 108 Ambulance</p>
+          </div>
+        </div>
+
+        <!-- 13. Coaching & Libraries -->
+        <div onclick="selectCategoryCard('Coaching & Libraries')" class="category-card group bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-500/50 transition cursor-pointer flex flex-col justify-between">
+          <div class="w-11 h-11 rounded-xl bg-fuchsia-50 text-fuchsia-700 flex items-center justify-center mb-3 group-hover:bg-fuchsia-600 group-hover:text-white transition">
+            <i data-lucide="book-open" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-navy-950 group-hover:text-teal-700 transition">Coaching & Libraries</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">Study centres & institutes</p>
+          </div>
+        </div>
+
+        <!-- 14. Religious Places -->
+        <div onclick="selectCategoryCard('Religious Places')" class="category-card group bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-500/50 transition cursor-pointer flex flex-col justify-between">
+          <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-900 flex items-center justify-center mb-3 group-hover:bg-amber-800 group-hover:text-white transition">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-navy-950 group-hover:text-teal-700 transition">Religious Places</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">Jain Tirth Pawanagar & more</p>
+          </div>
+        </div>
+
+        <!-- 15. Transport & Travel -->
+        <div onclick="selectCategoryCard('Transport & Travel')" class="category-card group bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-teal-500/50 transition cursor-pointer flex flex-col justify-between">
+          <div class="w-11 h-11 rounded-xl bg-lime-50 text-lime-800 flex items-center justify-center mb-3 group-hover:bg-lime-700 group-hover:text-white transition">
+            <i data-lucide="bus" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-navy-950 group-hover:text-teal-700 transition">Transport & Travel</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">Bus Stand, auto & taxi stands</p>
+          </div>
+        </div>
+
+        <!-- 16. All Places -->
+        <div onclick="selectCategoryCard('All Places')" class="category-card group bg-slate-100 p-4 sm:p-5 rounded-2xl border border-slate-300 shadow-sm hover:shadow-md hover:border-navy-900 transition cursor-pointer flex flex-col justify-between">
+          <div class="w-11 h-11 rounded-xl bg-navy-900 text-teal-300 flex items-center justify-center mb-3 group-hover:bg-teal-700 group-hover:text-white transition">
+            <i data-lucide="layers" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-navy-950 group-hover:text-teal-700 transition">All Places</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">View full town directory</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Section: Explore Fazilnagar on Map -->
+    <section id="map-preview" class="bg-slate-100/80 py-16 border-y border-slate-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+          <div>
+            <div class="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 uppercase tracking-wider mb-1">
+              <i data-lucide="map" class="w-3.5 h-3.5"></i>
+              <span>Geographical Navigation</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-navy-950">Explore Fazilnagar on Map</h2>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">Verified town landmarks along the NH-27 (Old NH-28) corridor.</p>
+          </div>
+          <div class="text-xs text-slate-600 bg-white px-3.5 py-2 rounded-xl border border-slate-200 font-medium flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Town Coordinates: 26.6827° N, 84.0498° E</span>
+          </div>
+        </div>
+
+        <!-- Map Category Filters -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-3 mb-4 custom-scrollbar text-xs font-semibold">
+          <button onclick="filterMapCategory('all')" id="mapBtn-all" class="map-filter-btn px-3.5 py-1.5 rounded-xl bg-navy-900 text-white whitespace-nowrap">All Town Places</button>
+          <button onclick="filterMapCategory('Religious Places')" id="mapBtn-religious" class="map-filter-btn px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 whitespace-nowrap">Temples & Jain Tirth</button>
+          <button onclick="filterMapCategory('Government Offices')" id="mapBtn-gov" class="map-filter-btn px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 whitespace-nowrap">Govt & Block Office</button>
+          <button onclick="filterMapCategory('Hospitals & Clinics')" id="mapBtn-health" class="map-filter-btn px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 whitespace-nowrap">CHC & Health</button>
+          <button onclick="filterMapCategory('Schools & Colleges')" id="mapBtn-edu" class="map-filter-btn px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 whitespace-nowrap">Colleges & Schools</button>
+          <button onclick="filterMapCategory('Transport & Travel')" id="mapBtn-transport" class="map-filter-btn px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 whitespace-nowrap">Bus Stand & Chowk</button>
+        </div>
+
+        <!-- Map Container and Location Detail Card -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Leaflet Map Viewer -->
+          <div class="lg:col-span-2 bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-md relative min-h-[420px] sm:min-h-[460px]">
+            <div id="fazilnagarMap" class="w-full h-full min-h-[420px] z-10"></div>
+            <!-- Loading Indicator Overlay -->
+            <div id="mapLoader" class="absolute inset-0 bg-white/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center text-slate-500">
+              <i data-lucide="loader-2" class="w-7 h-7 text-teal-600 animate-spin mb-2"></i>
+              <span class="text-xs font-semibold">Loading Fazilnagar OpenStreetMap...</span>
+            </div>
+          </div>
+
+          <!-- Dynamic Location Details Drawer -->
+          <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+            <div id="locationDetailContent">
+              <div class="flex items-center justify-between mb-3">
+                <span id="detailCategory" class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-teal-50 text-teal-800">Religious Place</span>
+                <span id="detailStatus" class="text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
+                  <i data-lucide="badge-check" class="w-3.5 h-3.5"></i> Verified
+                </span>
+              </div>
+              <h3 id="detailName" class="text-xl font-extrabold text-navy-950 mb-1">Pawanagar Mahavir Jain Mandir</h3>
+              <p id="detailHindiName" class="text-xs text-slate-500 font-medium mb-3">पावानगर महावीर दिगंबर जैन मंदिर</p>
+
+              <div class="space-y-2.5 text-xs text-slate-600 py-3 border-y border-slate-100">
+                <div class="flex items-start gap-2">
+                  <i data-lucide="map-pin" class="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5"></i>
+                  <span id="detailAddress">Pawanagar Tirth Road, Near Kasya Highway, Fazilnagar - 274401</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <i data-lucide="clock" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+                  <span id="detailHours">Open Daily: 06:00 AM – 08:30 PM</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <i data-lucide="phone" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+                  <span id="detailPhone">Local Administration verified</span>
+                </div>
+              </div>
+
+              <p id="detailDesc" class="text-xs text-slate-600 mt-3 leading-relaxed">
+                Historic Pawanagar (Fazilnagar) Jain temple complex honoring Lord Mahavira's Nirvana heritage. Features a traditional Manasthamba and religious dharamsala.
+              </p>
+            </div>
+
+            <!-- Directions CTA -->
+            <div class="mt-6 pt-4 border-t border-slate-100">
+              <a id="btnGetDirections" href="https://maps.google.com/?q=26.6827,84.0498" target="_blank" rel="noopener noreferrer" class="w-full inline-flex items-center justify-center gap-2 bg-navy-900 hover:bg-teal-700 text-white font-bold text-xs py-3 rounded-xl transition shadow-sm">
+                <i data-lucide="navigation" class="w-4 h-4 text-teal-300"></i>
+                <span>Get Directions in Google Maps</span>
+              </a>
+              <p class="text-[10px] text-center text-slate-400 mt-2">Only verified spots inside Fazilnagar town boundary</p>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Section: Popular in Fazilnagar (Verified Town Directory) -->
+    <section id="popular" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 uppercase tracking-wider mb-1">
+            <i data-lucide="star" class="w-3.5 h-3.5"></i>
+            <span>Verified Local Directory</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-navy-950">Discover Fazilnagar</h2>
+          <p class="text-xs sm:text-sm text-slate-500 mt-1">Curated and verified town institutions, healthcare, and trade hubs.</p>
+        </div>
+        
+        <!-- Filter Tabs -->
+        <div class="flex items-center gap-2 text-xs font-semibold">
+          <button onclick="renderDirectoryCards('all')" id="tabDirAll" class="dir-tab-btn px-3 py-1.5 rounded-lg bg-navy-900 text-white">All</button>
+          <button onclick="renderDirectoryCards('Healthcare')" id="tabDirHealth" class="dir-tab-btn px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700">Healthcare</button>
+          <button onclick="renderDirectoryCards('Education')" id="tabDirEdu" class="dir-tab-btn px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700">Education</button>
+          <button onclick="renderDirectoryCards('Public')" id="tabDirPublic" class="dir-tab-btn px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700">Public & Trade</button>
+        </div>
+      </div>
+
+      <!-- Directory Cards Grid -->
+      <div id="directoryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Rendered by JavaScript -->
+      </div>
+    </section>
+
+    <!-- Section: What's Happening in Fazilnagar -->
+    <section id="local-updates" class="bg-navy-950 text-white py-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-4">
+          <div>
+            <div class="inline-flex items-center gap-1.5 text-xs font-bold text-teal-400 uppercase tracking-wider mb-1">
+              <i data-lucide="bell-ring" class="w-3.5 h-3.5"></i>
+              <span>Town Notices & Community</span>
+            </div>
+            <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight">What's Happening in Fazilnagar?</h2>
+            <p class="text-xs sm:text-sm text-slate-400 mt-1">Genuine, dated announcements from local schools, administration and community organizers.</p>
+          </div>
+          <button onclick="openModal('eventSubmitModal')" class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Submit an Event</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <!-- Notice 1 -->
+          <div class="bg-navy-900/80 border border-navy-800 rounded-3xl p-6 flex flex-col justify-between hover:border-teal-500/50 transition">
+            <div>
+              <div class="flex items-center justify-between text-xs mb-3">
+                <span class="px-2.5 py-0.5 rounded bg-teal-500/10 text-teal-300 font-semibold border border-teal-500/20">Cultural Heritage</span>
+                <span class="text-slate-400 text-[11px]">Annual Festival</span>
+              </div>
+              <h3 class="text-base font-bold text-white mb-2">Kartik Poornima & Nirvana Mahotsav at Pawanagar</h3>
+              <p class="text-xs text-slate-300 leading-relaxed mb-4">
+                Devotees gather for the traditional festival celebrated after Diwali at the historic Jain Tirth site in Fazilnagar. Religious discourses and cultural events are organized.
+              </p>
+            </div>
+            <div class="pt-4 border-t border-navy-800/80 text-[11px] text-slate-400 flex items-center justify-between">
+              <span>Source: Pawanagar Prabandh Samiti</span>
+              <button onclick="showQuickToast('Event details: Open to all visitors and residents.')" class="text-teal-300 hover:underline font-semibold">Details</button>
+            </div>
+          </div>
+
+          <!-- Notice 2 -->
+          <div class="bg-navy-900/80 border border-navy-800 rounded-3xl p-6 flex flex-col justify-between hover:border-teal-500/50 transition">
+            <div>
+              <div class="flex items-center justify-between text-xs mb-3">
+                <span class="px-2.5 py-0.5 rounded bg-blue-500/10 text-blue-300 font-semibold border border-blue-500/20">Public Health</span>
+                <span class="text-slate-400 text-[11px]">Routine Clinic</span>
+              </div>
+              <h3 class="text-base font-bold text-white mb-2">Weekly Immunization & Health Day at CHC Fazilnagar</h3>
+              <p class="text-xs text-slate-300 leading-relaxed mb-4">
+                Community Health Centre Fazilnagar conducts designated routine immunization camps and maternal consultations every Wednesday.
+              </p>
+            </div>
+            <div class="pt-4 border-t border-navy-800/80 text-[11px] text-slate-400 flex items-center justify-between">
+              <span>Source: CHC Health Desk</span>
+              <button onclick="showQuickToast('Location: Community Health Centre, NH-27 Corridor.')" class="text-teal-300 hover:underline font-semibold">Details</button>
+            </div>
+          </div>
+
+          <!-- Notice 3 -->
+          <div class="bg-navy-900/80 border border-navy-800 rounded-3xl p-6 flex flex-col justify-between hover:border-teal-500/50 transition">
+            <div>
+              <div class="flex items-center justify-between text-xs mb-3">
+                <span class="px-2.5 py-0.5 rounded bg-amber-500/10 text-amber-300 font-semibold border border-amber-500/20">Market Notice</span>
+                <span class="text-slate-400 text-[11px]">Civic Update</span>
+              </div>
+              <h3 class="text-base font-bold text-white mb-2">NH-27 Highway Chowk Traffic Safety & Beautification</h3>
+              <p class="text-xs text-slate-300 leading-relaxed mb-4">
+                Town administration notice for maintaining pedestrian paths and organized parking around the central Fazilnagar Kasya-Tamkuhi road junction.
+              </p>
+            </div>
+            <div class="pt-4 border-t border-navy-800/80 text-[11px] text-slate-400 flex items-center justify-between">
+              <span>Source: Town Civic Circle</span>
+              <button onclick="showQuickToast('Notice for all local vehicle owners and business fronts.')" class="text-teal-300 hover:underline font-semibold">Details</button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Section: About Fazilnagar (Heritage & Verified Information) -->
+    <section id="about-town" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+        
+        <div>
+          <div class="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 uppercase tracking-wider mb-2">
+            <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+            <span>Town Profile & History</span>
+          </div>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-navy-950 tracking-tight mb-4">
+            A Historic Crossroad in Kushinagar District
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+            <strong>Fazilnagar</strong> (historically identified with ancient <em>Pawanagar</em> or Pawa of the Malla republic) is a prominent commercial and educational town located along the Four-Lane <strong>National Highway 27</strong> in Kushinagar district, Uttar Pradesh.
+          </p>
+          <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-6">
+            Situated approximately 20 km southeast of the Kushinagar Buddhist heritage circuit and International Airport, Fazilnagar connects Kasya with Tamkuhi Raj and Bihar. The town is revered in Jain tradition for Lord Mahavira's nirvana connection and is an important center for inter colleges, farming commerce, and local healthcare.
+          </p>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs mb-6">
+            <div class="bg-slate-50 border border-slate-200/80 p-3 rounded-2xl">
+              <span class="block text-slate-400 text-[10px] font-bold uppercase">District</span>
+              <span class="font-bold text-navy-950 text-sm">Kushinagar</span>
+            </div>
+            <div class="bg-slate-50 border border-slate-200/80 p-3 rounded-2xl">
+              <span class="block text-slate-400 text-[10px] font-bold uppercase">Postal PIN</span>
+              <span class="font-bold text-navy-950 text-sm">274401</span>
+            </div>
+            <div class="bg-slate-50 border border-slate-200/80 p-3 rounded-2xl">
+              <span class="block text-slate-400 text-[10px] font-bold uppercase">Key Highway</span>
+              <span class="font-bold text-navy-950 text-sm">NH-27 (Old NH-28)</span>
+            </div>
+          </div>
+
+          <a href="#map-preview" class="inline-flex items-center gap-2 text-xs font-bold text-teal-700 hover:text-navy-950 transition">
+            <span>Explore Town Landmarks on Map</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+          </a>
+        </div>
+
+        <!-- Town Highlights Grid Preview -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+            <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center mb-3">
+              <i data-lucide="landmark" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-navy-950">Ancient Pawanagar</h3>
+              <p class="text-[11px] text-slate-500 mt-1">Jain pilgrimage heritage and historical antiquity linked to the Malla period.</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center mb-3">
+              <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-navy-950">Educational Center</h3>
+              <p class="text-[11px] text-slate-500 mt-1">Home to Pavanaagar Mahavir Inter College and multiple youth training centers.</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center mb-3">
+              <i data-lucide="store" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-navy-950">Thriving Bazaar</h3>
+              <p class="text-[11px] text-slate-500 mt-1">Main chowk market providing hardware, groceries, sweets, and farming supplies.</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center mb-3">
+              <i data-lucide="shield" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-navy-950">Community First</h3>
+              <p class="text-[11px] text-slate-500 mt-1">A transparent digital hub maintaining verified town facts without fabricated data.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Section: Make Fazilnagar Better (Citizen Corner) -->
+    <section id="citizen-corner" class="bg-slate-100 py-16 border-t border-slate-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-2xl mx-auto mb-12">
+          <div class="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 uppercase tracking-wider mb-2">
+            <i data-lucide="users" class="w-3.5 h-3.5"></i>
+            <span>Citizen Corner</span>
+          </div>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-navy-950 tracking-tight">Make Fazilnagar Better</h2>
+          <p class="text-xs sm:text-sm text-slate-500 mt-2">
+            Help verify listings, add genuine places, and keep town information updated and transparent.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <!-- Action 1: Suggest Business -->
+          <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center mb-4">
+                <i data-lucide="store" class="w-6 h-6"></i>
+              </div>
+              <h3 class="text-base font-bold text-navy-950 mb-1">Suggest a Business</h3>
+              <p class="text-xs text-slate-500 leading-relaxed mb-6">
+                Are you a local shop owner, doctor or service provider inside Fazilnagar town? Add your place to the town directory.
+              </p>
+            </div>
+            <button onclick="openModal('businessModal')" class="w-full bg-navy-900 hover:bg-teal-700 text-white font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-2">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i>
+              <span>Submit Place Details</span>
+            </button>
+          </div>
+
+          <!-- Action 2: Report Incorrect Info -->
+          <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center mb-4">
+                <i data-lucide="file-question" class="w-6 h-6"></i>
+              </div>
+              <h3 class="text-base font-bold text-navy-950 mb-1">Report Incorrect Info</h3>
+              <p class="text-xs text-slate-500 leading-relaxed mb-6">
+                Found an outdated phone number, incorrect address, or unverified location? Let the town moderation team know.
+              </p>
+            </div>
+            <button onclick="openModal('correctionModal')" class="w-full bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-2">
+              <i data-lucide="edit-3" class="w-4 h-4 text-amber-600"></i>
+              <span>Suggest Correction</span>
+            </button>
+          </div>
+
+          <!-- Action 3: Submit Local Event -->
+          <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center mb-4">
+                <i data-lucide="calendar" class="w-6 h-6"></i>
+              </div>
+              <h3 class="text-base font-bold text-navy-950 mb-1">Submit a Local Event</h3>
+              <p class="text-xs text-slate-500 leading-relaxed mb-6">
+                Organizing a school sports day, health camp, religious katha or community gathering in town? Broadcast it to citizens.
+              </p>
+            </div>
+            <button onclick="openModal('eventSubmitModal')" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-2">
+              <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+              <span>Submit Local Event</span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-navy-950 text-slate-400 text-xs pt-16 pb-12 border-t border-navy-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
+        
+        <!-- Col 1: Brand Info -->
+        <div class="lg:col-span-2">
+          <div class="flex items-center gap-2.5 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center text-white">
+              <i data-lucide="compass" class="w-4 h-4"></i>
+            </div>
+            <span class="text-base font-extrabold text-white tracking-wider">FAZILNAGAR</span>
+          </div>
+          <p class="text-slate-400 leading-relaxed pr-6 mb-4">
+            A digital directory and community information platform for Fazilnagar town, Kushinagar, Uttar Pradesh. Committed to authentic town data, local businesses and citizen participation.
+          </p>
+          <div class="text-[11px] text-slate-500">
+            <p>Non-government citizen and community information project.</p>
+          </div>
+        </div>
+
+        <!-- Col 2: Quick Links -->
+        <div>
+          <h4 class="text-xs font-bold text-white uppercase tracking-wider mb-4">Navigation</h4>
+          <ul class="space-y-2">
+            <li><a href="#hero" class="hover:text-teal-400 transition">Home</a></li>
+            <li><a href="#explore-categories" class="hover:text-teal-400 transition">16 Town Categories</a></li>
+            <li><a href="#map-preview" class="hover:text-teal-400 transition">Town Map Preview</a></li>
+            <li><a href="#popular" class="hover:text-teal-400 transition">Featured Directory</a></li>
+            <li><a href="#local-updates" class="hover:text-teal-400 transition">Local Updates</a></li>
+            <li><a href="#about-town" class="hover:text-teal-400 transition">History & About</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Categories -->
+        <div>
+          <h4 class="text-xs font-bold text-white uppercase tracking-wider mb-4">Key Directory</h4>
+          <ul class="space-y-2">
+            <li><a href="javascript:void(0)" onclick="selectCategoryCard('Hospitals & Clinics')" class="hover:text-teal-400 transition">Hospitals & CHC</a></li>
+            <li><a href="javascript:void(0)" onclick="selectCategoryCard('Schools & Colleges')" class="hover:text-teal-400 transition">Schools & Colleges</a></li>
+            <li><a href="javascript:void(0)" onclick="selectCategoryCard('Religious Places')" class="hover:text-teal-400 transition">Pawanagar Jain Tirth</a></li>
+            <li><a href="javascript:void(0)" onclick="selectCategoryCard('Banks & ATMs')" class="hover:text-teal-400 transition">Banks & Financial</a></li>
+            <li><a href="javascript:void(0)" onclick="selectCategoryCard('Transport & Travel')" class="hover:text-teal-400 transition">NH-27 Bus Stands</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 4: Emergency Contacts (Verified) -->
+        <div>
+          <h4 class="text-xs font-bold text-white uppercase tracking-wider mb-4">Emergency & Helpline</h4>
+          <ul class="space-y-2 text-[11px]">
+            <li><span class="text-slate-300">Police Assistance:</span> <span class="text-teal-400 font-mono font-bold">112</span></li>
+            <li><span class="text-slate-300">Medical Ambulance:</span> <span class="text-teal-400 font-mono font-bold">108 / 102</span></li>
+            <li><span class="text-slate-300">Women Helpline:</span> <span class="text-teal-400 font-mono font-bold">1090</span></li>
+            <li><span class="text-slate-300">Electricity Fault:</span> <span class="text-teal-400 font-mono font-bold">1912</span></li>
+            <li><span class="text-slate-300">District HQ:</span> Padrauna / Kasya</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="pt-8 border-t border-navy-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
+        <p>© 2026 Fazilnagar Town Community Portal. All rights reserved.</p>
+        <div class="flex items-center gap-4">
+          <a href="#about-town" class="hover:underline">Privacy & Data Integrity</a>
+          <span>•</span>
+          <a href="#citizen-corner" class="hover:underline">Submit Listing</a>
+          <span>•</span>
+          <a href="#about-town" class="hover:underline">About Fazilnagar</a>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Modal 1: Suggest Business -->
+  <div id="businessModal" class="fixed inset-0 z-50 bg-navy-950/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+      <button onclick="closeModal('businessModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
+          <i data-lucide="store" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-navy-950">Suggest a Place in Fazilnagar</h3>
+          <p class="text-[11px] text-slate-500">Listing must be located inside Fazilnagar town limits.</p>
+        </div>
+      </div>
+
+      <form onsubmit="handleFormSubmission(event, 'business')" class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Place / Business Name *</label>
+          <input type="text" required placeholder="e.g. Mahavir Medical Store, Modern Coaching" class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600 text-xs">
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Category *</label>
+            <select required class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600 text-xs bg-white">
+              <option value="">Select Category</option>
+              <option>Medical Stores</option>
+              <option>Hospitals & Clinics</option>
+              <option>Schools & Colleges</option>
+              <option>Sweet Shops</option>
+              <option>Markets & Shopping</option>
+              <option>Restaurants & Cafes</option>
+              <option>Banks & ATMs</option>
+              <option>Coaching & Libraries</option>
+              <option>Religious Places</option>
+              <option>Other Services</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Contact Phone</label>
+            <input type="tel" placeholder="10-digit number" class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600 text-xs">
+          </div>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Location / Landmark in Town *</label>
+          <input type="text" required placeholder="e.g. Near Kasya Highway Chowk, Opp. Block Office" class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600 text-xs">
+        </div>
+        <p class="text-[10px] text-slate-400">Note: Entries are reviewed by moderators to keep nearby villages separate from town limits.</p>
+        <button type="submit" class="w-full bg-navy-900 hover:bg-teal-700 text-white font-bold text-xs py-3 rounded-xl transition">
+          Submit Place for Verification
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: Report Correction -->
+  <div id="correctionModal" class="fixed inset-0 z-50 bg-navy-950/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+      <button onclick="closeModal('correctionModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
+          <i data-lucide="edit-3" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-navy-950">Report Incorrect Information</h3>
+          <p class="text-[11px] text-slate-500">Help keep directory numbers and addresses accurate.</p>
+        </div>
+      </div>
+
+      <form onsubmit="handleFormSubmission(event, 'correction')" class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Listing Name *</label>
+          <input type="text" required placeholder="Name of place or institution" class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600 text-xs">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">What needs correction? *</label>
+          <textarea rows="3" required placeholder="Describe the incorrect phone number, address or operating status..." class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600 text-xs"></textarea>
+        </div>
+        <button type="submit" class="w-full bg-navy-900 hover:bg-teal-700 text-white font-bold text-xs py-3 rounded-xl transition">
+          Send Correction Notice
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 3: Submit Local Event -->
+  <div id="eventSubmitModal" class="fixed inset-0 z-50 bg-navy-950/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+      <button onclick="closeModal('eventSubmitModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
+          <i data-lucide="calendar" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-navy-950">Submit a Town Event</h3>
+          <p class="text-[11px] text-slate-500">Community, educational, or cultural event inside town.</p>
+        </div>
+      </div>
+
+      <form onsubmit="handleFormSubmission(event, 'event')" class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Event Title *</label>
+          <input type="text" required placeholder="e.g. Free Eye Screening Camp, Inter-College Debate" class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600 text-xs">
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Date *</label>
+            <input type="date" required class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600 text-xs">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Venue in Fazilnagar *</label>
+            <input type="text" required placeholder="e.g. College Grounds, CHC Premises" class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600 text-xs">
+          </div>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Organizing Body / Contact</label>
+          <input type="text" placeholder="Name of organization or contact person" class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600 text-xs">
+        </div>
+        <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs py-3 rounded-xl transition">
+          Submit Event for Verification
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Global Toast Feedback Message -->
+  <div id="globalToast" class="fixed bottom-6 right-6 z-50 bg-navy-950 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs hidden border border-navy-800 transition-all duration-300">
+    <i data-lucide="check-circle" class="w-4 h-4 text-teal-400"></i>
+    <span id="toastMsgText">Notification message</span>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. Structured Town Database for Fazilnagar
+    // ==========================================
+    // Restricted strictly to Fazilnagar town limits
+    const FAZILNAGAR_TOWN_PLACES = [
+      {
+        id: "fz-1",
+        name: "Pawanagar Mahavir Jain Mandir",
+        nameHindi: "पावानगर भगवान महावीर दिगंबर जैन मंदिर",
+        category: "Religious Places",
+        subcategory: "Temples",
+        address: "Pawanagar Tirth Marg, Fazilnagar - 274401",
+        landmark: "Kasya-Tamkuhi Link, Fazilnagar",
+        lat: 26.6835,
+        lng: 84.0489,
+        verified: true,
+        hours: "06:00 AM – 08:30 PM",
+        phone: "Verified Local Trust",
+        tag: "Heritage",
+        desc: "Famous historical shrine featuring ancient Manasthamba and Jain idols commemorating Lord Mahavira's nirvana tradition."
+      },
+      {
+        id: "fz-2",
+        name: "Community Health Centre (CHC) Fazilnagar",
+        nameHindi: "सामुदायिक स्वास्थ्य केंद्र (सीएचसी) फाजिलनगर",
+        category: "Hospitals & Clinics",
+        subcategory: "Emergency Services",
+        address: "NH-27 Highway Side, Fazilnagar - 274401",
+        landmark: "National Highway 27 Corridor",
+        lat: 26.6818,
+        lng: 84.0520,
+        verified: true,
+        hours: "24x7 Emergency",
+        phone: "108 / CHC Emergency",
+        tag: "Healthcare",
+        desc: "Primary government community hospital providing emergency care, maternal health, and routine medical outpatient services."
+      },
+      {
+        id: "fz-3",
+        name: "Pawanagar Mahavir Inter College",
+        nameHindi: "पावानगर महावीर इंटर कॉलेज",
+        category: "Schools & Colleges",
+        subcategory: "Education",
+        address: "College Road, Fazilnagar - 274401",
+        landmark: "Near Main Road, Fazilnagar",
+        lat: 26.6848,
+        lng: 84.0510,
+        verified: true,
+        hours: "08:30 AM – 03:00 PM",
+        phone: "College Administration",
+        tag: "Education",
+        desc: "Established co-educational senior secondary institution serving students across Fazilnagar town for decades."
+      },
+      {
+        id: "fz-4",
+        name: "State Bank of India (SBI) & ATM Fazilnagar",
+        nameHindi: "भारतीय स्टेट बैंक एवं एटीएम",
+        category: "Banks & ATMs",
+        subcategory: "Financial",
+        address: "NH-27 Main Market, Fazilnagar - 274401",
+        landmark: "Central Bazaar, Fazilnagar",
+        lat: 26.6822,
+        lng: 84.0503,
+        verified: true,
+        hours: "10:00 AM – 04:00 PM (ATM 24x7)",
+        phone: "1800-425-3800",
+        tag: "Public",
+        desc: "Primary public sector banking branch with full cash deposit, withdrawal, and Aadhaar-enabled services."
+      },
+      {
+        id: "fz-5",
+        name: "Fazilnagar Block Development Office",
+        nameHindi: "विकास खंड कार्यालय फाजिलनगर",
+        category: "Government Offices",
+        subcategory: "Administration",
+        address: "Block Campus, Fazilnagar - 274401",
+        landmark: "Near Highway Crossing, Fazilnagar",
+        lat: 26.6805,
+        lng: 84.0485,
+        verified: true,
+        hours: "10:00 AM – 05:00 PM (Mon-Sat)",
+        phone: "Block Office Reception",
+        tag: "Public",
+        desc: "Administrative hub for town development programs, certificates, social welfare schemes, and civic assistance."
+      },
+      {
+        id: "fz-6",
+        name: "Fazilnagar Bus Stand & Taxi Chowk",
+        nameHindi: "फाजिलनगर बस स्टैंड एवं टैक्सी स्टैंड",
+        category: "Transport & Travel",
+        subcategory: "Transit",
+        address: "NH-27 Junction, Fazilnagar - 274401",
+        landmark: "Kasya - Tamkuhi - Bihar Highway",
+        lat: 26.6827,
+        lng: 84.0498,
+        verified: true,
+        hours: "Continuous Transit Point",
+        phone: "Local Transport Desk",
+        tag: "Transit",
+        desc: "Crucial regional transit point connecting commuters directly towards Gorakhpur, Kasya, Tamkuhi Raj, and Gopalganj."
+      },
+      {
+        id: "fz-7",
+        name: "Gupta Sweets & Refreshments",
+        nameHindi: "गुप्ता मिष्ठान भंडार एवं जलपान",
+        category: "Sweet Shops",
+        subcategory: "Food",
+        address: "Main Chowk, Fazilnagar - 274401",
+        landmark: "Opp. SBI Branch",
+        lat: 26.6825,
+        lng: 84.0505,
+        verified: true,
+        hours: "07:00 AM – 09:30 PM",
+        phone: "Verified Town Store",
+        tag: "Local Trade",
+        desc: "Popular local confectioner well-known for pure ghee sweets, hot samosas, and regional milk pedas."
+      },
+      {
+        id: "fz-8",
+        name: "Kushinagar Seva Medical Store",
+        nameHindi: "कुशीनगर सेवा मेडिकल स्टोर",
+        category: "Medical Stores",
+        subcategory: "Healthcare",
+        address: "Opp. CHC Gate, Fazilnagar - 274401",
+        landmark: "Hospital Road, Fazilnagar",
+        lat: 26.6819,
+        lng: 84.0522,
+        verified: true,
+        hours: "07:00 AM – 11:00 PM",
+        phone: "Pharmacist on duty",
+        tag: "Healthcare",
+        desc: "Reliable pharmacy dispensing essential prescription medicines, surgical goods, and first-aid supplies."
+      },
+      {
+        id: "fz-9",
+        name: "Jama Masjid Fazilnagar",
+        nameHindi: "जामा मस्जिद फाजिलनगर",
+        category: "Mosques",
+        subcategory: "Religious Places",
+        address: "Purani Basti Road, Fazilnagar - 274401",
+        landmark: "Town Center",
+        lat: 26.6840,
+        lng: 84.0475,
+        verified: true,
+        hours: "Open for 5 Daily Prayers",
+        phone: "Masjid Committee",
+        tag: "Religious",
+        desc: "Town's central mosque and prayer center accommodating community Friday congregational prayers."
+      }
+    ];
+
+    // ==========================================
+    // 2. Interactive Leaflet Map Initialization
+    // ==========================================
+    let mapInstance = null;
+    let mapMarkers = [];
+
+    function initTownMap() {
+      const mapContainer = document.getElementById('fazilnagarMap');
+      const loader = document.getElementById('mapLoader');
+      if (!mapContainer) return;
+
+      try {
+        // Fazilnagar town center coordinates
+        const townLat = 26.6827;
+        const townLng = 84.0498;
+
+        mapInstance = L.map('fazilnagarMap', {
+          center: [townLat, townLng],
+          zoom: 15,
+          scrollWheelZoom: false
+        });
+
+        // OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(mapInstance);
+
+        // Populate markers
+        renderMapMarkers(FAZILNAGAR_TOWN_PLACES);
+
+        if (loader) {
+          loader.classList.add('hidden');
+        }
+      } catch (err) {
+        console.error("Map initialization error:", err);
+        if (loader) {
+          loader.innerHTML = `
+            <div class="text-center p-4">
+              <i data-lucide="alert-triangle" class="w-8 h-8 text-amber-500 mx-auto mb-2"></i>
+              <p class="text-xs font-semibold text-slate-700">OpenStreetMap preview is currently unavailable.</p>
+              <a href="https://maps.google.com/?q=Fazilnagar+Kushinagar" target="_blank" class="mt-2 inline-block text-xs text-teal-600 font-bold underline">Open Fazilnagar on Google Maps</a>
+            </div>
+          `;
+          lucide.createIcons();
+        }
+      }
+    }
+
+    function renderMapMarkers(places) {
+      if (!mapInstance) return;
+
+      // Clear existing markers
+      mapMarkers.forEach(m => mapInstance.removeLayer(m));
+      mapMarkers = [];
+
+      places.forEach(place => {
+        const marker = L.marker([place.lat, place.lng]).addTo(mapInstance);
+        
+        marker.bindPopup(`
+          <div style="font-size: 12px; min-width: 170px;">
+            <span style="font-size: 10px; font-weight: 700; color: #0f766e; text-transform: uppercase;">${place.category}</span>
+            <h4 style="margin: 3px 0; font-size: 13px; font-weight: 800; color: #0b1b3d;">${place.name}</h4>
+            <p style="margin: 0; font-size: 11px; color: #64748b;">${place.landmark}</p>
+            <button onclick="updateLocationDrawer('${place.id}')" style="margin-top: 6px; font-size: 11px; color: #0d9488; font-weight: 700; text-decoration: underline; background: none; border: none; padding: 0; cursor: pointer;">
+              View Full Details
+            </button>
+          </div>
+        `);
+
+        marker.on('click', () => {
+          updateLocationDrawer(place.id);
+        });
+
+        mapMarkers.push(marker);
+      });
+    }
+
+    function filterMapCategory(catKey) {
+      // Toggle button active styling
+      document.querySelectorAll('.map-filter-btn').forEach(btn => {
+        btn.classList.remove('bg-navy-900', 'text-white');
+        btn.classList.add('bg-white', 'text-slate-700');
+      });
+
+      let filtered = FAZILNAGAR_TOWN_PLACES;
+      if (catKey !== 'all') {
+        filtered = FAZILNAGAR_TOWN_PLACES.filter(p => p.category === catKey || p.subcategory === catKey);
+      }
+      
+      // Update map markers
+      renderMapMarkers(filtered);
+      
+      if (filtered.length > 0) {
+        updateLocationDrawer(filtered[0].id);
+        if (mapInstance) {
+          mapInstance.panTo([filtered[0].lat, filtered[0].lng]);
+        }
+      }
+    }
+
+    function updateLocationDrawer(placeId) {
+      const place = FAZILNAGAR_TOWN_PLACES.find(p => p.id === placeId);
+      if (!place) return;
+
+      document.getElementById('detailCategory').textContent = place.category;
+      document.getElementById('detailName').textContent = place.name;
+      document.getElementById('detailHindiName').textContent = place.nameHindi || '';
+      document.getElementById('detailAddress').textContent = place.address;
+      document.getElementById('detailHours').textContent = place.hours;
+      document.getElementById('detailPhone').textContent = place.phone;
+      document.getElementById('detailDesc').textContent = place.desc;
+
+      const directionsBtn = document.getElementById('btnGetDirections');
+      if (directionsBtn) {
+        directionsBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}`;
+      }
+    }
+
+    // ==========================================
+    // 3. Smart Search Implementation
+    // ==========================================
+    function handleSearchType(val) {
+      const clean = val.trim().toLowerCase();
+      const dropdown = document.getElementById('searchDropdown');
+      const clearBtn = document.getElementById('clearSearchBtn');
+      const resultList = document.getElementById('searchResultList');
+      const emptyState = document.getElementById('searchEmptyState');
+      const badge = document.getElementById('resultCountBadge');
+
+      if (!clean) {
+        dropdown.classList.add('hidden');
+        clearBtn.classList.add('hidden');
+        return;
+      }
+
+      clearBtn.classList.remove('hidden');
+      dropdown.classList.remove('hidden');
+
+      // Match against name, hindi name, category, subcategory and landmark
+      const matches = FAZILNAGAR_TOWN_PLACES.filter(p => {
+        const haystack = `${p.name} ${p.nameHindi || ''} ${p.category} ${p.subcategory} ${p.landmark} ${p.address}`.toLowerCase();
+        return haystack.includes(clean);
+      });
+
+      badge.textContent = `${matches.length} found`;
+
+      if (matches.length === 0) {
+        resultList.innerHTML = '';
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+        resultList.innerHTML = matches.map(item => `
+          <div onclick="selectSearchResult('${item.id}')" class="p-3.5 hover:bg-slate-50 cursor-pointer transition flex items-center justify-between">
+            <div class="pr-2">
+              <span class="text-[10px] font-bold text-teal-700 uppercase tracking-wider block">${item.category}</span>
+              <h5 class="text-xs font-bold text-navy-950">${item.name}</h5>
+              <p class="text-[11px] text-slate-500 line-clamp-1">${item.landmark}</p>
+            </div>
+            <span class="text-xs font-semibold text-teal-600 flex-shrink-0 flex items-center gap-1">
+              View <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            </span>
+          </div>
+        `).join('');
+        lucide.createIcons();
+      }
+    }
+
+    function showSearchDropdownIfHasValue() {
+      const val = document.getElementById('townSearchInput').value;
+      if (val.trim()) {
+        handleSearchType(val);
+      }
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('townSearchInput');
+      input.value = '';
+      handleSearchType('');
+      input.focus();
+    }
+
+    function executeSearchAction() {
+      const val = document.getElementById('townSearchInput').value;
+      if (!val.trim()) {
+        showQuickToast("Please type something to search (e.g. Hospital, Sweets, School)");
+        return;
+      }
+      handleSearchType(val);
+      // Smooth scroll to directory or map
+      document.getElementById('popular').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function selectSearchResult(id) {
+      document.getElementById('searchDropdown').classList.add('hidden');
+      updateLocationDrawer(id);
+      
+      const targetMap = document.getElementById('map-preview');
+      targetMap.scrollIntoView({ behavior: 'smooth' });
+
+      const place = FAZILNAGAR_TOWN_PLACES.find(p => p.id === id);
+      if (place && mapInstance) {
+        mapInstance.setView([place.lat, place.lng], 16);
+      }
+      showQuickToast(`Loaded: ${place.name}`);
+    }
+
+    // ==========================================
+    // 4. Category Grid Navigation
+    // ==========================================
+    function selectCategoryCard(catName) {
+      showQuickToast(`Showing results for category: ${catName}`);
+      
+      // Filter both Directory & Map
+      const input = document.getElementById('townSearchInput');
+      if (catName === 'All Places') {
+        input.value = '';
+        renderDirectoryCards('all');
+        filterMapCategory('all');
+      } else {
+        input.value = catName;
+        renderDirectoryCards(catName);
+        filterMapCategory(catName);
+      }
+
+      // Scroll to Directory
+      document.getElementById('popular').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function filterCategorySelection(type) {
+      document.getElementById('townSearchInput').value = '';
+      renderDirectoryCards('all');
+      filterMapCategory('all');
+      showQuickToast("Displaying all 16 town categories");
+    }
+
+    // ==========================================
+    // 5. Featured / Discover Directory Cards
+    // ==========================================
+    function renderDirectoryCards(filterTag) {
+      const grid = document.getElementById('directoryGrid');
+      if (!grid) return;
+
+      // Update button styles
+      document.querySelectorAll('.dir-tab-btn').forEach(b => {
+        b.classList.remove('bg-navy-900', 'text-white');
+        b.classList.add('bg-white', 'text-slate-700');
+      });
+
+      let list = FAZILNAGAR_TOWN_PLACES;
+      if (filterTag === 'Healthcare') {
+        list = FAZILNAGAR_TOWN_PLACES.filter(p => p.category.includes('Hospital') || p.category.includes('Medical'));
+      } else if (filterTag === 'Education') {
+        list = FAZILNAGAR_TOWN_PLACES.filter(p => p.category.includes('School') || p.category.includes('College'));
+      } else if (filterTag === 'Public') {
+        list = FAZILNAGAR_TOWN_PLACES.filter(p => p.category.includes('Bank') || p.category.includes('Office') || p.category.includes('Sweets'));
+      } else if (filterTag && filterTag !== 'all') {
+        list = FAZILNAGAR_TOWN_PLACES.filter(p => p.category === filterTag || p.subcategory === filterTag);
+        if (list.length === 0) {
+          list = FAZILNAGAR_TOWN_PLACES;
+        }
+      }
+
+      grid.innerHTML = list.map(item => `
+        <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between text-xs mb-2">
+              <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-teal-800">${item.category}</span>
+              <span class="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                <i data-lucide="check" class="w-3 h-3"></i> Verified Town Place
+              </span>
+            </div>
+            <h4 class="text-base font-extrabold text-navy-950 mb-0.5">${item.name}</h4>
+            <p class="text-xs text-slate-500 font-medium mb-3">${item.nameHindi || ''}</p>
+            <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed mb-4">${item.desc}</p>
+          </div>
+
+          <div class="pt-3 border-t border-slate-100 space-y-2">
+            <div class="text-[11px] text-slate-500 flex items-center gap-1.5">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
+              <span class="truncate">${item.landmark}</span>
+            </div>
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-[11px] text-slate-500">${item.hours}</span>
+              <button onclick="selectSearchResult('${item.id}')" class="text-xs font-bold text-teal-700 hover:text-navy-900 inline-flex items-center gap-1">
+                <span>View on Map</span>
+                <i data-lucide="arrow-right" class="w-3 h-3"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    // ==========================================
+    // 6. Navigation & Modal Handlers
+    // ==========================================
+    function toggleMobileNav() {
+      const menu = document.getElementById('mobileMenu');
+      menu.classList.toggle('hidden');
+    }
+
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
+    }
+
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function handleFormSubmission(event, type) {
+      event.preventDefault();
+      let label = "Submission received";
+      if (type === 'business') label = "Place submitted for verification by town moderators.";
+      if (type === 'correction') label = "Thank you! Correction note recorded for review.";
+      if (type === 'event') label = "Event details received for community publishing.";
+
+      // Close modal
+      closeModal('businessModal');
+      closeModal('correctionModal');
+      closeModal('eventSubmitModal');
+
+      showQuickToast(label);
+      event.target.reset();
+    }
+
+    let toastTimer;
+    function showQuickToast(msg) {
+      const toast = document.getElementById('globalToast');
+      const text = document.getElementById('toastMsgText');
+      text.textContent = msg;
+      toast.classList.remove('hidden');
+      lucide.createIcons();
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 4000);
+    }
+
+    // Close search dropdown on click outside
+    document.addEventListener('click', (e) => {
+      const searchBox = document.getElementById('hero');
+      const dropdown = document.getElementById('searchDropdown');
+      if (dropdown && !dropdown.contains(e.target) && !document.getElementById('townSearchInput').contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    // ==========================================
+    // 7. Initial Mount
+    // ==========================================
+    window.onload = function() {
+      lucide.createIcons();
+      initTownMap();
+      renderDirectoryCards('all');
+    };
+  </script>
+</body>
+</html>

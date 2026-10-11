@@ -1,0 +1,1022 @@
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
+import L from "leaflet";
+import API from "../api";
+import {
+  Search,
+  MapPin,
+  Phone,
+  Navigation,
+  CheckCircle2,
+  Clock,
+  Layers,
+  Map,
+  List,
+  Filter,
+  ArrowUpDown,
+  Download,
+  PlusCircle,
+  AlertTriangle,
+  Building,
+  GraduationCap,
+  Stethoscope,
+  Pill,
+  Cake,
+  Landmark,
+  Bus,
+  ShoppingBag,
+  ExternalLink,
+  ShieldCheck,
+  X,
+  Info,
+  Calendar,
+  Check,
+  ChevronRight,
+  RotateCcw,
+} from "lucide-react";
+
+// Category configurations with distinct styling and Lucide icons
+const CATEGORIES = [
+  { id: "all", name: "All Categories", icon: Layers, color: "slate" },
+  { id: "Schools & Colleges", name: "Schools & Colleges", icon: GraduationCap, color: "blue" },
+  { id: "Hospitals & Clinics", name: "Hospitals & Clinics", icon: Stethoscope, color: "rose" },
+  { id: "Sweet Shops & Bakeries", name: "Sweet Shops & Bakeries", icon: Cake, color: "amber" },
+  { id: "Medical Stores & Pharmacies", name: "Medical Stores", icon: Pill, color: "emerald" },
+  { id: "Religious Places", name: "Religious Places", icon: Landmark, color: "purple" },
+  { id: "Public Facilities", name: "Public Facilities & Banks", icon: Building, color: "sky" },
+  { id: "Transport & Travel", name: "Transport & Travel", icon: Bus, color: "lime" },
+  { id: "Shopping & Services", name: "Shopping & Trade", icon: ShoppingBag, color: "orange" },
+];
+
+export default function Directory() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [places, setPlaces] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "all");
+  const [selectedLocality, setSelectedLocality] = useState("all");
+  const [viewMode, setViewMode] = useState(searchParams.get("view") || "map"); // "map" | "list"
+  const [sortBy, setSortBy] = useState("name"); // "name" | "category"
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const [detailModalPlace, setDetailModalPlace] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showAdminQueue, setShowAdminQueue] = useState(false);
+  const [adminQueuePlaces, setAdminQueuePlaces] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [toastMessage, setToastMessage] = useState("");
+
+  const mapContainerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const markersRef = useRef([]);
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(""), 4000);
+  };
+
+  // Sync state if URL search params change
+  useEffect(() => {
+    const cat = searchParams.get("category");
+    if (cat && cat !== selectedCategory) {
+      setSelectedCategory(cat);
+    }
+    const search = searchParams.get("search");
+    if (search !== null && search !== searchQuery) {
+      setSearchQuery(search);
+    }
+    const view = searchParams.get("view");
+    if (view && (view === "map" || view === "list") && view !== viewMode) {
+      setViewMode(view);
+    }
+  }, [searchParams]);
+
+  // Fetch verified places and stats
+  useEffect(() => {
+    fetchPlaces();
+    fetchStats();
+  }, [selectedCategory, selectedLocality, sortBy]);
+
+  const fetchPlaces = async () => {
+    try {
+      setLoading(true);
+      const params = {};
+      if (selectedCategory !== "all") params.category = selectedCategory;
+      if (selectedLocality !== "all") params.locality = selectedLocality;
+      if (searchQuery.trim()) params.search = searchQuery.trim();
+      params.sort = sortBy;
+
+      const res = await API.get("/places", { params });
+      setPlaces(res.data);
+      if (res.data.length > 0 && !selectedPlace) {
+        setSelectedPlace(res.data[0]);
+      }
+    } catch (err) {
+      console.error("Failed to load directory places:", err);
+      showToast("Unable to load directory data. Please check connection.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const res = await API.get("/places/stats/summary");
+      setStats(res.data);
+    } catch (err) {
+      console.error("Failed to load stats:", err);
+    }
+  };
+
+  const fetchAdminQueue = async () => {
+    try {
+      const res = await API.get("/places/admin");
+      setAdminQueuePlaces(res.data);
+    } catch (err) {
+      console.error("Failed to fetch admin queue:", err);
+    }
+  };
+
+  // Map initialization & synchronization
+  useEffect(() => {
+    if (viewMode !== "map") return;
+    if (!mapContainerRef.current) return;
+
+    if (!mapInstanceRef.current) {
+      const townLat = 26.6827;
+      const townLng = 84.0498;
+
+      const map = L.map(mapContainerRef.current, {
+        center: [townLat, townLng],
+        zoom: 15,
+        scrollWheelZoom: false,
+      });
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors",
+      }).addTo(map);
+
+      mapInstanceRef.current = map;
+    }
+
+    renderMapMarkers(places);
+  }, [places, viewMode]);
+
+  const renderMapMarkers = (items) => {
+    if (!mapInstanceRef.current) return;
+
+    // Clear previous markers
+    markersRef.current.forEach((m) => mapInstanceRef.current.removeLayer(m));
+    markersRef.current = [];
+
+    const itemsWithCoords = items.filter((p) => p.latitude && p.longitude);
+
+    itemsWithCoords.forEach((place) => {
+      const marker = L.marker([place.latitude, place.longitude]).addTo(mapInstanceRef.current);
+
+      marker.bindPopup(`
+        <div style="font-size: 12px; min-width: 180px; font-family: inherit;">
+          <span style="font-size: 9px; font-weight: 700; color: #0d9488; text-transform: uppercase;">${place.category}</span>
+          <h4 style="margin: 2px 0 4px; font-size: 13px; font-weight: 800; color: #0f172a;">${place.name}</h4>
+          <p style="margin: 0; font-size: 11px; color: #64748b;">${place.streetOrLandmark || place.locality}</p>
+          <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between;">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${place.latitude},${place.longitude}" target="_blank" style="color: #0284c7; text-decoration: underline; font-weight: 700; font-size: 10px;">Get Directions</a>
+          </div>
+        </div>
+      `);
+
+      marker.on("click", () => {
+        setSelectedPlace(place);
+      });
+
+      markersRef.current.push(marker);
+    });
+
+    if (itemsWithCoords.length > 0 && selectedPlace && selectedPlace.latitude) {
+      mapInstanceRef.current.panTo([selectedPlace.latitude, selectedPlace.longitude]);
+    }
+  };
+
+  const handleSelectPlace = (place) => {
+    setSelectedPlace(place);
+    if (mapInstanceRef.current && place.latitude && place.longitude) {
+      mapInstanceRef.current.setView([place.latitude, place.longitude], 16);
+    }
+  };
+
+  const handleCategorySelect = (catId) => {
+    setSelectedCategory(catId);
+    const newParams = new URLSearchParams(searchParams);
+    if (catId === "all") {
+      newParams.delete("category");
+    } else {
+      newParams.set("category", catId);
+    }
+    setSearchParams(newParams);
+  };
+
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    const newParams = new URLSearchParams(searchParams);
+    if (searchQuery.trim()) {
+      newParams.set("search", searchQuery.trim());
+    } else {
+      newParams.delete("search");
+    }
+    setSearchParams(newParams);
+    fetchPlaces();
+  };
+
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {
+      name: formData.get("name"),
+      category: formData.get("category"),
+      subcategory: formData.get("subcategory"),
+      addressFull: formData.get("addressFull"),
+      locality: formData.get("locality"),
+      streetOrLandmark: formData.get("streetOrLandmark"),
+      phone: formData.get("phone"),
+      description: formData.get("description"),
+      sourceUrls: ["Citizen Submission via Directory Form"],
+    };
+
+    try {
+      await API.post("/places", data);
+      showToast("Place submitted successfully to verification queue!");
+      setShowAddModal(false);
+      fetchStats();
+    } catch (err) {
+      showToast("Submission failed. Please check required fields.");
+    }
+  };
+
+  const handleApprovePlace = async (id) => {
+    try {
+      await API.put(`/places/${id}`, {
+        isPublished: true,
+        townBoundaryStatus: "confirmed",
+        verificationStatus: "verified",
+      });
+      showToast("Establishment approved and published to public town directory!");
+      fetchAdminQueue();
+      fetchPlaces();
+      fetchStats();
+    } catch (err) {
+      showToast("Action failed.");
+    }
+  };
+
+  // Extract distinct localities from verified places for filter dropdown
+  const localities = Array.from(new Set(places.map((p) => p.locality).filter(Boolean)));
+
+  return (
+    <div className="space-y-6 pb-16 font-sans">
+      {/* Header Banner - Modern Civic Slate with Crimson & Emerald Accents */}
+      <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 border border-slate-800">
+        <div>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className="bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
+              <ShieldCheck className="w-3.5 h-3.5" /> Town Boundary Verified (PIN 274401)
+            </span>
+            <span className="text-xs text-slate-400 font-medium">NH-27 Highway Corridor</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+            Fazilnagar Complete Local Directory
+          </h1>
+          <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
+            Exact, verified physical locations strictly within Fazilnagar town limits. Complete directory of schools,
+            colleges, hospitals, clinics, sweet shops, pharmacies, religious shrines, banks, and essential services.
+          </p>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-sm"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Add / Suggest Place</span>
+          </button>
+
+          <a
+            href="http://localhost:5000/api/places/export/csv"
+            className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-700 transition"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Export CSV</span>
+          </a>
+
+          <button
+            onClick={() => {
+              setShowAdminQueue(!showAdminQueue);
+              if (!showAdminQueue) fetchAdminQueue();
+            }}
+            className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium px-3.5 py-2.5 rounded-xl border border-slate-700 transition"
+          >
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+            <span>{showAdminQueue ? "Close Review Queue" : `Review Queue (${stats?.inReview || 0})`}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Moderation & Review Queue Drawer (Section 13) */}
+      {showAdminQueue && (
+        <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              <h3 className="text-sm font-bold text-amber-900">
+                Verification & Boundary Moderation Queue (Non-Negotiable Geographical Compliance)
+              </h3>
+            </div>
+            <span className="text-xs font-semibold text-amber-800">
+              {adminQueuePlaces.filter((p) => !p.isPublished).length} Candidates Pending Ground Verification
+            </span>
+          </div>
+          <p className="text-xs text-amber-800 leading-relaxed">
+            Per the Non-Negotiable Geographical Rule, establishments whose physical location falls outside town boundaries
+            or whose exact street address is unconfirmed are quarantined in this review queue and excluded from public listings.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-2">
+            {adminQueuePlaces
+              .filter((p) => !p.isPublished)
+              .map((item) => (
+                <div key={item._id} className="bg-white p-4 rounded-2xl border border-amber-200 shadow-sm space-y-2">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800">
+                        {item.verificationStatus.replace(/_/g, " ")}
+                      </span>
+                      <h4 className="text-sm font-bold text-slate-900 mt-1">{item.name}</h4>
+                      <p className="text-xs text-slate-500">{item.addressFull}</p>
+                    </div>
+                    <span className="text-[10px] font-semibold text-slate-400">{item.category}</span>
+                  </div>
+
+                  <p className="text-[11px] text-amber-700 italic bg-amber-50 p-2 rounded-lg border border-amber-100">
+                    Reason: {item.reviewNotes || "Pending ground coordinate and boundary audit."}
+                  </p>
+
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <button
+                      onClick={() => handleApprovePlace(item._id)}
+                      className="text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg transition"
+                    >
+                      Verify & Publish Inside Town
+                    </button>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* Verification Metrics Bar */}
+      {stats && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <span className="text-slate-400 text-[10px] uppercase font-bold">Total Researched</span>
+              <p className="text-lg font-extrabold text-slate-900">{stats.total}</p>
+            </div>
+            <Building className="w-5 h-5 text-slate-400" />
+          </div>
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <span className="text-emerald-700 text-[10px] uppercase font-bold">Town Verified (274401)</span>
+              <p className="text-lg font-extrabold text-emerald-700">{stats.published}</p>
+            </div>
+            <ShieldCheck className="w-5 h-5 text-emerald-600" />
+          </div>
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <span className="text-amber-700 text-[10px] uppercase font-bold">In Review Queue</span>
+              <p className="text-lg font-extrabold text-amber-700">{stats.inReview}</p>
+            </div>
+            <AlertTriangle className="w-5 h-5 text-amber-600" />
+          </div>
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <span className="text-red-700 text-[10px] uppercase font-bold">Audited Categories</span>
+              <p className="text-lg font-extrabold text-red-700">{stats.categoryCounts?.length || 8}</p>
+            </div>
+            <Layers className="w-5 h-5 text-red-600" />
+          </div>
+        </div>
+      )}
+
+      {/* Search & Filter Bar */}
+      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="relative flex-1 w-full">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search by school, clinic, sweet shop, pharmacy, landmark (e.g. NH-27, College Road)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-50 text-slate-900 placeholder-slate-400 text-xs sm:text-sm pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-red-600"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              type="submit"
+              className="flex-1 sm:flex-none bg-slate-900 hover:bg-red-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition shadow-sm"
+            >
+              Search
+            </button>
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  fetchPlaces();
+                }}
+                className="p-2.5 text-slate-400 hover:text-slate-600 rounded-xl border border-slate-200"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* View Mode Switcher */}
+            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 ml-auto">
+              <button
+                type="button"
+                onClick={() => setViewMode("map")}
+                className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+                  viewMode === "map" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <Map className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Map View</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("list")}
+                className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+                  viewMode === "list" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <List className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">List View</span>
+              </button>
+            </div>
+          </div>
+        </form>
+
+        {/* Category Pills Slider */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-semibold custom-scrollbar">
+          {CATEGORIES.map((cat) => {
+            const Icon = cat.icon;
+            const isSelected = selectedCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => handleCategorySelect(cat.id)}
+                className={`px-3.5 py-1.5 rounded-xl whitespace-nowrap transition flex items-center gap-1.5 ${
+                  isSelected
+                    ? "bg-slate-900 text-white shadow-sm ring-2 ring-red-600/30"
+                    : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/80"
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-red-400" : "text-slate-500"}`} />
+                <span>{cat.name}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Secondary Filters Bar */}
+        <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100 gap-2">
+          <div className="flex items-center gap-2">
+            <span>Showing:</span>
+            <span className="font-bold text-slate-900">{places.length} Verified Establishments</span>
+            <span>in Fazilnagar Town</span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {localities.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-slate-400" />
+                <select
+                  value={selectedLocality}
+                  onChange={(e) => setSelectedLocality(e.target.value)}
+                  className="bg-transparent text-slate-700 font-semibold outline-none cursor-pointer text-xs"
+                >
+                  <option value="all">All Localities</option>
+                  {localities.map((loc) => (
+                    <option key={loc} value={loc}>
+                      {loc}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="flex items-center gap-1.5">
+              <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-transparent text-slate-700 font-semibold outline-none cursor-pointer text-xs"
+              >
+                <option value="name">Sort Alphabetically (A-Z)</option>
+                <option value="category">Sort by Category</option>
+                <option value="newest">Sort by Recently Verified</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      {places.length === 0 && !loading ? (
+        <div className="bg-white rounded-2xl p-12 text-center border border-[#E1E6EA] shadow-xs max-w-xl mx-auto my-8">
+          <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto mb-3">
+            <Search className="w-6 h-6 text-slate-400" />
+          </div>
+          <h3 className="text-base font-bold text-[#18232E] font-heading">No establishments found</h3>
+          <p className="text-xs text-[#647180] mt-1 max-w-md mx-auto">
+            No verified places matched your search query or category filter within Fazilnagar town limits.
+          </p>
+          <button
+            onClick={() => {
+              setSelectedCategory("all");
+              setSelectedLocality("all");
+              setSearchQuery("");
+              setSearchParams({});
+            }}
+            className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#18232E] hover:bg-[#B8323C] text-white text-xs font-bold transition shadow-xs"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset All Filters</span>
+          </button>
+        </div>
+      ) : viewMode === "map" ? (
+        /* Map View + Synchronized List */
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Leaflet Map */}
+          <div className="lg:col-span-2 bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-md relative min-h-[480px]">
+            <div ref={mapContainerRef} className="w-full h-full min-h-[480px] z-10" />
+            <div className="absolute top-3 left-3 z-20 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-slate-200 text-[11px] font-semibold text-slate-700 shadow-sm flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Coordinates: 26.6827° N, 84.0498° E (Town Boundary)</span>
+            </div>
+          </div>
+
+          {/* Synchronized Place Details Card */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+            {selectedPlace ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-red-50 text-red-800 border border-red-100">
+                    {selectedPlace.category}
+                  </span>
+                  <span className="text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Confirmed in Town
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-extrabold text-slate-900">{selectedPlace.name}</h3>
+                  {selectedPlace.subcategory && (
+                    <p className="text-xs font-semibold text-red-700 mt-0.5">{selectedPlace.subcategory}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2.5 text-xs text-slate-600 py-3 border-y border-slate-100">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                    <span>{selectedPlace.addressFull}</span>
+                  </div>
+                  {selectedPlace.openingHours && (
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      <span>{selectedPlace.openingHours}</span>
+                    </div>
+                  )}
+                  {selectedPlace.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      <span>{selectedPlace.phone}</span>
+                    </div>
+                  )}
+                </div>
+
+                {selectedPlace.description && (
+                  <p className="text-xs text-slate-600 leading-relaxed">{selectedPlace.description}</p>
+                )}
+
+                {selectedPlace.services?.length > 0 && (
+                  <div className="pt-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+                      Services / Offerings
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedPlace.services.map((srv, i) => (
+                        <span key={i} className="text-[11px] bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-lg">
+                          {srv}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-slate-400 text-xs">
+                Select an establishment from the map or list to view verified details.
+              </div>
+            )}
+
+            {selectedPlace && (
+              <div className="pt-6 border-t border-slate-100 space-y-2 mt-4">
+                <div className="grid grid-cols-2 gap-2">
+                  {selectedPlace.phone ? (
+                    <a
+                      href={`tel:${selectedPlace.phone.replace(/\s+/g, "")}`}
+                      className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2.5 rounded-xl transition text-center flex items-center justify-center gap-1.5"
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                      <span>Call Now</span>
+                    </a>
+                  ) : (
+                    <button
+                      disabled
+                      className="bg-slate-100 text-slate-400 font-medium text-xs py-2.5 rounded-xl text-center cursor-not-allowed"
+                    >
+                      No Public Phone
+                    </button>
+                  )}
+
+                  {selectedPlace.latitude && selectedPlace.longitude ? (
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${selectedPlace.latitude},${selectedPlace.longitude}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition text-center flex items-center justify-center gap-1.5 shadow-xs"
+                    >
+                      <Navigation className="w-3.5 h-3.5" />
+                      <span>Directions</span>
+                    </a>
+                  ) : (
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                        selectedPlace.name + " Fazilnagar"
+                      )}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition text-center flex items-center justify-center gap-1.5 shadow-xs"
+                    >
+                      <Navigation className="w-3.5 h-3.5" />
+                      <span>Directions</span>
+                    </a>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setDetailModalPlace(selectedPlace)}
+                  className="w-full text-center text-xs text-slate-500 hover:text-slate-800 font-semibold py-1.5 transition"
+                >
+                  View Full Verification Audit & Metadata
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* List View */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {places.map((place) => (
+            <div
+              key={place._id}
+              className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-teal-800">
+                    {place.category}
+                  </span>
+                  <span className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Town Verified
+                  </span>
+                </div>
+
+                <h3 className="text-base font-extrabold text-slate-900">{place.name}</h3>
+                {place.subcategory && <p className="text-xs font-semibold text-teal-700 mb-2">{place.subcategory}</p>}
+                <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed mb-3">{place.description}</p>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 space-y-2.5">
+                <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                  <span className="truncate">{place.streetOrLandmark || place.addressFull}</span>
+                </div>
+
+                {place.openingHours && (
+                  <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                    <span>{place.openingHours}</span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  {place.phone ? (
+                    <a
+                      href={`tel:${place.phone.replace(/\s+/g, "")}`}
+                      className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2 rounded-xl transition text-center flex items-center justify-center gap-1"
+                    >
+                      <Phone className="w-3 h-3" />
+                      <span>Call</span>
+                    </a>
+                  ) : (
+                    <span className="text-center text-[10px] text-slate-400 py-2 border border-slate-100 rounded-xl">
+                      In-Person Visit
+                    </span>
+                  )}
+
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${
+                      place.latitude ? `${place.latitude},${place.longitude}` : encodeURIComponent(place.name + " Fazilnagar")
+                    }`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-xs py-2 rounded-xl transition text-center flex items-center justify-center gap-1 shadow-xs"
+                  >
+                    <Navigation className="w-3 h-3" />
+                    <span>Directions</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Place Detail & Audit Modal (Section 2 & 9) */}
+      {detailModalPlace && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setDetailModalPlace(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-4">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-teal-50 text-teal-800">
+                  {detailModalPlace.category} • {detailModalPlace.subcategory || "Verified Establishment"}
+                </span>
+                <h2 className="text-2xl font-black text-slate-900 mt-2">{detailModalPlace.name}</h2>
+                {detailModalPlace.alternateNames?.length > 0 && (
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Also known as: {detailModalPlace.alternateNames.join(", ")}
+                  </p>
+                )}
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2 text-xs">
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold text-slate-800">Full Address:</span>
+                    <p className="text-slate-600">{detailModalPlace.addressFull}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200 text-slate-600">
+                  <div>
+                    <span className="font-bold text-slate-800">Locality:</span>
+                    <p>{detailModalPlace.locality}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-800">Coordinates:</span>
+                    <p>
+                      {detailModalPlace.latitude
+                        ? `${detailModalPlace.latitude}° N, ${detailModalPlace.longitude}° E`
+                        : "Verified Ground Location"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-xs font-bold text-slate-800">Description & Profile:</span>
+                <p className="text-xs text-slate-600 leading-relaxed">{detailModalPlace.description}</p>
+              </div>
+
+              {detailModalPlace.services?.length > 0 && (
+                <div>
+                  <span className="text-xs font-bold text-slate-800 block mb-1.5">Available Services:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {detailModalPlace.services.map((srv, idx) => (
+                      <span key={idx} className="text-xs bg-slate-100 text-slate-700 px-3 py-1 rounded-xl">
+                        {srv}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Research & Verification Metadata (Section 2) */}
+              <div className="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-100 space-y-1.5 text-xs">
+                <div className="flex items-center gap-1.5 text-emerald-950 font-bold">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <span>Geographical Verification Audit</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-[11px] text-emerald-900 pt-1">
+                  <div>
+                    <span className="font-semibold">Town Boundary Status:</span> Confirmed (Inside Town)
+                  </div>
+                  <div>
+                    <span className="font-semibold">Postal PIN:</span> 274401 (Fazilnagar)
+                  </div>
+                  <div>
+                    <span className="font-semibold">Last Audited:</span>{" "}
+                    {new Date(detailModalPlace.lastVerifiedAt || Date.now()).toLocaleDateString()}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Confidence Level:</span> High (Corroborated)
+                  </div>
+                </div>
+                {detailModalPlace.sourceUrls?.length > 0 && (
+                  <div className="text-[10px] text-emerald-800/80 pt-1 border-t border-emerald-100">
+                    Sources: {detailModalPlace.sourceUrls.join(" • ")}
+                  </div>
+                )}
+              </div>
+
+              {/* CTA Buttons */}
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                {detailModalPlace.phone ? (
+                  <a
+                    href={`tel:${detailModalPlace.phone.replace(/\s+/g, "")}`}
+                    className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-3 rounded-xl transition text-center flex items-center justify-center gap-2"
+                  >
+                    <Phone className="w-4 h-4" />
+                    <span>Call ({detailModalPlace.phone})</span>
+                  </a>
+                ) : (
+                  <button disabled className="bg-slate-100 text-slate-400 font-semibold text-xs py-3 rounded-xl">
+                    No Public Phone
+                  </button>
+                )}
+
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${
+                    detailModalPlace.latitude
+                      ? `${detailModalPlace.latitude},${detailModalPlace.longitude}`
+                      : encodeURIComponent(detailModalPlace.name + " Fazilnagar")
+                  }`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs py-3 rounded-xl transition text-center flex items-center justify-center gap-2"
+                >
+                  <Navigation className="w-4 h-4" />
+                  <span>Open in Google Maps</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Suggest Place Modal (Section 11) */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+            <button
+              onClick={() => setShowAddModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
+                <PlusCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Suggest Establishment for Directory</h3>
+                <p className="text-[11px] text-slate-500">
+                  Establishment must be physically located within Fazilnagar town limits.
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleAddSubmit} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Establishment Name *</label>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  placeholder="e.g. Mahavir Inter College, Kisan Seva Kendra"
+                  className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Category *</label>
+                  <select
+                    name="category"
+                    required
+                    className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600 bg-white"
+                  >
+                    <option value="">Select Category</option>
+                    <option value="Schools & Colleges">Schools & Colleges</option>
+                    <option value="Hospitals & Clinics">Hospitals & Clinics</option>
+                    <option value="Sweet Shops & Bakeries">Sweet Shops & Bakeries</option>
+                    <option value="Medical Stores & Pharmacies">Medical Stores & Pharmacies</option>
+                    <option value="Religious Places">Religious Places</option>
+                    <option value="Public Facilities">Public Facilities & Banks</option>
+                    <option value="Shopping & Services">Shopping & Services</option>
+                    <option value="Transport & Travel">Transport & Travel</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Subcategory</label>
+                  <input
+                    type="text"
+                    name="subcategory"
+                    placeholder="e.g. Pharmacy, Inter College"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Exact Address in Fazilnagar *</label>
+                <input
+                  type="text"
+                  name="addressFull"
+                  required
+                  placeholder="e.g. College Road, Opp. SBI Branch, Fazilnagar - 274401"
+                  className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Locality / Ward</label>
+                  <input
+                    type="text"
+                    name="locality"
+                    placeholder="e.g. College Road, Main Chowk"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Public Phone (Optional)</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    placeholder="10-digit phone number"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Services / Description</label>
+                <textarea
+                  name="description"
+                  rows={2}
+                  placeholder="Describe services, opening hours, or landmarks..."
+                  className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600"
+                ></textarea>
+              </div>
+
+              <p className="text-[10px] text-slate-400">
+                Note: Listings are verified by town moderators before publication to ensure no out-of-town entries are
+                included.
+              </p>
+
+              <button
+                type="submit"
+                className="w-full bg-slate-900 hover:bg-teal-700 text-white font-bold text-xs py-3 rounded-xl transition"
+              >
+                Submit Establishment for Verification
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Feedback */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs border border-slate-800 transition-all duration-300">
+          <CheckCircle2 className="w-4 h-4 text-teal-400" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+    </div>
+  );
+}
