@@ -237,12 +237,14 @@ export default function App() {
           <div className="hidden sm:flex items-center gap-2.5 shrink-0">
             {user ? (
               <>
-                <Link
-                  to="/admin/review"
-                  className="bg-amber-100 hover:bg-amber-200 text-amber-900 hover:text-amber-950 border border-amber-300 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5"
-                >
-                  <span>🛡️ Review Desk</span>
-                </Link>
+                {user.role === "admin" && (
+                  <Link
+                    to="/admin/review"
+                    className="bg-amber-100 hover:bg-amber-200 text-amber-900 hover:text-amber-950 border border-amber-300 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5"
+                  >
+                    <span>🛡️ Review Desk</span>
+                  </Link>
+                )}
                 <span className="text-xs font-bold text-[#168568] bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
                   {user.role === "admin" ? "Admin" : (user.name || user.email)}
                 </span>
@@ -261,12 +263,6 @@ export default function App() {
               </>
             ) : (
               <>
-                <Link
-                  to="/admin/review"
-                  className="bg-amber-100 hover:bg-amber-200 text-amber-900 hover:text-amber-950 border border-amber-300 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5"
-                >
-                  <span>🛡️ Review Desk</span>
-                </Link>
                 <Link
                   to="/login"
                   className="text-xs font-bold text-slate-700 hover:text-slate-900 px-3 py-2"
@@ -520,7 +516,9 @@ export default function App() {
               <li><Link to="/create-news" className="hover:text-white">Submit Local News</Link></li>
               <li><Link to="/login" className="hover:text-white">Citizen / Reporter Login</Link></li>
               <li><Link to="/register" className="hover:text-white">Register Resident Account</Link></li>
-              <li><Link to="/admin/review" className="hover:text-amber-400 text-amber-300 font-bold flex items-center gap-1"><span>🛡️</span> Admin Review Desk</Link></li>
+              {user?.role === "admin" && (
+                <li><Link to="/admin/review" className="hover:text-amber-400 text-amber-300 font-bold flex items-center gap-1"><span>🛡️</span> Admin Review Desk</Link></li>
+              )}
             </ul>
           </div>
 

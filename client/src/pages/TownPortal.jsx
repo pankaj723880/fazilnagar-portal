@@ -512,13 +512,15 @@ export default function TownPortal() {
             <div className="hidden sm:flex items-center gap-2.5 shrink-0">
               {currentUser ? (
                 <>
-                  <Link
-                    to="/admin/review"
-                    className="bg-amber-100 hover:bg-amber-200 text-amber-900 hover:text-amber-950 border border-amber-300 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5"
-                  >
-                    <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
-                    <span>Review Desk</span>
-                  </Link>
+                  {currentUser.role === "admin" && (
+                    <Link
+                      to="/admin/review"
+                      className="bg-amber-100 hover:bg-amber-200 text-amber-900 hover:text-amber-950 border border-amber-300 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5"
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Review Desk</span>
+                    </Link>
+                  )}
                   <span className="text-xs font-bold text-[#168568] bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
                     {currentUser.role === "admin" ? "Admin" : (currentUser.name || currentUser.email)}
                   </span>
@@ -537,13 +539,6 @@ export default function TownPortal() {
                 </>
               ) : (
                 <>
-                  <Link
-                    to="/admin/review"
-                    className="bg-amber-100 hover:bg-amber-200 text-amber-900 hover:text-amber-950 border border-amber-300 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5"
-                  >
-                    <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
-                    <span>Review Desk</span>
-                  </Link>
                   <Link
                     to="/login"
                     className="text-xs font-bold text-[#18232E] hover:text-[#B8323C] px-3 py-2 transition"
@@ -637,7 +632,7 @@ export default function TownPortal() {
                       <Link
                         to="/admin/review"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="bg-amber-500 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-xl text-center shadow-xs"
+                        className="bg-amber-100 border border-amber-300 text-amber-900 text-xs font-extrabold px-3 py-2 rounded-xl text-center shadow-xs"
                       >
                         🛡️ Review
                       </Link>
