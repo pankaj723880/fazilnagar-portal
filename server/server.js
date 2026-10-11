@@ -57,7 +57,7 @@ async function seedAdminUser() {
   try {
     const adminEmail = (process.env.ADMIN_EMAIL || "admin@fazilnagar.com").trim().toLowerCase();
     const adminPassword = process.env.ADMIN_PASSWORD || "Admin@Fazilnagar2026";
-    const adminName = process.env.ADMIN_NAME || "Fazilnagar Portal Administrator";
+    const adminName = process.env.ADMIN_NAME || "Admin";
 
     const existingAdmin = await User.findOne({ email: adminEmail });
     if (!existingAdmin) {
@@ -71,10 +71,20 @@ async function seedAdminUser() {
         role: "admin",
       });
       console.log(`[AdminSeed] Default Admin created successfully (${adminEmail}).`);
-    } else if (existingAdmin.role !== "admin") {
-      existingAdmin.role = "admin";
-      await existingAdmin.save();
-      console.log(`[AdminSeed] Existing user ${adminEmail} elevated to admin.`);
+    } else {
+      let needsSave = false;
+      if (existingAdmin.role !== "admin") {
+        existingAdmin.role = "admin";
+        needsSave = true;
+      }
+      if (existingAdmin.name === "Fazilnagar Portal Administrator") {
+        existingAdmin.name = "Admin";
+        needsSave = true;
+      }
+      if (needsSave) {
+        await existingAdmin.save();
+        console.log(`[AdminSeed] Updated existing admin ${adminEmail}.`);
+      }
     }
   } catch (err) {
     console.warn("[AdminSeed] Admin seed warning:", err.message);

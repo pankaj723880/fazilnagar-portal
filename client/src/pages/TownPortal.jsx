@@ -526,8 +526,7 @@ export default function TownPortal() {
                     <span>🛡️ Review Desk</span>
                   </Link>
                   <span className="text-xs font-bold text-[#168568] bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
-                    {currentUser.role === "admin" ? "👑 Admin: " : "👤 "}
-                    {currentUser.name || currentUser.email}
+                    {currentUser.role === "admin" ? "Admin" : (currentUser.name || currentUser.email)}
                   </span>
                   <Link
                     to="/create-news"

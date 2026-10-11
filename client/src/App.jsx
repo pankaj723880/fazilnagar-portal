@@ -169,7 +169,7 @@ export default function App() {
           </a>
           {user && (
             <span className="text-[#168568] font-bold hidden md:inline">
-              👤 Logged in as: {user.name || user.email}
+              👤 Logged in as: {user.role === "admin" ? "Admin" : (user.name || user.email)}
             </span>
           )}
         </div>
@@ -251,8 +251,7 @@ export default function App() {
                   <span>🛡️ Review Desk</span>
                 </Link>
                 <span className="text-xs font-bold text-[#168568] bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
-                  {user.role === "admin" ? "👑 Admin: " : "👤 "}
-                  {user.name || user.email}
+                  {user.role === "admin" ? "Admin" : (user.name || user.email)}
                 </span>
                 <Link
                   to="/create-news"
