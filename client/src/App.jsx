@@ -22,19 +22,27 @@ import CreateNews from "./pages/CreateNews";
 import TownPortal from "./pages/TownPortal";
 import Directory from "./pages/Directory";
 
-const NAV_ITEMS = [
-  { path: "/", label: "🏛️ Home", icon: "🏛️" },
-  { path: "/directory", label: "🗺️ Town Directory", icon: "📍", badge: "Verified" },
-  { path: "/news", label: "📰 News", icon: "🗞️" },
-  { path: "/emergency", label: "🚨 Emergency", icon: "🚓", badge: "24/7" },
-  { path: "/healthcare", label: "🏥 Healthcare", icon: "⚕️" },
-  { path: "/education", label: "🎓 Education", icon: "📚" },
-  { path: "/jobs", label: "💼 Jobs & Directory", icon: "👔" },
-  { path: "/tourism", label: "🏨 Tourism", icon: "🏰" },
-  { path: "/food", label: "🍛 Food Guide", icon: "🍲" },
-  { path: "/marketplace", label: "🛍️ Marketplace", icon: "🏪" },
-  { path: "/transport", label: "🚌 Transport", icon: "🛺" },
-  { path: "/govt", label: "🏛️ Govt Services", icon: "📜" },
+const MAIN_NAV_ITEMS = [
+  { path: "/", label: "Home" },
+  { path: "/#explore-categories", label: "Explore", isHash: true },
+  { path: "/directory", label: "Directory", count: "37" },
+  { path: "/#town-map-section", label: "Map", isHash: true },
+  { path: "/news", label: "Local Updates" },
+  { path: "/#about-fazilnagar-section", label: "About", isHash: true },
+];
+
+const DIRECTORY_SUB_NAV = [
+  { path: "/directory", label: "Town Directory", icon: "🗺️", badge: "Verified" },
+  { path: "/education", label: "Education", icon: "🎓" },
+  { path: "/emergency", label: "Emergency", icon: "🚨", badge: "24/7" },
+  { path: "/healthcare", label: "Healthcare", icon: "🏥" },
+  { path: "/news", label: "News", icon: "📰" },
+  { path: "/jobs", label: "Jobs & Directory", icon: "💼" },
+  { path: "/tourism", label: "Tourism", icon: "🏨" },
+  { path: "/food", label: "Food Guide", icon: "🍛" },
+  { path: "/marketplace", label: "Marketplace", icon: "🛍️" },
+  { path: "/transport", label: "Transport", icon: "🚌" },
+  { path: "/govt", label: "Govt Services", icon: "🏛️" },
 ];
 
 export default function App() {
@@ -49,22 +57,63 @@ export default function App() {
     location.pathname === "/portal" ||
     location.pathname === "/fazilnagar";
 
-  // Load user from LocalStorage on mount
+  // Persistent user synchronization from LocalStorage and JWT token
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        localStorage.removeItem("user");
+    const syncUser = () => {
+      const savedUser = localStorage.getItem("user");
+      const token = localStorage.getItem("token");
+
+      if (savedUser) {
+        try {
+          setUser(JSON.parse(savedUser));
+          return;
+        } catch (e) {
+          // continue to token decode
+        }
       }
-    }
+
+      if (token) {
+        try {
+          const payloadBase64 = token.split(".")[1];
+          if (payloadBase64) {
+            const decoded = JSON.parse(
+              atob(payloadBase64.replace(/-/g, "+").replace(/_/g, "/"))
+            );
+            if (decoded) {
+              const u = {
+                id: decoded.id,
+                name: decoded.name || decoded.email?.split("@")[0] || "Citizen",
+                email: decoded.email,
+              };
+              setUser(u);
+              localStorage.setItem("user", JSON.stringify(u));
+              return;
+            }
+          }
+        } catch (err) {
+          console.error("Token decode error:", err);
+        }
+      }
+
+      setUser(null);
+    };
+
+    syncUser();
+    window.addEventListener("storage", syncUser);
+    window.addEventListener("auth-change", syncUser);
+    return () => {
+      window.removeEventListener("storage", syncUser);
+      window.removeEventListener("auth-change", syncUser);
+    };
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("isLoggedIn");
     setUser(null);
+    window.dispatchEvent(new Event("auth-change"));
+    window.dispatchEvent(new Event("storage"));
   };
 
   if (isPortalPage) {
@@ -107,7 +156,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Main Header & Navigation - Modern Crisp Civic Frosted Bar */}
+      {/* Main Header & Navigation - Exact Match to Civic Navbar in Image 1 */}
       <header className="sticky top-0 z-50 bg-[#FFFFFF]/95 backdrop-blur-md border-b border-[#E1E6EA] shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16 gap-4">
           {/* Logo */}
@@ -125,37 +174,57 @@ export default function App() {
             </div>
           </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1 overflow-x-auto max-w-2xl py-2 scrollbar-none">
-            {NAV_ITEMS.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end={item.path === "/"}
-                className={({ isActive }) =>
-                  `px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${isActive
-                    ? "bg-red-700 text-white shadow-sm shadow-red-950/20"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                  }`
-                }
-              >
-                <span>{item.label}</span>
-                {item.badge && (
-                  <span className="bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full">
-                    {item.badge}
-                  </span>
-                )}
-              </NavLink>
-            ))}
+          {/* Desktop Navigation Links - Home, Explore, Directory [37], Map, Local Updates, About */}
+          <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold text-[#18232E]">
+            <Link
+              to="/"
+              className={`transition ${location.pathname === "/" ? "text-[#B8323C] font-bold" : "text-[#647180] hover:text-[#18232E]"}`}
+            >
+              Home
+            </Link>
+            <a
+              href="/#explore-categories"
+              className="text-[#647180] hover:text-[#18232E] transition"
+            >
+              Explore
+            </a>
+            <Link
+              to="/directory"
+              className={`transition flex items-center gap-1 ${location.pathname === "/directory" ? "text-[#B8323C] font-bold" : "text-[#647180] hover:text-[#18232E]"}`}
+            >
+              <span>Directory</span>
+              <span className="text-[9px] bg-[#168568] text-white px-1.5 py-0.2 rounded-full font-bold">37</span>
+            </Link>
+            <a
+              href="/#town-map-section"
+              className="text-[#647180] hover:text-[#18232E] transition"
+            >
+              Map
+            </a>
+            <Link
+              to="/news"
+              className={`transition ${location.pathname === "/news" ? "text-[#B8323C] font-bold" : "text-[#647180] hover:text-[#18232E]"}`}
+            >
+              Local Updates
+            </Link>
+            <a
+              href="/#about-fazilnagar-section"
+              className="text-[#647180] hover:text-[#18232E] transition"
+            >
+              About
+            </a>
           </nav>
 
           {/* Auth & Post Actions Bar */}
-          <div className="hidden sm:flex items-center gap-2 shrink-0">
+          <div className="hidden sm:flex items-center gap-2.5 shrink-0">
             {user ? (
               <>
+                <span className="text-xs font-bold text-[#168568] bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
+                  👤 {user.name || user.email}
+                </span>
                 <Link
                   to="/create-news"
-                  className="bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow-sm flex items-center gap-1"
+                  className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1"
                 >
                   <span>✍️ Post News</span>
                 </Link>
@@ -176,9 +245,15 @@ export default function App() {
                 </Link>
                 <Link
                   to="/register"
-                  className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-sm"
+                  className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs"
                 >
                   Register
+                </Link>
+                <Link
+                  to="/directory"
+                  className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs"
+                >
+                  Explore Town
                 </Link>
               </>
             )}
@@ -200,25 +275,111 @@ export default function App() {
           </button>
         </div>
 
+        {/* Secondary Sub-Navbar - ONLY ON DIRECTORY PAGE */}
+        {location.pathname === "/directory" && (
+          <div className="bg-[#FFFFFF] border-t border-[#E1E6EA] py-1.5 px-4 shadow-2xs">
+            <div className="max-w-7xl mx-auto flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#647180] shrink-0 mr-1 hidden sm:inline">
+                Civic Hubs:
+              </span>
+              {DIRECTORY_SUB_NAV.map((item) => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  end={item.path === "/directory"}
+                  className={({ isActive }) =>
+                    `px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+                      isActive
+                        ? "bg-[#B8323C] text-white shadow-xs font-bold"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200/60 bg-slate-50/70"
+                    }`
+                  }
+                >
+                  <span className="text-xs">{item.icon}</span>
+                  <span>{item.label}</span>
+                  {item.badge && (
+                    <span className="bg-[#168568] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Mobile Navigation Dropdown */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-4 space-y-3 shadow-lg">
             <div className="grid grid-cols-2 gap-2">
-              {NAV_ITEMS.map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  end={item.path === "/"}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={({ isActive }) =>
-                    `p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 ${isActive ? "bg-red-700 text-white shadow-sm" : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60"
-                    }`
-                  }
-                >
-                  <span>{item.icon}</span>
-                  <span className="truncate">{item.label.replace(/^.+?\s/, "")}</span>
-                </NavLink>
-              ))}
+              <Link
+                to="/"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60"
+              >
+                <span>🏛️</span>
+                <span>Home</span>
+              </Link>
+              <a
+                href="/#explore-categories"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60"
+              >
+                <span>🔍</span>
+                <span>Explore</span>
+              </a>
+              <Link
+                to="/directory"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-[#B8323C] text-white shadow-sm"
+              >
+                <span>🗺️</span>
+                <span>Directory (37)</span>
+              </Link>
+              <a
+                href="/#town-map-section"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60"
+              >
+                <span>📍</span>
+                <span>Map</span>
+              </a>
+              <Link
+                to="/news"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60"
+              >
+                <span>📰</span>
+                <span>Local Updates</span>
+              </Link>
+              <a
+                href="/#about-fazilnagar-section"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60"
+              >
+                <span>ℹ️</span>
+                <span>About</span>
+              </a>
+            </div>
+
+            {/* Mobile Civic Hubs Shortcuts */}
+            <div className="pt-2 border-t border-slate-100">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                Civic Hubs
+              </span>
+              <div className="grid grid-cols-2 gap-1.5">
+                {DIRECTORY_SUB_NAV.slice(1).map((hub) => (
+                  <Link
+                    key={hub.path}
+                    to={hub.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 flex items-center gap-1.5"
+                  >
+                    <span>{hub.icon}</span>
+                    <span className="truncate">{hub.label}</span>
+                  </Link>
+                ))}
+              </div>
             </div>
 
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
@@ -227,7 +388,7 @@ export default function App() {
                   <Link
                     to="/create-news"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex-1 bg-red-700 text-white text-xs font-bold py-2 rounded-xl text-center shadow-xs"
+                    className="flex-1 bg-[#B8323C] text-white text-xs font-bold py-2 rounded-xl text-center shadow-xs"
                   >
                     ✍️ Post News
                   </Link>
@@ -288,6 +449,7 @@ export default function App() {
           <Route path="/login" element={<Login setUser={setUser} />} />
           <Route path="/register" element={<Register setUser={setUser} />} />
           <Route path="/create-news" element={<CreateNews user={user} />} />
+          <Route path="/upload" element={<CreateNews user={user} />} />
         </Routes>
       </main>
 

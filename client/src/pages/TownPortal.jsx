@@ -245,6 +245,49 @@ export default function TownPortal() {
   const [modalType, setModalType] = useState(null); // "business" | "correction" | "event" | null
   const [toastMsg, setToastMsg] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const syncUser = () => {
+      const saved = localStorage.getItem("user");
+      const token = localStorage.getItem("token");
+      if (saved) {
+        try {
+          setCurrentUser(JSON.parse(saved));
+          return;
+        } catch (e) {}
+      }
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+          if (payload) {
+            const u = { name: payload.name || payload.email?.split("@")[0] || "Citizen", email: payload.email, id: payload.id };
+            setCurrentUser(u);
+            localStorage.setItem("user", JSON.stringify(u));
+            return;
+          }
+        } catch (e) {}
+      }
+      setCurrentUser(null);
+    };
+
+    syncUser();
+    window.addEventListener("storage", syncUser);
+    window.addEventListener("auth-change", syncUser);
+    return () => {
+      window.removeEventListener("storage", syncUser);
+      window.removeEventListener("auth-change", syncUser);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("isLoggedIn");
+    setCurrentUser(null);
+    window.dispatchEvent(new Event("auth-change"));
+    window.dispatchEvent(new Event("storage"));
+  };
 
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -426,15 +469,49 @@ export default function TownPortal() {
               <a href="#about-fazilnagar-section" className="text-[#647180] hover:text-[#18232E] transition">About</a>
             </div>
 
-            {/* Primary Action Button */}
+            {/* Primary Action & Citizen Auth Bar */}
             <div className="hidden sm:flex items-center gap-2.5 shrink-0">
-              <Link
-                to="/directory"
-                className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-xs flex items-center gap-1.5"
-              >
-                <Compass className="w-3.5 h-3.5" />
-                <span>Explore Town</span>
-              </Link>
+              {currentUser ? (
+                <>
+                  <span className="text-xs font-bold text-[#168568] bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
+                    👤 {currentUser.name || currentUser.email}
+                  </span>
+                  <Link
+                    to="/create-news"
+                    className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1"
+                  >
+                    <span>✍️ Post News</span>
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="text-xs font-bold text-[#18232E] hover:text-[#B8323C] px-3 py-2 transition"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs"
+                  >
+                    Register
+                  </Link>
+                  <Link
+                    to="/directory"
+                    className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5"
+                  >
+                    <Compass className="w-3.5 h-3.5" />
+                    <span>Explore Town</span>
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Toggle */}
@@ -499,6 +576,46 @@ export default function TownPortal() {
               >
                 Citizen Corner (Suggest & Report)
               </a>
+
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                {currentUser ? (
+                  <>
+                    <Link
+                      to="/create-news"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex-1 bg-[#B8323C] text-white text-xs font-bold py-2 rounded-xl text-center shadow-xs"
+                    >
+                      ✍️ Post News
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="bg-slate-100 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex-1 bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold py-2 rounded-xl text-center"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      to="/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex-1 bg-slate-900 text-white text-xs font-bold py-2 rounded-xl text-center shadow-xs"
+                    >
+                      Register
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           )}
         </div>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../api";
 
-export default function Register() {
+export default function Register({ setUser }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,26 +18,19 @@ export default function Register() {
     try {
       const res = await API.post("/auth/register", { name, email, password });
 
-      // Save auth tokens on successful creation
+      // Save auth tokens & user info
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("isLoggedIn", "true");
+      const userData = res.data.user || { name, email };
+      localStorage.setItem("user", JSON.stringify(userData));
+      
+      if (setUser) setUser(userData);
+      window.dispatchEvent(new Event("auth-change"));
       window.dispatchEvent(new Event("storage"));
 
-      navigate("/upload");
+      navigate("/");
     } catch (err) {
       const serverMessage = err.response?.data?.message || "Registration failed. Try again.";
-      
-      // Check if user already exists based on status code or response message
-      if (
-        err.response?.status === 400 || 
-        err.response?.status === 409 || 
-        serverMessage.toLowerCase().includes("exist")
-      ) {
-        alert("⚠️ User already exists with this email! Please log in instead.");
-      } else {
-        alert(`Error: ${serverMessage}`);
-      }
-
       setError(serverMessage);
     } finally {
       setLoading(false);
@@ -60,6 +53,7 @@ export default function Register() {
           <input
             type="text"
             value={name}
+            autoComplete="name"
             onChange={(e) => setName(e.target.value)}
             className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-red-600"
             required
@@ -71,6 +65,7 @@ export default function Register() {
           <input
             type="email"
             value={email}
+            autoComplete="email"
             onChange={(e) => setEmail(e.target.value)}
             className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-red-600"
             required
@@ -82,6 +77,7 @@ export default function Register() {
           <input
             type="password"
             value={password}
+            autoComplete="new-password"
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-red-600"
             required

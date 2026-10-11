@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import API from "../api";
 
-export default function Login() {
+export default function Login({ setUser }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -11,7 +11,7 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Redirect to origin page (e.g. /upload) if set, otherwise default to Homepage "/"
+  // Redirect to origin page if set, otherwise default to Homepage "/"
   const redirectPath = location.state?.from || "/";
 
   const handleLogin = async (e) => {
@@ -22,9 +22,14 @@ export default function Login() {
     try {
       const res = await API.post("/auth/login", { email, password });
 
-      // Save credentials
+      // Save credentials & user info
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("isLoggedIn", "true");
+      const userData = res.data.user || { email, name: email.split("@")[0] };
+      localStorage.setItem("user", JSON.stringify(userData));
+      
+      if (setUser) setUser(userData);
+      window.dispatchEvent(new Event("auth-change"));
       window.dispatchEvent(new Event("storage"));
 
       // Navigate dynamically based on where user came from
@@ -52,6 +57,7 @@ export default function Login() {
           <input
             type="email"
             value={email}
+            autoComplete="email"
             onChange={(e) => setEmail(e.target.value)}
             className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-red-600"
             required
@@ -63,6 +69,7 @@ export default function Login() {
           <input
             type="password"
             value={password}
+            autoComplete="current-password"
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-red-600"
             required
