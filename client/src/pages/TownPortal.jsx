@@ -496,7 +496,7 @@ export default function TownPortal() {
             </Link>
 
             {/* Desktop Navigation Links */}
-            <div className="hidden lg:flex items-center gap-6 text-xs font-semibold text-[#18232E]">
+            <div className="hidden lg:flex items-center gap-5 text-xs font-semibold text-[#18232E]">
               <a href="#hero-section" className="text-[#B8323C] font-bold">Home</a>
               <a href="#explore-categories" className="text-[#647180] hover:text-[#18232E] transition">Explore</a>
               <Link to="/directory" className="text-[#647180] hover:text-[#18232E] transition flex items-center gap-1">
@@ -506,21 +506,25 @@ export default function TownPortal() {
               <a href="#town-map-section" className="text-[#647180] hover:text-[#18232E] transition">Map</a>
               <a href="#local-updates-section" className="text-[#647180] hover:text-[#18232E] transition">Local Updates</a>
               <a href="#about-fazilnagar-section" className="text-[#647180] hover:text-[#18232E] transition">About</a>
+              <Link
+                to="/admin/review"
+                className="text-amber-900 hover:text-amber-950 font-extrabold bg-amber-100 hover:bg-amber-200 px-2.5 py-1.5 rounded-xl border border-amber-300 transition flex items-center gap-1"
+              >
+                <span>🛡️ Admin Review</span>
+              </Link>
             </div>
 
             {/* Primary Action & Citizen Auth Bar */}
             <div className="hidden sm:flex items-center gap-2.5 shrink-0">
               {currentUser ? (
                 <>
-                  {currentUser.role === "admin" && (
-                    <Link
-                      to="/admin/review"
-                      className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1"
-                    >
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      <span>🛡️ Review Desk</span>
-                    </Link>
-                  )}
+                  <Link
+                    to="/admin/review"
+                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>🛡️ Review Desk</span>
+                  </Link>
                   <span className="text-xs font-bold text-[#168568] bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
                     {currentUser.role === "admin" ? "👑 Admin: " : "👤 "}
                     {currentUser.name || currentUser.email}
@@ -540,6 +544,13 @@ export default function TownPortal() {
                 </>
               ) : (
                 <>
+                  <Link
+                    to="/admin/review"
+                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>🛡️ Review Desk</span>
+                  </Link>
                   <Link
                     to="/login"
                     className="text-xs font-bold text-[#18232E] hover:text-[#B8323C] px-3 py-2 transition"

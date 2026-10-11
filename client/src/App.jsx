@@ -31,6 +31,7 @@ const MAIN_NAV_ITEMS = [
   { path: "/#town-map-section", label: "Map", isHash: true },
   { path: "/news", label: "Local Updates" },
   { path: "/#about-fazilnagar-section", label: "About", isHash: true },
+  { path: "/admin/review", label: "🛡️ Admin Review", badge: "Admin" },
 ];
 
 const DIRECTORY_SUB_NAV = [
@@ -231,20 +232,24 @@ export default function App() {
             >
               About
             </a>
+            <Link
+              to="/admin/review"
+              className="text-amber-900 hover:text-amber-950 font-extrabold bg-amber-100 hover:bg-amber-200 px-2.5 py-1.5 rounded-xl border border-amber-300 transition flex items-center gap-1"
+            >
+              <span>🛡️ Admin Review</span>
+            </Link>
           </nav>
 
           {/* Auth & Post Actions Bar */}
           <div className="hidden sm:flex items-center gap-2.5 shrink-0">
             {user ? (
               <>
-                {user.role === "admin" && (
-                  <Link
-                    to="/admin/review"
-                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1"
-                  >
-                    <span>🛡️ Review Desk</span>
-                  </Link>
-                )}
+                <Link
+                  to="/admin/review"
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1"
+                >
+                  <span>🛡️ Review Desk</span>
+                </Link>
                 <span className="text-xs font-bold text-[#168568] bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
                   {user.role === "admin" ? "👑 Admin: " : "👤 "}
                   {user.name || user.email}
@@ -264,6 +269,12 @@ export default function App() {
               </>
             ) : (
               <>
+                <Link
+                  to="/admin/review"
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1"
+                >
+                  <span>🛡️ Review Desk</span>
+                </Link>
                 <Link
                   to="/login"
                   className="text-xs font-bold text-slate-700 hover:text-slate-900 px-3 py-2"
