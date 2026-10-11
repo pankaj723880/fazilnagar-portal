@@ -21,6 +21,7 @@ import Register from "./pages/Register";
 import CreateNews from "./pages/CreateNews";
 import TownPortal from "./pages/TownPortal";
 import Directory from "./pages/Directory";
+import About from "./pages/About";
 
 const MAIN_NAV_ITEMS = [
   { path: "/", label: "Home" },
@@ -58,6 +59,7 @@ const DIRECTORY_SUB_NAV_PATHS = [
   "/marketplace",
   "/transport",
   "/govt",
+  "/about",
 ];
 
 export default function App() {
@@ -459,6 +461,7 @@ export default function App() {
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/transport" element={<Transportation />} />
           <Route path="/govt" element={<GovtServices />} />
+          <Route path="/about" element={<About />} />
 
           {/* Auth & Admin Routes */}
           <Route path="/login" element={<Login setUser={setUser} />} />

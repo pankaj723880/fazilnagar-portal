@@ -247,6 +247,7 @@ export default function TownPortal() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [liveNews, setLiveNews] = useState([]);
+  const [aboutTab, setAboutTab] = useState("fazilnagar"); // "fazilnagar" | "kushinagar" | "connection"
 
   useEffect(() => {
     const syncUser = () => {
@@ -1517,97 +1518,403 @@ export default function TownPortal() {
       </section>
 
       {/* ========================================================
-          SECTION 9: ABOUT FAZILNAGAR (History & Culture)
+          SECTION 9: ABOUT FAZILNAGAR & KUSHINAGAR (History & Culture)
           ======================================================== */}
-      <section id="about-fazilnagar-section" className="py-16">
+      <section id="about-fazilnagar-section" className="py-16 bg-white border-t border-[#E1E6EA]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-            <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B8323C] uppercase tracking-wider mb-1">
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>Town Profile & History</span>
-              </div>
-              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#18232E] tracking-tight mb-4 font-heading">
-                A Historic Crossroad in Kushinagar District
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
-                <strong>Fazilnagar</strong> (historically identified with ancient <em>Pawanagar</em> of the Malla
-                republic) is a vibrant commercial and educational town situated on the Four-Lane{" "}
-                <strong>National Highway 27</strong> (Old NH-28) in Kushinagar district, Uttar Pradesh.
-              </p>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-6">
-                Situated approximately 20 km southeast of the international Buddhist pilgrimage center of Kushinagar,
-                Fazilnagar connects Kasya with Tamkuhi Raj and Bihar. Revered in Jain tradition for Lord Mahavira's nirvana
-                legacy, the town is also a bustling center for secondary colleges, agro-trade, and local medical facilities.
-              </p>
-
-              <div className="grid grid-cols-3 gap-3 text-xs mb-6">
-                <div className="bg-white border border-[#E1E6EA] p-3 rounded-xl shadow-xs">
-                  <span className="block text-[#647180] text-[10px] font-bold uppercase">District</span>
-                  <span className="font-bold text-[#18232E] text-sm">Kushinagar</span>
-                </div>
-                <div className="bg-white border border-[#E1E6EA] p-3 rounded-xl shadow-xs">
-                  <span className="block text-[#647180] text-[10px] font-bold uppercase">Postal PIN</span>
-                  <span className="font-bold text-[#18232E] text-sm">274401</span>
-                </div>
-                <div className="bg-white border border-[#E1E6EA] p-3 rounded-xl shadow-xs">
-                  <span className="block text-[#647180] text-[10px] font-bold uppercase">Key Arterial</span>
-                  <span className="font-bold text-[#18232E] text-sm">NH-27 Highway</span>
-                </div>
-              </div>
-
-              <a
-                href="#town-map-section"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B8323C] hover:text-[#18232E] transition"
-              >
-                <span>Discover Town Landmarks on Map</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </a>
+          {/* Header */}
+          <div className="text-center max-w-3xl mx-auto mb-10">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B8323C] uppercase tracking-wider mb-2 bg-red-50 px-3 py-1 rounded-full border border-red-100">
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Town Profile, Antiquity & Sacred Heritage</span>
             </div>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#18232E] tracking-tight mb-3 font-heading">
+              Fazilnagar & Kushinagar: The Sacred Twin Heritage
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Explore the deep 2,600-year-old antiquity, sacred spiritual milestones of Bhagwan Mahavira and Lord Buddha,
+              and modern civic significance of the two historic capitals of the ancient Malla Republic.
+            </p>
 
-            {/* Landmark Cards */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#E1E6EA] shadow-xs">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center mb-3">
-                  <Landmark className="w-5 h-5" />
-                </div>
-                <h3 className="text-xs sm:text-sm font-bold text-[#18232E]">Ancient Pawanagar</h3>
-                <p className="text-[11px] text-[#647180] mt-1 leading-snug">
-                  Historic Jain Tirth antiquity and pilgrimage tradition honoring Lord Mahavira.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#E1E6EA] shadow-xs">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center mb-3">
-                  <GraduationCap className="w-5 h-5" />
-                </div>
-                <h3 className="text-xs sm:text-sm font-bold text-[#18232E]">College Road Hub</h3>
-                <p className="text-[11px] text-[#647180] mt-1 leading-snug">
-                  Home to Pawanagar Inter College, Sanskar Academy, and youth study centers.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#E1E6EA] shadow-xs">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#168568] flex items-center justify-center mb-3">
-                  <Store className="w-5 h-5" />
-                </div>
-                <h3 className="text-xs sm:text-sm font-bold text-[#18232E]">Highway Bazaar</h3>
-                <p className="text-[11px] text-[#647180] mt-1 leading-snug">
-                  Vibrant retail market supplying building materials, mithai, electronics, and clothing.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#E1E6EA] shadow-xs">
-                <div className="w-10 h-10 rounded-xl bg-red-50 text-[#B8323C] flex items-center justify-center mb-3">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-                <h3 className="text-xs sm:text-sm font-bold text-[#18232E]">Verified Directory</h3>
-                <p className="text-[11px] text-[#647180] mt-1 leading-snug">
-                  All listings verified inside town boundary without fake entries or outer block sprawl.
-                </p>
-              </div>
+            {/* Interactive Tab Switcher */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-6 p-1.5 bg-[#F5F7F8] rounded-2xl border border-[#E1E6EA] max-w-xl mx-auto">
+              <button
+                type="button"
+                onClick={() => setAboutTab("fazilnagar")}
+                className={`flex-1 min-w-[150px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                  aboutTab === "fazilnagar"
+                    ? "bg-[#18232E] text-white shadow-md"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                }`}
+              >
+                <span>🏛️ Fazilnagar (Pawanagar)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAboutTab("kushinagar")}
+                className={`flex-1 min-w-[150px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                  aboutTab === "kushinagar"
+                    ? "bg-[#18232E] text-white shadow-md"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                }`}
+              >
+                <span>☸️ Kushinagar (Mahaparinirvana)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAboutTab("connection")}
+                className={`flex-1 min-w-[150px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                  aboutTab === "connection"
+                    ? "bg-[#18232E] text-white shadow-md"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                }`}
+              >
+                <span>✨ The Twin Sacred Bond</span>
+              </button>
             </div>
           </div>
+
+          {/* TAB 1: FAZILNAGAR (PAWANAGAR) */}
+          {aboutTab === "fazilnagar" && (
+            <div className="space-y-8 animate-fadeIn">
+              {/* Image Gallery Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="group relative rounded-2xl overflow-hidden shadow-lg border border-[#E1E6EA] bg-slate-900 aspect-16/10">
+                  <img
+                    src="/images/fazilnagar_pawanagar.jpg"
+                    alt="Pawanagar Jain Mandir, Fazilnagar"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-5">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/80 border border-amber-600/50 px-2 py-0.5 rounded-full w-fit mb-1.5">
+                      Jain Tirth & Nirvana Sthal
+                    </span>
+                    <h3 className="text-white font-bold text-base sm:text-lg">
+                      Pawa Nagar Jain Temple & Shwetambar / Digambar Tirth
+                    </h3>
+                    <p className="text-slate-300 text-xs mt-1 line-clamp-2">
+                      Sacred site where the 24th Tirthankara, Lord Mahavira, delivered his concluding sermons and attained Nirvana in 527 BCE.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="group relative rounded-2xl overflow-hidden shadow-lg border border-[#E1E6EA] bg-slate-900 aspect-16/10">
+                  <img
+                    src="/images/fazilnagar_kakodha.jpg"
+                    alt="Kakodha Ghat and Kukuttha River, Fazilnagar"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-5">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-600/50 px-2 py-0.5 rounded-full w-fit mb-1.5">
+                      Ancient Kukuttha River
+                    </span>
+                    <h3 className="text-white font-bold text-base sm:text-lg">
+                      Historic Kakodha Ghat & Brick Archaeological Remains
+                    </h3>
+                    <p className="text-slate-300 text-xs mt-1 line-clamp-2">
+                      The revered river where Lord Buddha bathed and drank water on his holy journey from Pawa towards Kushinagar.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* History & Importance Deep Dive */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 bg-[#F5F7F8] p-6 sm:p-8 rounded-2xl border border-[#E1E6EA] space-y-4">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#B8323C] uppercase tracking-wide">
+                    <Landmark className="w-4 h-4" />
+                    <span>Historical Significance of Fazilnagar (Pawanagar)</span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-[#18232E] font-heading">
+                    Ancient Capital of the Malla Republic & Lord Mahavira's Nirvana
+                  </h3>
+                  <div className="text-xs sm:text-sm text-slate-700 leading-relaxed space-y-3">
+                    <p>
+                      <strong>Fazilnagar</strong> is historically identified with ancient <strong>Pawa (Pawanagar)</strong>,
+                      one of the two sovereign capitals of the ancient democratic <strong>Malla Mahajanapada</strong> (6th century BCE).
+                      According to canonical Jain literature (Kalpa Sutra and Uttaradhyayana Sutra), the 24th Jain Tirthankara,{" "}
+                      <strong>Lord Mahavira</strong>, spent his last monsoon retreat here, delivered his final immortal sermons at
+                      King Hastipala's council, and attained ultimate <em>Nirvana</em> on the new moon night of Kartik (Kartik Amavasya) in 527 BCE.
+                    </p>
+                    <p>
+                      To mark the departure of the supreme light of truth, the confederate kings of Kasi, Kosala, and the nine Malla chieftains
+                      illuminated their homes and streets with rows of clay lamps—establishing the sacred origin of the festival of{" "}
+                      <strong>Deepavali (Diwali)</strong>.
+                    </p>
+                    <p>
+                      In Buddhist chronicles (Maha-parinibbana Sutta), Pawa holds equal reverence. Before his Parinirvana,{" "}
+                      <strong>Gautam Buddha</strong> visited Pawa, stayed in the mango grove of Cunda the metalsmith, accepted his final meal,
+                      and then walked past the tranquil <strong>Kakuttha (Kakodha) River</strong>, resting beneath trees on his path to Kushinagar.
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-[#E1E6EA] grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                    <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
+                      <span className="block text-[10px] text-slate-500 font-bold uppercase">Antiquity</span>
+                      <span className="text-xs font-extrabold text-[#18232E]">2,600+ Years</span>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
+                      <span className="block text-[10px] text-slate-500 font-bold uppercase">Ancient Dynasty</span>
+                      <span className="text-xs font-extrabold text-[#18232E]">Malla Republic</span>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
+                      <span className="block text-[10px] text-slate-500 font-bold uppercase">PIN Code</span>
+                      <span className="text-xs font-extrabold text-[#18232E]">274401</span>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
+                      <span className="block text-[10px] text-slate-500 font-bold uppercase">Highway</span>
+                      <span className="text-xs font-extrabold text-[#18232E]">NH-27 4-Lane</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modern Importance Column */}
+                <div className="bg-white p-6 rounded-2xl border border-[#E1E6EA] space-y-4 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-[#168568] tracking-wider block mb-1">
+                      Present-Day Importance
+                    </span>
+                    <h4 className="text-base font-bold text-[#18232E] font-heading mb-3">
+                      Modern Civic, Educational & Commercial Hub
+                    </h4>
+                    <ul className="space-y-3 text-xs text-slate-600 leading-relaxed">
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#168568] font-bold text-sm">✓</span>
+                        <span><strong>Education Center:</strong> Houses prominent institutions including Pawanagar Mahavir Inter College, Degree Colleges, and private academies serving 15+ surrounding gram panchayats.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#168568] font-bold text-sm">✓</span>
+                        <span><strong>Strategic Highway Corridor:</strong> Directly situated on the Golden East-West corridor NH-27 (Old NH-28), connecting Gorakhpur with Bihar and Assam.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#168568] font-bold text-sm">✓</span>
+                        <span><strong>Public Health Care:</strong> Community Health Centre (CHC) Fazilnagar provides 24/7 maternal, emergency ambulance, and immunization care.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#168568] font-bold text-sm">✓</span>
+                        <span><strong>Grain & Trade Mandi:</strong> A prime marketplace for sugarcane, grains, electronics, fertilizers, and building materials.</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <a
+                    href="#town-map-section"
+                    className="w-full bg-[#18232E] hover:bg-[#B8323C] text-white text-xs font-bold py-2.5 rounded-xl transition text-center block shadow-xs"
+                  >
+                    View Fazilnagar Landmarks on Map
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: KUSHINAGAR (MAHAPARINIRVANA) */}
+          {aboutTab === "kushinagar" && (
+            <div className="space-y-8 animate-fadeIn">
+              {/* Image Gallery Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="group relative rounded-2xl overflow-hidden shadow-lg border border-[#E1E6EA] bg-slate-900 aspect-16/10">
+                  <img
+                    src="/images/kushinagar_mahaparinirvana.jpg"
+                    alt="Mahaparinirvana Stupa and Temple, Kushinagar"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-5">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 bg-rose-950/80 border border-rose-600/50 px-2 py-0.5 rounded-full w-fit mb-1.5">
+                      World Buddhist Pilgrimage
+                    </span>
+                    <h3 className="text-white font-bold text-base sm:text-lg">
+                      Mahaparinirvana Stupa & Temple with 6.1m Reclining Buddha
+                    </h3>
+                    <p className="text-slate-300 text-xs mt-1 line-clamp-2">
+                      The sacred sanctuary commemorating where Lord Gautam Buddha attained Mahaparinirvana in 483 BCE under the twin Sal trees.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="group relative rounded-2xl overflow-hidden shadow-lg border border-[#E1E6EA] bg-slate-900 aspect-16/10">
+                  <img
+                    src="/images/kushinagar_ramabhar.jpg"
+                    alt="Ramabhar Stupa, Kushinagar"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-5">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/80 border border-amber-600/50 px-2 py-0.5 rounded-full w-fit mb-1.5">
+                      Mukutbandhana Chaitya
+                    </span>
+                    <h3 className="text-white font-bold text-base sm:text-lg">
+                      Ancient Ramabhar Stupa — Holy Cremation Mound
+                    </h3>
+                    <p className="text-slate-300 text-xs mt-1 line-clamp-2">
+                      A majestic 49-foot brick dome marking the exact site where the mortal remains of Buddha were cremated with supreme reverence by the Mallas.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* History & Importance Deep Dive */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 bg-[#F5F7F8] p-6 sm:p-8 rounded-2xl border border-[#E1E6EA] space-y-4">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#B8323C] uppercase tracking-wide">
+                    <Landmark className="w-4 h-4" />
+                    <span>Sacred Antiquity of Kushinagar (Kusinara)</span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-[#18232E] font-heading">
+                    The Supreme Mahaparinirvana Sthal of Lord Gautam Buddha
+                  </h3>
+                  <div className="text-xs sm:text-sm text-slate-700 leading-relaxed space-y-3">
+                    <p>
+                      <strong>Kushinagar</strong> (anciently known as <em>Kushavati</em> and <em>Kusinara</em>) was the sister sovereign
+                      seat of the Malla Republic, situated approximately <strong>18 km northwest of Fazilnagar</strong>.
+                      It is revered worldwide by hundreds of millions of Buddhists as one of the four principal holy sites of Buddhism
+                      (alongside Lumbini, Bodh Gaya, and Sarnath).
+                    </p>
+                    <p>
+                      In 483 BCE, at the age of 80, <strong>Gautama Buddha</strong> reached the Upavattana grove of Sal trees along the
+                      Hiranyavati River in Kusinara. Here, lying between two blossoming Sal trees with his head to the north, he delivered
+                      his last discourse to his disciples, gave his final admonition:{" "}
+                      <em>"Appamadena sampadetha" (Strive diligently for your liberation)</em>, and attained ultimate Parinirvana.
+                    </p>
+                    <p>
+                      In 1876, British archaeologist <strong>A.C.L. Carlleyle</strong> and Sir Alexander Cunningham excavated the site,
+                      unearthing the celebrated <strong>6.1-meter-long monolith red sandstone reclining Buddha statue</strong>,
+                      sculpted during the 5th-century Gupta era with the inscription of craftsman Dinna of Mathura.
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-[#E1E6EA] grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                    <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
+                      <span className="block text-[10px] text-slate-500 font-bold uppercase">Distance from Town</span>
+                      <span className="text-xs font-extrabold text-[#18232E]">18 km (~20 min)</span>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
+                      <span className="block text-[10px] text-slate-500 font-bold uppercase">International Airport</span>
+                      <span className="text-xs font-extrabold text-[#18232E]">Operational</span>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
+                      <span className="block text-[10px] text-slate-500 font-bold uppercase">Buddhist Circuit</span>
+                      <span className="text-xs font-extrabold text-[#18232E]">Global Hub</span>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
+                      <span className="block text-[10px] text-slate-500 font-bold uppercase">District HQ</span>
+                      <span className="text-xs font-extrabold text-[#18232E]">Kushinagar</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Key Monuments Column */}
+                <div className="bg-white p-6 rounded-2xl border border-[#E1E6EA] space-y-4 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-[#B8323C] tracking-wider block mb-1">
+                      Key Pilgrimage Monuments
+                    </span>
+                    <h4 className="text-base font-bold text-[#18232E] font-heading mb-3">
+                      World Heritage Archaeological Wonders
+                    </h4>
+                    <ul className="space-y-3 text-xs text-slate-600 leading-relaxed">
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#B8323C] font-bold text-sm">☸</span>
+                        <span><strong>Mahaparinirvana Temple:</strong> Rebuilt in 1956 for the 2500th Buddha Jayanti, housing the world-famous reclining Buddha.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#B8323C] font-bold text-sm">☸</span>
+                        <span><strong>Ramabhar Stupa:</strong> Monumental brick chaitya standing 49 feet tall at the Buddha's holy cremation site.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#B8323C] font-bold text-sm">☸</span>
+                        <span><strong>Matha Kuar Shrine:</strong> Features a colossal 10th-century blue-black stone Buddha in Bhumisparsha mudra.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#B8323C] font-bold text-sm">☸</span>
+                        <span><strong>International Monasteries:</strong> Cultural monasteries built by Thailand, Myanmar, Japan, Sri Lanka, Tibet, China, Vietnam, and Cambodia.</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <Link
+                    to="/tourism"
+                    className="w-full bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold py-2.5 rounded-xl transition text-center block shadow-xs"
+                  >
+                    Explore Tourism Guide & Itineraries
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: TWIN SACRED BOND */}
+          {aboutTab === "connection" && (
+            <div className="space-y-8 animate-fadeIn">
+              <div className="bg-gradient-to-br from-slate-900 to-[#18232E] text-white p-8 sm:p-10 rounded-3xl shadow-xl space-y-6">
+                <div className="max-w-3xl">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/80 border border-amber-600/50 px-3 py-1 rounded-full">
+                    A Confluence of Two World Religions
+                  </span>
+                  <h3 className="text-2xl sm:text-3xl font-extrabold mt-3 font-heading text-white">
+                    Pawa (Fazilnagar) & Kusinara (Kushinagar): The Twin Capitals of the Malla Republic
+                  </h3>
+                  <p className="text-slate-300 text-xs sm:text-sm mt-3 leading-relaxed">
+                    Nowhere else on Earth are the ultimate mortal milestones of two supreme world spiritual luminaries—Lord Mahavira
+                    (Jainism) and Lord Gautam Buddha (Buddhism)—located in such intimate geographic and historic proximity.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-800 text-xs">
+                  <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 space-y-2">
+                    <span className="text-lg">🏛️</span>
+                    <h4 className="font-bold text-amber-300 text-sm">The Malla Mahajanapada</h4>
+                    <p className="text-slate-300 leading-relaxed text-[11px]">
+                      Over 2,600 years ago, the Mallas established one of ancient India's earliest democratic oligarchic republics,
+                      divided into two confederate capital regions: Pawa (modern Fazilnagar) and Kusinara (modern Kushinagar).
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 space-y-2">
+                    <span className="text-lg">🕯️</span>
+                    <h4 className="font-bold text-amber-300 text-sm">Mahavira's Nirvana in Pawa</h4>
+                    <p className="text-slate-300 leading-relaxed text-[11px]">
+                      In 527 BCE, the 24th Tirthankara Bhagwan Mahavira attained Nirvana at Pawa. The Malla chieftains lit deepams
+                      to dispel the spiritual darkness, originating the eternal Diwali celebration observed to this day.
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 space-y-2">
+                    <span className="text-lg">☸️</span>
+                    <h4 className="font-bold text-amber-300 text-sm">Buddha's Parinirvana in Kusinara</h4>
+                    <p className="text-slate-300 leading-relaxed text-[11px]">
+                      In 483 BCE, Gautam Buddha accepted his final meal in Pawa's mango grove, rested by the Kakodha/Kukuttha river,
+                      and walked the short 18 km route to Kushinagar to attain Mahaparinirvana under the twin Sal trees.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-800 text-xs">
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <MapPin className="w-4 h-4 text-emerald-400" />
+                    <span>Connected seamlessly by 4-lane NH-27 (Distance: 18 km / Travel Time: 20 minutes)</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Link
+                      to="/directory"
+                      className="bg-[#B8323C] hover:bg-[#991B1B] text-white font-bold px-4 py-2 rounded-xl transition"
+                    >
+                      Browse Town Directory
+                    </Link>
+                    <Link
+                      to="/tourism"
+                      className="bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-2 rounded-xl transition"
+                    >
+                      View Tourism Route
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
