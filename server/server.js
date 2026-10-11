@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import mongoose from "mongoose";
-import connectDB, { dbConnectionError } from "./config/db.js";
+import connectDB, { dbConnectionError, detectedUriSource } from "./config/db.js";
 import authRoutes from "./routes/auth.js";
 import newsRoutes from "./routes/news.js";
 import placesRoutes from "./routes/places.js";
@@ -35,6 +35,7 @@ app.get(["/", "/health", "/api/health"], (req, res) => {
     status: dbState === "connected" ? "healthy" : "database_issue",
     database: dbState,
     databaseHost: mongoose.connection.host || null,
+    uriSource: detectedUriSource,
     dbConnectionError: dbConnectionError || null,
     uptimeSeconds: Math.floor(process.uptime()),
     timestamp: new Date().toISOString(),

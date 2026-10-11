@@ -32,12 +32,38 @@ const autoSeedIfEmpty = async () => {
 };
 
 let dbConnectionError = null;
+let detectedUriSource = "default_fallback";
 
 const connectDB = async () => {
   try {
-    const uri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/fazilnagar_db";
+    let rawUri =
+      process.env.MONGO_URI ||
+      process.env.MONGO_URL ||
+      process.env.MONGODB_URI ||
+      process.env.MONGODB_URL ||
+      process.env["mongodb url"] ||
+      process.env["MONGODB URL"] ||
+      process.env["mongodb_url"] ||
+      "";
+
+    rawUri = (rawUri || "").trim();
+
+    let uri = rawUri;
+    if (!uri) {
+      uri = "mongodb://127.0.0.1:27017/fazilnagar_db";
+      detectedUriSource = "local_default (no MONGO_URI env var detected)";
+    } else {
+      detectedUriSource = "environment_variable_detected";
+      // Auto-append database name if omitted from Atlas SRV URI
+      if (uri.startsWith("mongodb+srv://") && uri.endsWith(".mongodb.net")) {
+        uri = `${uri}/fazilnagar_db?retryWrites=true&w=majority`;
+      } else if (uri.startsWith("mongodb+srv://") && uri.endsWith(".mongodb.net/")) {
+        uri = `${uri}fazilnagar_db?retryWrites=true&w=majority`;
+      }
+    }
+
     const conn = await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 8000,
     });
     console.log(`MongoDB Connected: ${conn.connection.host}`);
     dbConnectionError = null;
@@ -48,5 +74,5 @@ const connectDB = async () => {
   }
 };
 
-export { dbConnectionError };
+export { dbConnectionError, detectedUriSource };
 export default connectDB;
