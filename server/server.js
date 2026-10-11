@@ -3,7 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-import connectDB from "./config/db.js";
+import mongoose from "mongoose";
+import connectDB, { dbConnectionError } from "./config/db.js";
 import authRoutes from "./routes/auth.js";
 import newsRoutes from "./routes/news.js";
 import placesRoutes from "./routes/places.js";
@@ -27,8 +28,17 @@ app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Root health check endpoint
-app.get("/", (req, res) => {
-  res.json({ status: "ok", message: "Fazilnagar Town Portal Civic API is operational." });
+app.get(["/", "/health", "/api/health"], (req, res) => {
+  const states = ["disconnected", "connected", "connecting", "disconnecting"];
+  const dbState = states[mongoose.connection.readyState] || "unknown";
+  res.json({
+    status: dbState === "connected" ? "healthy" : "database_issue",
+    database: dbState,
+    databaseHost: mongoose.connection.host || null,
+    dbConnectionError: dbConnectionError || null,
+    uptimeSeconds: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // Connect DB & Routes
