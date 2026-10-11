@@ -1,40 +1,60 @@
 /**
  * Smart Direction Utility: Launches Google Maps turn-by-turn directions
- * starting from the user's real-time live GPS device location to the establishment.
+ * starting from the user's real-time live GPS device location to the destination.
+ *
+ * Uses synchronous navigation to prevent browser popup blockers from blocking
+ * the new tab, with cached coordinates fallback to Google Maps' native 'Current+Location'.
  */
+
+let cachedUserCoords = null;
+
+// Pre-fetch device coordinates in background if user already has permissions enabled
+if (typeof window !== "undefined" && "geolocation" in navigator) {
+  try {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (pos?.coords) {
+          cachedUserCoords = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          };
+        }
+      },
+      () => {
+        // Silently ignore if not yet permitted or dismissed
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 8000,
+        maximumAge: 300000, // Cache for 5 minutes
+      }
+    );
+  } catch (e) {
+    // Ignore environments where geolocation is restricted
+  }
+}
+
 export function openGoogleMapsDirections(place) {
   if (!place) return;
 
   const destLat = place.latitude || place.lat;
   const destLng = place.longitude || place.lng;
   const placeName = place.name || "Fazilnagar";
+
   const destination =
     destLat && destLng
       ? `${destLat},${destLng}`
       : encodeURIComponent(`${placeName}, Fazilnagar, Kushinagar, Uttar Pradesh`);
 
-  if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const userLat = position.coords.latitude;
-        const userLng = position.coords.longitude;
-        const url = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${destination}&travelmode=driving`;
-        window.open(url, "_blank", "noopener,noreferrer");
-      },
-      (error) => {
-        // Fallback: If user denies GPS permission or device times out, use Google Maps' built-in Current Location
-        console.warn("Geolocation prompt dismissed or unavailable, falling back to Current Location:", error);
-        const url = `https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${destination}&travelmode=driving`;
-        window.open(url, "_blank", "noopener,noreferrer");
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 6000,
-        maximumAge: 60000,
-      }
-    );
-  } else {
-    const url = `https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${destination}&travelmode=driving`;
-    window.open(url, "_blank", "noopener,noreferrer");
-  }
+  // If exact coordinates are cached from background geolocation, pass them directly.
+  // Otherwise, 'Current+Location' instructs Google Maps to immediately grab the device's live GPS.
+  const origin = cachedUserCoords
+    ? `${cachedUserCoords.lat},${cachedUserCoords.lng}`
+    : "Current+Location";
+
+  const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`;
+
+  // Always invoke window.open synchronously to prevent modern browsers (Chrome/Safari)
+  // from blocking the new window as an unsolicited async popup.
+  window.open(url, "_blank", "noopener,noreferrer");
 }
