@@ -12,8 +12,14 @@ import placesRoutes from "./routes/places.js";
 dotenv.config();
 const app = express();
 
+import fs from "fs";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 app.use(
   cors({
@@ -25,7 +31,7 @@ app.use(
 app.use(express.json());
 
 // Serve uploaded media files publicly
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(uploadsDir));
 
 // Root health check endpoint
 app.get(["/", "/health", "/api/health"], (req, res) => {

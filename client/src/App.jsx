@@ -45,6 +45,21 @@ const DIRECTORY_SUB_NAV = [
   { path: "/govt", label: "Govt Services", icon: "🏛️" },
 ];
 
+const DIRECTORY_SUB_NAV_PATHS = [
+  "/directory",
+  "/local-directory",
+  "/education",
+  "/emergency",
+  "/healthcare",
+  "/news",
+  "/jobs",
+  "/tourism",
+  "/food",
+  "/marketplace",
+  "/transport",
+  "/govt",
+];
+
 export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -275,8 +290,8 @@ export default function App() {
           </button>
         </div>
 
-        {/* Secondary Sub-Navbar - ONLY ON DIRECTORY PAGE */}
-        {location.pathname === "/directory" && (
+        {/* Secondary Sub-Navbar - Visible across Directory & all Civic Hub pages */}
+        {DIRECTORY_SUB_NAV_PATHS.includes(location.pathname) && (
           <div className="bg-[#FFFFFF] border-t border-[#E1E6EA] py-1.5 px-4 shadow-2xs">
             <div className="max-w-7xl mx-auto flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#647180] shrink-0 mr-1 hidden sm:inline">

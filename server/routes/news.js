@@ -4,12 +4,22 @@ import path from "path";
 import News from "../models/News.js";
 import verifyToken from "../middleware/auth.js";
 
+import fs from "fs";
+import { fileURLToPath } from "url";
+
 const router = express.Router();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const uploadDir = path.join(__dirname, "../uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // Multer storage setup for image and video uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/");
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
@@ -44,12 +54,16 @@ router.post(
       let imagePath = "";
       let videoPath = "";
 
+      const host = req.get("host") || "localhost:5000";
+      const protocol = req.protocol === "https" || req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+      const baseUrl = `${protocol}://${host}`;
+
       if (req.files?.image?.[0]) {
-        imagePath = `http://localhost:5000/uploads/${req.files.image[0].filename}`;
+        imagePath = `${baseUrl}/uploads/${req.files.image[0].filename}`;
       }
 
       if (req.files?.video?.[0]) {
-        videoPath = `http://localhost:5000/uploads/${req.files.video[0].filename}`;
+        videoPath = `${baseUrl}/uploads/${req.files.video[0].filename}`;
       }
 
       const news = await News.create({
@@ -75,7 +89,7 @@ router.post(
 // @access  Public
 router.get("/", async (req, res) => {
   try {
-    const news = await News.find().sort({ createdAt: -1 });
+    const news = await News.find().populate("author", "name email").sort({ createdAt: -1 });
     res.status(200).json(news);
   } catch (err) {
     console.error("Fetch All News Error:", err);

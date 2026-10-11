@@ -42,7 +42,7 @@ export default function UploadForm() {
         },
       });
       setMessage("News posted successfully!");
-      setTimeout(() => navigate("/"), 1500);
+      setTimeout(() => navigate("/news"), 1500);
     } catch (err) {
       setMessage(err.response?.data?.message || "Failed to post news. Try again.");
     } finally {

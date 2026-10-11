@@ -246,6 +246,7 @@ export default function TownPortal() {
   const [toastMsg, setToastMsg] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [liveNews, setLiveNews] = useState([]);
 
   useEffect(() => {
     const syncUser = () => {
@@ -298,7 +299,7 @@ export default function TownPortal() {
     setTimeout(() => setToastMsg(""), 4000);
   };
 
-  // Fetch live places from backend if available
+  // Fetch live places & news from backend if available
   useEffect(() => {
     API.get("/places?limit=50")
       .then((res) => {
@@ -324,6 +325,16 @@ export default function TownPortal() {
       })
       .catch(() => {
         // Fallback to grounded local verified data
+      });
+
+    API.get("/news")
+      .then((res) => {
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          setLiveNews(res.data);
+        }
+      })
+      .catch((err) => {
+        console.error("Live news fetch error:", err);
       });
   }, []);
 
@@ -1369,75 +1380,138 @@ export default function TownPortal() {
                 Official notices and community happenings verified from local organizers.
               </p>
             </div>
-            <button
-              onClick={() => setModalType("event")}
-              className="inline-flex items-center gap-1.5 bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-xs"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Submit a Local Event</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <Link
+                to="/news"
+                className="text-red-400 hover:text-white text-xs font-bold inline-flex items-center gap-1 transition"
+              >
+                <span>View All Updates ({liveNews.length > 0 ? liveNews.length : 3}) →</span>
+              </Link>
+              <Link
+                to="/create-news"
+                className="inline-flex items-center gap-1.5 bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-xs"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Post News</span>
+              </Link>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {/* Event 1 */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-xs mb-2">
-                  <span className="text-[10px] font-bold text-amber-400 uppercase">Cultural Heritage</span>
-                  <span className="text-[11px] text-slate-400">Annual Festival</span>
+            {liveNews.length > 0 ? (
+              liveNews.slice(0, 3).map((item) => (
+                <div
+                  key={item._id || item.id}
+                  className="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-slate-700 transition-all group"
+                >
+                  {item.image && (
+                    <div className="h-40 w-full overflow-hidden bg-slate-950">
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  )}
+                  <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between text-xs mb-2">
+                        <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider bg-red-950/60 px-2 py-0.5 rounded border border-red-800/40">
+                          {item.category || "General"}
+                        </span>
+                        <span className="text-[11px] text-slate-400">
+                          {item.createdAt
+                            ? new Date(item.createdAt).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                              })
+                            : "Recent"}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-bold text-white mb-1.5 group-hover:text-red-300 transition-colors line-clamp-2">
+                        {item.title}
+                      </h3>
+                      {item.titleHi && (
+                        <p className="text-xs text-slate-400 font-serif line-clamp-1 mb-1">
+                          {item.titleHi}
+                        </p>
+                      )}
+                      <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">
+                        {item.description}
+                      </p>
+                    </div>
+                    <div className="pt-4 border-t border-slate-800/80 mt-4 text-[11px] text-slate-400 flex items-center justify-between">
+                      <span className="truncate">By {item.author?.name || "Local Reporter"}</span>
+                      <Link to="/news" className="text-red-400 hover:text-red-300 font-semibold shrink-0 ml-2">
+                        Read Bulletin →
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-sm font-bold text-white mb-1.5">
-                  Kartik Poornima & Nirvana Mahotsav at Pawanagar
-                </h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Traditional annual pilgrimage gathering following Diwali celebrating the nirvana legacy of Lord Mahavira at the historic shrine.
-                </p>
-              </div>
-              <div className="pt-4 border-t border-slate-800 mt-4 text-[11px] text-slate-400 flex items-center justify-between">
-                <span>Source: Pawanagar Trust</span>
-                <span className="text-emerald-400 font-semibold">Post-Diwali</span>
-              </div>
-            </div>
+              ))
+            ) : (
+              <>
+                {/* Event 1 */}
+                <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between text-xs mb-2">
+                      <span className="text-[10px] font-bold text-amber-400 uppercase">Cultural Heritage</span>
+                      <span className="text-[11px] text-slate-400">Annual Festival</span>
+                    </div>
+                    <h3 className="text-sm font-bold text-white mb-1.5">
+                      Kartik Poornima & Nirvana Mahotsav at Pawanagar
+                    </h3>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      Traditional annual pilgrimage gathering following Diwali celebrating the nirvana legacy of Lord Mahavira at the historic shrine.
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-slate-800 mt-4 text-[11px] text-slate-400 flex items-center justify-between">
+                    <span>Source: Pawanagar Trust</span>
+                    <span className="text-emerald-400 font-semibold">Post-Diwali</span>
+                  </div>
+                </div>
 
-            {/* Event 2 */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-xs mb-2">
-                  <span className="text-[10px] font-bold text-[#168568] uppercase">Healthcare Routine</span>
-                  <span className="text-[11px] text-slate-400">Every Wednesday</span>
+                {/* Event 2 */}
+                <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between text-xs mb-2">
+                      <span className="text-[10px] font-bold text-[#168568] uppercase">Healthcare Routine</span>
+                      <span className="text-[11px] text-slate-400">Every Wednesday</span>
+                    </div>
+                    <h3 className="text-sm font-bold text-white mb-1.5">
+                      Weekly Immunization & Maternal Day at CHC Fazilnagar
+                    </h3>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      Public health team conducts designated infant immunizations, maternal nutrition checkups, and child wellness counseling.
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-slate-800 mt-4 text-[11px] text-slate-400 flex items-center justify-between">
+                    <span>Source: CHC Health Desk</span>
+                    <span className="text-emerald-400 font-semibold">Weekly</span>
+                  </div>
                 </div>
-                <h3 className="text-sm font-bold text-white mb-1.5">
-                  Weekly Immunization & Maternal Day at CHC Fazilnagar
-                </h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Public health team conducts designated infant immunizations, maternal nutrition checkups, and child wellness counseling.
-                </p>
-              </div>
-              <div className="pt-4 border-t border-slate-800 mt-4 text-[11px] text-slate-400 flex items-center justify-between">
-                <span>Source: CHC Health Desk</span>
-                <span className="text-emerald-400 font-semibold">Weekly</span>
-              </div>
-            </div>
 
-            {/* Event 3 */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-xs mb-2">
-                  <span className="text-[10px] font-bold text-blue-400 uppercase">Civic Works</span>
-                  <span className="text-[11px] text-slate-400">Highway Corridor</span>
+                {/* Event 3 */}
+                <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between text-xs mb-2">
+                      <span className="text-[10px] font-bold text-blue-400 uppercase">Civic Works</span>
+                      <span className="text-[11px] text-slate-400">Highway Corridor</span>
+                    </div>
+                    <h3 className="text-sm font-bold text-white mb-1.5">
+                      NH-27 Highway Service Road Beautification & Lighting
+                    </h3>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      Town civic maintenance program underway for solar streetlight installation and pedestrian pathway clearing at Main Chowk.
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-slate-800 mt-4 text-[11px] text-slate-400 flex items-center justify-between">
+                    <span>Source: Town Civic Circle</span>
+                    <span className="text-emerald-400 font-semibold">In Progress</span>
+                  </div>
                 </div>
-                <h3 className="text-sm font-bold text-white mb-1.5">
-                  NH-27 Highway Service Road Beautification & Lighting
-                </h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Town civic maintenance program underway for solar streetlight installation and pedestrian pathway clearing at Main Chowk.
-                </p>
-              </div>
-              <div className="pt-4 border-t border-slate-800 mt-4 text-[11px] text-slate-400 flex items-center justify-between">
-                <span>Source: Town Civic Circle</span>
-                <span className="text-emerald-400 font-semibold">In Progress</span>
-              </div>
-            </div>
+              </>
+            )}
           </div>
         </div>
       </section>
