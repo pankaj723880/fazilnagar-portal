@@ -23,6 +23,7 @@ import Directory from "./pages/Directory";
 import About from "./pages/About";
 import AdminReview from "./pages/AdminReview";
 import InstallButton from "./components/InstallButton";
+import { GlobalFloatingAndStickyAds } from "./components/AdvertisementSlot";
 import { Home, Compass, PhoneCall, Newspaper, Menu, X, ShieldAlert } from "lucide-react";
 
 const MAIN_NAV_ITEMS = [
@@ -729,6 +730,9 @@ export default function App() {
           <span>{mobileMenuOpen ? "Close" : "Menu"}</span>
         </button>
       </nav>
+
+      {/* Global Floating Overlay & Sticky Banner Advertisements (Cancellable) */}
+      <GlobalFloatingAndStickyAds />
     </div>
   );
 }

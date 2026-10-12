@@ -188,6 +188,7 @@ router.post(
         destinationUrl,
         startDate,
         endDate,
+        format,
         isActive,
         isPublished,
       } = req.body;
@@ -233,11 +234,16 @@ router.post(
         return res.status(400).json({ message: "Start date cannot be after end date." });
       }
 
+      const validFormat = ["banner", "floating", "sticky-bottom", "sticky-top"].includes(format)
+        ? format
+        : "banner";
+
       const ad = await Advertisement.create({
         title: title.trim(),
         description: (description || "").trim(),
         imageUrl: finalImageUrl,
         destinationUrl: (destinationUrl || "").trim(),
+        format: validFormat,
         startDate: parsedStart,
         endDate: parsedEnd,
         isActive: isActive === "true" || isActive === true,
@@ -331,6 +337,9 @@ router.put(
       }
       if (isPublished !== undefined) {
         ad.isPublished = isPublished === "true" || isPublished === true;
+      }
+      if (req.body.format !== undefined && ["banner", "floating", "sticky-bottom", "sticky-top"].includes(req.body.format)) {
+        ad.format = req.body.format;
       }
 
       await ad.save();

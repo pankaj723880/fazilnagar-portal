@@ -63,6 +63,7 @@ export default function AdminReview({ user: propUser }) {
   const [editingAd, setEditingAd] = useState(null);
   const [adFormTitle, setAdFormTitle] = useState("");
   const [adFormDesc, setAdFormDesc] = useState("");
+  const [adFormFormat, setAdFormFormat] = useState("banner");
   const [adFormUrl, setAdFormUrl] = useState("");
   const [adFormDestUrl, setAdFormDestUrl] = useState("");
   const [adFormStart, setAdFormStart] = useState("");
@@ -315,6 +316,7 @@ export default function AdminReview({ user: propUser }) {
     setEditingAd(null);
     setAdFormTitle("");
     setAdFormDesc("");
+    setAdFormFormat("banner");
     setAdFormUrl("");
     setAdFormDestUrl("");
     setAdFormStart("");
@@ -330,6 +332,7 @@ export default function AdminReview({ user: propUser }) {
     setEditingAd(ad);
     setAdFormTitle(ad.title || "");
     setAdFormDesc(ad.description || "");
+    setAdFormFormat(ad.format || "banner");
     setAdFormUrl(ad.imageUrl || "");
     setAdFormDestUrl(ad.destinationUrl || "");
     setAdFormStart(ad.startDate ? new Date(ad.startDate).toISOString().slice(0, 16) : "");
@@ -360,6 +363,7 @@ export default function AdminReview({ user: propUser }) {
       const formData = new FormData();
       formData.append("title", adFormTitle.trim());
       formData.append("description", adFormDesc.trim());
+      formData.append("format", adFormFormat);
       formData.append("destinationUrl", adFormDestUrl.trim());
       if (adFormStart) formData.append("startDate", adFormStart);
       if (adFormEnd) formData.append("endDate", adFormEnd);
@@ -1101,6 +1105,26 @@ export default function AdminReview({ user: propUser }) {
                           >
                             {ad.isPublished ? "Published" : "Draft (Unpublished)"}
                           </span>
+
+                          <span
+                            className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                              ad.format === "floating"
+                                ? "bg-purple-100 text-purple-800"
+                                : ad.format === "sticky-bottom"
+                                ? "bg-indigo-100 text-indigo-800"
+                                : ad.format === "sticky-top"
+                                ? "bg-cyan-100 text-cyan-800"
+                                : "bg-blue-100 text-blue-800"
+                            }`}
+                          >
+                            {ad.format === "floating"
+                              ? "🪟 Floating Overlay"
+                              : ad.format === "sticky-bottom"
+                              ? "📌 Sticky Bottom"
+                              : ad.format === "sticky-top"
+                              ? "📌 Sticky Top"
+                              : "🖼️ In-Feed Banner"}
+                          </span>
                         </div>
 
                         {/* Impressions and Clicks */}
@@ -1651,6 +1675,102 @@ export default function AdminReview({ user: propUser }) {
                   placeholder="Fresh desi ghee sweets, cakes, and gift packs on NH-27 College Road Crossing..."
                   className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-3 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs"
                 />
+              </div>
+
+              {/* Advertisement Type / Format Selection */}
+              <div>
+                <label className="block font-bold text-[#18232E] mb-1.5">
+                  Advertisement Display Type (विज्ञापन का प्रकार) <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setAdFormFormat("banner")}
+                    className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 cursor-pointer ${
+                      adFormFormat === "banner"
+                        ? "border-[#B8323C] bg-red-50/60 ring-2 ring-[#B8323C]/20"
+                        : "border-slate-200 bg-[#F5F7F8] hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-[#18232E] text-xs flex items-center gap-1.5">
+                        <span>🖼️</span> In-Feed Banner
+                      </span>
+                      {adFormFormat === "banner" && (
+                        <span className="w-2 h-2 rounded-full bg-[#B8323C]"></span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-500 leading-tight">
+                      Homepage content ke beech me standard full-width banner
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAdFormFormat("floating")}
+                    className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 cursor-pointer ${
+                      adFormFormat === "floating"
+                        ? "border-purple-600 bg-purple-50/60 ring-2 ring-purple-600/20"
+                        : "border-slate-200 bg-[#F5F7F8] hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-[#18232E] text-xs flex items-center gap-1.5">
+                        <span>🪟</span> Floating Overlay Ad
+                      </span>
+                      {adFormFormat === "floating" && (
+                        <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-500 leading-tight">
+                      Screen corner mein chota overlay card with Close (✕) button
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAdFormFormat("sticky-bottom")}
+                    className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 cursor-pointer ${
+                      adFormFormat === "sticky-bottom"
+                        ? "border-indigo-600 bg-indigo-50/60 ring-2 ring-indigo-600/20"
+                        : "border-slate-200 bg-[#F5F7F8] hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-[#18232E] text-xs flex items-center gap-1.5">
+                        <span>📌</span> Sticky Bottom Banner
+                      </span>
+                      {adFormFormat === "sticky-bottom" && (
+                        <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-500 leading-tight">
+                      Screen ke bottom par scrolling ke dauran fixed with Close (✕) button
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAdFormFormat("sticky-top")}
+                    className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 cursor-pointer ${
+                      adFormFormat === "sticky-top"
+                        ? "border-cyan-600 bg-cyan-50/60 ring-2 ring-cyan-600/20"
+                        : "border-slate-200 bg-[#F5F7F8] hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-[#18232E] text-xs flex items-center gap-1.5">
+                        <span>📌</span> Sticky Top Banner
+                      </span>
+                      {adFormFormat === "sticky-top" && (
+                        <span className="w-2 h-2 rounded-full bg-cyan-600"></span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-500 leading-tight">
+                      Screen ke top (navbar ke niche) fixed with Close (✕) button
+                    </span>
+                  </button>
+                </div>
               </div>
 
               {/* Banner Image Upload or URL */}

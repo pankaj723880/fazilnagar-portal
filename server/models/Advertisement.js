@@ -22,6 +22,12 @@ const advertisementSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    format: {
+      type: String,
+      enum: ["banner", "floating", "sticky-bottom", "sticky-top"],
+      default: "banner",
+      index: true,
+    },
     startDate: {
       type: Date,
       default: null,
