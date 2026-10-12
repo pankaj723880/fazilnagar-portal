@@ -78,9 +78,8 @@ router.get("/feed", async (req, res) => {
     const anonId = req.headers["x-anon-id"] || req.query.anonId || null;
     const user = getOptionalUser(req);
 
-    // Filter: ONLY published and approved news
+    // Filter: Return all published and approved stories, and live citizen reports (exclude only drafts & rejected)
     const query = {
-      $or: [{ isPublished: true }, { status: "approved" }],
       status: { $nin: ["rejected", "draft"] },
     };
 
@@ -870,7 +869,16 @@ router.post(
       const baseUrl = `${protocol}://${host}`;
 
       if (req.files?.image?.[0]) {
-        imagePath = `${baseUrl}/uploads/${req.files.image[0].filename}`;
+        try {
+          const imgFile = req.files.image[0];
+          const fileBuffer = fs.readFileSync(imgFile.path);
+          const mime = imgFile.mimetype || "image/jpeg";
+          imagePath = `data:${mime};base64,${fileBuffer.toString("base64")}`;
+          try { fs.unlinkSync(imgFile.path); } catch (_) {}
+        } catch (e) {
+          console.warn("Base64 conversion error:", e);
+          imagePath = `${baseUrl}/uploads/${req.files.image[0].filename}`;
+        }
       }
 
       if (req.files?.video?.[0]) {
@@ -879,17 +887,13 @@ router.post(
 
       const isAuthorAdmin = req.user?.role === "admin";
 
-      let initialStatus = "pending";
-      let initialPublished = false;
+      // Stories are approved and published by default so they appear live immediately
+      let initialStatus = "approved";
+      let initialPublished = true;
 
-      if (isAuthorAdmin) {
-        if (status === "draft") {
-          initialStatus = "draft";
-          initialPublished = false;
-        } else {
-          initialStatus = "approved";
-          initialPublished = isPublished === "true" || isPublished === true;
-        }
+      if (status === "draft") {
+        initialStatus = "draft";
+        initialPublished = false;
       }
 
       const news = await News.create({
@@ -912,11 +916,9 @@ router.post(
 
       res.status(201).json({
         ...news.toObject(),
-        moderationMessage: isAuthorAdmin
-          ? initialPublished
-            ? "Story published live to Fazilnagar News Feed."
-            : "Story saved as draft."
-          : "News submitted successfully and is pending admin review.",
+        moderationMessage: initialPublished
+          ? "Story published live to Fazilnagar News Feed."
+          : "Story saved as draft.",
       });
     } catch (err) {
       console.error("Create News Error:", err);
@@ -975,7 +977,15 @@ router.put(
       const baseUrl = `${protocol}://${host}`;
 
       if (req.files?.image?.[0]) {
-        article.image = `${baseUrl}/uploads/${req.files.image[0].filename}`;
+        try {
+          const imgFile = req.files.image[0];
+          const fileBuffer = fs.readFileSync(imgFile.path);
+          const mime = imgFile.mimetype || "image/jpeg";
+          article.image = `data:${mime};base64,${fileBuffer.toString("base64")}`;
+          try { fs.unlinkSync(imgFile.path); } catch (_) {}
+        } catch (e) {
+          article.image = `${baseUrl}/uploads/${req.files.image[0].filename}`;
+        }
       } else if (providedImageUrl && providedImageUrl.trim() !== "") {
         article.image = providedImageUrl.trim();
       }

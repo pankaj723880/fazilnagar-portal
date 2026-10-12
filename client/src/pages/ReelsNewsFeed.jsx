@@ -26,17 +26,31 @@ import {
 const FALLBACK_COVER_IMAGE =
   "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1200&auto=format&fit=crop";
 
+const CATEGORY_FALLBACK_IMAGES = {
+  "Civic Updates": "https://images.unsplash.com/photo-1577495508048-b635879837f1?q=80&w=1200&auto=format&fit=crop",
+  Events: "https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1200&auto=format&fit=crop",
+  Healthcare: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?q=80&w=1200&auto=format&fit=crop",
+  Education: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1200&auto=format&fit=crop",
+  Market: "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?q=80&w=1200&auto=format&fit=crop",
+  General: "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?q=80&w=1200&auto=format&fit=crop",
+};
+
 // Robust Story Media Cover: Never shows broken icon or black void
 function StoryMediaCover({ story, active, muted }) {
   const [imgFailed, setImgFailed] = useState(false);
+  const [fallbackFailed, setFallbackFailed] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
 
   const hasVideo = !!story.video && !videoFailed;
-  const hasImage = !!story.image && !imgFailed;
+  const rawImage = story.image && String(story.image).trim();
+  const hasUserImage = rawImage && !imgFailed;
+
+  const fallbackPhoto =
+    CATEGORY_FALLBACK_IMAGES[story.category] || CATEGORY_FALLBACK_IMAGES.General;
 
   return (
     <div className="absolute inset-0 z-0 bg-[#0B1118] overflow-hidden flex items-center justify-center select-none">
-      {/* Dynamic Civic News Poster Backdrop - Guaranteed to ALWAYS look stunning even if upload 404s */}
+      {/* Dynamic Civic News Poster Backdrop - Always present underneath */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#0a1017] via-[#0F1E2E] to-[#080d14] flex flex-col justify-between p-6 pointer-events-none">
         {/* Luminous ambient meshes */}
         <div className="absolute -top-20 -right-20 w-72 h-72 bg-[#B8323C]/20 rounded-full blur-3xl pointer-events-none" />
@@ -73,19 +87,26 @@ function StoryMediaCover({ story, active, muted }) {
         />
       )}
 
-      {/* Image layer if present */}
-      {!hasVideo && hasImage && (
+      {/* Photo Layer: Prioritizes user's uploaded image (now persistent base64), or category fallback photo */}
+      {!hasVideo && (
         <img
-          src={story.image}
+          src={hasUserImage ? rawImage : fallbackPhoto}
           alt=""
           className="absolute inset-0 w-full h-full object-cover object-center z-10"
           loading={active ? "eager" : "lazy"}
-          onError={() => setImgFailed(true)}
+          onError={() => {
+            if (hasUserImage) {
+              setImgFailed(true);
+            } else {
+              setFallbackFailed(true);
+            }
+          }}
+          style={{ display: fallbackFailed && imgFailed ? "none" : "block" }}
         />
       )}
 
-      {/* Dark gradient for text readability and actions */}
-      <div className="absolute inset-0 z-20 bg-gradient-to-t from-black via-black/40 to-black/20 pointer-events-none" />
+      {/* Dark gradient overlay for text readability and action visibility */}
+      <div className="absolute inset-0 z-20 bg-gradient-to-t from-black via-black/45 to-black/25 pointer-events-none" />
     </div>
   );
 }

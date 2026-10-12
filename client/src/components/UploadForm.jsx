@@ -15,10 +15,54 @@ export default function UploadForm() {
   const [locationName, setLocationName] = useState("Fazilnagar");
   const [imageFile, setImageFile] = useState(null);
   const [imageUrl, setImageUrl] = useState("");
+  const [imagePreview, setImagePreview] = useState("");
+  const [compressedBase64, setCompressedBase64] = useState("");
   const [videoFile, setVideoFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleImageFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+
+    // Compress client-side to ensure the image is self-contained and never lost on server restarts
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        setImagePreview(dataUrl);
+        setCompressedBase64(dataUrl);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,7 +78,13 @@ export default function UploadForm() {
     formData.append("category", category);
     formData.append("location", locationName || "Fazilnagar");
     formData.append("source", reporterName ? `${reporterName} (Citizen)` : "Citizen Reporter");
-    if (imageUrl.trim()) formData.append("imageUrl", imageUrl.trim());
+    
+    // Prioritize self-contained base64 so Render never 404s the image
+    if (compressedBase64) {
+      formData.append("imageUrl", compressedBase64);
+    } else if (imageUrl.trim()) {
+      formData.append("imageUrl", imageUrl.trim());
+    }
 
     if (imageFile) formData.append("image", imageFile);
     if (videoFile) formData.append("video", videoFile);
@@ -48,10 +98,10 @@ export default function UploadForm() {
       }
 
       const res = await API.post("/news", formData, { headers });
-      const msg = res.data?.moderationMessage || "Story submitted successfully! It will appear after quick review.";
+      const msg = res.data?.moderationMessage || "Story published live to Fazilnagar News Feed!";
       setMessage(msg);
       setIsSuccess(true);
-      setTimeout(() => navigate("/news"), 2500);
+      setTimeout(() => navigate("/news"), 2000);
     } catch (err) {
       setMessage(err.response?.data?.message || "Failed to submit story. Please check fields and try again.");
       setIsSuccess(false);
@@ -170,9 +220,17 @@ export default function UploadForm() {
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => setImageFile(e.target.files[0])}
+              onChange={handleImageFileChange}
               className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:border-[#B8323C] file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:bg-slate-200 file:text-xs file:font-bold text-xs bg-[#F5F7F8]"
             />
+            {imagePreview && (
+              <div className="mt-2 relative w-20 h-20 rounded-xl overflow-hidden border border-emerald-500 shadow-sm">
+                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                <span className="absolute bottom-0 inset-x-0 bg-emerald-600/90 text-[9px] text-white font-bold text-center py-0.5">
+                  Ready ✓
+                </span>
+              </div>
+            )}
           </div>
 
           <div>
