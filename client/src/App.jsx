@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect } from "react";
 import { Routes, Route, NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 
@@ -68,13 +66,54 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // If on the Town Portal homepage, it renders its own complete 11-section layout
+  // If on the Town Portal homepage, it renders full-width sections
   const isPortalPage =
     location.pathname === "/" ||
     location.pathname === "/town" ||
     location.pathname === "/portal" ||
     location.pathname === "/fazilnagar";
+
+  const hasSubNav = DIRECTORY_SUB_NAV_PATHS.includes(location.pathname);
+
+  // Smooth scroll and route switch effect
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    if (location.hash) {
+      const id = location.hash.replace("#", "");
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 150);
+    } else {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }, [location.pathname, location.hash]);
+
+  // Handle in-page hash links (like Explore, Map, About) smoothly from any page
+  const handleNavClick = (e, path, isHash) => {
+    if (isHash) {
+      e.preventDefault();
+      const hashTarget = path.split("#")[1];
+      if (isPortalPage) {
+        const el = document.getElementById(hashTarget);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth" });
+        }
+      } else {
+        navigate(path);
+        setTimeout(() => {
+          const el = document.getElementById(hashTarget);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 150);
+      }
+    }
+  };
 
   // Persistent user synchronization from LocalStorage and JWT token
   useEffect(() => {
@@ -103,6 +142,7 @@ export default function App() {
                 id: decoded.id,
                 name: decoded.name || decoded.email?.split("@")[0] || "Citizen",
                 email: decoded.email,
+                role: decoded.role || (decoded.email === "pankaj723880@gmail.com" ? "admin" : "citizen"),
               };
               setUser(u);
               localStorage.setItem("user", JSON.stringify(u));
@@ -135,180 +175,176 @@ export default function App() {
     window.dispatchEvent(new Event("storage"));
   };
 
-  if (isPortalPage) {
-    return (
-      <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#F5F7F8] text-[#18232E] font-sans selection:bg-[#B8323C] selection:text-white">
-        <Routes>
-          <Route path="/" element={<TownPortal />} />
-          <Route path="/town" element={<TownPortal />} />
-          <Route path="/portal" element={<TownPortal />} />
-          <Route path="/fazilnagar" element={<TownPortal />} />
-        </Routes>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#F5F7F8] text-[#18232E] flex flex-col font-sans selection:bg-[#B8323C] selection:text-white">
-      {/* Top Alert & User Status Bar - Modern Civic Deep Slate & Crimson */}
-      <div className="bg-[#18232E] text-slate-300 text-[11px] font-semibold py-1.5 px-4 flex justify-between items-center border-b border-slate-800 shadow-xs">
-        <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
-          <span className="bg-[#B8323C] text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-xs">
-            LIVE CIVIC
-          </span>
-          <span className="truncate text-slate-300">
-            Fazilnagar Town Official Civic & Local Directory Portal (PIN 274401)
-          </span>
-        </div>
-        <div className="flex items-center gap-4">
-          <a
-            href="tel:112"
-            className="hidden sm:inline-flex items-center gap-1 text-red-400 hover:text-red-300 font-bold whitespace-nowrap"
-          >
-            <span>📞 Helpline: 112</span>
-          </a>
-          {user && (
-            <span className="text-[#168568] font-bold hidden md:inline">
-              👤 Logged in as: {user.role === "admin" ? "Admin" : (user.name || user.email)}
+      {/* ========================================================
+          PERMANENT FIXED TOP SHELL (Never moves, Constant on all pages)
+          ======================================================== */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#FFFFFF] shadow-xs">
+        {/* Top Alert & User Status Bar - Modern Civic Deep Slate & Crimson */}
+        <div className="h-8 bg-[#18232E] text-slate-300 text-[11px] font-semibold px-4 flex justify-between items-center border-b border-slate-800 shadow-xs">
+          <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
+            <span className="bg-[#B8323C] text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-xs">
+              LIVE CIVIC
             </span>
-          )}
-        </div>
-      </div>
-
-      {/* Main Header & Navigation - Exact Match to Civic Navbar in Image 1 */}
-      <header className="sticky top-0 z-50 bg-[#FFFFFF]/95 backdrop-blur-md border-b border-[#E1E6EA] shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16 gap-4">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="w-9 h-9 rounded-xl bg-[#18232E] flex items-center justify-center text-white font-extrabold text-base border border-slate-700 shadow-xs group-hover:scale-105 transition-transform">
-              F
-            </div>
-            <div>
-              <span className="text-base font-extrabold tracking-tight text-[#18232E] leading-none block font-heading">
-                FAZIL<span className="text-[#B8323C]">NAGAR</span>
+            <span className="truncate text-slate-300">
+              Fazilnagar Town Official Civic & Local Directory Portal (PIN 274401)
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <a
+              href="tel:112"
+              className="hidden sm:inline-flex items-center gap-1 text-red-400 hover:text-red-300 font-bold whitespace-nowrap"
+            >
+              <span>📞 Helpline: 112</span>
+            </a>
+            {user && (
+              <span className="text-[#168568] font-bold hidden md:inline">
+                👤 Logged in as: {user.role === "admin" ? "Admin" : (user.name || user.email)}
               </span>
-              <span className="text-[10px] font-medium text-[#647180] tracking-wider block">
-                Your Town. Your Community.
-              </span>
-            </div>
-          </Link>
-
-          {/* Desktop Navigation Links - Home, Explore, Directory [37], Map, Local Updates, About */}
-          <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold text-[#18232E]">
-            <Link
-              to="/"
-              className={`transition ${location.pathname === "/" ? "text-[#B8323C] font-bold" : "text-[#647180] hover:text-[#18232E]"}`}
-            >
-              Home
-            </Link>
-            <a
-              href="/#explore-categories"
-              className="text-[#647180] hover:text-[#18232E] transition"
-            >
-              Explore
-            </a>
-            <Link
-              to="/directory"
-              className={`transition flex items-center gap-1 ${location.pathname === "/directory" ? "text-[#B8323C] font-bold" : "text-[#647180] hover:text-[#18232E]"}`}
-            >
-              <span>Directory</span>
-              <span className="text-[9px] bg-[#168568] text-white px-1.5 py-0.2 rounded-full font-bold">37</span>
-            </Link>
-            <a
-              href="/#town-map-section"
-              className="text-[#647180] hover:text-[#18232E] transition"
-            >
-              Map
-            </a>
-            <Link
-              to="/news"
-              className={`transition ${location.pathname === "/news" ? "text-[#B8323C] font-bold" : "text-[#647180] hover:text-[#18232E]"}`}
-            >
-              Local Updates
-            </Link>
-            <a
-              href="/#about-fazilnagar-section"
-              className="text-[#647180] hover:text-[#18232E] transition"
-            >
-              About
-            </a>
-          </nav>
-
-          {/* Auth & Post Actions Bar */}
-          <div className="hidden sm:flex items-center gap-2.5 shrink-0">
-            <InstallButton />
-            {user ? (
-              <>
-                {user.role === "admin" && (
-                  <Link
-                    to="/admin/review"
-                    className="bg-amber-100 hover:bg-amber-200 text-amber-900 hover:text-amber-950 border border-amber-300 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5"
-                  >
-                    <span>🛡️ Review Desk</span>
-                  </Link>
-                )}
-                <span className="text-xs font-bold text-[#168568] bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
-                  {user.role === "admin" ? "Admin" : (user.name || user.email)}
-                </span>
-                <Link
-                  to="/create-news"
-                  className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1"
-                >
-                  <span>✍️ Post News</span>
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="text-xs font-bold text-slate-700 hover:text-slate-900 px-3 py-2"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/register"
-                  className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs"
-                >
-                  Register
-                </Link>
-                <Link
-                  to="/directory"
-                  className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs"
-                >
-                  Explore Town
-                </Link>
-              </>
             )}
           </div>
+        </div>
 
-          {/* Mobile Actions & Menu Toggle Button */}
-          <div className="flex lg:hidden items-center gap-2">
-            <InstallButton compact={true} />
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:outline-none cursor-pointer"
-              aria-label="Toggle Navigation"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {mobileMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
+        {/* Main Header & Navigation */}
+        <div className="bg-[#FFFFFF]/95 backdrop-blur-md border-b border-[#E1E6EA]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16 gap-4">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+              <div className="w-9 h-9 rounded-xl bg-[#18232E] flex items-center justify-center text-white font-extrabold text-base border border-slate-700 shadow-xs group-hover:scale-105 transition-transform">
+                F
+              </div>
+              <div>
+                <span className="text-base font-extrabold tracking-tight text-[#18232E] leading-none block font-heading">
+                  FAZIL<span className="text-[#B8323C]">NAGAR</span>
+                </span>
+                <span className="text-[10px] font-medium text-[#647180] tracking-wider block">
+                  Your Town. Your Community.
+                </span>
+              </div>
+            </Link>
+
+            {/* Desktop Navigation Links */}
+            <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold text-[#18232E]">
+              <Link
+                to="/"
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                className={`transition ${location.pathname === "/" ? "text-[#B8323C] font-bold" : "text-[#647180] hover:text-[#18232E]"}`}
+              >
+                Home
+              </Link>
+              <a
+                href="/#explore-categories"
+                onClick={(e) => handleNavClick(e, "/#explore-categories", true)}
+                className="text-[#647180] hover:text-[#18232E] transition cursor-pointer"
+              >
+                Explore
+              </a>
+              <Link
+                to="/directory"
+                className={`transition flex items-center gap-1 ${location.pathname === "/directory" ? "text-[#B8323C] font-bold" : "text-[#647180] hover:text-[#18232E]"}`}
+              >
+                <span>Directory</span>
+                <span className="text-[9px] bg-[#168568] text-white px-1.5 py-0.2 rounded-full font-bold">37</span>
+              </Link>
+              <a
+                href="/#town-map-section"
+                onClick={(e) => handleNavClick(e, "/#town-map-section", true)}
+                className="text-[#647180] hover:text-[#18232E] transition cursor-pointer"
+              >
+                Map
+              </a>
+              <Link
+                to="/news"
+                className={`transition ${location.pathname === "/news" ? "text-[#B8323C] font-bold" : "text-[#647180] hover:text-[#18232E]"}`}
+              >
+                Local Updates
+              </Link>
+              <a
+                href="/#about-fazilnagar-section"
+                onClick={(e) => handleNavClick(e, "/#about-fazilnagar-section", true)}
+                className="text-[#647180] hover:text-[#18232E] transition cursor-pointer"
+              >
+                About
+              </a>
+            </nav>
+
+            {/* Auth & Post Actions Bar */}
+            <div className="hidden sm:flex items-center gap-2.5 shrink-0">
+              <InstallButton />
+              {user ? (
+                <>
+                  {user.role === "admin" && (
+                    <Link
+                      to="/admin/review"
+                      className="bg-amber-100 hover:bg-amber-200 text-amber-900 hover:text-amber-950 border border-amber-300 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5"
+                    >
+                      <span>🛡️ Review Desk</span>
+                    </Link>
+                  )}
+                  <span className="text-xs font-bold text-[#168568] bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
+                    {user.role === "admin" ? "Admin" : (user.name || user.email)}
+                  </span>
+                  <Link
+                    to="/create-news"
+                    className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1"
+                  >
+                    <span>✍️ Post News</span>
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="text-xs font-bold text-slate-700 hover:text-slate-900 px-3 py-2"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs"
+                  >
+                    Register
+                  </Link>
+                  <Link
+                    to="/directory"
+                    className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs"
+                  >
+                    Explore Town
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* Mobile Actions & Menu Toggle Button */}
+            <div className="flex lg:hidden items-center gap-2">
+              <InstallButton compact={true} />
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:outline-none cursor-pointer"
+                aria-label="Toggle Navigation"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {mobileMenuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Secondary Sub-Navbar - Visible across Directory & all Civic Hub pages */}
-        {DIRECTORY_SUB_NAV_PATHS.includes(location.pathname) && (
-          <div className="bg-[#FFFFFF] border-t border-[#E1E6EA] py-1.5 px-4 shadow-2xs">
+        {hasSubNav && (
+          <div className="bg-[#FFFFFF] border-b border-[#E1E6EA] py-1.5 px-4 shadow-2xs">
             <div className="max-w-7xl mx-auto flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#647180] shrink-0 mr-1 hidden sm:inline">
                 Civic Hubs:
@@ -349,7 +385,10 @@ export default function App() {
             <div className="grid grid-cols-2 gap-2">
               <Link
                 to="/"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
                 className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60"
               >
                 <span>🏛️</span>
@@ -357,7 +396,10 @@ export default function App() {
               </Link>
               <a
                 href="/#explore-categories"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleNavClick(e, "/#explore-categories", true);
+                }}
                 className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60"
               >
                 <span>🔍</span>
@@ -373,7 +415,10 @@ export default function App() {
               </Link>
               <a
                 href="/#town-map-section"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleNavClick(e, "/#town-map-section", true);
+                }}
                 className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60"
               >
                 <span>📍</span>
@@ -389,7 +434,10 @@ export default function App() {
               </Link>
               <a
                 href="/#about-fazilnagar-section"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleNavClick(e, "/#about-fazilnagar-section", true);
+                }}
                 className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60"
               >
                 <span>ℹ️</span>
@@ -460,38 +508,55 @@ export default function App() {
         )}
       </header>
 
-      {/* Main Body Routes */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-6">
-        <Routes>
-          <Route path="/" element={<TownPortal />} />
-          <Route path="/news" element={<News />} />
-          <Route path="/directory" element={<Directory user={user} />} />
-          <Route path="/local-directory" element={<Directory user={user} />} />
-          <Route path="/town" element={<TownPortal />} />
-          <Route path="/portal" element={<TownPortal />} />
-          <Route path="/fazilnagar" element={<TownPortal />} />
-          <Route path="/emergency" element={<EmergencyHub />} />
-          <Route path="/healthcare" element={<HealthcareDirectory />} />
-          <Route path="/education" element={<EducationHub />} />
-          <Route path="/jobs" element={<JobsAndBusiness />} />
-          <Route path="/tourism" element={<Tourism />} />
-          <Route path="/food" element={<FoodGuide />} />
-          <Route path="/marketplace" element={<Marketplace />} />
-          <Route path="/transport" element={<Transportation />} />
-          <Route path="/govt" element={<GovtServices />} />
-          <Route path="/about" element={<About />} />
+      {/* ========================================================
+          MAIN BODY: Dynamic Top Padding (Starts exactly below fixed navbar)
+          WITH SMOOTH ROUTE TRANSITIONS (animate-page-enter)
+          ======================================================== */}
+      <main
+        className={`flex-1 w-full ${
+          isPortalPage ? "" : "max-w-7xl mx-auto px-4 sm:px-6"
+        } ${
+          hasSubNav
+            ? "pt-[144px]"
+            : isPortalPage
+            ? "pt-[96px]"
+            : "pt-[112px]"
+        }`}
+      >
+        <div key={location.pathname} className="animate-page-enter">
+          <Routes>
+            <Route path="/" element={<TownPortal />} />
+            <Route path="/news" element={<News />} />
+            <Route path="/directory" element={<Directory user={user} />} />
+            <Route path="/local-directory" element={<Directory user={user} />} />
+            <Route path="/town" element={<TownPortal />} />
+            <Route path="/portal" element={<TownPortal />} />
+            <Route path="/fazilnagar" element={<TownPortal />} />
+            <Route path="/emergency" element={<EmergencyHub />} />
+            <Route path="/healthcare" element={<HealthcareDirectory />} />
+            <Route path="/education" element={<EducationHub />} />
+            <Route path="/jobs" element={<JobsAndBusiness />} />
+            <Route path="/tourism" element={<Tourism />} />
+            <Route path="/food" element={<FoodGuide />} />
+            <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/transport" element={<Transportation />} />
+            <Route path="/govt" element={<GovtServices />} />
+            <Route path="/about" element={<About />} />
 
-          {/* Auth & Admin Routes */}
-          <Route path="/login" element={<Login setUser={setUser} />} />
-          <Route path="/register" element={<Register setUser={setUser} />} />
-          <Route path="/create-news" element={<CreateNews user={user} />} />
-          <Route path="/upload" element={<CreateNews user={user} />} />
-          <Route path="/admin/review" element={<AdminReview user={user} />} />
-          <Route path="/admin" element={<AdminReview user={user} />} />
-        </Routes>
+            {/* Auth & Admin Routes */}
+            <Route path="/login" element={<Login setUser={setUser} />} />
+            <Route path="/register" element={<Register setUser={setUser} />} />
+            <Route path="/create-news" element={<CreateNews user={user} />} />
+            <Route path="/upload" element={<CreateNews user={user} />} />
+            <Route path="/admin/review" element={<AdminReview user={user} />} />
+            <Route path="/admin" element={<AdminReview user={user} />} />
+          </Routes>
+        </div>
       </main>
 
-      {/* Footer - Modern Civic Deep Slate with Crimson & Emerald Accents */}
+      {/* ========================================================
+          FOOTER - Modern Civic Deep Slate with Crimson & Emerald Accents
+          ======================================================== */}
       <footer className="bg-[#18232E] text-slate-400 text-xs mt-12 border-t border-slate-800 pb-16 lg:pb-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-3">
