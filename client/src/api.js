@@ -7,22 +7,14 @@ const baseURL = rawUrl.endsWith("/api") ? rawUrl : `${rawUrl}/api`;
 
 const API = axios.create({
   baseURL,
-  timeout: 10000,
+  timeout: 30000,
 });
 
-// Attach Authorization and Anonymous Client ID
+// Attach Authorization token if available
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token && !config.headers.Authorization) {
     config.headers.Authorization = `Bearer ${token}`;
-  }
-  let anonId = localStorage.getItem("fazil_anon_id");
-  if (!anonId) {
-    anonId = "anon_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now();
-    localStorage.setItem("fazil_anon_id", anonId);
-  }
-  if (!config.headers["x-anon-id"]) {
-    config.headers["x-anon-id"] = anonId;
   }
   return config;
 });

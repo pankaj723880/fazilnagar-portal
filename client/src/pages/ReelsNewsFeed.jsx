@@ -92,7 +92,13 @@ export default function ReelsNewsFeed() {
       }
 
       try {
-        let url = `/news/feed?page=${pageNum}&limit=8`;
+        let anonId = localStorage.getItem("fazil_anon_id");
+        if (!anonId) {
+          anonId = "anon_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now();
+          localStorage.setItem("fazil_anon_id", anonId);
+        }
+
+        let url = `/news/feed?page=${pageNum}&limit=8&anonId=${encodeURIComponent(anonId)}`;
         if (pageNum === 1 && targetStoryId) {
           url += `&storyId=${encodeURIComponent(targetStoryId)}`;
         }
@@ -206,7 +212,8 @@ export default function ReelsNewsFeed() {
     );
 
     try {
-      const res = await API.post(`/news/${storyId}/like`);
+      const anonId = localStorage.getItem("fazil_anon_id");
+      const res = await API.post(`/news/${storyId}/like`, { anonId });
       // Update with server verified count
       if (res.data) {
         setStories((prev) =>
