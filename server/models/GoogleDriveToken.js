@@ -36,6 +36,14 @@ const googleDriveTokenSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    folderId: {
+      type: String,
+      default: null,
+    },
+    folderName: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true }
 );
