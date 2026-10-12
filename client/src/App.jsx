@@ -22,6 +22,7 @@ import Directory from "./pages/Directory";
 import About from "./pages/About";
 import AdminReview from "./pages/AdminReview";
 import InstallButton from "./components/InstallButton";
+import { Home, Compass, PhoneCall, Newspaper, Menu, X, ShieldAlert } from "lucide-react";
 
 const MAIN_NAV_ITEMS = [
   { path: "/", label: "Home" },
@@ -514,14 +515,14 @@ export default function App() {
           ======================================================== */}
       <main
         className={`flex-1 w-full ${
-          isPortalPage ? "" : "max-w-7xl mx-auto px-4 sm:px-6"
+          isPortalPage ? "" : "max-w-7xl mx-auto px-3 sm:px-6"
         } ${
           hasSubNav
-            ? "pt-[144px]"
+            ? "pt-[136px] sm:pt-[144px]"
             : isPortalPage
-            ? "pt-[96px]"
-            : "pt-[112px]"
-        }`}
+            ? "pt-[88px] sm:pt-[96px]"
+            : "pt-[104px] sm:pt-[112px]"
+        } pb-24 sm:pb-8`}
       >
         <div key={location.pathname} className="animate-page-enter">
           <Routes>
@@ -608,6 +609,93 @@ export default function App() {
           © {new Date().getFullYear()} Fazilnagar Town Portal • Modern Civic & Editorial System. All rights reserved.
         </div>
       </footer>
+
+      {/* ========================================================
+          MOBILE NATIVE BOTTOM APP BAR (Fixed at bottom for phones < 640px)
+          Provides effortless 1-thumb native app navigation across the portal
+          ======================================================== */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.07)] px-2 py-1.5 flex items-center justify-around pb-[max(0.4rem,env(safe-area-inset-bottom))]">
+        <NavLink
+          to="/"
+          end
+          onClick={() => {
+            if (location.pathname === "/") {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          }}
+          className={({ isActive }) =>
+            `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition text-[10px] font-bold ${
+              isActive && location.pathname === "/"
+                ? "text-[#B8323C]"
+                : "text-slate-500 hover:text-slate-900"
+            }`
+          }
+        >
+          <Home className="w-5 h-5 mb-0.5" />
+          <span>Home</span>
+        </NavLink>
+
+        <NavLink
+          to="/directory"
+          className={({ isActive }) =>
+            `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition text-[10px] font-bold relative ${
+              isActive || location.pathname.startsWith("/directory")
+                ? "text-[#B8323C]"
+                : "text-slate-500 hover:text-slate-900"
+            }`
+          }
+        >
+          <Compass className="w-5 h-5 mb-0.5" />
+          <span>Directory</span>
+          <span className="absolute top-1 right-2 w-1.5 h-1.5 rounded-full bg-[#168568]"></span>
+        </NavLink>
+
+        <NavLink
+          to="/emergency"
+          className={({ isActive }) =>
+            `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition text-[10px] font-bold ${
+              isActive
+                ? "text-[#B8323C]"
+                : "text-slate-500 hover:text-slate-900"
+            }`
+          }
+        >
+          <PhoneCall className="w-5 h-5 mb-0.5 text-red-500" />
+          <span>24/7 Aid</span>
+        </NavLink>
+
+        <NavLink
+          to="/news"
+          className={({ isActive }) =>
+            `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition text-[10px] font-bold ${
+              isActive
+                ? "text-[#B8323C]"
+                : "text-slate-500 hover:text-slate-900"
+            }`
+          }
+        >
+          <Newspaper className="w-5 h-5 mb-0.5" />
+          <span>Updates</span>
+        </NavLink>
+
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen((prev) => !prev)}
+          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition text-[10px] font-bold cursor-pointer ${
+            mobileMenuOpen
+              ? "text-[#B8323C]"
+              : "text-slate-500 hover:text-slate-900"
+          }`}
+          aria-label="Toggle navigation menu"
+        >
+          {mobileMenuOpen ? (
+            <X className="w-5 h-5 mb-0.5 text-[#B8323C]" />
+          ) : (
+            <Menu className="w-5 h-5 mb-0.5" />
+          )}
+          <span>{mobileMenuOpen ? "Close" : "Menu"}</span>
+        </button>
+      </nav>
     </div>
   );
 }

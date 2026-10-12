@@ -487,30 +487,30 @@ export default function Directory({ user }) {
   const localities = Array.from(new Set(allMasterPlaces.map((p) => p.locality).filter(Boolean)));
 
   return (
-    <div className="space-y-6 pb-16 font-sans">
+    <div className="space-y-4 sm:space-y-6 pb-24 sm:pb-16 font-sans">
       {/* Header Banner - Modern Civic Slate with Crimson & Emerald Accents */}
-      <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 border border-slate-800">
+      <div className="bg-slate-900 text-white p-4 sm:p-8 rounded-2xl sm:rounded-3xl shadow-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 sm:gap-6 border border-slate-800">
         <div>
-          <div className="flex flex-wrap items-center gap-2 mb-2">
-            <span className="bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
+            <span className="bg-emerald-600 text-white text-[10px] sm:text-xs font-bold px-2.5 sm:px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
               <ShieldCheck className="w-3.5 h-3.5" /> Town Boundary Verified (PIN 274401)
             </span>
-            <span className="text-xs text-slate-400 font-medium">NH-27 Highway Corridor</span>
+            <span className="text-[10px] sm:text-xs text-slate-400 font-medium">NH-27 Highway Corridor</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
             Fazilnagar Complete Local Directory
           </h1>
-          <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
+          <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
             Exact, verified physical locations strictly within Fazilnagar town limits. Complete directory of schools,
             colleges, hospitals, clinics, sweet shops, pharmacies, religious shrines, banks, and essential services.
           </p>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <button
             onClick={() => setShowAddModal(true)}
-            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-sm cursor-pointer"
+            className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 sm:gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 sm:px-4 py-2.5 rounded-xl transition shadow-sm cursor-pointer active:scale-95"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Add / Suggest Place</span>
@@ -518,7 +518,7 @@ export default function Directory({ user }) {
 
           <a
             href={`${API.defaults.baseURL || "https://fazilnagar-portal.onrender.com/api"}/places/export/csv`}
-            className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-700 transition"
+            className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-700 transition"
           >
             <Download className="w-3.5 h-3.5 text-emerald-400" />
             <span>Export CSV</span>
@@ -790,23 +790,23 @@ export default function Directory({ user }) {
         </div>
       ) : viewMode === "map" ? (
         /* Map View + Synchronized List */
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Leaflet Map */}
-          <div className="lg:col-span-2 bg-slate-50 rounded-3xl overflow-hidden border border-slate-200 shadow-md relative min-h-[520px] h-[520px] lg:h-[580px]">
+          <div className="lg:col-span-2 bg-slate-50 rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200 shadow-md relative min-h-[290px] h-[310px] sm:h-[420px] lg:h-[580px]">
             <div
               ref={mapContainerRef}
               id="fazilnagar-leaflet-map"
-              className="w-full h-full z-10"
-              style={{ minHeight: "520px", height: "100%", width: "100%", position: "relative" }}
+              className="w-full h-full z-10 min-h-[290px]"
+              style={{ minHeight: "290px", height: "100%", width: "100%", position: "relative" }}
             />
-            <div className="absolute top-3 left-3 z-20 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-slate-200 text-[11px] font-semibold text-slate-700 shadow-sm flex items-center gap-2 pointer-events-none">
+            <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-20 bg-white/95 backdrop-blur-sm px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl border border-slate-200 text-[10px] sm:text-[11px] font-semibold text-slate-700 shadow-sm flex items-center gap-1.5 sm:gap-2 pointer-events-none">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Coordinates: 26.6827° N, 84.0498° E (Fazilnagar Town Boundary)</span>
+              <span>Coordinates: 26.6827° N, 84.0498° E (Fazilnagar)</span>
             </div>
           </div>
 
           {/* Synchronized Place Details Card OR Category Items List */}
-          <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between min-h-[480px]">
+          <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-sm flex flex-col justify-between min-h-[380px] sm:min-h-[480px]">
             {selectedPlace ? (
               <div className="flex flex-col justify-between h-full space-y-4">
                 <div>
@@ -1051,11 +1051,11 @@ export default function Directory({ user }) {
 
       {/* Place Detail & Audit Modal (Section 2 & 9) */}
       {detailModalPlace && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto animate-fade-in-up sm:animate-modal-pop">
             <button
               onClick={() => setDetailModalPlace(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-slate-400 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -1176,11 +1176,11 @@ export default function Directory({ user }) {
 
       {/* Suggest Place Modal (Section 11) */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto animate-fade-in-up sm:animate-modal-pop">
             <button
               onClick={() => setShowAddModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-slate-400 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>

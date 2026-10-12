@@ -749,7 +749,7 @@ export default function TownPortal() {
         id="hero-section"
         onMouseEnter={() => setIsHeroHovered(true)}
         onMouseLeave={() => setIsHeroHovered(false)}
-        className="relative text-white py-16 sm:py-20 lg:py-24 overflow-hidden border-b border-slate-800"
+        className="relative text-white py-10 sm:py-20 lg:py-24 overflow-hidden border-b border-slate-800"
       >
         {/* Dynamic Multi-Image Carousel of Kushinagar & Fazilnagar (17 Landmark Images, Auto-advancing every 3.5s) */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -1132,7 +1132,7 @@ export default function TownPortal() {
           </div>
 
           {/* Map Category Filters */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-4 text-xs font-semibold">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-3 mb-4 text-xs font-semibold custom-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
             {MAP_CATEGORY_TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -1140,7 +1140,7 @@ export default function TownPortal() {
                   setMapFilter(tab.id);
                   setSelectedPlace(null);
                 }}
-                className={`px-3.5 py-1.5 rounded-xl whitespace-nowrap transition border cursor-pointer ${
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl whitespace-nowrap transition border cursor-pointer ${
                   mapFilter === tab.id
                     ? "bg-[#18232E] text-white border-[#18232E]"
                     : "bg-white border-[#E1E6EA] text-[#647180] hover:bg-slate-50 hover:text-[#18232E]"
@@ -1153,17 +1153,17 @@ export default function TownPortal() {
 
           {/* Map Content */}
           {mapViewMode === "map" ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Leaflet Map Frame */}
-              <div className="lg:col-span-2 bg-white rounded-2xl overflow-hidden border border-[#E1E6EA] shadow-xs relative min-h-[440px]">
-                <div ref={mapContainerRef} className="w-full h-full min-h-[440px] z-10" />
+              <div className="lg:col-span-2 bg-white rounded-2xl overflow-hidden border border-[#E1E6EA] shadow-xs relative min-h-[290px] h-[310px] sm:h-[420px] lg:h-[480px]">
+                <div ref={mapContainerRef} className="w-full h-full min-h-[290px] z-10" />
               </div>
 
               {/* Synchronized Detail Card OR Category Places List */}
               {selectedPlace ? (
                 <div
                   key={selectedPlace.id || selectedPlace._id}
-                  className="bg-white rounded-2xl p-5 border border-[#E1E6EA] shadow-xs flex flex-col justify-between animate-fade-in-up transition-all duration-300 min-h-[440px]"
+                  className="bg-white rounded-2xl p-4 sm:p-5 border border-[#E1E6EA] shadow-xs flex flex-col justify-between animate-fade-in-up transition-all duration-300 min-h-[360px] sm:min-h-[440px]"
                 >
                   <div>
                     {/* Back to List Navigation */}
@@ -1241,7 +1241,7 @@ export default function TownPortal() {
                 </div>
               ) : (
                 /* Category Places List View */
-                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#E1E6EA] shadow-xs flex flex-col justify-between h-full min-h-[440px] animate-fade-in-up">
+                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#E1E6EA] shadow-xs flex flex-col justify-between h-full min-h-[360px] sm:min-h-[440px] animate-fade-in-up">
                   <div className="flex flex-col h-full">
                     <div className="pb-3 border-b border-[#E1E6EA] mb-3">
                       <div className="flex items-center justify-between">
