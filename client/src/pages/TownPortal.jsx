@@ -2290,6 +2290,7 @@ export default function TownPortal() {
             <ul className="space-y-1.5 text-xs">
               <li><button onClick={() => setModalType("correction")} className="hover:text-white text-left cursor-pointer">Report Inaccurate Data</button></li>
               <li><button onClick={() => setModalType("business")} className="hover:text-white text-left cursor-pointer">Suggest New Place</button></li>
+              <li><Link to="/admin/review" className="hover:text-amber-300 text-amber-400 font-bold flex items-center gap-1"><span>🛡️</span> Admin Review Desk</Link></li>
               <li><span className="text-slate-400">Postal Area: PIN 274401</span></li>
               <li><span className="text-slate-400">District: Kushinagar, UP</span></li>
               <li className="pt-2 text-[10px] text-slate-500">
