@@ -670,6 +670,9 @@ export default function ReelsNewsFeed() {
                       muted={videoMuted}
                       playsInline
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.warn("Video failed to load:", story.video);
+                      }}
                     />
                   ) : (
                     <img
@@ -677,6 +680,11 @@ export default function ReelsNewsFeed() {
                       alt={story.title}
                       className="w-full h-full object-cover object-center"
                       loading={idx === 0 ? "eager" : "lazy"}
+                      onError={(e) => {
+                        if (e.currentTarget.src !== FALLBACK_COVER_IMAGE) {
+                          e.currentTarget.src = FALLBACK_COVER_IMAGE;
+                        }
+                      }}
                     />
                   )}
 
@@ -1159,6 +1167,11 @@ export default function ReelsNewsFeed() {
                     src={readingStory.image}
                     alt={readingStory.title}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      if (e.currentTarget.src !== FALLBACK_COVER_IMAGE) {
+                        e.currentTarget.src = FALLBACK_COVER_IMAGE;
+                      }
+                    }}
                   />
                 </div>
               )}

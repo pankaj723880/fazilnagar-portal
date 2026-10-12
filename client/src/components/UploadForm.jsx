@@ -14,6 +14,7 @@ export default function UploadForm() {
   const [reporterName, setReporterName] = useState("");
   const [locationName, setLocationName] = useState("Fazilnagar");
   const [imageFile, setImageFile] = useState(null);
+  const [imageUrl, setImageUrl] = useState("");
   const [videoFile, setVideoFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -33,6 +34,7 @@ export default function UploadForm() {
     formData.append("category", category);
     formData.append("location", locationName || "Fazilnagar");
     formData.append("source", reporterName ? `${reporterName} (Citizen)` : "Citizen Reporter");
+    if (imageUrl.trim()) formData.append("imageUrl", imageUrl.trim());
 
     if (imageFile) formData.append("image", imageFile);
     if (videoFile) formData.append("video", videoFile);
@@ -175,15 +177,28 @@ export default function UploadForm() {
 
           <div>
             <label className="block font-bold text-[#18232E] mb-1">
-              Upload Video Clip (MP4 - Optional)
+              Or Web Image Link (फ़ोटो का लिंक - URL)
             </label>
             <input
-              type="file"
-              accept="video/*"
-              onChange={(e) => setVideoFile(e.target.files[0])}
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:border-[#B8323C] file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:bg-slate-200 file:text-xs file:font-bold text-xs bg-[#F5F7F8]"
+              type="url"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="https://images.unsplash.com/... or https://..."
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-[#B8323C] text-xs bg-[#F5F7F8]"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block font-bold text-[#18232E] mb-1">
+            Upload Video Clip (MP4 - Optional)
+          </label>
+          <input
+            type="file"
+            accept="video/*"
+            onChange={(e) => setVideoFile(e.target.files[0])}
+            className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:border-[#B8323C] file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:bg-slate-200 file:text-xs file:font-bold text-xs bg-[#F5F7F8]"
+          />
         </div>
 
         <div>
