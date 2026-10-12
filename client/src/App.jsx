@@ -564,9 +564,9 @@ export default function App() {
 
       {/* ========================================================
           FOOTER - Modern Civic Deep Slate with Crimson & Emerald Accents
-          (Hidden on /news full-screen reels page to preserve clean app experience)
+          (Hidden on /news full-screen reels page and TownPortal homepage which has its own footer)
           ======================================================== */}
-      {!isNewsPage && (
+      {!isNewsPage && !isPortalPage && (
         <footer className="bg-[#18232E] text-slate-400 text-xs mt-12 border-t border-slate-800 pb-16 lg:pb-0">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-3">
