@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import API from "../api";
 import {
@@ -25,6 +25,244 @@ import {
 
 const FALLBACK_COVER_IMAGE =
   "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1200&auto=format&fit=crop";
+
+// Robust Story Media Cover: Never shows broken icon or black void
+function StoryMediaCover({ story, active, muted }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
+
+  const hasVideo = !!story.video && !videoFailed;
+  const hasImage = !!story.image && !imgFailed;
+
+  return (
+    <div className="absolute inset-0 z-0 bg-[#0B1118] overflow-hidden flex items-center justify-center select-none">
+      {/* Dynamic Civic News Poster Backdrop - Guaranteed to ALWAYS look stunning even if upload 404s */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0a1017] via-[#0F1E2E] to-[#080d14] flex flex-col justify-between p-6 pointer-events-none">
+        {/* Luminous ambient meshes */}
+        <div className="absolute -top-20 -right-20 w-72 h-72 bg-[#B8323C]/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/3 -left-20 w-64 h-64 bg-sky-600/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-20 right-10 w-72 h-72 bg-emerald-600/15 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Center Civic Poster Badge */}
+        <div className="relative z-10 m-auto flex flex-col items-center text-center px-4 max-w-sm">
+          <div className="w-16 h-16 rounded-2xl bg-slate-900/90 border border-slate-700/80 shadow-2xl flex items-center justify-center mb-3 text-rose-400">
+            <Newspaper className="w-8 h-8" />
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-800/90 text-rose-300 border border-rose-500/30 mb-2 shadow-sm">
+            {story.category || "FAZILNAGAR BULLETIN"}
+          </span>
+          <h2 className="text-base sm:text-lg font-black text-white line-clamp-3 leading-snug drop-shadow-md">
+            {story.title}
+          </h2>
+          <p className="text-xs text-slate-400 mt-2 line-clamp-3 leading-relaxed">
+            {story.summary || story.description || "Official town news and community bulletin."}
+          </p>
+        </div>
+      </div>
+
+      {/* Video layer if present */}
+      {hasVideo && (
+        <video
+          src={story.video}
+          autoPlay={active}
+          loop
+          muted={muted}
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover z-10"
+          onError={() => setVideoFailed(true)}
+        />
+      )}
+
+      {/* Image layer if present */}
+      {!hasVideo && hasImage && (
+        <img
+          src={story.image}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover object-center z-10"
+          loading={active ? "eager" : "lazy"}
+          onError={() => setImgFailed(true)}
+        />
+      )}
+
+      {/* Dark gradient for text readability and actions */}
+      <div className="absolute inset-0 z-20 bg-gradient-to-t from-black via-black/40 to-black/20 pointer-events-none" />
+    </div>
+  );
+}
+
+// Recursive Comment Branch Node: Supports unlimited branching depth
+function CommentBranchNode({
+  node,
+  depth = 0,
+  currentIdentifier,
+  currentUser,
+  isStoryAuthor,
+  isAdmin,
+  replyingTo,
+  setReplyingTo,
+  replyText,
+  setReplyText,
+  submittingReply,
+  handlePostReply,
+  handleToggleCommentLike,
+  handleDeleteComment,
+  formatRelativeTime,
+}) {
+  const isCommentLiked = node.likedBy?.includes(currentIdentifier);
+  const isCommentCreator =
+    (currentUser?.id && node.userId && String(currentUser.id) === String(node.userId)) ||
+    (!node.userId && node.anonId && node.anonId === currentIdentifier);
+  const canDelete = isAdmin || isCommentCreator || isStoryAuthor;
+  const isReplyingThis = replyingTo?.commentId === node._id;
+
+  return (
+    <div
+      className={`rounded-2xl transition-all ${
+        depth === 0
+          ? "bg-slate-900/80 p-3 border border-slate-800/80 space-y-2 shadow-sm"
+          : "bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60 space-y-1.5"
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-xs font-extrabold text-white">
+            {node.authorName || "Resident"}
+          </span>
+          {node.userId && (
+            <span className="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.2 rounded font-semibold">
+              Verified
+            </span>
+          )}
+          {node.replyToAuthorName && (
+            <span className="text-[10px] text-sky-400 font-semibold bg-sky-950/60 px-1.5 py-0.5 rounded border border-sky-800/40">
+              ↳ @{node.replyToAuthorName}
+            </span>
+          )}
+          <span className="text-[10px] text-slate-400">
+            {formatRelativeTime(node.createdAt)}
+          </span>
+        </div>
+
+        {canDelete && (
+          <button
+            onClick={() => handleDeleteComment(node._id)}
+            className="text-slate-500 hover:text-red-400 p-1 transition cursor-pointer"
+            title="Delete comment / reply"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
+      <p className="text-xs text-slate-200 leading-relaxed break-words">
+        {node.text}
+      </p>
+
+      {/* Action Bar: Like & Reply at any depth */}
+      <div className="flex items-center gap-4 pt-1 text-[11px] text-slate-400 border-t border-slate-800/60">
+        <button
+          type="button"
+          onClick={() => handleToggleCommentLike(node._id)}
+          className={`flex items-center gap-1.5 font-bold transition cursor-pointer ${
+            isCommentLiked ? "text-red-400 font-extrabold" : "hover:text-white"
+          }`}
+        >
+          <Heart
+            className={`w-3.5 h-3.5 ${
+              isCommentLiked ? "fill-red-500 text-red-500" : ""
+            }`}
+          />
+          <span>{node.likes > 0 ? node.likes : "Like"}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (isReplyingThis) {
+              setReplyingTo(null);
+            } else {
+              setReplyingTo({ commentId: node._id, authorName: node.authorName || "Resident" });
+            }
+          }}
+          className="flex items-center gap-1 font-bold hover:text-white transition cursor-pointer"
+        >
+          <CornerDownRight className="w-3.5 h-3.5" />
+          <span>Reply</span>
+        </button>
+      </div>
+
+      {/* Inline Reply Input Box */}
+      {isReplyingThis && (
+        <div className="mt-2 pl-3 border-l-2 border-[#B8323C] space-y-1.5 bg-slate-950/50 p-2.5 rounded-xl">
+          <div className="flex items-center justify-between text-[10px] text-slate-400">
+            <span>
+              Replying to <strong className="text-white">@{node.authorName || "Resident"}</strong>
+            </span>
+            <button
+              type="button"
+              onClick={() => setReplyingTo(null)}
+              className="text-slate-400 hover:text-white cursor-pointer"
+            >
+              ✕ Cancel
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              placeholder={`Reply to @${node.authorName || "Resident"}...`}
+              maxLength={500}
+              autoFocus
+              className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-[#B8323C]"
+            />
+            <button
+              type="button"
+              onClick={() => handlePostReply(node._id, node.authorName || "Resident")}
+              disabled={submittingReply || !replyText.trim()}
+              className="bg-[#B8323C] hover:bg-[#991B1B] disabled:opacity-40 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1"
+            >
+              <span>Send</span>
+              <Send className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Unlimited Recursive Child Branches */}
+      {node.children && node.children.length > 0 && (
+        <div
+          className={`border-l ${
+            depth >= 2
+              ? "border-cyan-500/35 ml-1.5 pl-2"
+              : "border-slate-700/60 ml-2.5 sm:ml-4 pl-2.5 sm:pl-3"
+          } mt-2 space-y-2`}
+        >
+          {node.children.map((child) => (
+            <CommentBranchNode
+              key={child._id}
+              node={child}
+              depth={depth + 1}
+              currentIdentifier={currentIdentifier}
+              currentUser={currentUser}
+              isStoryAuthor={isStoryAuthor}
+              isAdmin={isAdmin}
+              replyingTo={replyingTo}
+              setReplyingTo={setReplyingTo}
+              replyText={replyText}
+              setReplyText={setReplyText}
+              submittingReply={submittingReply}
+              handlePostReply={handlePostReply}
+              handleToggleCommentLike={handleToggleCommentLike}
+              handleDeleteComment={handleDeleteComment}
+              formatRelativeTime={formatRelativeTime}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ReelsNewsFeed() {
   const [searchParams] = useSearchParams();
@@ -304,6 +542,32 @@ export default function ReelsNewsFeed() {
     setCommentError("");
   };
 
+  // Memoized recursive comment tree (unlimited branching)
+  const commentTree = useMemo(() => {
+    if (!comments || comments.length === 0) return [];
+    const map = new Map();
+    const roots = [];
+
+    // Initialize all nodes
+    comments.forEach((c) => {
+      map.set(String(c._id), { ...c, children: [] });
+    });
+
+    // Wire up parent-child relationships
+    comments.forEach((c) => {
+      const node = map.get(String(c._id));
+      if (c.parentId && map.has(String(c.parentId))) {
+        map.get(String(c.parentId)).children.push(node);
+      } else {
+        roots.push(node);
+      }
+    });
+
+    // Roots sorted newest first (descending), replies within branches stay in chronological order
+    roots.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    return roots;
+  }, [comments]);
+
   const handlePostComment = async (e) => {
     e.preventDefault();
     if (!commentText.trim() || !commentDrawerStory) return;
@@ -316,9 +580,11 @@ export default function ReelsNewsFeed() {
     setCommentError("");
 
     try {
+      const anonId = localStorage.getItem("fazil_anon_id");
       const payload = {
         text: commentText.trim(),
         authorName: currentUser?.name || guestAuthorName.trim() || undefined,
+        anonId,
       };
 
       const res = await API.post(
@@ -328,11 +594,11 @@ export default function ReelsNewsFeed() {
 
       const createdComment = res.data?.comment;
       if (createdComment) {
-        setComments((prev) => [createdComment, ...prev]);
+        setComments((prev) => [...prev, createdComment]);
         setCommentText("");
 
         // Update comment count on story
-        const newCount = res.data?.commentCount ?? (commentDrawerStory.commentCount + 1);
+        const newCount = res.data?.commentCount ?? ((commentDrawerStory.commentCount || 0) + 1);
         setStories((prev) =>
           prev.map((s) =>
             String(s._id) === String(commentDrawerStory._id)
@@ -352,32 +618,50 @@ export default function ReelsNewsFeed() {
     }
   };
 
-  const handleDeleteComment = async (commentId) => {
-    if (!commentDrawerStory || !window.confirm("Delete this comment?")) return;
+  const handlePostReply = async (targetParentId, targetAuthorName) => {
+    if (!replyText.trim() || !commentDrawerStory) return;
+    if (replyText.trim().length > 500) {
+      alert("Reply cannot exceed 500 characters.");
+      return;
+    }
 
+    setSubmittingReply(true);
     try {
       const anonId = localStorage.getItem("fazil_anon_id");
-      const res = await API.delete(
-        `/news/${commentDrawerStory._id}/comments/${commentId}`,
-        {
-          headers: anonId ? { "x-anon-id": anonId } : {},
-        }
+      const payload = {
+        text: replyText.trim(),
+        authorName: currentUser?.name || guestAuthorName.trim() || undefined,
+        parentId: targetParentId,
+        replyToAuthorName: targetAuthorName,
+        anonId,
+      };
+
+      const res = await API.post(
+        `/news/${commentDrawerStory._id}/comments`,
+        payload
       );
 
-      setComments((prev) => prev.filter((c) => String(c._id) !== String(commentId)));
+      const createdReply = res.data?.comment;
+      if (createdReply) {
+        setComments((prev) => [...prev, createdReply]);
+        setReplyText("");
+        setReplyingTo(null);
 
-      const newCount = res.data?.commentCount ?? Math.max(0, (commentDrawerStory.commentCount || 1) - 1);
-      setStories((prev) =>
-        prev.map((s) =>
-          String(s._id) === String(commentDrawerStory._id)
-            ? { ...s, commentCount: newCount }
-            : s
-        )
-      );
-      setCommentDrawerStory((prev) => (prev ? { ...prev, commentCount: newCount } : prev));
+        const newCount = res.data?.commentCount ?? ((commentDrawerStory.commentCount || 0) + 1);
+        setStories((prev) =>
+          prev.map((s) =>
+            String(s._id) === String(commentDrawerStory._id)
+              ? { ...s, commentCount: newCount }
+              : s
+          )
+        );
+        setCommentDrawerStory((prev) => (prev ? { ...prev, commentCount: newCount } : prev));
+      }
     } catch (err) {
-      console.error("Delete comment error:", err);
-      alert(err.response?.data?.message || "Unable to delete comment.");
+      console.error("Reply post error:", err);
+      alert(err.response?.data?.message || "Failed to post reply.");
+    } finally {
+      setSubmittingReply(false);
     }
   };
 
@@ -386,7 +670,7 @@ export default function ReelsNewsFeed() {
     const anonId = localStorage.getItem("fazil_anon_id") || "guest";
     const identifier = currentUser?.id ? String(currentUser.id) : String(anonId);
 
-    // Optimistic UI
+    // Optimistic UI for any comment or reply node in tree
     setComments((prev) =>
       prev.map((c) => {
         if (String(c._id) !== String(commentId)) return c;
@@ -424,135 +708,24 @@ export default function ReelsNewsFeed() {
     }
   };
 
-  const handlePostReply = async (commentId) => {
-    if (!replyText.trim() || !commentDrawerStory) return;
-    if (replyText.trim().length > 500) {
-      alert("Reply cannot exceed 500 characters.");
-      return;
-    }
-
-    setSubmittingReply(true);
-    try {
-      const anonId = localStorage.getItem("fazil_anon_id");
-      const payload = {
-        text: replyText.trim(),
-        authorName: currentUser?.name || guestAuthorName.trim() || undefined,
-        anonId,
-      };
-
-      const res = await API.post(
-        `/news/${commentDrawerStory._id}/comments/${commentId}/replies`,
-        payload
-      );
-
-      if (res.data?.comment) {
-        setComments((prev) =>
-          prev.map((c) =>
-            String(c._id) === String(commentId) ? res.data.comment : c
-          )
-        );
-        setReplyText("");
-        setReplyingTo(null);
-
-        const newCount = res.data?.commentCount ?? (commentDrawerStory.commentCount + 1);
-        setStories((prev) =>
-          prev.map((s) =>
-            String(s._id) === String(commentDrawerStory._id)
-              ? { ...s, commentCount: newCount }
-              : s
-          )
-        );
-        setCommentDrawerStory((prev) => (prev ? { ...prev, commentCount: newCount } : prev));
-      }
-    } catch (err) {
-      console.error("Reply post error:", err);
-      alert(err.response?.data?.message || "Failed to post reply.");
-    } finally {
-      setSubmittingReply(false);
-    }
-  };
-
-  const handleToggleReplyLike = async (commentId, replyId) => {
-    if (!commentDrawerStory) return;
-    const anonId = localStorage.getItem("fazil_anon_id") || "guest";
-    const identifier = currentUser?.id ? String(currentUser.id) : String(anonId);
-
-    // Optimistic UI
-    setComments((prev) =>
-      prev.map((c) => {
-        if (String(c._id) !== String(commentId)) return c;
-        const updatedReplies = (c.replies || []).map((r) => {
-          if (String(r._id) !== String(replyId)) return r;
-          const alreadyLiked = r.likedBy?.includes(identifier);
-          const newLikes = alreadyLiked ? Math.max(0, (r.likes || 1) - 1) : (r.likes || 0) + 1;
-          const newLikedBy = alreadyLiked
-            ? (r.likedBy || []).filter((id) => id !== identifier)
-            : [...(r.likedBy || []), identifier];
-          return { ...r, likes: newLikes, likedBy: newLikedBy };
-        });
-        return { ...c, replies: updatedReplies };
-      })
-    );
-
-    try {
-      const res = await API.post(
-        `/news/${commentDrawerStory._id}/comments/${commentId}/replies/${replyId}/like`,
-        { anonId }
-      );
-      if (res.data) {
-        setComments((prev) =>
-          prev.map((c) => {
-            if (String(c._id) !== String(commentId)) return c;
-            const updatedReplies = (c.replies || []).map((r) => {
-              if (String(r._id) !== String(replyId)) return r;
-              return {
-                ...r,
-                likes: res.data.likes,
-                likedBy: res.data.liked
-                  ? [...new Set([...(r.likedBy || []), identifier])]
-                  : (r.likedBy || []).filter((id) => id !== identifier),
-              };
-            });
-            return { ...c, replies: updatedReplies };
-          })
-        );
-      }
-    } catch (err) {
-      console.error("Reply like error:", err);
-    }
-  };
-
-  const handleDeleteReply = async (commentId, replyId) => {
-    if (!commentDrawerStory || !window.confirm("Delete this reply?")) return;
+  const handleDeleteComment = async (targetId) => {
+    if (!commentDrawerStory || !window.confirm("Delete this comment / reply?")) return;
 
     try {
       const anonId = localStorage.getItem("fazil_anon_id");
       const res = await API.delete(
-        `/news/${commentDrawerStory._id}/comments/${commentId}/replies/${replyId}`,
+        `/news/${commentDrawerStory._id}/comments/${targetId}`,
         {
           headers: anonId ? { "x-anon-id": anonId } : {},
         }
       );
 
-      if (res.data?.comment) {
-        setComments((prev) =>
-          prev.map((c) =>
-            String(c._id) === String(commentId) ? res.data.comment : c
-          )
-        );
-      } else {
-        setComments((prev) =>
-          prev.map((c) => {
-            if (String(c._id) !== String(commentId)) return c;
-            return {
-              ...c,
-              replies: (c.replies || []).filter((r) => String(r._id) !== String(replyId)),
-            };
-          })
-        );
-      }
+      const deletedIds = res.data?.deletedIds || [String(targetId)];
+      const deletedSet = new Set(deletedIds.map(String));
 
-      const newCount = res.data?.commentCount ?? Math.max(0, (commentDrawerStory.commentCount || 1) - 1);
+      setComments((prev) => prev.filter((c) => !deletedSet.has(String(c._id))));
+
+      const newCount = res.data?.commentCount ?? Math.max(0, (commentDrawerStory.commentCount || 1) - deletedIds.length);
       setStories((prev) =>
         prev.map((s) =>
           String(s._id) === String(commentDrawerStory._id)
@@ -562,8 +735,8 @@ export default function ReelsNewsFeed() {
       );
       setCommentDrawerStory((prev) => (prev ? { ...prev, commentCount: newCount } : prev));
     } catch (err) {
-      console.error("Delete reply error:", err);
-      alert(err.response?.data?.message || "Unable to delete reply.");
+      console.error("Delete comment error:", err);
+      alert(err.response?.data?.message || "Unable to delete comment.");
     }
   };
 
@@ -659,38 +832,12 @@ export default function ReelsNewsFeed() {
                 ref={(el) => (storyRefs.current[idx] = el)}
                 className="w-full h-full min-h-full snap-start snap-always relative flex flex-col justify-end overflow-hidden shrink-0"
               >
-                {/* Media Layer (Video or Cover Image) */}
-                <div className="absolute inset-0 z-0 bg-slate-950">
-                  {story.video ? (
-                    <video
-                      src={story.video}
-                      poster={coverImage}
-                      autoPlay={idx === activeStoryIndex}
-                      loop
-                      muted={videoMuted}
-                      playsInline
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        console.warn("Video failed to load:", story.video);
-                      }}
-                    />
-                  ) : (
-                    <img
-                      src={coverImage}
-                      alt={story.title}
-                      className="w-full h-full object-cover object-center"
-                      loading={idx === 0 ? "eager" : "lazy"}
-                      onError={(e) => {
-                        if (e.currentTarget.src !== FALLBACK_COVER_IMAGE) {
-                          e.currentTarget.src = FALLBACK_COVER_IMAGE;
-                        }
-                      }}
-                    />
-                  )}
-
-                  {/* Gradient Overlay for Readable Text & Controls */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent pointer-events-none" />
-                </div>
+                {/* Robust Media Layer that never fails or shows broken image icon */}
+                <StoryMediaCover
+                  story={story}
+                  active={idx === activeStoryIndex}
+                  muted={videoMuted}
+                />
 
                 {/* Right Floating Actions Rail (Reels / Shorts Style) */}
                 <div className="absolute right-3.5 bottom-20 sm:bottom-24 z-20 flex flex-col items-center gap-4">
@@ -901,7 +1048,7 @@ export default function ReelsNewsFeed() {
               )}
 
               {!commentsLoading &&
-                comments.map((c) => {
+                commentTree.map((rootNode) => {
                   const anonId = localStorage.getItem("fazil_anon_id") || "guest";
                   const currentIdentifier = currentUser?.id ? String(currentUser.id) : String(anonId);
                   const isStoryAuthor =
@@ -909,181 +1056,29 @@ export default function ReelsNewsFeed() {
                     commentDrawerStory?.author &&
                     (String(commentDrawerStory.author) === String(currentUser.id) ||
                       String(commentDrawerStory.author?._id) === String(currentUser.id));
-                  const isCommentCreator =
-                    (currentUser?.id && c.userId && String(currentUser.id) === String(c.userId)) ||
-                    (!c.userId && c.anonId && c.anonId === anonId);
                   const isAdmin =
                     currentUser?.role === "admin" ||
                     currentUser?.email === "pankaj723880@gmail.com";
 
-                  const canDeleteComment = isAdmin || isCommentCreator || isStoryAuthor;
-                  const isCommentLiked = c.likedBy?.includes(currentIdentifier);
-
                   return (
-                    <div
-                      key={c._id}
-                      className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/80 space-y-2"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-extrabold text-white">
-                            {c.authorName || "Resident"}
-                          </span>
-                          {c.userId && (
-                            <span className="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.2 rounded font-semibold">
-                              Verified
-                            </span>
-                          )}
-                          <span className="text-[10px] text-slate-400">
-                            {formatRelativeTime(c.createdAt)}
-                          </span>
-                        </div>
-
-                        {canDeleteComment && (
-                          <button
-                            onClick={() => handleDeleteComment(c._id)}
-                            className="text-slate-500 hover:text-red-400 p-1 transition cursor-pointer"
-                            title="Delete comment (allowed for commenter, story author, and admin)"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
-
-                      <p className="text-xs text-slate-200 leading-relaxed break-words">
-                        {c.text}
-                      </p>
-
-                      {/* Comment Actions: Like & Reply */}
-                      <div className="flex items-center gap-4 pt-1 text-[11px] text-slate-400 border-t border-slate-800/60">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleCommentLike(c._id)}
-                          className={`flex items-center gap-1.5 font-bold transition cursor-pointer ${
-                            isCommentLiked ? "text-red-400 font-extrabold" : "hover:text-white"
-                          }`}
-                        >
-                          <Heart
-                            className={`w-3.5 h-3.5 ${
-                              isCommentLiked ? "fill-red-500 text-red-500" : ""
-                            }`}
-                          />
-                          <span>{c.likes > 0 ? c.likes : "Like"}</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (replyingTo?.commentId === c._id) {
-                              setReplyingTo(null);
-                            } else {
-                              setReplyingTo({ commentId: c._id, authorName: c.authorName || "Resident" });
-                            }
-                          }}
-                          className="flex items-center gap-1 font-bold hover:text-white transition cursor-pointer"
-                        >
-                          <CornerDownRight className="w-3.5 h-3.5" />
-                          <span>Reply</span>
-                        </button>
-                      </div>
-
-                      {/* Inline Reply Input Box */}
-                      {replyingTo?.commentId === c._id && (
-                        <div className="mt-2 pl-3 border-l-2 border-[#B8323C] space-y-1.5 bg-slate-950/40 p-2.5 rounded-xl">
-                          <div className="flex items-center justify-between text-[10px] text-slate-400">
-                            <span>Replying to <strong className="text-white">@{c.authorName || "Resident"}</strong></span>
-                            <button
-                              type="button"
-                              onClick={() => setReplyingTo(null)}
-                              className="text-slate-400 hover:text-white cursor-pointer"
-                            >
-                              ✕ Cancel
-                            </button>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="text"
-                              value={replyText}
-                              onChange={(e) => setReplyText(e.target.value)}
-                              placeholder={`Reply to @${c.authorName || "Resident"}...`}
-                              maxLength={500}
-                              className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-[#B8323C]"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handlePostReply(c._id)}
-                              disabled={submittingReply || !replyText.trim()}
-                              className="bg-[#B8323C] hover:bg-[#991B1B] disabled:opacity-40 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1"
-                            >
-                              <span>Send</span>
-                              <Send className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Nested Replies List */}
-                      {c.replies && c.replies.length > 0 && (
-                        <div className="mt-2 pl-3 border-l border-slate-800 space-y-2 pt-1">
-                          {c.replies.map((r) => {
-                            const isReplyLiked = r.likedBy?.includes(currentIdentifier);
-                            const isReplyCreator =
-                              (currentUser?.id && r.userId && String(currentUser.id) === String(r.userId)) ||
-                              (!r.userId && r.anonId && r.anonId === anonId);
-                            const canDeleteReply = isAdmin || isReplyCreator || isStoryAuthor;
-
-                            return (
-                              <div
-                                key={r._id}
-                                className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60 space-y-1"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-[11px] font-bold text-slate-200">
-                                      {r.authorName || "Resident"}
-                                    </span>
-                                    <span className="text-[9px] text-slate-500">
-                                      {formatRelativeTime(r.createdAt)}
-                                    </span>
-                                  </div>
-
-                                  {canDeleteReply && (
-                                    <button
-                                      onClick={() => handleDeleteReply(c._id, r._id)}
-                                      className="text-slate-500 hover:text-red-400 p-0.5 transition cursor-pointer"
-                                      title="Delete reply"
-                                    >
-                                      <Trash2 className="w-3 h-3" />
-                                    </button>
-                                  )}
-                                </div>
-
-                                <p className="text-xs text-slate-300 leading-relaxed break-words">
-                                  {r.text}
-                                </p>
-
-                                <div className="flex items-center gap-2 pt-1 text-[10px] text-slate-400">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleReplyLike(c._id, r._id)}
-                                    className={`flex items-center gap-1 font-semibold transition cursor-pointer ${
-                                      isReplyLiked ? "text-red-400" : "hover:text-white"
-                                    }`}
-                                  >
-                                    <Heart
-                                      className={`w-3 h-3 ${
-                                        isReplyLiked ? "fill-red-500 text-red-500" : ""
-                                      }`}
-                                    />
-                                    <span>{r.likes > 0 ? r.likes : "Like"}</span>
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
+                    <CommentBranchNode
+                      key={rootNode._id}
+                      node={rootNode}
+                      depth={0}
+                      currentIdentifier={currentIdentifier}
+                      currentUser={currentUser}
+                      isStoryAuthor={isStoryAuthor}
+                      isAdmin={isAdmin}
+                      replyingTo={replyingTo}
+                      setReplyingTo={setReplyingTo}
+                      replyText={replyText}
+                      setReplyText={setReplyText}
+                      submittingReply={submittingReply}
+                      handlePostReply={handlePostReply}
+                      handleToggleCommentLike={handleToggleCommentLike}
+                      handleDeleteComment={handleDeleteComment}
+                      formatRelativeTime={formatRelativeTime}
+                    />
                   );
                 })}
             </div>

@@ -250,34 +250,61 @@ router.post("/:id/like", async (req, res) => {
 });
 
 // ====================================================================
-// COMMENTS ENDPOINTS (PERSISTENT IN MONGODB)
+// COMMENTS ENDPOINTS (PERSISTENT IN MONGODB WITH UNLIMITED BRANCHING)
 // ====================================================================
 
 // @route   GET /api/news/:id/comments
-// @desc    Get paginated comments for a news story
+// @desc    Get all comments and nested replies for a news story
 // @access  Public
 router.get("/:id/comments", async (req, res) => {
   try {
     const newsId = req.params.id;
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
-    const skip = (page - 1) * limit;
-
-    const query = { newsId, status: "visible" };
-    const total = await Comment.countDocuments(query);
-    const comments = await Comment.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
+    const rawComments = await Comment.find({ newsId, status: "visible" })
+      .sort({ createdAt: 1 })
       .lean();
+
+    // Flatten any legacy embedded replies so every item is a unified node
+    const comments = [];
+    for (const c of rawComments) {
+      comments.push({
+        _id: c._id,
+        newsId: c.newsId,
+        parentId: c.parentId || null,
+        replyToAuthorName: c.replyToAuthorName || null,
+        userId: c.userId || null,
+        anonId: c.anonId || null,
+        authorName: c.authorName,
+        text: c.text,
+        likes: c.likes || 0,
+        likedBy: c.likedBy || [],
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+      });
+
+      // Legacy embedded replies support
+      if (Array.isArray(c.replies) && c.replies.length > 0) {
+        for (const r of c.replies) {
+          comments.push({
+            _id: r._id,
+            newsId: c.newsId,
+            parentId: c._id,
+            replyToAuthorName: c.authorName,
+            userId: r.userId || null,
+            anonId: r.anonId || null,
+            authorName: r.authorName,
+            text: r.text,
+            likes: r.likes || 0,
+            likedBy: r.likedBy || [],
+            createdAt: r.createdAt,
+            updatedAt: r.updatedAt,
+          });
+        }
+      }
+    }
 
     res.status(200).json({
       comments,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit) || 1,
-      hasMore: skip + comments.length < total,
+      total: comments.length,
     });
   } catch (err) {
     console.error("Fetch Comments Error:", err);
@@ -286,14 +313,12 @@ router.get("/:id/comments", async (req, res) => {
 });
 
 // @route   POST /api/news/:id/comments
-// @desc    Submit a new comment on a news story
-// @route   POST /api/news/:id/comments
-// @desc    Submit a new comment on a news story
+// @desc    Submit a new comment or reply to any comment/reply at unlimited depth
 // @access  Public (Citizen or Authenticated)
 router.post("/:id/comments", async (req, res) => {
   try {
     const newsId = req.params.id;
-    const { text, authorName } = req.body;
+    const { text, authorName, parentId, replyToAuthorName } = req.body;
     const user = getOptionalUser(req);
     const anonId = req.headers["x-anon-id"] || req.body.anonId || null;
 
@@ -310,6 +335,29 @@ router.post("/:id/comments", async (req, res) => {
       return res.status(404).json({ message: "News story not found." });
     }
 
+    // If replying to a parent comment or reply, verify parent
+    let verifiedParentId = null;
+    let targetReplyAuthor = replyToAuthorName || null;
+    if (parentId) {
+      const parentComment = await Comment.findOne({ _id: parentId, newsId, status: "visible" });
+      if (!parentComment) {
+        // Fallback: check if parentId was a legacy embedded reply
+        const legacyParent = await Comment.findOne({ newsId, "replies._id": parentId });
+        if (legacyParent) {
+          verifiedParentId = legacyParent._id;
+          const legacyReply = legacyParent.replies.id(parentId);
+          if (legacyReply && !targetReplyAuthor) {
+            targetReplyAuthor = legacyReply.authorName;
+          }
+        }
+      } else {
+        verifiedParentId = parentComment._id;
+        if (!targetReplyAuthor) {
+          targetReplyAuthor = parentComment.authorName;
+        }
+      }
+    }
+
     // Determine author name
     const finalAuthorName = sanitizeText(
       user?.name || authorName || "Fazilnagar Resident"
@@ -318,6 +366,8 @@ router.post("/:id/comments", async (req, res) => {
 
     const newComment = await Comment.create({
       newsId,
+      parentId: verifiedParentId,
+      replyToAuthorName: targetReplyAuthor,
       userId: user?.id || null,
       anonId: user?.id ? null : (anonId ? String(anonId).trim() : null),
       authorName: finalAuthorName,
@@ -346,7 +396,7 @@ router.post("/:id/comments", async (req, res) => {
 });
 
 // @route   POST /api/news/:id/comments/:commentId/replies
-// @desc    Add a reply to an existing comment
+// @desc    Add a reply to an existing comment (supports legacy route)
 // @access  Public (Citizen or Authenticated)
 router.post("/:id/comments/:commentId/replies", async (req, res) => {
   try {
@@ -363,8 +413,8 @@ router.post("/:id/comments/:commentId/replies", async (req, res) => {
       return res.status(400).json({ message: "Reply is too long (maximum 500 characters)." });
     }
 
-    const comment = await Comment.findOne({ _id: commentId, newsId });
-    if (!comment) {
+    const parentComment = await Comment.findOne({ _id: commentId, newsId });
+    if (!parentComment) {
       return res.status(404).json({ message: "Parent comment not found." });
     }
 
@@ -373,19 +423,19 @@ router.post("/:id/comments/:commentId/replies", async (req, res) => {
     ).slice(0, 60);
     const sanitizedText = sanitizeText(text);
 
-    const newReply = {
+    const newReply = await Comment.create({
+      newsId,
+      parentId: parentComment._id,
+      replyToAuthorName: parentComment.authorName,
       userId: user?.id || null,
       anonId: user?.id ? null : (anonId ? String(anonId).trim() : null),
       authorName: finalAuthorName,
       text: sanitizedText,
+      status: "visible",
       likes: 0,
       likedBy: [],
-    };
+    });
 
-    comment.replies.push(newReply);
-    await comment.save();
-
-    // Increment comment count on the story for replies as well
     const updatedStory = await News.findByIdAndUpdate(
       newsId,
       { $inc: { commentCount: 1 } },
@@ -393,8 +443,8 @@ router.post("/:id/comments/:commentId/replies", async (req, res) => {
     );
 
     res.status(201).json({
-      reply: comment.replies[comment.replies.length - 1],
-      comment,
+      reply: newReply,
+      comment: newReply,
       commentCount: updatedStory?.commentCount || 1,
     });
   } catch (err) {
@@ -404,7 +454,7 @@ router.post("/:id/comments/:commentId/replies", async (req, res) => {
 });
 
 // @route   POST /api/news/:id/comments/:commentId/like
-// @desc    Toggle like state for a comment
+// @desc    Toggle like state for any comment or reply node
 // @access  Public / Authenticated
 router.post("/:id/comments/:commentId/like", async (req, res) => {
   try {
@@ -417,8 +467,30 @@ router.post("/:id/comments/:commentId/like", async (req, res) => {
       return res.status(400).json({ message: "Identifier required to like comment." });
     }
 
-    const comment = await Comment.findOne({ _id: commentId, newsId });
+    let comment = await Comment.findOne({ _id: commentId, newsId });
     if (!comment) {
+      // Check legacy embedded reply
+      const parentWithReply = await Comment.findOne({ newsId, "replies._id": commentId });
+      if (parentWithReply) {
+        const reply = parentWithReply.replies.id(commentId);
+        if (reply) {
+          const alreadyLiked = reply.likedBy?.includes(identifier);
+          if (alreadyLiked) {
+            reply.likedBy = reply.likedBy.filter((id) => id !== identifier);
+            reply.likes = Math.max(0, (reply.likes || 1) - 1);
+          } else {
+            if (!reply.likedBy) reply.likedBy = [];
+            reply.likedBy.push(identifier);
+            reply.likes = (reply.likes || 0) + 1;
+          }
+          await parentWithReply.save();
+          return res.status(200).json({
+            liked: !alreadyLiked,
+            likes: reply.likes,
+            commentId: reply._id,
+          });
+        }
+      }
       return res.status(404).json({ message: "Comment not found." });
     }
 
@@ -446,11 +518,13 @@ router.post("/:id/comments/:commentId/like", async (req, res) => {
 });
 
 // @route   POST /api/news/:id/comments/:commentId/replies/:replyId/like
-// @desc    Toggle like state for a reply
+// @desc    Toggle like state for a reply (supports legacy route)
 // @access  Public / Authenticated
 router.post("/:id/comments/:commentId/replies/:replyId/like", async (req, res) => {
   try {
-    const { id: newsId, commentId, replyId } = req.params;
+    const { id: newsId, replyId } = req.params;
+    req.params.commentId = replyId;
+    // Delegate directly to the unified comment/reply like endpoint
     const user = getOptionalUser(req);
     const anonId = req.headers["x-anon-id"] || req.body.anonId || null;
     const identifier = user?.id ? String(user.id) : (anonId ? String(anonId).trim() : null);
@@ -459,32 +533,47 @@ router.post("/:id/comments/:commentId/replies/:replyId/like", async (req, res) =
       return res.status(400).json({ message: "Identifier required to like reply." });
     }
 
-    const comment = await Comment.findOne({ _id: commentId, newsId });
+    let comment = await Comment.findOne({ _id: replyId, newsId });
     if (!comment) {
-      return res.status(404).json({ message: "Comment not found." });
-    }
-
-    const reply = comment.replies.id(replyId);
-    if (!reply) {
+      const parentWithReply = await Comment.findOne({ newsId, "replies._id": replyId });
+      if (parentWithReply) {
+        const reply = parentWithReply.replies.id(replyId);
+        if (reply) {
+          const alreadyLiked = reply.likedBy?.includes(identifier);
+          if (alreadyLiked) {
+            reply.likedBy = reply.likedBy.filter((id) => id !== identifier);
+            reply.likes = Math.max(0, (reply.likes || 1) - 1);
+          } else {
+            if (!reply.likedBy) reply.likedBy = [];
+            reply.likedBy.push(identifier);
+            reply.likes = (reply.likes || 0) + 1;
+          }
+          await parentWithReply.save();
+          return res.status(200).json({
+            liked: !alreadyLiked,
+            likes: reply.likes,
+            replyId: reply._id,
+          });
+        }
+      }
       return res.status(404).json({ message: "Reply not found." });
     }
 
-    const alreadyLiked = reply.likedBy?.includes(identifier);
+    const alreadyLiked = comment.likedBy?.includes(identifier);
     if (alreadyLiked) {
-      reply.likedBy = reply.likedBy.filter((id) => id !== identifier);
-      reply.likes = Math.max(0, (reply.likes || 1) - 1);
+      comment.likedBy = comment.likedBy.filter((id) => id !== identifier);
+      comment.likes = Math.max(0, (comment.likes || 1) - 1);
     } else {
-      if (!reply.likedBy) reply.likedBy = [];
-      reply.likedBy.push(identifier);
-      reply.likes = (reply.likes || 0) + 1;
+      if (!comment.likedBy) comment.likedBy = [];
+      comment.likedBy.push(identifier);
+      comment.likes = (comment.likes || 0) + 1;
     }
-
     await comment.save();
 
     res.status(200).json({
       liked: !alreadyLiked,
-      likes: reply.likes,
-      replyId: reply._id,
+      likes: comment.likes,
+      replyId: comment._id,
     });
   } catch (err) {
     console.error("Reply Like Toggle Error:", err);
@@ -493,7 +582,7 @@ router.post("/:id/comments/:commentId/replies/:replyId/like", async (req, res) =
 });
 
 // @route   DELETE /api/news/:id/comments/:commentId
-// @desc    Delete a comment (User who commented, Author of story, or Admin)
+// @desc    Delete a comment or reply with cascading branch deletion
 // @access  Public with verification or Authenticated
 router.delete("/:id/comments/:commentId", async (req, res) => {
   try {
@@ -501,22 +590,49 @@ router.delete("/:id/comments/:commentId", async (req, res) => {
     const user = getOptionalUser(req);
     const anonId = req.headers["x-anon-id"] || req.query.anonId || req.body?.anonId || null;
 
-    const [comment, story] = await Promise.all([
+    let [comment, story] = await Promise.all([
       Comment.findById(commentId),
       News.findById(newsId),
     ]);
 
+    // Check if it's a legacy embedded reply
     if (!comment) {
+      const parentWithReply = await Comment.findOne({ newsId, "replies._id": commentId });
+      if (parentWithReply) {
+        const reply = parentWithReply.replies.id(commentId);
+        if (reply) {
+          const isAdmin = user?.role === "admin" || user?.email === "pankaj723880@gmail.com";
+          const isReplyAuthorUser = user?.id && reply.userId && String(reply.userId) === String(user.id);
+          const isReplyAuthorAnon = !reply.userId && anonId && reply.anonId && String(reply.anonId) === String(anonId).trim();
+          const isStoryAuthor = user?.id && story?.author && String(story.author) === String(user.id);
+
+          if (!isAdmin && !isReplyAuthorUser && !isReplyAuthorAnon && !isStoryAuthor) {
+            return res.status(403).json({
+              message: "You are not authorized to delete this reply. Only the author, story creator, or admin can delete it.",
+            });
+          }
+
+          reply.deleteOne();
+          await parentWithReply.save();
+          const updatedStory = await News.findByIdAndUpdate(
+            newsId,
+            [{ $set: { commentCount: { $max: [0, { $subtract: ["$commentCount", 1] }] } } }],
+            { new: true }
+          );
+          return res.status(200).json({
+            success: true,
+            deletedIds: [commentId],
+            commentCount: updatedStory?.commentCount || 0,
+          });
+        }
+      }
       return res.status(404).json({ message: "Comment not found." });
     }
 
     // Check authorization:
-    // 1. Admin
     const isAdmin = user?.role === "admin" || user?.email === "pankaj723880@gmail.com";
-    // 2. The user who wrote the comment
     const isCommentAuthorUser = user?.id && comment.userId && String(comment.userId) === String(user.id);
     const isCommentAuthorAnon = !comment.userId && anonId && comment.anonId && String(comment.anonId) === String(anonId).trim();
-    // 3. The user on whose story the comment was posted
     const isStoryAuthor = user?.id && story?.author && String(story.author) === String(user.id);
 
     if (!isAdmin && !isCommentAuthorUser && !isCommentAuthorAnon && !isStoryAuthor) {
@@ -525,11 +641,21 @@ router.delete("/:id/comments/:commentId", async (req, res) => {
       });
     }
 
-    // Number of total items removed (comment + its replies)
-    const replyCount = comment.replies?.length || 0;
-    const decrementCount = 1 + replyCount;
+    // Recursive cascade deletion: collect all descendant reply IDs (unlimited branch)
+    const idsToDelete = [comment._id];
+    let currentLevel = [comment._id];
+    while (currentLevel.length > 0) {
+      const children = await Comment.find({ newsId, parentId: { $in: currentLevel } }, "_id").lean();
+      if (children.length === 0) break;
+      const nextLevel = children.map((c) => c._id);
+      idsToDelete.push(...nextLevel);
+      currentLevel = nextLevel;
+    }
 
-    await Comment.findByIdAndDelete(commentId);
+    const legacyRepliesCount = comment.replies?.length || 0;
+    const totalCountToDelete = idsToDelete.length + legacyRepliesCount;
+
+    await Comment.deleteMany({ _id: { $in: idsToDelete } });
 
     // Decrement commentCount atomically on story
     const updatedStory = await News.findByIdAndUpdate(
@@ -537,7 +663,7 @@ router.delete("/:id/comments/:commentId", async (req, res) => {
       [
         {
           $set: {
-            commentCount: { $max: [0, { $subtract: ["$commentCount", decrementCount] }] },
+            commentCount: { $max: [0, { $subtract: ["$commentCount", totalCountToDelete] }] },
           },
         },
       ],
@@ -546,7 +672,8 @@ router.delete("/:id/comments/:commentId", async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Comment deleted successfully.",
+      message: "Comment and any replies deleted successfully.",
+      deletedIds: idsToDelete.map(String),
       commentCount: updatedStory?.commentCount || 0,
     });
   } catch (err) {
@@ -556,35 +683,57 @@ router.delete("/:id/comments/:commentId", async (req, res) => {
 });
 
 // @route   DELETE /api/news/:id/comments/:commentId/replies/:replyId
-// @desc    Delete a reply (User who wrote reply, Story author, or Admin)
+// @desc    Delete a reply (supports legacy route)
 // @access  Public with verification or Authenticated
 router.delete("/:id/comments/:commentId/replies/:replyId", async (req, res) => {
+  // Delegate directly to the recursive delete route using replyId
+  req.params.commentId = req.params.replyId;
   try {
-    const { id: newsId, commentId, replyId } = req.params;
+    const { id: newsId, replyId } = req.params;
     const user = getOptionalUser(req);
     const anonId = req.headers["x-anon-id"] || req.query.anonId || req.body?.anonId || null;
 
-    const [comment, story] = await Promise.all([
-      Comment.findById(commentId),
+    let [comment, story] = await Promise.all([
+      Comment.findById(replyId),
       News.findById(newsId),
     ]);
 
     if (!comment) {
-      return res.status(404).json({ message: "Comment not found." });
-    }
+      const parentWithReply = await Comment.findOne({ newsId, "replies._id": replyId });
+      if (parentWithReply) {
+        const reply = parentWithReply.replies.id(replyId);
+        if (reply) {
+          const isAdmin = user?.role === "admin" || user?.email === "pankaj723880@gmail.com";
+          const isReplyAuthorUser = user?.id && reply.userId && String(reply.userId) === String(user.id);
+          const isReplyAuthorAnon = !reply.userId && anonId && reply.anonId && String(reply.anonId) === String(anonId).trim();
+          const isStoryAuthor = user?.id && story?.author && String(story.author) === String(user.id);
 
-    const reply = comment.replies.id(replyId);
-    if (!reply) {
+          if (!isAdmin && !isReplyAuthorUser && !isReplyAuthorAnon && !isStoryAuthor) {
+            return res.status(403).json({
+              message: "You are not authorized to delete this reply. Only the author, story creator, or admin can delete it.",
+            });
+          }
+
+          reply.deleteOne();
+          await parentWithReply.save();
+          const updatedStory = await News.findByIdAndUpdate(
+            newsId,
+            [{ $set: { commentCount: { $max: [0, { $subtract: ["$commentCount", 1] }] } } }],
+            { new: true }
+          );
+          return res.status(200).json({
+            success: true,
+            deletedIds: [replyId],
+            commentCount: updatedStory?.commentCount || 0,
+          });
+        }
+      }
       return res.status(404).json({ message: "Reply not found." });
     }
 
-    // Check authorization:
-    // 1. Admin
     const isAdmin = user?.role === "admin" || user?.email === "pankaj723880@gmail.com";
-    // 2. The user who wrote the reply
-    const isReplyAuthorUser = user?.id && reply.userId && String(reply.userId) === String(user.id);
-    const isReplyAuthorAnon = !reply.userId && anonId && reply.anonId && String(reply.anonId) === String(anonId).trim();
-    // 3. The user on whose story the comment is
+    const isReplyAuthorUser = user?.id && comment.userId && String(comment.userId) === String(user.id);
+    const isReplyAuthorAnon = !comment.userId && anonId && comment.anonId && String(comment.anonId) === String(anonId).trim();
     const isStoryAuthor = user?.id && story?.author && String(story.author) === String(user.id);
 
     if (!isAdmin && !isReplyAuthorUser && !isReplyAuthorAnon && !isStoryAuthor) {
@@ -593,16 +742,24 @@ router.delete("/:id/comments/:commentId/replies/:replyId", async (req, res) => {
       });
     }
 
-    reply.deleteOne();
-    await comment.save();
+    const idsToDelete = [comment._id];
+    let currentLevel = [comment._id];
+    while (currentLevel.length > 0) {
+      const children = await Comment.find({ newsId, parentId: { $in: currentLevel } }, "_id").lean();
+      if (children.length === 0) break;
+      const nextLevel = children.map((c) => c._id);
+      idsToDelete.push(...nextLevel);
+      currentLevel = nextLevel;
+    }
 
-    // Decrement story commentCount
+    await Comment.deleteMany({ _id: { $in: idsToDelete } });
+
     const updatedStory = await News.findByIdAndUpdate(
       newsId,
       [
         {
           $set: {
-            commentCount: { $max: [0, { $subtract: ["$commentCount", 1] }] },
+            commentCount: { $max: [0, { $subtract: ["$commentCount", idsToDelete.length] }] },
           },
         },
       ],
@@ -612,7 +769,7 @@ router.delete("/:id/comments/:commentId/replies/:replyId", async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Reply deleted successfully.",
-      comment,
+      deletedIds: idsToDelete.map(String),
       commentCount: updatedStory?.commentCount || 0,
     });
   } catch (err) {

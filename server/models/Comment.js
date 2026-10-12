@@ -47,6 +47,18 @@ const commentSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    parentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Comment",
+      default: null,
+      index: true,
+    },
+    replyToAuthorName: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: 60,
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -91,6 +103,7 @@ const commentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+commentSchema.index({ newsId: 1, parentId: 1, createdAt: 1 });
 commentSchema.index({ newsId: 1, createdAt: -1 });
 
 const Comment = mongoose.model("Comment", commentSchema);
