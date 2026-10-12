@@ -287,12 +287,15 @@ router.get("/:id/comments", async (req, res) => {
 
 // @route   POST /api/news/:id/comments
 // @desc    Submit a new comment on a news story
+// @route   POST /api/news/:id/comments
+// @desc    Submit a new comment on a news story
 // @access  Public (Citizen or Authenticated)
 router.post("/:id/comments", async (req, res) => {
   try {
     const newsId = req.params.id;
     const { text, authorName } = req.body;
     const user = getOptionalUser(req);
+    const anonId = req.headers["x-anon-id"] || req.body.anonId || null;
 
     if (!text || text.trim().length === 0) {
       return res.status(400).json({ message: "Comment text cannot be empty." });
@@ -316,9 +319,13 @@ router.post("/:id/comments", async (req, res) => {
     const newComment = await Comment.create({
       newsId,
       userId: user?.id || null,
+      anonId: user?.id ? null : (anonId ? String(anonId).trim() : null),
       authorName: finalAuthorName,
       text: sanitizedText,
       status: "visible",
+      likes: 0,
+      likedBy: [],
+      replies: [],
     });
 
     // Atomically increment commentCount on the story
@@ -338,35 +345,199 @@ router.post("/:id/comments", async (req, res) => {
   }
 });
 
-// @route   DELETE /api/news/:id/comments/:commentId
-// @desc    Delete a comment (User can delete own comment, Admin can delete any)
-// @access  Private
-router.delete("/:id/comments/:commentId", verifyToken, async (req, res) => {
+// @route   POST /api/news/:id/comments/:commentId/replies
+// @desc    Add a reply to an existing comment
+// @access  Public (Citizen or Authenticated)
+router.post("/:id/comments/:commentId/replies", async (req, res) => {
   try {
     const { id: newsId, commentId } = req.params;
-    const comment = await Comment.findById(commentId);
+    const { text, authorName } = req.body;
+    const user = getOptionalUser(req);
+    const anonId = req.headers["x-anon-id"] || req.body.anonId || null;
+
+    if (!text || text.trim().length === 0) {
+      return res.status(400).json({ message: "Reply text cannot be empty." });
+    }
+
+    if (text.trim().length > 500) {
+      return res.status(400).json({ message: "Reply is too long (maximum 500 characters)." });
+    }
+
+    const comment = await Comment.findOne({ _id: commentId, newsId });
+    if (!comment) {
+      return res.status(404).json({ message: "Parent comment not found." });
+    }
+
+    const finalAuthorName = sanitizeText(
+      user?.name || authorName || "Fazilnagar Resident"
+    ).slice(0, 60);
+    const sanitizedText = sanitizeText(text);
+
+    const newReply = {
+      userId: user?.id || null,
+      anonId: user?.id ? null : (anonId ? String(anonId).trim() : null),
+      authorName: finalAuthorName,
+      text: sanitizedText,
+      likes: 0,
+      likedBy: [],
+    };
+
+    comment.replies.push(newReply);
+    await comment.save();
+
+    // Increment comment count on the story for replies as well
+    const updatedStory = await News.findByIdAndUpdate(
+      newsId,
+      { $inc: { commentCount: 1 } },
+      { new: true }
+    );
+
+    res.status(201).json({
+      reply: comment.replies[comment.replies.length - 1],
+      comment,
+      commentCount: updatedStory?.commentCount || 1,
+    });
+  } catch (err) {
+    console.error("Add Reply Error:", err);
+    res.status(500).json({ message: "Failed to post reply." });
+  }
+});
+
+// @route   POST /api/news/:id/comments/:commentId/like
+// @desc    Toggle like state for a comment
+// @access  Public / Authenticated
+router.post("/:id/comments/:commentId/like", async (req, res) => {
+  try {
+    const { id: newsId, commentId } = req.params;
+    const user = getOptionalUser(req);
+    const anonId = req.headers["x-anon-id"] || req.body.anonId || null;
+    const identifier = user?.id ? String(user.id) : (anonId ? String(anonId).trim() : null);
+
+    if (!identifier) {
+      return res.status(400).json({ message: "Identifier required to like comment." });
+    }
+
+    const comment = await Comment.findOne({ _id: commentId, newsId });
+    if (!comment) {
+      return res.status(404).json({ message: "Comment not found." });
+    }
+
+    const alreadyLiked = comment.likedBy?.includes(identifier);
+    if (alreadyLiked) {
+      comment.likedBy = comment.likedBy.filter((id) => id !== identifier);
+      comment.likes = Math.max(0, (comment.likes || 1) - 1);
+    } else {
+      if (!comment.likedBy) comment.likedBy = [];
+      comment.likedBy.push(identifier);
+      comment.likes = (comment.likes || 0) + 1;
+    }
+
+    await comment.save();
+
+    res.status(200).json({
+      liked: !alreadyLiked,
+      likes: comment.likes,
+      commentId: comment._id,
+    });
+  } catch (err) {
+    console.error("Comment Like Toggle Error:", err);
+    res.status(500).json({ message: "Failed to toggle comment like." });
+  }
+});
+
+// @route   POST /api/news/:id/comments/:commentId/replies/:replyId/like
+// @desc    Toggle like state for a reply
+// @access  Public / Authenticated
+router.post("/:id/comments/:commentId/replies/:replyId/like", async (req, res) => {
+  try {
+    const { id: newsId, commentId, replyId } = req.params;
+    const user = getOptionalUser(req);
+    const anonId = req.headers["x-anon-id"] || req.body.anonId || null;
+    const identifier = user?.id ? String(user.id) : (anonId ? String(anonId).trim() : null);
+
+    if (!identifier) {
+      return res.status(400).json({ message: "Identifier required to like reply." });
+    }
+
+    const comment = await Comment.findOne({ _id: commentId, newsId });
+    if (!comment) {
+      return res.status(404).json({ message: "Comment not found." });
+    }
+
+    const reply = comment.replies.id(replyId);
+    if (!reply) {
+      return res.status(404).json({ message: "Reply not found." });
+    }
+
+    const alreadyLiked = reply.likedBy?.includes(identifier);
+    if (alreadyLiked) {
+      reply.likedBy = reply.likedBy.filter((id) => id !== identifier);
+      reply.likes = Math.max(0, (reply.likes || 1) - 1);
+    } else {
+      if (!reply.likedBy) reply.likedBy = [];
+      reply.likedBy.push(identifier);
+      reply.likes = (reply.likes || 0) + 1;
+    }
+
+    await comment.save();
+
+    res.status(200).json({
+      liked: !alreadyLiked,
+      likes: reply.likes,
+      replyId: reply._id,
+    });
+  } catch (err) {
+    console.error("Reply Like Toggle Error:", err);
+    res.status(500).json({ message: "Failed to toggle reply like." });
+  }
+});
+
+// @route   DELETE /api/news/:id/comments/:commentId
+// @desc    Delete a comment (User who commented, Author of story, or Admin)
+// @access  Public with verification or Authenticated
+router.delete("/:id/comments/:commentId", async (req, res) => {
+  try {
+    const { id: newsId, commentId } = req.params;
+    const user = getOptionalUser(req);
+    const anonId = req.headers["x-anon-id"] || req.query.anonId || req.body?.anonId || null;
+
+    const [comment, story] = await Promise.all([
+      Comment.findById(commentId),
+      News.findById(newsId),
+    ]);
 
     if (!comment) {
       return res.status(404).json({ message: "Comment not found." });
     }
 
-    // Check authorization: Admin or the comment creator
-    const isAdmin = req.user?.role === "admin";
-    const isOwner = comment.userId && String(comment.userId) === String(req.user?.id);
+    // Check authorization:
+    // 1. Admin
+    const isAdmin = user?.role === "admin" || user?.email === "pankaj723880@gmail.com";
+    // 2. The user who wrote the comment
+    const isCommentAuthorUser = user?.id && comment.userId && String(comment.userId) === String(user.id);
+    const isCommentAuthorAnon = !comment.userId && anonId && comment.anonId && String(comment.anonId) === String(anonId).trim();
+    // 3. The user on whose story the comment was posted
+    const isStoryAuthor = user?.id && story?.author && String(story.author) === String(user.id);
 
-    if (!isAdmin && !isOwner) {
-      return res.status(403).json({ message: "Not authorized to delete this comment." });
+    if (!isAdmin && !isCommentAuthorUser && !isCommentAuthorAnon && !isStoryAuthor) {
+      return res.status(403).json({
+        message: "You are not authorized to delete this comment. Only the commenter, story author, or admin can delete it.",
+      });
     }
+
+    // Number of total items removed (comment + its replies)
+    const replyCount = comment.replies?.length || 0;
+    const decrementCount = 1 + replyCount;
 
     await Comment.findByIdAndDelete(commentId);
 
-    // Decrement commentCount atomically
+    // Decrement commentCount atomically on story
     const updatedStory = await News.findByIdAndUpdate(
       newsId,
       [
         {
           $set: {
-            commentCount: { $max: [0, { $subtract: ["$commentCount", 1] }] },
+            commentCount: { $max: [0, { $subtract: ["$commentCount", decrementCount] }] },
           },
         },
       ],
@@ -381,6 +552,72 @@ router.delete("/:id/comments/:commentId", verifyToken, async (req, res) => {
   } catch (err) {
     console.error("Delete Comment Error:", err);
     res.status(500).json({ message: "Server error deleting comment." });
+  }
+});
+
+// @route   DELETE /api/news/:id/comments/:commentId/replies/:replyId
+// @desc    Delete a reply (User who wrote reply, Story author, or Admin)
+// @access  Public with verification or Authenticated
+router.delete("/:id/comments/:commentId/replies/:replyId", async (req, res) => {
+  try {
+    const { id: newsId, commentId, replyId } = req.params;
+    const user = getOptionalUser(req);
+    const anonId = req.headers["x-anon-id"] || req.query.anonId || req.body?.anonId || null;
+
+    const [comment, story] = await Promise.all([
+      Comment.findById(commentId),
+      News.findById(newsId),
+    ]);
+
+    if (!comment) {
+      return res.status(404).json({ message: "Comment not found." });
+    }
+
+    const reply = comment.replies.id(replyId);
+    if (!reply) {
+      return res.status(404).json({ message: "Reply not found." });
+    }
+
+    // Check authorization:
+    // 1. Admin
+    const isAdmin = user?.role === "admin" || user?.email === "pankaj723880@gmail.com";
+    // 2. The user who wrote the reply
+    const isReplyAuthorUser = user?.id && reply.userId && String(reply.userId) === String(user.id);
+    const isReplyAuthorAnon = !reply.userId && anonId && reply.anonId && String(reply.anonId) === String(anonId).trim();
+    // 3. The user on whose story the comment is
+    const isStoryAuthor = user?.id && story?.author && String(story.author) === String(user.id);
+
+    if (!isAdmin && !isReplyAuthorUser && !isReplyAuthorAnon && !isStoryAuthor) {
+      return res.status(403).json({
+        message: "You are not authorized to delete this reply. Only the author, story creator, or admin can delete it.",
+      });
+    }
+
+    reply.deleteOne();
+    await comment.save();
+
+    // Decrement story commentCount
+    const updatedStory = await News.findByIdAndUpdate(
+      newsId,
+      [
+        {
+          $set: {
+            commentCount: { $max: [0, { $subtract: ["$commentCount", 1] }] },
+          },
+        },
+      ],
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Reply deleted successfully.",
+      comment,
+      commentCount: updatedStory?.commentCount || 0,
+    });
+  } catch (err) {
+    console.error("Delete Reply Error:", err);
+    res.status(500).json({ message: "Server error deleting reply." });
   }
 });
 

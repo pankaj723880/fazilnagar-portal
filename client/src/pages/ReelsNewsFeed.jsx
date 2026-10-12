@@ -20,6 +20,7 @@ import {
   ExternalLink,
   ShieldCheck,
   RefreshCw,
+  CornerDownRight,
 } from "lucide-react";
 
 const FALLBACK_COVER_IMAGE =
@@ -50,6 +51,9 @@ export default function ReelsNewsFeed() {
   const [guestAuthorName, setGuestAuthorName] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
   const [commentError, setCommentError] = useState("");
+  const [replyingTo, setReplyingTo] = useState(null); // { commentId, authorName }
+  const [replyText, setReplyText] = useState("");
+  const [submittingReply, setSubmittingReply] = useState(false);
 
   // Current logged in user (if any)
   const [currentUser, setCurrentUser] = useState(null);
@@ -352,8 +356,12 @@ export default function ReelsNewsFeed() {
     if (!commentDrawerStory || !window.confirm("Delete this comment?")) return;
 
     try {
+      const anonId = localStorage.getItem("fazil_anon_id");
       const res = await API.delete(
-        `/news/${commentDrawerStory._id}/comments/${commentId}`
+        `/news/${commentDrawerStory._id}/comments/${commentId}`,
+        {
+          headers: anonId ? { "x-anon-id": anonId } : {},
+        }
       );
 
       setComments((prev) => prev.filter((c) => String(c._id) !== String(commentId)));
@@ -370,6 +378,192 @@ export default function ReelsNewsFeed() {
     } catch (err) {
       console.error("Delete comment error:", err);
       alert(err.response?.data?.message || "Unable to delete comment.");
+    }
+  };
+
+  const handleToggleCommentLike = async (commentId) => {
+    if (!commentDrawerStory) return;
+    const anonId = localStorage.getItem("fazil_anon_id") || "guest";
+    const identifier = currentUser?.id ? String(currentUser.id) : String(anonId);
+
+    // Optimistic UI
+    setComments((prev) =>
+      prev.map((c) => {
+        if (String(c._id) !== String(commentId)) return c;
+        const alreadyLiked = c.likedBy?.includes(identifier);
+        const newLikes = alreadyLiked ? Math.max(0, (c.likes || 1) - 1) : (c.likes || 0) + 1;
+        const newLikedBy = alreadyLiked
+          ? (c.likedBy || []).filter((id) => id !== identifier)
+          : [...(c.likedBy || []), identifier];
+        return { ...c, likes: newLikes, likedBy: newLikedBy };
+      })
+    );
+
+    try {
+      const res = await API.post(
+        `/news/${commentDrawerStory._id}/comments/${commentId}/like`,
+        { anonId }
+      );
+      if (res.data) {
+        setComments((prev) =>
+          prev.map((c) =>
+            String(c._id) === String(commentId)
+              ? {
+                  ...c,
+                  likes: res.data.likes,
+                  likedBy: res.data.liked
+                    ? [...new Set([...(c.likedBy || []), identifier])]
+                    : (c.likedBy || []).filter((id) => id !== identifier),
+                }
+              : c
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Comment like error:", err);
+    }
+  };
+
+  const handlePostReply = async (commentId) => {
+    if (!replyText.trim() || !commentDrawerStory) return;
+    if (replyText.trim().length > 500) {
+      alert("Reply cannot exceed 500 characters.");
+      return;
+    }
+
+    setSubmittingReply(true);
+    try {
+      const anonId = localStorage.getItem("fazil_anon_id");
+      const payload = {
+        text: replyText.trim(),
+        authorName: currentUser?.name || guestAuthorName.trim() || undefined,
+        anonId,
+      };
+
+      const res = await API.post(
+        `/news/${commentDrawerStory._id}/comments/${commentId}/replies`,
+        payload
+      );
+
+      if (res.data?.comment) {
+        setComments((prev) =>
+          prev.map((c) =>
+            String(c._id) === String(commentId) ? res.data.comment : c
+          )
+        );
+        setReplyText("");
+        setReplyingTo(null);
+
+        const newCount = res.data?.commentCount ?? (commentDrawerStory.commentCount + 1);
+        setStories((prev) =>
+          prev.map((s) =>
+            String(s._id) === String(commentDrawerStory._id)
+              ? { ...s, commentCount: newCount }
+              : s
+          )
+        );
+        setCommentDrawerStory((prev) => (prev ? { ...prev, commentCount: newCount } : prev));
+      }
+    } catch (err) {
+      console.error("Reply post error:", err);
+      alert(err.response?.data?.message || "Failed to post reply.");
+    } finally {
+      setSubmittingReply(false);
+    }
+  };
+
+  const handleToggleReplyLike = async (commentId, replyId) => {
+    if (!commentDrawerStory) return;
+    const anonId = localStorage.getItem("fazil_anon_id") || "guest";
+    const identifier = currentUser?.id ? String(currentUser.id) : String(anonId);
+
+    // Optimistic UI
+    setComments((prev) =>
+      prev.map((c) => {
+        if (String(c._id) !== String(commentId)) return c;
+        const updatedReplies = (c.replies || []).map((r) => {
+          if (String(r._id) !== String(replyId)) return r;
+          const alreadyLiked = r.likedBy?.includes(identifier);
+          const newLikes = alreadyLiked ? Math.max(0, (r.likes || 1) - 1) : (r.likes || 0) + 1;
+          const newLikedBy = alreadyLiked
+            ? (r.likedBy || []).filter((id) => id !== identifier)
+            : [...(r.likedBy || []), identifier];
+          return { ...r, likes: newLikes, likedBy: newLikedBy };
+        });
+        return { ...c, replies: updatedReplies };
+      })
+    );
+
+    try {
+      const res = await API.post(
+        `/news/${commentDrawerStory._id}/comments/${commentId}/replies/${replyId}/like`,
+        { anonId }
+      );
+      if (res.data) {
+        setComments((prev) =>
+          prev.map((c) => {
+            if (String(c._id) !== String(commentId)) return c;
+            const updatedReplies = (c.replies || []).map((r) => {
+              if (String(r._id) !== String(replyId)) return r;
+              return {
+                ...r,
+                likes: res.data.likes,
+                likedBy: res.data.liked
+                  ? [...new Set([...(r.likedBy || []), identifier])]
+                  : (r.likedBy || []).filter((id) => id !== identifier),
+              };
+            });
+            return { ...c, replies: updatedReplies };
+          })
+        );
+      }
+    } catch (err) {
+      console.error("Reply like error:", err);
+    }
+  };
+
+  const handleDeleteReply = async (commentId, replyId) => {
+    if (!commentDrawerStory || !window.confirm("Delete this reply?")) return;
+
+    try {
+      const anonId = localStorage.getItem("fazil_anon_id");
+      const res = await API.delete(
+        `/news/${commentDrawerStory._id}/comments/${commentId}/replies/${replyId}`,
+        {
+          headers: anonId ? { "x-anon-id": anonId } : {},
+        }
+      );
+
+      if (res.data?.comment) {
+        setComments((prev) =>
+          prev.map((c) =>
+            String(c._id) === String(commentId) ? res.data.comment : c
+          )
+        );
+      } else {
+        setComments((prev) =>
+          prev.map((c) => {
+            if (String(c._id) !== String(commentId)) return c;
+            return {
+              ...c,
+              replies: (c.replies || []).filter((r) => String(r._id) !== String(replyId)),
+            };
+          })
+        );
+      }
+
+      const newCount = res.data?.commentCount ?? Math.max(0, (commentDrawerStory.commentCount || 1) - 1);
+      setStories((prev) =>
+        prev.map((s) =>
+          String(s._id) === String(commentDrawerStory._id)
+            ? { ...s, commentCount: newCount }
+            : s
+        )
+      );
+      setCommentDrawerStory((prev) => (prev ? { ...prev, commentCount: newCount } : prev));
+    } catch (err) {
+      console.error("Delete reply error:", err);
+      alert(err.response?.data?.message || "Unable to delete reply.");
     }
   };
 
@@ -700,38 +894,187 @@ export default function ReelsNewsFeed() {
 
               {!commentsLoading &&
                 comments.map((c) => {
-                  const canDelete =
+                  const anonId = localStorage.getItem("fazil_anon_id") || "guest";
+                  const currentIdentifier = currentUser?.id ? String(currentUser.id) : String(anonId);
+                  const isStoryAuthor =
+                    currentUser?.id &&
+                    commentDrawerStory?.author &&
+                    (String(commentDrawerStory.author) === String(currentUser.id) ||
+                      String(commentDrawerStory.author?._id) === String(currentUser.id));
+                  const isCommentCreator =
+                    (currentUser?.id && c.userId && String(currentUser.id) === String(c.userId)) ||
+                    (!c.userId && c.anonId && c.anonId === anonId);
+                  const isAdmin =
                     currentUser?.role === "admin" ||
-                    (currentUser?.id && c.userId && String(currentUser.id) === String(c.userId));
+                    currentUser?.email === "pankaj723880@gmail.com";
+
+                  const canDeleteComment = isAdmin || isCommentCreator || isStoryAuthor;
+                  const isCommentLiked = c.likedBy?.includes(currentIdentifier);
 
                   return (
                     <div
                       key={c._id}
-                      className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/80 space-y-1.5"
+                      className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/80 space-y-2"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-extrabold text-white">
                             {c.authorName || "Resident"}
                           </span>
+                          {c.userId && (
+                            <span className="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.2 rounded font-semibold">
+                              Verified
+                            </span>
+                          )}
                           <span className="text-[10px] text-slate-400">
                             {formatRelativeTime(c.createdAt)}
                           </span>
                         </div>
 
-                        {canDelete && (
+                        {canDeleteComment && (
                           <button
                             onClick={() => handleDeleteComment(c._id)}
-                            className="text-slate-400 hover:text-red-400 p-1 transition cursor-pointer"
-                            title="Delete comment"
+                            className="text-slate-500 hover:text-red-400 p-1 transition cursor-pointer"
+                            title="Delete comment (allowed for commenter, story author, and admin)"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         )}
                       </div>
+
                       <p className="text-xs text-slate-200 leading-relaxed break-words">
                         {c.text}
                       </p>
+
+                      {/* Comment Actions: Like & Reply */}
+                      <div className="flex items-center gap-4 pt-1 text-[11px] text-slate-400 border-t border-slate-800/60">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleCommentLike(c._id)}
+                          className={`flex items-center gap-1.5 font-bold transition cursor-pointer ${
+                            isCommentLiked ? "text-red-400 font-extrabold" : "hover:text-white"
+                          }`}
+                        >
+                          <Heart
+                            className={`w-3.5 h-3.5 ${
+                              isCommentLiked ? "fill-red-500 text-red-500" : ""
+                            }`}
+                          />
+                          <span>{c.likes > 0 ? c.likes : "Like"}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (replyingTo?.commentId === c._id) {
+                              setReplyingTo(null);
+                            } else {
+                              setReplyingTo({ commentId: c._id, authorName: c.authorName || "Resident" });
+                            }
+                          }}
+                          className="flex items-center gap-1 font-bold hover:text-white transition cursor-pointer"
+                        >
+                          <CornerDownRight className="w-3.5 h-3.5" />
+                          <span>Reply</span>
+                        </button>
+                      </div>
+
+                      {/* Inline Reply Input Box */}
+                      {replyingTo?.commentId === c._id && (
+                        <div className="mt-2 pl-3 border-l-2 border-[#B8323C] space-y-1.5 bg-slate-950/40 p-2.5 rounded-xl">
+                          <div className="flex items-center justify-between text-[10px] text-slate-400">
+                            <span>Replying to <strong className="text-white">@{c.authorName || "Resident"}</strong></span>
+                            <button
+                              type="button"
+                              onClick={() => setReplyingTo(null)}
+                              className="text-slate-400 hover:text-white cursor-pointer"
+                            >
+                              ✕ Cancel
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              placeholder={`Reply to @${c.authorName || "Resident"}...`}
+                              maxLength={500}
+                              className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-[#B8323C]"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handlePostReply(c._id)}
+                              disabled={submittingReply || !replyText.trim()}
+                              className="bg-[#B8323C] hover:bg-[#991B1B] disabled:opacity-40 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                            >
+                              <span>Send</span>
+                              <Send className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Nested Replies List */}
+                      {c.replies && c.replies.length > 0 && (
+                        <div className="mt-2 pl-3 border-l border-slate-800 space-y-2 pt-1">
+                          {c.replies.map((r) => {
+                            const isReplyLiked = r.likedBy?.includes(currentIdentifier);
+                            const isReplyCreator =
+                              (currentUser?.id && r.userId && String(currentUser.id) === String(r.userId)) ||
+                              (!r.userId && r.anonId && r.anonId === anonId);
+                            const canDeleteReply = isAdmin || isReplyCreator || isStoryAuthor;
+
+                            return (
+                              <div
+                                key={r._id}
+                                className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60 space-y-1"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[11px] font-bold text-slate-200">
+                                      {r.authorName || "Resident"}
+                                    </span>
+                                    <span className="text-[9px] text-slate-500">
+                                      {formatRelativeTime(r.createdAt)}
+                                    </span>
+                                  </div>
+
+                                  {canDeleteReply && (
+                                    <button
+                                      onClick={() => handleDeleteReply(c._id, r._id)}
+                                      className="text-slate-500 hover:text-red-400 p-0.5 transition cursor-pointer"
+                                      title="Delete reply"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </button>
+                                  )}
+                                </div>
+
+                                <p className="text-xs text-slate-300 leading-relaxed break-words">
+                                  {r.text}
+                                </p>
+
+                                <div className="flex items-center gap-2 pt-1 text-[10px] text-slate-400">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleReplyLike(c._id, r._id)}
+                                    className={`flex items-center gap-1 font-semibold transition cursor-pointer ${
+                                      isReplyLiked ? "text-red-400" : "hover:text-white"
+                                    }`}
+                                  >
+                                    <Heart
+                                      className={`w-3 h-3 ${
+                                        isReplyLiked ? "fill-red-500 text-red-500" : ""
+                                      }`}
+                                    />
+                                    <span>{r.likes > 0 ? r.likes : "Like"}</span>
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

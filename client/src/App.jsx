@@ -290,8 +290,6 @@ export default function App() {
 
             {/* Auth & Post Actions Bar */}
             <div className="hidden sm:flex items-center gap-2.5 shrink-0">
-              <InstallButton />
-
               {/* Add Story Button - Always visible to all users (Normal users, citizens, & visitors) */}
               <Link
                 to="/create-news"
@@ -340,8 +338,8 @@ export default function App() {
               )}
             </div>
 
-            {/* Mobile Actions & Menu Toggle Button */}
-            <div className="flex lg:hidden items-center gap-2">
+            {/* Mobile Actions: Only +Story button (Upper hamburger and upper install button removed) */}
+            <div className="flex sm:hidden items-center gap-2">
               <Link
                 to="/create-news"
                 className="bg-[#B8323C] hover:bg-red-700 text-white text-[11px] font-black px-2.5 py-1.5 rounded-xl flex items-center gap-1 shadow-xs"
@@ -350,20 +348,6 @@ export default function App() {
                 <span>✍️</span>
                 <span>+Story</span>
               </Link>
-              <InstallButton compact={true} />
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:outline-none cursor-pointer"
-                aria-label="Toggle Navigation"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  {mobileMenuOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                  )}
-                </svg>
-              </button>
             </div>
           </div>
         </div>
@@ -401,7 +385,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Mobile Navigation Dropdown */}
+        {/* Mobile Navigation Dropdown (Triggered from bottom navbar Menu) */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-4 space-y-3 shadow-lg">
             <div className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between">
@@ -450,14 +434,6 @@ export default function App() {
                 <span>📍</span>
                 <span>Map</span>
               </a>
-              <Link
-                to="/news"
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60"
-              >
-                <span>📰</span>
-                <span>Local Updates</span>
-              </Link>
               {user?.role === "admin" && (
                 <Link
                   to="/admin/review"
