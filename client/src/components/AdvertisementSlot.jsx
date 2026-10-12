@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import API from "../api";
 import { ExternalLink, Sparkles, X } from "lucide-react";
 
@@ -21,6 +22,55 @@ const trackClick = (adId) => {
   } catch (_) {}
 };
 
+const trackDismissal = (adId) => {
+  if (!adId) return;
+  try {
+    API.post(`/advertisements/${adId}/dismiss`).catch(() => {});
+  } catch (_) {}
+};
+
+// Helper: Check if an ad has been dismissed according to its configured policy
+const isAdDismissed = (ad) => {
+  if (!ad?._id) return true;
+  const policy = ad.frequency || "once-per-session";
+
+  if (policy === "always") {
+    // Dismissing only lasts until next page visit, but in current view it stays hidden if dismissed in state
+    return false;
+  }
+
+  const dismissedTimestamp = localStorage.getItem(`fazil_ad_dismissed_${ad._id}`);
+  if (policy === "interval" && dismissedTimestamp) {
+    const minutesPassed = (Date.now() - parseInt(dismissedTimestamp, 10)) / (1000 * 60);
+    const interval = ad.redisplayIntervalMinutes || 60;
+    if (minutesPassed < interval) {
+      return true; // Still within dismissal cooldown
+    }
+    // Cooldown expired, clear localStorage
+    localStorage.removeItem(`fazil_ad_dismissed_${ad._id}`);
+    return false;
+  }
+
+  // Default: "once-per-session"
+  if (sessionStorage.getItem(`fazil_ad_dismissed_session_${ad._id}`)) {
+    return true;
+  }
+
+  return false;
+};
+
+// Helper: Record dismissal in storage according to ad policy
+const recordAdDismissal = (ad) => {
+  if (!ad?._id) return;
+  const policy = ad.frequency || "once-per-session";
+  const now = Date.now().toString();
+
+  sessionStorage.setItem(`fazil_ad_dismissed_session_${ad._id}`, now);
+  if (policy === "interval") {
+    localStorage.setItem(`fazil_ad_dismissed_${ad._id}`, now);
+  }
+};
+
 // ====================================================================
 // 1. IN-FEED BANNER AD (Rendered inside content / TownPortal Section 3.5)
 // ====================================================================
@@ -38,18 +88,11 @@ export default function AdvertisementSlot() {
         if (isMounted) {
           const allAds = res.data?.ads || (res.data?.ad ? [res.data.ad] : []);
           // Pick the active banner format ad
-          const bannerAd = allAds.find(
-            (a) => (!a.format || a.format === "banner")
-          );
+          const bannerAd = allAds.find((a) => a.format === "banner");
 
-          if (bannerAd) {
-            const isDismissed = sessionStorage.getItem(`fazil_dismissed_ad_${bannerAd._id}`);
-            if (!isDismissed) {
-              setAd(bannerAd);
-              trackImpression(bannerAd._id);
-            } else {
-              setAd(null);
-            }
+          if (bannerAd && !isAdDismissed(bannerAd)) {
+            setAd(bannerAd);
+            trackImpression(bannerAd._id);
           } else {
             setAd(null);
           }
@@ -70,11 +113,13 @@ export default function AdvertisementSlot() {
 
   const handleDismiss = () => {
     if (ad?._id) {
-      sessionStorage.setItem(`fazil_dismissed_ad_${ad._id}`, "1");
+      recordAdDismissal(ad);
+      trackDismissal(ad._id);
     }
     setDismissed(true);
   };
 
+  // Zero reserved space: if loading, no ad, or dismissed, render absolutely nothing
   if (loading || !ad || dismissed) {
     return null;
   }
@@ -91,7 +136,7 @@ export default function AdvertisementSlot() {
           onClick={handleDismiss}
           className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-black/60 hover:bg-black/80 text-white/80 hover:text-white flex items-center justify-center transition cursor-pointer"
           aria-label="Dismiss advertisement"
-          title="Dismiss ad"
+          title="Dismiss ad (✕)"
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -143,7 +188,7 @@ export default function AdvertisementSlot() {
                   onClick={() => trackClick(ad._id)}
                   className="inline-flex items-center gap-2 bg-white hover:bg-slate-100 text-[#18232E] hover:text-[#B8323C] text-xs sm:text-sm font-bold px-5 py-2.5 rounded-xl shadow-md transition duration-200"
                 >
-                  <span>Visit Partner Website</span>
+                  <span>{ad.ctaText || "Visit Partner Website"}</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>
@@ -157,14 +202,20 @@ export default function AdvertisementSlot() {
 
 // ====================================================================
 // 2. GLOBAL FLOATING & STICKY ADVERTISEMENTS (Mounted in App.jsx)
-// Supports:
-//   - "floating": Cancellable corner overlay card
-//   - "sticky-bottom": Cancellable bottom screen banner
-//   - "sticky-top": Cancellable top screen banner
+// - Floating Cards (bottom-right / bottom-left)
+// - Sticky Bottom & Top Banners
+// - Automatically suppresses over Reels / Fullscreen news feed
 // ====================================================================
 export function GlobalFloatingAndStickyAds() {
   const [ads, setAds] = useState([]);
   const [dismissedMap, setDismissedMap] = useState({});
+  const location = useLocation();
+
+  // Suppress floating & sticky overlay ads on full-screen Reels page so it doesn't cover swipe controls
+  const isReelsPage =
+    location.pathname === "/news" ||
+    location.pathname === "/local-updates" ||
+    location.pathname === "/directory/news";
 
   useEffect(() => {
     let isMounted = true;
@@ -178,7 +229,7 @@ export function GlobalFloatingAndStickyAds() {
 
           // Track impressions for active visible ads
           list.forEach((a) => {
-            if (a?._id && !sessionStorage.getItem(`fazil_dismissed_ad_${a._id}`)) {
+            if (a?._id && !isAdDismissed(a)) {
               trackImpression(a._id);
             }
           });
@@ -195,27 +246,35 @@ export function GlobalFloatingAndStickyAds() {
     };
   }, []);
 
-  const handleDismiss = (adId) => {
-    if (!adId) return;
-    try {
-      sessionStorage.setItem(`fazil_dismissed_ad_${adId}`, "1");
-    } catch (_) {}
-    setDismissedMap((prev) => ({ ...prev, [adId]: true }));
+  const handleDismiss = (ad) => {
+    if (!ad?._id) return;
+    recordAdDismissal(ad);
+    trackDismissal(ad._id);
+    setDismissedMap((prev) => ({ ...prev, [ad._id]: true }));
   };
 
   const isVisible = (ad) => {
     if (!ad?._id) return false;
     if (dismissedMap[ad._id]) return false;
-    try {
-      if (sessionStorage.getItem(`fazil_dismissed_ad_${ad._id}`)) return false;
-    } catch (_) {}
-    return true;
+    return !isAdDismissed(ad);
   };
 
-  // Find the first active, non-dismissed ad for each format
-  const floatingAd = ads.find((a) => a.format === "floating" && isVisible(a));
+  // If on Reels fullscreen view, do not obstruct controls or reels feed
+  if (isReelsPage) {
+    return null;
+  }
+
+  // Find eligible ads (rotation policy: picks latest active or matching format)
+  const floatingAds = ads.filter((a) => (a.format === "floating" || (!a.format && a.format !== "banner")) && isVisible(a));
+  const floatingAd = floatingAds.length > 0 ? floatingAds[0] : null;
+
   const stickyBottomAd = ads.find((a) => a.format === "sticky-bottom" && isVisible(a));
   const stickyTopAd = ads.find((a) => a.format === "sticky-top" && isVisible(a));
+
+  // If no ads match, render nothing - zero empty space
+  if (!floatingAd && !stickyBottomAd && !stickyTopAd) {
+    return null;
+  }
 
   return (
     <>
@@ -264,17 +323,17 @@ export function GlobalFloatingAndStickyAds() {
                   onClick={() => trackClick(stickyTopAd._id)}
                   className="bg-white hover:bg-slate-100 text-[#18232E] font-bold text-[11px] px-3 py-1 rounded-lg flex items-center gap-1 transition shadow-xs"
                 >
-                  <span>Explore</span>
+                  <span>{stickyTopAd.ctaText || "Explore"}</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               )}
 
               <button
                 type="button"
-                onClick={() => handleDismiss(stickyTopAd._id)}
+                onClick={() => handleDismiss(stickyTopAd)}
                 className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer"
                 aria-label="Close top banner"
-                title="Dismiss ad"
+                title="Dismiss ad (✕)"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -329,17 +388,17 @@ export function GlobalFloatingAndStickyAds() {
                   onClick={() => trackClick(stickyBottomAd._id)}
                   className="bg-[#B8323C] hover:bg-red-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition shadow-sm"
                 >
-                  <span>Visit Partner</span>
+                  <span>{stickyBottomAd.ctaText || "Visit Partner"}</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               )}
 
               <button
                 type="button"
-                onClick={() => handleDismiss(stickyBottomAd._id)}
+                onClick={() => handleDismiss(stickyBottomAd)}
                 className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer"
                 aria-label="Dismiss sticky bottom banner"
-                title="Dismiss ad"
+                title="Dismiss ad (✕)"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -349,14 +408,19 @@ export function GlobalFloatingAndStickyAds() {
       )}
 
       {/* ----------------------------------------------------
-          FLOATING OVERLAY AD (Corner popup with dismiss button)
-          Positioned in bottom-right corner of the screen
+          FLOATING OVERLAY AD CARD (Corner popup with dismiss button)
+          Placement: bottom-right (default) or bottom-left
+          Mobile: Safe area positioning above mobile bottom bar
           ---------------------------------------------------- */}
       {floatingAd && (
         <aside
           role="complementary"
-          aria-label="Sponsored Floating Overlay"
-          className="fixed bottom-16 sm:bottom-6 right-3 sm:right-6 z-50 w-[calc(100%-1.5rem)] sm:w-84 max-w-sm bg-gradient-to-br from-slate-900 via-[#18232E] to-slate-900 text-white rounded-2xl border border-slate-700/90 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300"
+          aria-label="Sponsored Floating Advertisement"
+          className={`fixed z-40 transition-all duration-300 ease-out animate-in fade-in zoom-in-95 duration-300 ${
+            floatingAd.placement === "bottom-left"
+              ? "bottom-16 sm:bottom-6 left-3 sm:left-6"
+              : "bottom-16 sm:bottom-6 right-3 sm:right-6"
+          } w-[calc(100%-1.5rem)] sm:w-80 max-w-sm bg-gradient-to-br from-slate-900 via-[#18232E] to-slate-900 text-white rounded-2xl border border-slate-700/90 shadow-[0_12px_40px_rgba(0,0,0,0.4)] overflow-hidden`}
         >
           {/* Header Bar with Badge and Close (X) button */}
           <div className="flex items-center justify-between px-3.5 py-2.5 bg-black/40 border-b border-white/10">
@@ -367,8 +431,8 @@ export function GlobalFloatingAndStickyAds() {
 
             <button
               type="button"
-              onClick={() => handleDismiss(floatingAd._id)}
-              className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer"
+              onClick={() => handleDismiss(floatingAd)}
+              className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/25 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer"
               aria-label="Dismiss floating advertisement"
               title="Close ad (✕)"
             >
@@ -376,12 +440,12 @@ export function GlobalFloatingAndStickyAds() {
             </button>
           </div>
 
-          {/* Media Image (if available) */}
+          {/* Media Image */}
           {floatingAd.imageUrl && (
-            <div className="w-full h-32 overflow-hidden bg-black/60 relative">
+            <div className="w-full h-28 sm:h-32 overflow-hidden bg-black/60 relative">
               <img
                 src={floatingAd.imageUrl}
-                alt={floatingAd.title}
+                alt={floatingAd.title || "Advertisement"}
                 className="w-full h-full object-cover"
                 loading="lazy"
                 onError={(e) => {
@@ -393,12 +457,12 @@ export function GlobalFloatingAndStickyAds() {
 
           {/* Body Content */}
           <div className="p-3.5 space-y-2">
-            <h4 className="text-sm font-extrabold text-white leading-snug line-clamp-2">
+            <h4 className="text-xs sm:text-sm font-extrabold text-white leading-snug line-clamp-2">
               {floatingAd.title}
             </h4>
 
             {floatingAd.description && (
-              <p className="text-xs text-slate-300 leading-relaxed line-clamp-2">
+              <p className="text-[11px] sm:text-xs text-slate-300 leading-relaxed line-clamp-2">
                 {floatingAd.description}
               </p>
             )}
@@ -412,7 +476,7 @@ export function GlobalFloatingAndStickyAds() {
                   onClick={() => trackClick(floatingAd._id)}
                   className="w-full text-center inline-flex items-center justify-center gap-1.5 bg-white hover:bg-slate-100 text-[#18232E] hover:text-[#B8323C] text-xs font-bold py-2 px-3 rounded-xl shadow-md transition"
                 >
-                  <span>Visit Partner Website</span>
+                  <span>{floatingAd.ctaText || "Learn More"}</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>

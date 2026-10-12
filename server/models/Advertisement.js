@@ -6,11 +6,13 @@ const advertisementSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      maxlength: 120,
     },
     description: {
       type: String,
       default: "",
       trim: true,
+      maxlength: 300,
     },
     imageUrl: {
       type: String,
@@ -22,11 +24,33 @@ const advertisementSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    ctaText: {
+      type: String,
+      default: "Learn More",
+      trim: true,
+      maxlength: 30,
+    },
     format: {
       type: String,
-      enum: ["banner", "floating", "sticky-bottom", "sticky-top"],
-      default: "banner",
+      enum: ["floating", "banner", "sticky-bottom", "sticky-top"],
+      default: "floating",
       index: true,
+    },
+    placement: {
+      type: String,
+      enum: ["bottom-right", "bottom-left"],
+      default: "bottom-right",
+    },
+    frequency: {
+      type: String,
+      enum: ["once-per-session", "interval", "always"],
+      default: "once-per-session",
+    },
+    redisplayIntervalMinutes: {
+      type: Number,
+      default: 60, // Minutes after which dismissed ad can reappear if frequency is 'interval'
+      min: 1,
+      max: 10080,
     },
     startDate: {
       type: Date,
@@ -51,6 +75,10 @@ const advertisementSchema = new mongoose.Schema(
       default: 0,
     },
     clicks: {
+      type: Number,
+      default: 0,
+    },
+    dismissals: {
       type: Number,
       default: 0,
     },

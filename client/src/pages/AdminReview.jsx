@@ -63,7 +63,11 @@ export default function AdminReview({ user: propUser }) {
   const [editingAd, setEditingAd] = useState(null);
   const [adFormTitle, setAdFormTitle] = useState("");
   const [adFormDesc, setAdFormDesc] = useState("");
-  const [adFormFormat, setAdFormFormat] = useState("banner");
+  const [adFormFormat, setAdFormFormat] = useState("floating");
+  const [adFormPlacement, setAdFormPlacement] = useState("bottom-right");
+  const [adFormFrequency, setAdFormFrequency] = useState("once-per-session");
+  const [adFormInterval, setAdFormInterval] = useState(60);
+  const [adFormCtaText, setAdFormCtaText] = useState("Learn More");
   const [adFormUrl, setAdFormUrl] = useState("");
   const [adFormDestUrl, setAdFormDestUrl] = useState("");
   const [adFormStart, setAdFormStart] = useState("");
@@ -74,6 +78,7 @@ export default function AdminReview({ user: propUser }) {
   const [adFormPreviewUrl, setAdFormPreviewUrl] = useState("");
   const [adFormSubmitting, setAdFormSubmitting] = useState(false);
   const [adDeleteConfirmId, setAdDeleteConfirmId] = useState(null);
+  const [adPreviewModalItem, setAdPreviewModalItem] = useState(null);
 
   // -------------------------------------------------------------
   // NEWS STUDIO MODAL STATE
@@ -316,7 +321,11 @@ export default function AdminReview({ user: propUser }) {
     setEditingAd(null);
     setAdFormTitle("");
     setAdFormDesc("");
-    setAdFormFormat("banner");
+    setAdFormFormat("floating");
+    setAdFormPlacement("bottom-right");
+    setAdFormFrequency("once-per-session");
+    setAdFormInterval(60);
+    setAdFormCtaText("Learn More");
     setAdFormUrl("");
     setAdFormDestUrl("");
     setAdFormStart("");
@@ -332,7 +341,11 @@ export default function AdminReview({ user: propUser }) {
     setEditingAd(ad);
     setAdFormTitle(ad.title || "");
     setAdFormDesc(ad.description || "");
-    setAdFormFormat(ad.format || "banner");
+    setAdFormFormat(ad.format || "floating");
+    setAdFormPlacement(ad.placement || "bottom-right");
+    setAdFormFrequency(ad.frequency || "once-per-session");
+    setAdFormInterval(ad.redisplayIntervalMinutes || 60);
+    setAdFormCtaText(ad.ctaText || "Learn More");
     setAdFormUrl(ad.imageUrl || "");
     setAdFormDestUrl(ad.destinationUrl || "");
     setAdFormStart(ad.startDate ? new Date(ad.startDate).toISOString().slice(0, 16) : "");
@@ -364,6 +377,10 @@ export default function AdminReview({ user: propUser }) {
       formData.append("title", adFormTitle.trim());
       formData.append("description", adFormDesc.trim());
       formData.append("format", adFormFormat);
+      formData.append("placement", adFormPlacement);
+      formData.append("frequency", adFormFrequency);
+      formData.append("redisplayIntervalMinutes", adFormInterval);
+      formData.append("ctaText", adFormCtaText.trim() || "Learn More");
       formData.append("destinationUrl", adFormDestUrl.trim());
       if (adFormStart) formData.append("startDate", adFormStart);
       if (adFormEnd) formData.append("endDate", adFormEnd);
@@ -644,6 +661,7 @@ export default function AdminReview({ user: propUser }) {
 
   const totalAdImpressions = adsList.reduce((acc, a) => acc + (a.impressions || 0), 0);
   const totalAdClicks = adsList.reduce((acc, a) => acc + (a.clicks || 0), 0);
+  const totalAdDismissals = adsList.reduce((acc, a) => acc + (a.dismissals || 0), 0);
 
   // Filtered lists
   const filteredNews = newsList.filter((n) => {
@@ -1007,13 +1025,13 @@ export default function AdminReview({ user: propUser }) {
           </div>
 
           {/* Ad Analytics Summary */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="bg-white p-4 rounded-xl border border-[#E1E6EA] shadow-2xs flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
                 <Eye className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400">Total Impressions</span>
+                <span className="text-[10px] font-bold uppercase text-slate-400">Impressions</span>
                 <h4 className="text-base font-extrabold text-[#18232E]">{totalAdImpressions} views</h4>
               </div>
             </div>
@@ -1023,8 +1041,18 @@ export default function AdminReview({ user: propUser }) {
                 <MousePointer className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400">Total Genuine Clicks</span>
+                <span className="text-[10px] font-bold uppercase text-slate-400">Genuine Clicks</span>
                 <h4 className="text-base font-extrabold text-[#18232E]">{totalAdClicks} clicks</h4>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-xl border border-[#E1E6EA] shadow-2xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+                <X className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase text-slate-400">Dismissals (✕)</span>
+                <h4 className="text-base font-extrabold text-[#18232E]">{totalAdDismissals} closed</h4>
               </div>
             </div>
 
@@ -1033,7 +1061,7 @@ export default function AdminReview({ user: propUser }) {
                 <TrendingUp className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400">Avg Click-Through Rate</span>
+                <span className="text-[10px] font-bold uppercase text-slate-400">Click-Through Rate</span>
                 <h4 className="text-base font-extrabold text-[#18232E]">
                   {totalAdImpressions > 0
                     ? ((totalAdClicks / totalAdImpressions) * 100).toFixed(1) + "%"
@@ -1127,11 +1155,13 @@ export default function AdminReview({ user: propUser }) {
                           </span>
                         </div>
 
-                        {/* Impressions and Clicks */}
+                        {/* Impressions, Clicks & Dismissals */}
                         <div className="flex items-center gap-2 text-[11px] text-slate-500 font-semibold">
                           <span>{ad.impressions || 0} imp</span>
                           <span>•</span>
                           <span>{ad.clicks || 0} clicks</span>
+                          <span>•</span>
+                          <span>{ad.dismissals || 0} dismissed</span>
                         </div>
                       </div>
 
@@ -1154,20 +1184,37 @@ export default function AdminReview({ user: propUser }) {
                         )}
                       </div>
 
-                      {/* Destination URL */}
-                      {ad.destinationUrl && (
-                        <div className="text-xs text-slate-500 flex items-center gap-1.5 truncate">
-                          <Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <a
-                            href={ad.destinationUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline truncate"
-                          >
-                            {ad.destinationUrl}
-                          </a>
-                        </div>
-                      )}
+                      {/* Destination URL & CTA */}
+                      <div className="flex items-center justify-between gap-2 text-xs text-slate-500">
+                        {ad.destinationUrl ? (
+                          <div className="flex items-center gap-1.5 truncate">
+                            <Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <a
+                              href={ad.destinationUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline truncate"
+                            >
+                              {ad.destinationUrl}
+                            </a>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 text-[11px]">No link</span>
+                        )}
+                        <span className="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md shrink-0">
+                          CTA: {ad.ctaText || "Learn More"}
+                        </span>
+                      </div>
+
+                      {/* Configuration Badges */}
+                      <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                        <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-semibold">
+                          📍 {ad.placement === "bottom-left" ? "Bottom Left" : "Bottom Right"}
+                        </span>
+                        <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-semibold">
+                          ⏱️ {ad.frequency === "always" ? "Every Visit" : ad.frequency === "interval" ? `Every ${ad.redisplayIntervalMinutes || 60}m` : "Once / Session"}
+                        </span>
+                      </div>
 
                       {/* Schedule Info */}
                       {(ad.startDate || ad.endDate) && (
@@ -1210,6 +1257,14 @@ export default function AdminReview({ user: propUser }) {
                       </div>
 
                       <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setAdPreviewModalItem(ad)}
+                          className="bg-purple-50 hover:bg-purple-100 text-purple-700 p-2 rounded-xl transition cursor-pointer"
+                          title="Preview Live Floating Card"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+
                         <button
                           onClick={() => openEditAdModal(ad)}
                           className="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-xl transition cursor-pointer"
@@ -1840,17 +1895,87 @@ export default function AdminReview({ user: propUser }) {
                 )}
               </div>
 
-              <div>
-                <label className="block font-bold text-[#18232E] mb-1">
-                  Destination URL (Optional Website / WhatsApp Link)
-                </label>
-                <input
-                  type="url"
-                  value={adFormDestUrl}
-                  onChange={(e) => setAdFormDestUrl(e.target.value)}
-                  placeholder="https://example.com or https://wa.me/91..."
-                  className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-3 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#18232E] mb-1">
+                    Destination URL (Optional Link)
+                  </label>
+                  <input
+                    type="url"
+                    value={adFormDestUrl}
+                    onChange={(e) => setAdFormDestUrl(e.target.value)}
+                    placeholder="https://example.com or https://wa.me/91..."
+                    className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-3 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#18232E] mb-1">
+                    Call To Action (CTA) Button Text
+                  </label>
+                  <input
+                    type="text"
+                    value={adFormCtaText}
+                    onChange={(e) => setAdFormCtaText(e.target.value)}
+                    placeholder="e.g. Learn More, Book Now, Order Now"
+                    className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-3 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Placement & Frequency Settings (For Floating Ads) */}
+              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">
+                  Floating & Dismissal Display Settings
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block font-bold text-[#18232E] mb-1">Card Placement</label>
+                    <select
+                      value={adFormPlacement}
+                      onChange={(e) => setAdFormPlacement(e.target.value)}
+                      className="w-full bg-white border border-[#E1E6EA] rounded-xl p-2.5 outline-none focus:border-[#B8323C] text-xs"
+                    >
+                      <option value="bottom-right">Bottom Right (Default)</option>
+                      <option value="bottom-left">Bottom Left</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#18232E] mb-1">Dismissal Behavior</label>
+                    <select
+                      value={adFormFrequency}
+                      onChange={(e) => setAdFormFrequency(e.target.value)}
+                      className="w-full bg-white border border-[#E1E6EA] rounded-xl p-2.5 outline-none focus:border-[#B8323C] text-xs"
+                    >
+                      <option value="once-per-session">Once Per Session</option>
+                      <option value="interval">Reappear After Interval</option>
+                      <option value="always">Always Show Every Visit</option>
+                    </select>
+                  </div>
+
+                  {adFormFrequency === "interval" ? (
+                    <div>
+                      <label className="block font-bold text-[#18232E] mb-1">Cooldown (Minutes)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10080"
+                        value={adFormInterval}
+                        onChange={(e) => setAdFormInterval(parseInt(e.target.value, 10) || 60)}
+                        className="w-full bg-white border border-[#E1E6EA] rounded-xl p-2.5 outline-none focus:border-[#B8323C] text-xs"
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block font-bold text-slate-400 mb-1">Cooldown</label>
+                      <div className="p-2.5 bg-slate-100 rounded-xl text-slate-500 text-xs">
+                        {adFormFrequency === "once-per-session" ? "Entire Browser Session" : "Immediate on Reload"}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Schedule Dates */}
@@ -2264,6 +2389,95 @@ export default function AdminReview({ user: propUser }) {
                 <span>{newsPreviewModalItem.source || "Fazilnagar Bureau"}</span>
                 <span>{newsPreviewModalItem.location || "Fazilnagar"}</span>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          FLOATING AD LIVE PREVIEW MODAL
+          ======================================================== */}
+      {adPreviewModalItem && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white max-w-md w-full rounded-3xl border border-slate-200 shadow-2xl overflow-hidden space-y-4 p-6">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
+                  <Megaphone className="w-4 h-4" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-extrabold text-[#18232E]">Live Card Preview</h3>
+                  <span className="text-[10px] text-slate-500">
+                    Format: {adPreviewModalItem.format} • {adPreviewModalItem.placement || "bottom-right"}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setAdPreviewModalItem(null)}
+                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Simulated Floating Card Display */}
+            <div className="p-4 bg-slate-100 rounded-2xl flex items-center justify-center min-h-[220px]">
+              <div className="w-72 bg-gradient-to-br from-slate-900 via-[#18232E] to-slate-900 text-white rounded-2xl border border-slate-700 shadow-2xl overflow-hidden">
+                <div className="flex items-center justify-between px-3 py-2 bg-black/40 border-b border-white/10">
+                  <span className="inline-flex items-center gap-1 bg-[#B8323C] text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
+                    <Sparkles className="w-2.5 h-2.5" />
+                    <span>Sponsored</span>
+                  </span>
+                  <div className="w-5 h-5 rounded-full bg-white/10 text-slate-300 flex items-center justify-center">
+                    <X className="w-3 h-3" />
+                  </div>
+                </div>
+
+                {adPreviewModalItem.imageUrl && (
+                  <div className="w-full h-28 overflow-hidden bg-black/60">
+                    <img
+                      src={adPreviewModalItem.imageUrl}
+                      alt={adPreviewModalItem.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                <div className="p-3 space-y-1.5">
+                  <h4 className="text-xs font-extrabold text-white leading-snug line-clamp-2">
+                    {adPreviewModalItem.title}
+                  </h4>
+                  {adPreviewModalItem.description && (
+                    <p className="text-[11px] text-slate-300 line-clamp-2 leading-relaxed">
+                      {adPreviewModalItem.description}
+                    </p>
+                  )}
+                  <div className="pt-1.5">
+                    <div className="w-full text-center bg-white text-[#18232E] text-xs font-bold py-1.5 px-3 rounded-xl shadow-xs flex items-center justify-center gap-1.5">
+                      <span>{adPreviewModalItem.ctaText || "Learn More"}</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-[11px] text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-1">
+              <div><strong>Placement:</strong> {adPreviewModalItem.placement || "bottom-right"}</div>
+              <div><strong>Dismissal Cooldown:</strong> {adPreviewModalItem.frequency === "interval" ? `Reappears after ${adPreviewModalItem.redisplayIntervalMinutes || 60} minutes` : adPreviewModalItem.frequency === "always" ? "Reappears every visit" : "Hidden for current session"}</div>
+              {adPreviewModalItem.destinationUrl && (
+                <div className="truncate"><strong>Link:</strong> {adPreviewModalItem.destinationUrl}</div>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setAdPreviewModalItem(null)}
+                className="bg-slate-900 text-white font-bold text-xs px-4 py-2 rounded-xl"
+              >
+                Close Preview
+              </button>
             </div>
           </div>
         </div>

@@ -15,7 +15,7 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Multer storage setup
+// Multer storage setup for image uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
@@ -61,7 +61,8 @@ const isValidUrl = (string) => {
 // ====================================================================
 
 // @route   GET /api/advertisements/active
-// @desc    Get currently active & published advertisement(s) within schedule for homepage
+// @desc    Get currently active & published advertisement(s) within schedule.
+//          Returns ONLY public display fields. Private admin data is strictly excluded.
 // @access  Public
 router.get("/active", async (req, res) => {
   try {
@@ -85,13 +86,18 @@ router.get("/active", async (req, res) => {
       ],
     };
 
-    const activeAds = await Advertisement.find(query).sort({ updatedAt: -1 });
+    // Public read-only projection: returns only display-necessary fields
+    const publicProjection = "_id title description imageUrl destinationUrl ctaText format placement frequency redisplayIntervalMinutes startDate endDate updatedAt";
+
+    const activeAds = await Advertisement.find(query)
+      .select(publicProjection)
+      .sort({ updatedAt: -1 })
+      .lean();
 
     if (!activeAds || activeAds.length === 0) {
       return res.status(200).json({ ad: null, ads: [] });
     }
 
-    // Return the latest active ad (and the full active list)
     res.status(200).json({
       ad: activeAds[0],
       ads: activeAds,
@@ -142,12 +148,32 @@ router.post("/:id/click", async (req, res) => {
   }
 });
 
+// @route   POST /api/advertisements/:id/dismiss
+// @desc    Increment genuine dismissal count
+// @access  Public
+router.post("/:id/dismiss", async (req, res) => {
+  try {
+    const ad = await Advertisement.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { dismissals: 1 } },
+      { new: true }
+    );
+    if (!ad) {
+      return res.status(404).json({ message: "Advertisement not found." });
+    }
+    res.status(200).json({ success: true, dismissals: ad.dismissals });
+  } catch (err) {
+    console.error("Ad Dismissal Track Error:", err);
+    res.status(500).json({ message: "Failed to track dismissal." });
+  }
+});
+
 // ====================================================================
 // ADMIN ONLY ENDPOINTS (Strictly protected by verifyToken + requireAdmin)
 // ====================================================================
 
 // @route   GET /api/advertisements/admin
-// @desc    List all advertisements for admin dashboard with analytics
+// @desc    List all advertisements for admin dashboard with full analytics
 // @access  Private (Admin)
 router.get("/admin", verifyToken, requireAdmin, async (req, res) => {
   try {
@@ -186,9 +212,13 @@ router.post(
         description,
         imageUrl: providedImageUrl,
         destinationUrl,
+        ctaText,
+        format,
+        placement,
+        frequency,
+        redisplayIntervalMinutes,
         startDate,
         endDate,
-        format,
         isActive,
         isPublished,
       } = req.body;
@@ -234,16 +264,31 @@ router.post(
         return res.status(400).json({ message: "Start date cannot be after end date." });
       }
 
-      const validFormat = ["banner", "floating", "sticky-bottom", "sticky-top"].includes(format)
+      const validFormat = ["floating", "banner", "sticky-bottom", "sticky-top"].includes(format)
         ? format
-        : "banner";
+        : "floating";
+
+      const validPlacement = ["bottom-right", "bottom-left"].includes(placement)
+        ? placement
+        : "bottom-right";
+
+      const validFrequency = ["once-per-session", "interval", "always"].includes(frequency)
+        ? frequency
+        : "once-per-session";
+
+      const parsedInterval = parseInt(redisplayIntervalMinutes, 10);
+      const validInterval = isNaN(parsedInterval) || parsedInterval < 1 ? 60 : parsedInterval;
 
       const ad = await Advertisement.create({
         title: title.trim(),
         description: (description || "").trim(),
         imageUrl: finalImageUrl,
         destinationUrl: (destinationUrl || "").trim(),
+        ctaText: (ctaText || "Learn More").trim(),
         format: validFormat,
+        placement: validPlacement,
+        frequency: validFrequency,
+        redisplayIntervalMinutes: validInterval,
         startDate: parsedStart,
         endDate: parsedEnd,
         isActive: isActive === "true" || isActive === true,
@@ -263,7 +308,7 @@ router.post(
 );
 
 // @route   PUT /api/advertisements/:id
-// @desc    Update advertisement details
+// @desc    Update advertisement
 // @access  Private (Admin)
 router.put(
   "/:id",
@@ -291,6 +336,11 @@ router.put(
         description,
         imageUrl: providedImageUrl,
         destinationUrl,
+        ctaText,
+        format,
+        placement,
+        frequency,
+        redisplayIntervalMinutes,
         startDate,
         endDate,
         isActive,
@@ -299,6 +349,7 @@ router.put(
 
       if (title) ad.title = title.trim();
       if (description !== undefined) ad.description = description.trim();
+      if (ctaText !== undefined) ad.ctaText = (ctaText || "Learn More").trim();
 
       if (req.file) {
         const host = req.get("host") || "localhost:5000";
@@ -321,6 +372,25 @@ router.put(
         ad.destinationUrl = trimmed;
       }
 
+      if (format !== undefined && ["floating", "banner", "sticky-bottom", "sticky-top"].includes(format)) {
+        ad.format = format;
+      }
+
+      if (placement !== undefined && ["bottom-right", "bottom-left"].includes(placement)) {
+        ad.placement = placement;
+      }
+
+      if (frequency !== undefined && ["once-per-session", "interval", "always"].includes(frequency)) {
+        ad.frequency = frequency;
+      }
+
+      if (redisplayIntervalMinutes !== undefined) {
+        const num = parseInt(redisplayIntervalMinutes, 10);
+        if (!isNaN(num) && num >= 1) {
+          ad.redisplayIntervalMinutes = num;
+        }
+      }
+
       if (startDate !== undefined) {
         ad.startDate = startDate ? new Date(startDate) : null;
       }
@@ -337,9 +407,6 @@ router.put(
       }
       if (isPublished !== undefined) {
         ad.isPublished = isPublished === "true" || isPublished === true;
-      }
-      if (req.body.format !== undefined && ["banner", "floating", "sticky-bottom", "sticky-top"].includes(req.body.format)) {
-        ad.format = req.body.format;
       }
 
       await ad.save();
