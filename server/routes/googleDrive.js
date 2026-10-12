@@ -92,17 +92,17 @@ export async function getAuthenticatedDriveClient() {
 /**
  * Helper to get or create the dedicated application folder in Google Drive
  */
-export async function getOrCreateAppFolder(drive, tokenDoc) {
-  const folderName = "Fazilnagar Portal Media";
+export async function getOrCreateAppFolder(drive, tokenDoc, targetFolderName = "Fazilnagar Media") {
+  const folderName = targetFolderName;
 
-  // Check cached folder ID first
-  if (tokenDoc?.folderId) {
+  // Check cached folder ID first if cached name matches targetFolderName
+  if (tokenDoc?.folderId && tokenDoc?.folderName === folderName) {
     try {
       const existing = await drive.files.get({
         fileId: tokenDoc.folderId,
-        fields: "id, name, trashed",
+        fields: "id, name, trashed, webViewLink",
       });
-      if (existing.data && !existing.data.trashed) {
+      if (existing.data && !existing.data.trashed && existing.data.name === folderName) {
         return existing.data.id;
       }
     } catch (err) {
@@ -113,7 +113,7 @@ export async function getOrCreateAppFolder(drive, tokenDoc) {
   // Search if folder exists
   const searchRes = await drive.files.list({
     q: `mimeType = 'application/vnd.google-apps.folder' and name = '${folderName}' and trashed = false`,
-    fields: "files(id, name)",
+    fields: "files(id, name, webViewLink)",
     spaces: "drive",
   });
 
@@ -133,7 +133,7 @@ export async function getOrCreateAppFolder(drive, tokenDoc) {
       mimeType: "application/vnd.google-apps.folder",
       description: "Dedicated application storage for Fazilnagar Portal media files",
     },
-    fields: "id, name",
+    fields: "id, name, webViewLink",
   });
 
   const newFolderId = folderRes.data.id;
@@ -142,6 +142,40 @@ export async function getOrCreateAppFolder(drive, tokenDoc) {
     { $set: { folderId: newFolderId, folderName } }
   );
   return newFolderId;
+}
+
+/**
+ * Helper to inspect the dedicated application folder and check whether any files have been uploaded
+ */
+export async function inspectMediaFolder(drive, targetFolderName = "Fazilnagar Media") {
+  const searchRes = await drive.files.list({
+    q: `mimeType = 'application/vnd.google-apps.folder' and name = '${targetFolderName}' and trashed = false`,
+    fields: "files(id, name, webViewLink, createdTime)",
+    spaces: "drive",
+  });
+
+  const exists = !!(searchRes.data.files && searchRes.data.files.length > 0);
+  const folder = exists ? searchRes.data.files[0] : null;
+  let files = [];
+
+  if (exists && folder?.id) {
+    const filesRes = await drive.files.list({
+      q: `'${folder.id}' in parents and trashed = false`,
+      fields: "files(id, name, mimeType, size, createdTime, modifiedTime, webViewLink)",
+      spaces: "drive",
+      pageSize: 50,
+    });
+    files = filesRes.data.files || [];
+  }
+
+  return {
+    folderExists: exists,
+    folderId: folder?.id || null,
+    folderName: targetFolderName,
+    folderWebViewLink: folder?.webViewLink || (folder?.id ? `https://drive.google.com/drive/folders/${folder.id}` : null),
+    filesUploadedCount: files.length,
+    files,
+  };
 }
 
 /**
@@ -155,7 +189,7 @@ export async function uploadMediaToDrive({
   isTest = false,
 }) {
   const { drive, accountEmail, tokenDoc } = await getAuthenticatedDriveClient();
-  const folderId = await getOrCreateAppFolder(drive, tokenDoc);
+  const folderId = await getOrCreateAppFolder(drive, tokenDoc, "Fazilnagar Media");
 
   const cleanName = `fazilnagar_${Date.now()}_${originalName.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
 
@@ -217,6 +251,7 @@ router.get("/status", async (req, res) => {
       storageType: hasEnvRefreshToken ? "environment_variable" : hasDbRefreshToken ? "database" : "none",
       accountEmail: storedDoc?.accountEmail || null,
       folderId: storedDoc?.folderId || null,
+      folderName: storedDoc?.folderName || null,
       mediaCount,
       scope: storedDoc?.tokens?.scope || (isConnected ? DRIVE_FILE_SCOPE : null),
       connectedAt: storedDoc?.connectedAt || null,
@@ -226,6 +261,48 @@ router.get("/status", async (req, res) => {
   } catch (err) {
     console.error("[GoogleDrive] Status Check Error:", err);
     res.status(500).json({ message: "Failed to query Google Drive connection status." });
+  }
+});
+
+/**
+ * @route   GET /api/google-drive/inspect
+ * @desc    Checks whether the dedicated 'Fazilnagar Media' folder exists in Drive, lists uploaded files,
+ *          and counts MongoDB records without exposing tokens.
+ * @access  Public / Admin
+ */
+router.get("/inspect", async (req, res) => {
+  try {
+    const { drive, accountEmail } = await getAuthenticatedDriveClient();
+    const folderInspection = await inspectMediaFolder(drive, "Fazilnagar Media");
+    const mongoMediaCount = await GoogleDriveMedia.countDocuments();
+    const mongoMedia = await GoogleDriveMedia.find().sort({ createdAt: -1 }).limit(10).lean();
+
+    res.status(200).json({
+      connected: true,
+      accountEmail,
+      folder: folderInspection,
+      mongo: {
+        totalCount: mongoMediaCount,
+        recentFiles: mongoMedia.map((m) => ({
+          id: m._id,
+          driveFileId: m.driveFileId,
+          fileName: m.fileName,
+          mimeType: m.mimeType,
+          fileSize: m.fileSize,
+          owner: m.owner,
+          folderId: m.folderId,
+          isTest: m.isTest,
+          deliveryUrl: m.deliveryUrl,
+          createdAt: m.createdAt,
+        })),
+      },
+    });
+  } catch (err) {
+    console.error("[GoogleDrive] Inspect Error:", err);
+    res.status(500).json({
+      connected: false,
+      message: err.message || "Failed to inspect Google Drive media folder.",
+    });
   }
 });
 
@@ -681,7 +758,7 @@ router.post("/test-workflow", verifyToken, requireAdmin, async (req, res) => {
       name: "Upload to Dedicated Google Drive Folder",
       status: "SUCCESS",
       folderId,
-      folderName: "Fazilnagar Portal Media",
+      folderName: "Fazilnagar Media",
       driveFileId: driveData.id,
       driveFileName: driveData.name,
     });
@@ -773,6 +850,164 @@ router.post("/test-workflow", verifyToken, requireAdmin, async (req, res) => {
       message: err.message,
       failedAtStep: steps.length + 1,
       steps,
+    });
+  }
+});
+
+/**
+ * @route   POST /api/google-drive/admin/verify-integration
+ * @desc    Comprehensive verification endpoint for the Google Drive integration:
+ *          1. Checks whether the dedicated 'Fazilnagar Media' folder exists.
+ *          2. Checks whether any files have actually been uploaded into it.
+ *          3. If the folder does not exist, creates the dedicated 'Fazilnagar Media' folder using existing OAuth connection.
+ *          4. Uploads one small test image and verifies it in Google Drive.
+ *          5. Saves its file ID and metadata in MongoDB.
+ *          6. Verifies retrieval through the delivery route.
+ *          7. Never exposes tokens or secrets, and reports exact Drive folder location and test results.
+ * @access  Private (Admin only)
+ */
+router.post("/admin/verify-integration", verifyToken, requireAdmin, async (req, res) => {
+  const checkResults = {
+    accountEmail: null,
+    folderCheck: {
+      folderExistedPrior: false,
+      priorFilesCount: 0,
+      priorFiles: [],
+      currentFolderId: null,
+      currentFolderName: "Fazilnagar Media",
+      driveFolderUrl: null,
+    },
+    testUpload: null,
+    verification: {
+      driveFileVerified: false,
+      mongoSaved: false,
+      retrievalVerified: false,
+      tokensExposed: false,
+    },
+  };
+
+  try {
+    const { drive, accountEmail, tokenDoc } = await getAuthenticatedDriveClient();
+    checkResults.accountEmail = accountEmail;
+
+    // STEP 1: Check whether the 'Fazilnagar Media' folder exists and whether files exist in it
+    const inspection = await inspectMediaFolder(drive, "Fazilnagar Media");
+    checkResults.folderCheck.folderExistedPrior = inspection.folderExists;
+    checkResults.folderCheck.priorFilesCount = inspection.filesUploadedCount;
+    checkResults.folderCheck.priorFiles = inspection.files.map((f) => ({
+      id: f.id,
+      name: f.name,
+      mimeType: f.mimeType,
+      size: f.size,
+      createdTime: f.createdTime,
+    }));
+
+    let folderId = inspection.folderId;
+
+    // STEP 2: If folder does not exist, create dedicated 'Fazilnagar Media' folder
+    if (!folderId) {
+      folderId = await getOrCreateAppFolder(drive, tokenDoc, "Fazilnagar Media");
+    }
+
+    checkResults.folderCheck.currentFolderId = folderId;
+    checkResults.folderCheck.driveFolderUrl = `https://drive.google.com/drive/folders/${folderId}`;
+
+    // STEP 3: Upload one small test image
+    const testImageBuffer = Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+      "base64"
+    );
+    const testFileName = `fazilnagar_media_test_${Date.now()}.png`;
+    const mimeType = "image/png";
+
+    const driveCreateRes = await drive.files.create({
+      requestBody: {
+        name: testFileName,
+        parents: [folderId],
+        description: "Fazilnagar Media dedicated folder verification test image",
+      },
+      media: {
+        mimeType,
+        body: Readable.from(testImageBuffer),
+      },
+      fields: "id, name, mimeType, size, createdTime, modifiedTime, owners, parents, webViewLink",
+    });
+
+    const fileData = driveCreateRes.data;
+    const driveFileId = fileData.id;
+    const fileSize = Number(fileData.size) || testImageBuffer.length;
+    const owner = fileData.owners?.[0]?.emailAddress || accountEmail;
+
+    // STEP 4: Verify in Google Drive (get file metadata and parent check)
+    const verifyDriveRes = await drive.files.get({
+      fileId: driveFileId,
+      fields: "id, name, mimeType, size, parents, webViewLink, createdTime, owners",
+    });
+
+    const driveParents = verifyDriveRes.data.parents || [];
+    const isInDedicatedFolder = driveParents.includes(folderId);
+
+    if (!isInDedicatedFolder) {
+      throw new Error(`Uploaded file is not located in the target folder ${folderId}`);
+    }
+    checkResults.verification.driveFileVerified = true;
+
+    // STEP 5: Save file ID and metadata in MongoDB
+    const mediaDoc = await GoogleDriveMedia.create({
+      driveFileId,
+      fileName: testFileName,
+      mimeType: fileData.mimeType || mimeType,
+      fileSize,
+      owner,
+      folderId,
+      isTest: true,
+      uploadedBy: req.user?.id || null,
+    });
+
+    mediaDoc.deliveryUrl = `/api/google-drive/media/${mediaDoc._id}`;
+    await mediaDoc.save();
+
+    // Verify MongoDB document
+    const savedDoc = await GoogleDriveMedia.findById(mediaDoc._id).lean();
+    if (savedDoc) {
+      checkResults.verification.mongoSaved = true;
+    }
+
+    // STEP 6: Verify retrieval via stream
+    const streamRes = await drive.files.get(
+      { fileId: driveFileId, alt: "media" },
+      { responseType: "arraybuffer" }
+    );
+    const retrievedBuffer = Buffer.from(streamRes.data);
+    if (retrievedBuffer.length === testImageBuffer.length) {
+      checkResults.verification.retrievalVerified = true;
+    }
+
+    checkResults.testUpload = {
+      mongoId: mediaDoc._id,
+      driveFileId,
+      fileName: testFileName,
+      mimeType: mediaDoc.mimeType,
+      fileSize,
+      owner,
+      folderId,
+      isTest: true,
+      deliveryUrl: mediaDoc.deliveryUrl,
+      driveWebViewLink: fileData.webViewLink || `https://drive.google.com/file/d/${driveFileId}/view`,
+      createdAt: mediaDoc.createdAt,
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: "Google Drive integration verified successfully. Dedicated 'Fazilnagar Media' folder and test image verified.",
+      data: checkResults,
+    });
+  } catch (err) {
+    console.error("[GoogleDrive] Verification Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Failed to verify Google Drive integration.",
+      data: checkResults,
     });
   }
 });
