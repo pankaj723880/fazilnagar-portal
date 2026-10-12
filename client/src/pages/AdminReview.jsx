@@ -317,11 +317,11 @@ export default function AdminReview({ user: propUser }) {
   // -------------------------------------------------------------
   // ADVERTISEMENT MANAGEMENT HANDLERS
   // -------------------------------------------------------------
-  const openCreateAdModal = () => {
+  const openCreateAdModal = (defaultFormat = "floating") => {
     setEditingAd(null);
     setAdFormTitle("");
     setAdFormDesc("");
-    setAdFormFormat("floating");
+    setAdFormFormat(defaultFormat);
     setAdFormPlacement("bottom-right");
     setAdFormFrequency("once-per-session");
     setAdFormInterval(60);
@@ -1011,17 +1011,79 @@ export default function AdminReview({ user: propUser }) {
                 </h2>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                Manage private banners displayed on the homepage. If no active published ad exists, the homepage slot remains completely invisible with zero reserved space.
+                Manage floating overlay ads, sticky banners, and in-feed sponsor spots across Fazilnagar portal.
               </p>
             </div>
 
             <button
-              onClick={openCreateAdModal}
+              onClick={() => openCreateAdModal("floating")}
               className="bg-[#B8323C] hover:bg-red-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-sm cursor-pointer shrink-0"
             >
               <Plus className="w-4 h-4" />
-              <span>Create Advertisement</span>
+              <span>+ Create Advertisement</span>
             </button>
+          </div>
+
+          {/* Quick Ad Type Creation Selector Bar */}
+          <div className="bg-gradient-to-r from-slate-900 via-[#18232E] to-slate-900 text-white p-4 rounded-2xl border border-slate-700 shadow-md">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3.5">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="bg-[#B8323C] text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <Sparkles className="w-2.5 h-2.5" />
+                    <span>Choose Type</span>
+                  </span>
+                  <h3 className="text-xs sm:text-sm font-extrabold text-white">
+                    Select Ad Format to Create (विज्ञापन का प्रकार चुनें)
+                  </h3>
+                </div>
+                <p className="text-[11px] text-slate-300">
+                  Click any of the 4 formats below to quickly create and configure:
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => openCreateAdModal("floating")}
+                  className="bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  title="Screen ke corner mein chota overlay card with Close (✕) button"
+                >
+                  <span>🪟</span>
+                  <span>+ Floating Card Ad</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => openCreateAdModal("sticky-bottom")}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  title="Screen ke bottom par scrolling ke dauran permanently fixed with Close (✕) button"
+                >
+                  <span>📌</span>
+                  <span>+ Sticky Bottom Ad</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => openCreateAdModal("sticky-top")}
+                  className="bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  title="Screen ke top par (navbar ke niche) fixed with Close (✕) button"
+                >
+                  <span>📌</span>
+                  <span>+ Sticky Top Ad</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => openCreateAdModal("banner")}
+                  className="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  title="Homepage content ke beech me standard full-width banner"
+                >
+                  <span>🖼️</span>
+                  <span>+ In-Feed Banner</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Ad Analytics Summary */}
@@ -1705,6 +1767,135 @@ export default function AdminReview({ user: propUser }) {
 
             {/* Modal Form */}
             <form onSubmit={handleSaveAd} className="overflow-y-auto p-6 space-y-4 text-xs">
+              {/* STEP 1: Select Advertisement Type / Format */}
+              <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-5 h-5 rounded-full bg-[#B8323C] text-white text-[10px] font-black flex items-center justify-center">
+                      1
+                    </span>
+                    <label className="block font-extrabold text-[#18232E] text-xs">
+                      Select Advertisement Display Type (विज्ञापन का प्रकार चुनें) <span className="text-red-500">*</span>
+                    </label>
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-full">
+                    4 Formats Available
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setAdFormFormat("floating")}
+                    className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 cursor-pointer ${
+                      adFormFormat === "floating"
+                        ? "border-purple-600 bg-purple-50 ring-2 ring-purple-600/30"
+                        : "border-slate-200 bg-white hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-purple-950 text-xs flex items-center gap-1.5">
+                        <span className="text-base">🪟</span> Floating Overlay Ad
+                      </span>
+                      {adFormFormat === "floating" ? (
+                        <span className="text-[10px] font-black uppercase text-purple-700 bg-purple-200 px-1.5 py-0.2 rounded">Selected</span>
+                      ) : (
+                        <span className="w-3 h-3 rounded-full border border-slate-300"></span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-500 leading-tight">
+                      Screen corner mein chota floating overlay card with Close (✕) button & CTA
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAdFormFormat("sticky-bottom")}
+                    className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 cursor-pointer ${
+                      adFormFormat === "sticky-bottom"
+                        ? "border-indigo-600 bg-indigo-50 ring-2 ring-indigo-600/30"
+                        : "border-slate-200 bg-white hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-indigo-950 text-xs flex items-center gap-1.5">
+                        <span className="text-base">📌</span> Sticky Bottom Banner
+                      </span>
+                      {adFormFormat === "sticky-bottom" ? (
+                        <span className="text-[10px] font-black uppercase text-indigo-700 bg-indigo-200 px-1.5 py-0.2 rounded">Selected</span>
+                      ) : (
+                        <span className="w-3 h-3 rounded-full border border-slate-300"></span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-500 leading-tight">
+                      Screen ke bottom par scrolling ke dauran fixed banner with Close (✕) button
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAdFormFormat("sticky-top")}
+                    className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 cursor-pointer ${
+                      adFormFormat === "sticky-top"
+                        ? "border-cyan-600 bg-cyan-50 ring-2 ring-cyan-600/30"
+                        : "border-slate-200 bg-white hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-cyan-950 text-xs flex items-center gap-1.5">
+                        <span className="text-base">📌</span> Sticky Top Banner
+                      </span>
+                      {adFormFormat === "sticky-top" ? (
+                        <span className="text-[10px] font-black uppercase text-cyan-700 bg-cyan-200 px-1.5 py-0.2 rounded">Selected</span>
+                      ) : (
+                        <span className="w-3 h-3 rounded-full border border-slate-300"></span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-500 leading-tight">
+                      Screen ke top (navbar ke niche) fixed banner with Close (✕) button
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAdFormFormat("banner")}
+                    className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 cursor-pointer ${
+                      adFormFormat === "banner"
+                        ? "border-[#B8323C] bg-red-50 ring-2 ring-[#B8323C]/30"
+                        : "border-slate-200 bg-white hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-slate-900 text-xs flex items-center gap-1.5">
+                        <span className="text-base">🖼️</span> In-Feed Banner
+                      </span>
+                      {adFormFormat === "banner" ? (
+                        <span className="text-[10px] font-black uppercase text-[#B8323C] bg-red-200 px-1.5 py-0.2 rounded">Selected</span>
+                      ) : (
+                        <span className="w-3 h-3 rounded-full border border-slate-300"></span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-500 leading-tight">
+                      Homepage content ke beech standard full-width horizontal banner
+                    </span>
+                  </button>
+                </div>
+
+                <div className="text-[11px] font-semibold text-slate-600 bg-white p-2.5 rounded-xl border border-slate-200 flex items-center gap-2">
+                  <span className="font-black text-[#B8323C]">Format Active:</span>
+                  <span>
+                    {adFormFormat === "floating"
+                      ? "🪟 Floating Overlay Card — Dismissible corner popup. (Configure placement & cooldown below)"
+                      : adFormFormat === "sticky-bottom"
+                      ? "📌 Sticky Bottom Banner — Sticks to bottom edge of screen while scrolling."
+                      : adFormFormat === "sticky-top"
+                      ? "📌 Sticky Top Banner — Sticks just below navbar at top edge."
+                      : "🖼️ In-Feed Banner — Embeds between civic directories and civic news updates."}
+                  </span>
+                </div>
+              </div>
+
+              {/* STEP 2: Basic Details */}
               <div>
                 <label className="block font-bold text-[#18232E] mb-1">
                   Advertisement Title / Business Name <span className="text-red-500">*</span>
@@ -1730,102 +1921,6 @@ export default function AdminReview({ user: propUser }) {
                   placeholder="Fresh desi ghee sweets, cakes, and gift packs on NH-27 College Road Crossing..."
                   className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-3 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs"
                 />
-              </div>
-
-              {/* Advertisement Type / Format Selection */}
-              <div>
-                <label className="block font-bold text-[#18232E] mb-1.5">
-                  Advertisement Display Type (विज्ञापन का प्रकार) <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setAdFormFormat("banner")}
-                    className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 cursor-pointer ${
-                      adFormFormat === "banner"
-                        ? "border-[#B8323C] bg-red-50/60 ring-2 ring-[#B8323C]/20"
-                        : "border-slate-200 bg-[#F5F7F8] hover:border-slate-300"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-extrabold text-[#18232E] text-xs flex items-center gap-1.5">
-                        <span>🖼️</span> In-Feed Banner
-                      </span>
-                      {adFormFormat === "banner" && (
-                        <span className="w-2 h-2 rounded-full bg-[#B8323C]"></span>
-                      )}
-                    </div>
-                    <span className="text-[10px] text-slate-500 leading-tight">
-                      Homepage content ke beech me standard full-width banner
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setAdFormFormat("floating")}
-                    className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 cursor-pointer ${
-                      adFormFormat === "floating"
-                        ? "border-purple-600 bg-purple-50/60 ring-2 ring-purple-600/20"
-                        : "border-slate-200 bg-[#F5F7F8] hover:border-slate-300"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-extrabold text-[#18232E] text-xs flex items-center gap-1.5">
-                        <span>🪟</span> Floating Overlay Ad
-                      </span>
-                      {adFormFormat === "floating" && (
-                        <span className="w-2 h-2 rounded-full bg-purple-600"></span>
-                      )}
-                    </div>
-                    <span className="text-[10px] text-slate-500 leading-tight">
-                      Screen corner mein chota overlay card with Close (✕) button
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setAdFormFormat("sticky-bottom")}
-                    className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 cursor-pointer ${
-                      adFormFormat === "sticky-bottom"
-                        ? "border-indigo-600 bg-indigo-50/60 ring-2 ring-indigo-600/20"
-                        : "border-slate-200 bg-[#F5F7F8] hover:border-slate-300"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-extrabold text-[#18232E] text-xs flex items-center gap-1.5">
-                        <span>📌</span> Sticky Bottom Banner
-                      </span>
-                      {adFormFormat === "sticky-bottom" && (
-                        <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
-                      )}
-                    </div>
-                    <span className="text-[10px] text-slate-500 leading-tight">
-                      Screen ke bottom par scrolling ke dauran fixed with Close (✕) button
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setAdFormFormat("sticky-top")}
-                    className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 cursor-pointer ${
-                      adFormFormat === "sticky-top"
-                        ? "border-cyan-600 bg-cyan-50/60 ring-2 ring-cyan-600/20"
-                        : "border-slate-200 bg-[#F5F7F8] hover:border-slate-300"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-extrabold text-[#18232E] text-xs flex items-center gap-1.5">
-                        <span>📌</span> Sticky Top Banner
-                      </span>
-                      {adFormFormat === "sticky-top" && (
-                        <span className="w-2 h-2 rounded-full bg-cyan-600"></span>
-                      )}
-                    </div>
-                    <span className="text-[10px] text-slate-500 leading-tight">
-                      Screen ke top (navbar ke niche) fixed with Close (✕) button
-                    </span>
-                  </button>
-                </div>
               </div>
 
               {/* Banner Image Upload or URL */}
