@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import L from "leaflet";
 import API from "../api";
+import seedPlaces from "../data/places.json";
 import { openGoogleMapsDirections } from "../utils/directions";
 import InstallButton from "../components/InstallButton";
 import {
@@ -376,11 +377,43 @@ const KUSHINAGAR_FAZILNAGAR_HERO_IMAGES = [
   }
 ];
 
+function matchesCategory(placeCat, placeSubcat, targetCat) {
+  if (!targetCat || targetCat === "all" || targetCat === "All") return true;
+  const target = targetCat.toLowerCase().trim();
+  const c = (placeCat || "").toLowerCase().trim();
+  const sc = (placeSubcat || "").toLowerCase().trim();
+
+  if (c === target || sc === target) return true;
+  if (c && (c.includes(target) || target.includes(c))) return true;
+  if (sc && (sc.includes(target) || target.includes(sc))) return true;
+
+  const targetWords = target.split(/[\s&,/]+/).filter((w) => w.length > 3);
+  return targetWords.some((w) => c.includes(w) || sc.includes(w));
+}
+
+const INITIAL_PLACES = Array.isArray(seedPlaces) && seedPlaces.length > 0
+  ? seedPlaces.map((p) => ({
+      id: p.id || p._id,
+      name: p.name,
+      nameHindi: p.alternateNames?.[0] || p.name,
+      category: p.category,
+      subcategory: p.subcategory,
+      address: p.addressFull || p.locality,
+      landmark: p.streetOrLandmark || p.addressFull || p.locality,
+      lat: parseFloat(p.latitude),
+      lng: parseFloat(p.longitude),
+      hours: p.openingHours || "General Hours",
+      phone: p.phone || "",
+      desc: p.description,
+      badge: p.subcategory || p.category,
+    }))
+  : VERIFIED_TOWN_PLACES;
+
 export default function TownPortal() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [places, setPlaces] = useState(VERIFIED_TOWN_PLACES);
+  const [places, setPlaces] = useState(INITIAL_PLACES);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [mapFilter, setMapFilter] = useState("all");
   const [mapViewMode, setMapViewMode] = useState("map"); // "map" | "list"
@@ -582,7 +615,7 @@ export default function TownPortal() {
     let filtered = items;
     if (mapFilter !== "all") {
       filtered = items.filter(
-        (p) => p.category === mapFilter || p.subcategory === mapFilter
+        (p) => matchesCategory(p.category, p.subcategory, mapFilter)
       );
     }
 
@@ -699,7 +732,7 @@ export default function TownPortal() {
   ];
 
   const filteredMapPlaces = places.filter(
-    (p) => mapFilter === "all" || p.category === mapFilter || p.subcategory === mapFilter
+    (p) => matchesCategory(p.category, p.subcategory, mapFilter)
   );
 
   const currentMapTabLabel =

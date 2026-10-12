@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -52,6 +52,22 @@ const CATEGORIES = [
   { id: "Shopping & Services", name: "Shopping & Trade", icon: ShoppingBag, color: "orange" },
 ];
 
+// Helper function to match place category and subcategory robustly
+function matchesCategory(placeCat, placeSubcat, targetCat) {
+  if (!targetCat || targetCat === "all" || targetCat === "All" || targetCat === "All Categories") return true;
+  const target = targetCat.toLowerCase().trim();
+  const c = (placeCat || "").toLowerCase().trim();
+  const sc = (placeSubcat || "").toLowerCase().trim();
+
+  if (c === target || sc === target) return true;
+  if (c && (c.includes(target) || target.includes(c))) return true;
+  if (sc && (sc.includes(target) || target.includes(sc))) return true;
+
+  // Split multi-word categories for fuzzy match (e.g., "Medical Stores" -> "Medical Stores & Pharmacies")
+  const targetWords = target.split(/[\s&,/]+/).filter((w) => w.length > 3);
+  return targetWords.some((w) => c.includes(w) || sc.includes(w));
+}
+
 // Helper to filter embedded verified places - strictly includes confirmed town locations with valid GPS coordinates
 function filterPlaces(list, category, locality, search, sort) {
   let filtered = Array.isArray(list) ? [...list] : [];
@@ -66,13 +82,8 @@ function filterPlaces(list, category, locality, search, sort) {
       !isNaN(parseFloat(p.longitude))
   );
 
-  if (category && category !== "all") {
-    const catLower = category.toLowerCase();
-    filtered = filtered.filter(
-      (p) =>
-        (p.category && p.category.toLowerCase() === catLower) ||
-        (p.subcategory && p.subcategory.toLowerCase() === catLower)
-    );
+  if (category && category !== "all" && category !== "All") {
+    filtered = filtered.filter((p) => matchesCategory(p.category, p.subcategory, category));
   }
   if (locality && locality !== "all") {
     const locLower = locality.toLowerCase();
@@ -120,7 +131,7 @@ export default function Directory({ user }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCat = searchParams.get("category") || "all";
   const initialSearch = searchParams.get("search") || "";
-  const [places, setPlaces] = useState(() => filterPlaces(seedPlaces, initialCat, "all", initialSearch, "name"));
+  const [allMasterPlaces, setAllMasterPlaces] = useState(seedPlaces);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [selectedCategory, setSelectedCategory] = useState(initialCat);
@@ -149,6 +160,19 @@ export default function Directory({ user }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
+  const sideListRef = useRef(null);
+
+  // Instant synchronous filtered places: always perfectly in sync with selected category
+  const places = useMemo(() => {
+    return filterPlaces(allMasterPlaces, selectedCategory, selectedLocality, searchQuery, sortBy);
+  }, [allMasterPlaces, selectedCategory, selectedLocality, searchQuery, sortBy]);
+
+  // Scroll side list back to top whenever category or filter changes
+  useEffect(() => {
+    if (sideListRef.current) {
+      sideListRef.current.scrollTop = 0;
+    }
+  }, [selectedCategory, selectedLocality, searchQuery]);
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -158,8 +182,13 @@ export default function Directory({ user }) {
   // Sync state if URL search params change
   useEffect(() => {
     const cat = searchParams.get("category");
-    if (cat && cat !== selectedCategory) {
-      setSelectedCategory(cat);
+    if (cat) {
+      if (cat !== selectedCategory) {
+        setSelectedCategory(cat);
+        setSelectedPlace(null);
+      }
+    } else if (selectedCategory !== "all") {
+      setSelectedCategory("all");
       setSelectedPlace(null);
     }
     const search = searchParams.get("search");
@@ -173,40 +202,22 @@ export default function Directory({ user }) {
     }
   }, [searchParams]);
 
-  // Fetch verified places and stats
+  // Fetch verified places and stats on mount
   useEffect(() => {
     fetchPlaces();
     fetchStats();
-  }, [selectedCategory, selectedLocality, sortBy]);
+  }, []);
 
   const fetchPlaces = async () => {
     try {
       setLoading(true);
-      const params = {};
-      if (selectedCategory !== "all") params.category = selectedCategory;
-      if (selectedLocality !== "all") params.locality = selectedLocality;
-      if (searchQuery.trim()) params.search = searchQuery.trim();
-      params.sort = sortBy;
-
-      const res = await API.get("/places", { params });
-      let data = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
-      if (data.length === 0) {
-        data = filterPlaces(seedPlaces, selectedCategory, selectedLocality, searchQuery, sortBy);
+      const res = await API.get("/places");
+      const data = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+      if (data.length > 0) {
+        setAllMasterPlaces(data);
       }
-      setPlaces(data);
-      // If a place was selected, only keep it if it belongs to current category/filters, else reset
-      setSelectedPlace((prev) => {
-        if (!prev) return null;
-        return data.find((p) => (p._id || p.id) === (prev._id || prev.id)) || null;
-      });
     } catch (err) {
-      console.warn("API unavailable, loading from local verified places:", err.message);
-      const fallback = filterPlaces(seedPlaces, selectedCategory, selectedLocality, searchQuery, sortBy);
-      setPlaces(fallback);
-      setSelectedPlace((prev) => {
-        if (!prev) return null;
-        return fallback.find((p) => (p._id || p.id) === (prev._id || prev.id)) || null;
-      });
+      console.warn("API unavailable, keeping seed verified places:", err.message);
     } finally {
       setLoading(false);
     }
@@ -473,7 +484,7 @@ export default function Directory({ user }) {
   };
 
   // Extract distinct localities from verified places for filter dropdown
-  const localities = Array.from(new Set(places.map((p) => p.locality).filter(Boolean)));
+  const localities = Array.from(new Set(allMasterPlaces.map((p) => p.locality).filter(Boolean)));
 
   return (
     <div className="space-y-6 pb-16 font-sans">
@@ -690,12 +701,15 @@ export default function Directory({ user }) {
         <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-semibold custom-scrollbar">
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
-            const isSelected = selectedCategory === cat.id;
+            const isSelected =
+              selectedCategory === cat.id ||
+              (cat.id === "all" && (!selectedCategory || selectedCategory === "all")) ||
+              matchesCategory(cat.id, "", selectedCategory);
             return (
               <button
                 key={cat.id}
                 onClick={() => handleCategorySelect(cat.id)}
-                className={`px-3.5 py-1.5 rounded-xl whitespace-nowrap transition flex items-center gap-1.5 ${
+                className={`px-3.5 py-1.5 rounded-xl whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
                   isSelected
                     ? "bg-slate-900 text-white shadow-sm ring-2 ring-red-600/30"
                     : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/80"
@@ -804,7 +818,13 @@ export default function Directory({ user }) {
                       className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-[#B8323C] bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition cursor-pointer"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" />
-                      <span>Back to {selectedCategory === "all" ? "All Places" : selectedCategory} ({places.length})</span>
+                      <span>
+                        Back to{" "}
+                        {selectedCategory === "all"
+                          ? "All Places"
+                          : (CATEGORIES.find((c) => c.id === selectedCategory || matchesCategory(c.id, "", selectedCategory))?.name || selectedCategory)}{" "}
+                        ({places.length})
+                      </span>
                     </button>
                     <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Verified
@@ -914,7 +934,11 @@ export default function Directory({ user }) {
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
                       <Layers className="w-4 h-4 text-[#B8323C]" />
-                      <span>{selectedCategory === "all" ? "All Town Places" : selectedCategory}</span>
+                      <span>
+                        {selectedCategory === "all"
+                          ? "All Town Places"
+                          : (CATEGORIES.find((c) => c.id === selectedCategory || matchesCategory(c.id, "", selectedCategory))?.name || selectedCategory)}
+                      </span>
                     </span>
                     <span className="text-[11px] font-bold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full">
                       {places.length} places
@@ -925,10 +949,10 @@ export default function Directory({ user }) {
                   </p>
                 </div>
 
-                <div className="space-y-2 overflow-y-auto max-h-[420px] pr-1 custom-scrollbar flex-1">
+                <div ref={sideListRef} className="space-y-2 overflow-y-auto max-h-[420px] pr-1 custom-scrollbar flex-1">
                   {places.map((p, idx) => (
                     <div
-                      key={p._id || p.id || idx}
+                      key={`${p._id || p.id || 'place'}-${idx}`}
                       onClick={() => handleSelectPlace(p)}
                       className="p-3 rounded-2xl border border-slate-100 hover:border-red-300 bg-slate-50/70 hover:bg-white hover:shadow-xs transition cursor-pointer group flex items-start justify-between gap-2"
                     >
@@ -962,9 +986,9 @@ export default function Directory({ user }) {
       ) : (
         /* List View */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {places.map((place) => (
+          {places.map((place, idx) => (
             <div
-              key={place._id}
+              key={`${place._id || place.id || 'place'}-${idx}`}
               className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between"
             >
               <div>
