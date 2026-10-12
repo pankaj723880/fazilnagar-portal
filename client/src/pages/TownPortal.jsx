@@ -937,7 +937,7 @@ export default function TownPortal() {
         id="hero-section"
         onMouseEnter={() => setIsHeroHovered(true)}
         onMouseLeave={() => setIsHeroHovered(false)}
-        className="relative bg-[#18232E] text-white py-16 sm:py-20 lg:py-24 overflow-hidden border-b border-slate-800"
+        className="relative text-white py-16 sm:py-20 lg:py-24 overflow-hidden border-b border-slate-800"
       >
         {/* Dynamic Multi-Image Carousel of Kushinagar & Fazilnagar (17 Landmark Images, Auto-advancing every 3.5s) */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -964,29 +964,27 @@ export default function TownPortal() {
             </div>
           ))}
 
-          {/* Elegant Multi-layered Dark Gradients ensuring crisp text readability while showcasing vibrant photography */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#101923] via-[#18232E]/80 to-[#101923]/88 z-20"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-[#101923]/92 via-[#18232E]/60 to-[#101923]/92 z-20"></div>
-          <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#E1E6EA_1px,transparent_1px)] [background-size:24px_24px] z-20"></div>
+          {/* Minimal soft transparent gradient - preserves full photo clarity, natural colors & brightness without any grey fog */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/65 z-20"></div>
         </div>
 
         <div className="relative z-30 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           {/* Active Landmark Pill Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-xs text-slate-200 font-medium mb-5 shadow-xl animate-fade-in-up">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/30 text-xs text-slate-100 font-medium mb-5 shadow-2xl animate-fade-in-up">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
             <span className="text-amber-300 font-bold">📍 {KUSHINAGAR_FAZILNAGAR_HERO_IMAGES[heroSlideIndex].location}</span>
-            <span className="text-slate-400">•</span>
+            <span className="text-slate-300">•</span>
             <span className="font-semibold text-white">{KUSHINAGAR_FAZILNAGAR_HERO_IMAGES[heroSlideIndex].title}</span>
           </div>
 
           {/* Master Headline */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 leading-tight font-heading drop-shadow-md">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 leading-tight font-heading drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
             Apna Fazilnagar,{" "}
-            <span className="text-[#B8323C] inline-block">Apni Pehchaan.</span>
+            <span className="text-[#FF4D5A] inline-block drop-shadow-[0_4px_16px_rgba(255,77,90,0.6)]">Apni Pehchaan.</span>
           </h1>
 
           {/* Subtitle */}
-          <p className="text-sm sm:text-lg text-slate-200 max-w-2xl mx-auto mb-9 font-normal leading-relaxed drop-shadow-sm">
+          <p className="text-sm sm:text-lg text-slate-100 max-w-2xl mx-auto mb-9 font-medium leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
             Discover local places, essential services, businesses and everything happening in Fazilnagar — all in one place.
           </p>
 
