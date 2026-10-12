@@ -23,6 +23,12 @@ const EXACT_REDIRECT_URI =
 // Minimum required scope for uploading and managing files created by this app
 const DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 
+const FRONTEND_ADMIN_URL =
+  process.env.FRONTEND_ADMIN_URL ||
+  (process.env.FRONTEND_URL
+    ? `${process.env.FRONTEND_URL.replace(/\/+$/, "")}/admin`
+    : "https://fazilnagar-portal-nine.vercel.app/admin");
+
 /**
  * Helper to build an OAuth2 client instance
  */
@@ -285,7 +291,7 @@ router.get("/oauth/callback", async (req, res) => {
         <body style="font-family:sans-serif;text-align:center;padding:50px;background:#0f172a;color:#f87171;">
           <h2>❌ Google Drive Connection Failed</h2>
           <p>Reason: ${sanitizeHtml(String(error))}</p>
-          <a href="/admin" style="color:#38bdf8;text-decoration:none;font-weight:bold;">Return to Admin Dashboard</a>
+          <a href="${FRONTEND_ADMIN_URL}" style="color:#38bdf8;text-decoration:none;font-weight:bold;">Return to Admin Dashboard</a>
         </body>
       </html>
     `);
@@ -299,7 +305,7 @@ router.get("/oauth/callback", async (req, res) => {
         <body style="font-family:sans-serif;text-align:center;padding:50px;background:#0f172a;color:#f87171;">
           <h2>❌ Invalid Request</h2>
           <p>Missing authorization code or state parameter.</p>
-          <a href="/admin" style="color:#38bdf8;text-decoration:none;font-weight:bold;">Return to Admin Dashboard</a>
+          <a href="${FRONTEND_ADMIN_URL}" style="color:#38bdf8;text-decoration:none;font-weight:bold;">Return to Admin Dashboard</a>
         </body>
       </html>
     `);
@@ -321,7 +327,7 @@ router.get("/oauth/callback", async (req, res) => {
         <body style="font-family:sans-serif;text-align:center;padding:50px;background:#0f172a;color:#f87171;">
           <h2>⚠️ Security Validation Error</h2>
           <p>OAuth state verification failed or session expired. Please re-initiate authorization from the admin panel.</p>
-          <a href="/admin" style="color:#38bdf8;text-decoration:none;font-weight:bold;">Return to Admin Dashboard</a>
+          <a href="${FRONTEND_ADMIN_URL}" style="color:#38bdf8;text-decoration:none;font-weight:bold;">Return to Admin Dashboard</a>
         </body>
       </html>
     `);
@@ -399,7 +405,7 @@ router.get("/oauth/callback", async (req, res) => {
               ${accountEmail ? `<div class="details-row"><span>Account:</span><strong>${sanitizeHtml(accountEmail)}</strong></div>` : ""}
               <div class="details-row"><span>Scope:</span><strong>drive.file (Minimal)</strong></div>
             </div>
-            <a href="/admin" class="btn">Return to Admin Dashboard</a>
+            <a href="${FRONTEND_ADMIN_URL}" class="btn">Return to Admin Dashboard</a>
           </div>
         </body>
       </html>
@@ -413,7 +419,7 @@ router.get("/oauth/callback", async (req, res) => {
         <body style="font-family:sans-serif;text-align:center;padding:50px;background:#0f172a;color:#f87171;">
           <h2>❌ Token Exchange Failed</h2>
           <p>Failed to exchange authorization code for Google tokens. Please try again.</p>
-          <a href="/admin" style="color:#38bdf8;text-decoration:none;font-weight:bold;">Return to Admin Dashboard</a>
+          <a href="${FRONTEND_ADMIN_URL}" style="color:#38bdf8;text-decoration:none;font-weight:bold;">Return to Admin Dashboard</a>
         </body>
       </html>
     `);
@@ -477,6 +483,62 @@ router.post(
       });
     } catch (err) {
       console.error("[GoogleDrive] Upload Handler Error:", err);
+      res.status(500).json({
+        success: false,
+        message: err.message || "Failed to upload file to Google Drive.",
+      });
+    }
+  }
+);
+
+/**
+ * @route   POST /api/google-drive/admin/upload
+ * @desc    Admin-authorized media upload endpoint to store media in Google Drive.
+ * @access  Private (Admin only)
+ */
+router.post(
+  "/admin/upload",
+  verifyToken,
+  requireAdmin,
+  uploadMem.fields([
+    { name: "file", maxCount: 1 },
+    { name: "image", maxCount: 1 },
+    { name: "media", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      const file =
+        req.files?.file?.[0] || req.files?.image?.[0] || req.files?.media?.[0];
+
+      if (!file) {
+        return res.status(400).json({ message: "No media file provided for upload." });
+      }
+
+      const { mediaDoc } = await uploadMediaToDrive({
+        buffer: file.buffer,
+        originalName: file.originalname || "admin_upload",
+        mimeType: file.mimetype || "application/octet-stream",
+        user: req.user,
+        isTest: false,
+      });
+
+      res.status(201).json({
+        success: true,
+        message: "Media uploaded successfully to Google Drive by admin.",
+        media: {
+          id: mediaDoc._id,
+          driveFileId: mediaDoc.driveFileId,
+          fileName: mediaDoc.fileName,
+          mimeType: mediaDoc.mimeType,
+          fileSize: mediaDoc.fileSize,
+          owner: mediaDoc.owner,
+          folderId: mediaDoc.folderId,
+          deliveryUrl: mediaDoc.deliveryUrl,
+          createdAt: mediaDoc.createdAt,
+        },
+      });
+    } catch (err) {
+      console.error("[GoogleDrive] Admin Upload Error:", err);
       res.status(500).json({
         success: false,
         message: err.message || "Failed to upload file to Google Drive.",
