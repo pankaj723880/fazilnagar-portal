@@ -11,7 +11,18 @@
     --secondary-text: #647180;
   }
 
-  html, body {
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    overscroll-behavior-x: none;
+  }
+
+  body {
     overflow-x: hidden;
     max-width: 100vw;
     width: 100%;
@@ -88,4 +99,95 @@
 }
 .civic-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94A3B8;
+}
+
+/* ========================================================
+   SMOOTH TRANSITIONS & SECTION REVEAL ANIMATIONS
+   ======================================================== */
+
+/* Section landing highlight glow effect */
+@keyframes sectionGlowPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(184, 50, 60, 0.4);
+    background-color: rgba(184, 50, 60, 0.05);
+  }
+  40% {
+    box-shadow: 0 0 30px 6px rgba(184, 50, 60, 0.25);
+    background-color: rgba(184, 50, 60, 0.03);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(184, 50, 60, 0);
+    background-color: transparent;
+  }
+}
+
+.section-highlight-active {
+  animation: sectionGlowPulse 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  border-radius: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+/* Smooth Entrance Slide Up */
+@keyframes fadeInSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal Pop & Dropdown Entrance */
+@keyframes fadeInScaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Dropdown Slide Down */
+@keyframes slideDownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Ken Burns subtle zoom */
+@keyframes kenBurnsSlow {
+  0% {
+    transform: scale(1.0);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1.0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInSlideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-modal-pop {
+  animation: fadeInScaleUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-down {
+  animation: slideDownFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-ken-burns {
+  animation: kenBurnsSlow 20s ease-in-out infinite alternate;
 }

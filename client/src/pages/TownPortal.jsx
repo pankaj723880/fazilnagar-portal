@@ -234,6 +234,146 @@ const VERIFIED_TOWN_PLACES = [
   },
 ];
 
+// 17 Verified Landmark & Heritage Images of Kushinagar and Fazilnagar for Hero Carousel
+const KUSHINAGAR_FAZILNAGAR_HERO_IMAGES = [
+  {
+    id: 1,
+    src: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1400&auto=format&fit=crop",
+    fallback: "/images/hero/mahaparinirvana-temple-1.jpg",
+    title: "Mahaparinirvana Temple & Stupa",
+    location: "Kushinagar",
+    caption: "Sacred historical site of Lord Buddha's Parinirvana with 5th-century reclining Buddha",
+  },
+  {
+    id: 2,
+    src: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?q=80&w=1400&auto=format&fit=crop",
+    fallback: "/images/hero/stupa-ruins-kushinagar.jpg",
+    title: "Ramabhar Stupa (Mukutbandhana)",
+    location: "Kushinagar",
+    caption: "Ancient 15-meter monumental brick stupa where last rites were performed",
+  },
+  {
+    id: 3,
+    src: "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?q=80&w=1400&auto=format&fit=crop",
+    fallback: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1400&auto=format&fit=crop",
+    title: "Pawanagar Mahavir Jain Tirth",
+    location: "Fazilnagar (Ancient Pawa)",
+    caption: "Nirvana Bhoomi of 24th Tirthankara Lord Mahavira and historic Manasthambha",
+  },
+  {
+    id: 4,
+    src: "https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?q=80&w=1400&auto=format&fit=crop",
+    fallback: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1400&auto=format&fit=crop",
+    title: "Wat Thai Buddhist Monastery & Gardens",
+    location: "Kushinagar",
+    caption: "Siamese-style grand temple complex and serene meditation grounds",
+  },
+  {
+    id: 5,
+    src: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?q=80&w=1400&auto=format&fit=crop",
+    fallback: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?q=80&w=1400&auto=format&fit=crop",
+    title: "Indo-Japan Buddhist Lotus Stupa",
+    location: "Kushinagar",
+    caption: "Circular architectural marvel erected by Indo-Japanese cultural society",
+  },
+  {
+    id: 6,
+    src: "https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=1400&auto=format&fit=crop",
+    fallback: "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?q=80&w=1400&auto=format&fit=crop",
+    title: "Pawanagar Tirth Marg Gateway",
+    location: "Fazilnagar",
+    caption: "Heritage corridor connecting NH-27 to ancient Pawanagar temple complexes",
+  },
+  {
+    id: 7,
+    src: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?q=80&w=1400&auto=format&fit=crop",
+    fallback: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1400&auto=format&fit=crop",
+    title: "Chinese Buddhist Temple & Pagoda",
+    location: "Kushinagar",
+    caption: "Authentic East Asian Buddhist temple housing sacred marble statue",
+  },
+  {
+    id: 8,
+    src: "https://images.unsplash.com/photo-1590766940554-634a7ed41450?q=80&w=1400&auto=format&fit=crop",
+    fallback: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?q=80&w=1400&auto=format&fit=crop",
+    title: "Matha Kuar Shrine & Ancient Sal Grove",
+    location: "Kushinagar",
+    caption: "Colossal blue stone image of Lord Buddha in Bhumisparsha Mudra",
+  },
+  {
+    id: 9,
+    src: "https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=1400&auto=format&fit=crop",
+    fallback: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?q=80&w=1400&auto=format&fit=crop",
+    title: "Ancient Pawa Excavations & Monastic Viharas",
+    location: "Fazilnagar & Kushinagar",
+    caption: "ASI protected archaeological brick foundations and stupa ruins",
+  },
+  {
+    id: 10,
+    src: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?q=80&w=1400&auto=format&fit=crop",
+    fallback: "https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?q=80&w=1400&auto=format&fit=crop",
+    title: "Tibetan Buddhist Temple & Prayer Wheels",
+    location: "Kushinagar",
+    caption: "Spiritual sanctuary decorated with traditional Tibetan thangka frescoes",
+  },
+  {
+    id: 11,
+    src: "https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=1400&auto=format&fit=crop",
+    fallback: "https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=1400&auto=format&fit=crop",
+    title: "Linh-Son Monastery & Meditation Hall",
+    location: "Kushinagar",
+    caption: "Vietnamese-style multi-tiered sanctum for peace and spiritual retreat",
+  },
+  {
+    id: 12,
+    src: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=80&w=1400&auto=format&fit=crop",
+    fallback: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1400&auto=format&fit=crop",
+    title: "Parinirvana Stupa Sunset Panorama",
+    location: "Kushinagar",
+    caption: "Golden evening hour over the world-renowned Buddhist pilgrimage hub",
+  },
+  {
+    id: 13,
+    src: "https://images.unsplash.com/photo-1616046229478-9901c5536a45?q=80&w=1400&auto=format&fit=crop",
+    fallback: "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?q=80&w=1400&auto=format&fit=crop",
+    title: "Pawanagar Spiritual Heritage Grounds",
+    location: "Fazilnagar",
+    caption: "Peaceful sacred town center preserving historic Jain pilgrimage values",
+  },
+  {
+    id: 14,
+    src: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1400&auto=format&fit=crop",
+    fallback: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1400&auto=format&fit=crop",
+    title: "Kushinagar - Fazilnagar Pilgrimage Corridor",
+    location: "NH-27 Heritage Axis",
+    caption: "Historic transit corridor traversed by pilgrims from across the globe",
+  },
+  {
+    id: 15,
+    src: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1400&auto=format&fit=crop",
+    fallback: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?q=80&w=1400&auto=format&fit=crop",
+    title: "Archaeological Garden & Sal Tree Canopy",
+    location: "Kushinagar & Pawa",
+    caption: "Ancient Sal groves where historical events of 5th century BCE unfolded",
+  },
+  {
+    id: 16,
+    src: "/images/hero/mahaparinirvana-temple-1.jpg",
+    fallback: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1400&auto=format&fit=crop",
+    title: "Mahaparinirvana Temple Sanctum",
+    location: "Kushinagar",
+    caption: "ASI preserved sacred monolith housing the Nirvana Buddha statue",
+  },
+  {
+    id: 17,
+    src: "/images/hero/stupa-ruins-kushinagar.jpg",
+    fallback: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?q=80&w=1400&auto=format&fit=crop",
+    title: "Ancient Stupa Foundations & Relics",
+    location: "Kushinagar & Fazilnagar",
+    caption: "Timeless brick masonry depicting 2,500 years of civilization",
+  }
+];
+
 export default function TownPortal() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
@@ -249,6 +389,44 @@ export default function TownPortal() {
   const [currentUser, setCurrentUser] = useState(null);
   const [liveNews, setLiveNews] = useState([]);
   const [aboutTab, setAboutTab] = useState("fazilnagar"); // "fazilnagar" | "kushinagar" | "connection"
+
+  // Hero Background Carousel States (Changes automatically every 3.5 seconds)
+  const [heroSlideIndex, setHeroSlideIndex] = useState(0);
+  const [isHeroHovered, setIsHeroHovered] = useState(false);
+
+  // Auto-advance Carousel every 3.5 seconds
+  useEffect(() => {
+    if (isHeroHovered) return;
+    const carouselTimer = setInterval(() => {
+      setHeroSlideIndex((prev) => (prev + 1) % KUSHINAGAR_FAZILNAGAR_HERO_IMAGES.length);
+    }, 3500);
+    return () => clearInterval(carouselTimer);
+  }, [isHeroHovered]);
+
+  // Smooth scroll handler with visual landing glow pulse animation
+  const handleSmoothScroll = (e, targetId) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const element = document.getElementById(targetId);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+      element.classList.remove("section-highlight-active");
+      void element.offsetWidth; // Force CSS reflow to re-trigger keyframe animation
+      element.classList.add("section-highlight-active");
+      setTimeout(() => {
+        element.classList.remove("section-highlight-active");
+      }, 2200);
+    }
+  };
+
+  // If user arrives with a hash in URL, smoothly scroll and highlight target section
+  useEffect(() => {
+    if (window.location.hash) {
+      const sectionId = window.location.hash.replace("#", "");
+      setTimeout(() => {
+        handleSmoothScroll(null, sectionId);
+      }, 350);
+    }
+  }, []);
 
   useEffect(() => {
     const syncUser = () => {
@@ -534,15 +712,40 @@ export default function TownPortal() {
 
             {/* Desktop Navigation Links */}
             <div className="hidden lg:flex items-center gap-5 text-xs font-semibold text-[#18232E]">
-              <a href="#hero-section" className="text-[#B8323C] font-bold">Home</a>
-              <a href="#explore-categories" className="text-[#647180] hover:text-[#18232E] transition">Explore</a>
+              <button
+                onClick={(e) => handleSmoothScroll(e, "hero-section")}
+                className="text-[#B8323C] font-bold cursor-pointer hover:opacity-80 transition"
+              >
+                Home
+              </button>
+              <button
+                onClick={(e) => handleSmoothScroll(e, "explore-categories")}
+                className="text-[#647180] hover:text-[#18232E] transition cursor-pointer"
+              >
+                Explore
+              </button>
               <Link to="/directory" className="text-[#647180] hover:text-[#18232E] transition flex items-center gap-1">
                 <span>Directory</span>
                 <span className="text-[9px] bg-[#168568] text-white px-1.5 py-0.2 rounded-full font-bold">37</span>
               </Link>
-              <a href="#town-map-section" className="text-[#647180] hover:text-[#18232E] transition">Map</a>
-              <a href="#local-updates-section" className="text-[#647180] hover:text-[#18232E] transition">Local Updates</a>
-              <a href="#about-fazilnagar-section" className="text-[#647180] hover:text-[#18232E] transition">About</a>
+              <button
+                onClick={(e) => handleSmoothScroll(e, "town-map-section")}
+                className="text-[#647180] hover:text-[#18232E] transition cursor-pointer"
+              >
+                Map
+              </button>
+              <button
+                onClick={(e) => handleSmoothScroll(e, "local-updates-section")}
+                className="text-[#647180] hover:text-[#18232E] transition cursor-pointer"
+              >
+                Local Updates
+              </button>
+              <button
+                onClick={(e) => handleSmoothScroll(e, "about-fazilnagar-section")}
+                className="text-[#647180] hover:text-[#18232E] transition cursor-pointer"
+              >
+                About
+              </button>
             </div>
 
             {/* Primary Action & Citizen Auth Bar */}
@@ -611,21 +814,25 @@ export default function TownPortal() {
 
           {/* Mobile Menu Dropdown */}
           {mobileMenuOpen && (
-            <div className="lg:hidden bg-white border-t border-[#E1E6EA] py-3 px-2 space-y-1 text-xs font-semibold shadow-lg">
-              <a
-                href="#hero-section"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-[#B8323C] font-bold bg-red-50"
+            <div className="lg:hidden bg-white border-t border-[#E1E6EA] py-3 px-2 space-y-1 text-xs font-semibold shadow-lg animate-slide-down">
+              <button
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleSmoothScroll(e, "hero-section");
+                }}
+                className="w-full text-left block px-3 py-2 rounded-lg text-[#B8323C] font-bold bg-red-50 cursor-pointer"
               >
                 Home
-              </a>
-              <a
-                href="#explore-categories"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-[#18232E] hover:bg-slate-50"
+              </button>
+              <button
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleSmoothScroll(e, "explore-categories");
+                }}
+                className="w-full text-left block px-3 py-2 rounded-lg text-[#18232E] hover:bg-slate-50 cursor-pointer"
               >
                 Explore (21 Categories)
-              </a>
+              </button>
               <Link
                 to="/directory"
                 onClick={() => setMobileMenuOpen(false)}
@@ -633,34 +840,42 @@ export default function TownPortal() {
               >
                 Full Town Directory
               </Link>
-              <a
-                href="#town-map-section"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-[#18232E] hover:bg-slate-50"
+              <button
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleSmoothScroll(e, "town-map-section");
+                }}
+                className="w-full text-left block px-3 py-2 rounded-lg text-[#18232E] hover:bg-slate-50 cursor-pointer"
               >
                 Interactive Map
-              </a>
-              <a
-                href="#local-updates-section"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-[#18232E] hover:bg-slate-50"
+              </button>
+              <button
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleSmoothScroll(e, "local-updates-section");
+                }}
+                className="w-full text-left block px-3 py-2 rounded-lg text-[#18232E] hover:bg-slate-50 cursor-pointer"
               >
                 Local News & Events
-              </a>
-              <a
-                href="#about-fazilnagar-section"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-[#18232E] hover:bg-slate-50"
+              </button>
+              <button
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleSmoothScroll(e, "about-fazilnagar-section");
+                }}
+                className="w-full text-left block px-3 py-2 rounded-lg text-[#18232E] hover:bg-slate-50 cursor-pointer"
               >
                 About Fazilnagar
-              </a>
-              <a
-                href="#citizen-corner-section"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-[#168568] font-bold hover:bg-slate-50"
+              </button>
+              <button
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleSmoothScroll(e, "citizen-corner-section");
+                }}
+                className="w-full text-left block px-3 py-2 rounded-lg text-[#168568] font-bold hover:bg-slate-50 cursor-pointer"
               >
                 Citizen Corner (Suggest & Report)
-              </a>
+              </button>
 
               <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
                 {currentUser ? (
@@ -716,27 +931,62 @@ export default function TownPortal() {
       </nav>
 
       {/* ========================================================
-          SECTION 2: HERO SECTION (Editorial Authority)
+          SECTION 2: HERO SECTION (Dynamic Kushinagar & Fazilnagar Carousel)
           ======================================================== */}
-      <section id="hero-section" className="relative bg-[#18232E] text-white py-16 sm:py-20 lg:py-24 overflow-hidden border-b border-slate-800">
-        {/* Subtle Geometric Background */}
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#E1E6EA_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
+      <section
+        id="hero-section"
+        onMouseEnter={() => setIsHeroHovered(true)}
+        onMouseLeave={() => setIsHeroHovered(false)}
+        className="relative bg-[#18232E] text-white py-16 sm:py-20 lg:py-24 overflow-hidden border-b border-slate-800"
+      >
+        {/* Dynamic Multi-Image Carousel of Kushinagar & Fazilnagar (17 Landmark Images, Auto-advancing every 3.5s) */}
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          {KUSHINAGAR_FAZILNAGAR_HERO_IMAGES.map((img, idx) => (
+            <div
+              key={img.id || idx}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                idx === heroSlideIndex ? "opacity-100 z-10" : "opacity-0 z-0"
+              }`}
+            >
+              <img
+                src={img.src}
+                alt={img.title}
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  if (img.fallback && e.currentTarget.src !== img.fallback) {
+                    e.currentTarget.src = img.fallback;
+                  }
+                }}
+                className={`w-full h-full object-cover object-center ${
+                  idx === heroSlideIndex ? "animate-ken-burns scale-105" : "scale-100"
+                } transition-transform duration-1000 ease-out`}
+              />
+            </div>
+          ))}
 
-        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* Town Location Label */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-xs text-slate-200 font-medium mb-6">
-            <MapPin className="w-3.5 h-3.5 text-[#168568]" />
-            <span>Fazilnagar Town, Kushinagar, Uttar Pradesh (PIN 274401)</span>
+          {/* Elegant Multi-layered Dark Gradients ensuring crisp text readability while showcasing vibrant photography */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#101923] via-[#18232E]/80 to-[#101923]/88 z-20"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#101923]/92 via-[#18232E]/60 to-[#101923]/92 z-20"></div>
+          <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#E1E6EA_1px,transparent_1px)] [background-size:24px_24px] z-20"></div>
+        </div>
+
+        <div className="relative z-30 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          {/* Active Landmark Pill Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-xs text-slate-200 font-medium mb-5 shadow-xl animate-fade-in-up">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="text-amber-300 font-bold">📍 {KUSHINAGAR_FAZILNAGAR_HERO_IMAGES[heroSlideIndex].location}</span>
+            <span className="text-slate-400">•</span>
+            <span className="font-semibold text-white">{KUSHINAGAR_FAZILNAGAR_HERO_IMAGES[heroSlideIndex].title}</span>
           </div>
 
           {/* Master Headline */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 leading-tight font-heading">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 leading-tight font-heading drop-shadow-md">
             Apna Fazilnagar,{" "}
             <span className="text-[#B8323C] inline-block">Apni Pehchaan.</span>
           </h1>
 
           {/* Subtitle */}
-          <p className="text-sm sm:text-lg text-slate-300 max-w-2xl mx-auto mb-9 font-normal leading-relaxed">
+          <p className="text-sm sm:text-lg text-slate-200 max-w-2xl mx-auto mb-9 font-normal leading-relaxed drop-shadow-sm">
             Discover local places, essential services, businesses and everything happening in Fazilnagar — all in one place.
           </p>
 
@@ -778,7 +1028,7 @@ export default function TownPortal() {
                   }
                   navigate(`/directory?search=${encodeURIComponent(searchQuery)}`);
                 }}
-                className="w-full sm:w-auto bg-[#18232E] hover:bg-[#B8323C] text-white px-6 py-2.5 rounded-xl font-bold text-xs tracking-wide transition shadow-sm whitespace-nowrap flex items-center justify-center gap-2"
+                className="w-full sm:w-auto bg-[#18232E] hover:bg-[#B8323C] text-white px-6 py-2.5 rounded-xl font-bold text-xs tracking-wide transition shadow-sm whitespace-nowrap flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Search</span>
                 <ArrowRight className="w-3.5 h-3.5 text-slate-300" />
@@ -787,7 +1037,7 @@ export default function TownPortal() {
 
             {/* Smart Search Suggestions Dropdown */}
             {dropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-[#E1E6EA] z-50 overflow-hidden max-h-80 overflow-y-auto">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-[#E1E6EA] z-50 overflow-hidden max-h-80 overflow-y-auto animate-slide-down">
                 <div className="p-3 border-b border-slate-100 text-[11px] font-bold text-[#647180] uppercase tracking-wider flex justify-between items-center">
                   <span>Verified Town Results</span>
                   <span className="text-[#168568] font-bold">{searchMatches.length} matches</span>
@@ -825,28 +1075,73 @@ export default function TownPortal() {
             )}
           </div>
 
-          {/* Primary CTA Buttons */}
+          {/* Primary CTA Buttons with Smooth Animations */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              to="/directory"
-              className="inline-flex items-center gap-2 bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs sm:text-sm font-bold px-6 py-3 rounded-xl shadow-xs transition"
+            <button
+              onClick={(e) => handleSmoothScroll(e, "explore-categories")}
+              className="inline-flex items-center gap-2 bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs sm:text-sm font-bold px-6 py-3 rounded-xl shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200"
             >
               <Compass className="w-4 h-4" />
               <span>Explore Town</span>
-            </Link>
-            <a
-              href="#town-map-section"
-              className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-semibold px-6 py-3 rounded-xl border border-white/20 transition"
+            </button>
+            <button
+              onClick={(e) => handleSmoothScroll(e, "town-map-section")}
+              className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 text-white text-xs sm:text-sm font-semibold px-6 py-3 rounded-xl border border-white/25 backdrop-blur-md shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200"
             >
               <Map className="w-4 h-4 text-emerald-400" />
               <span>View Map</span>
-            </a>
+            </button>
+          </div>
+
+          {/* Carousel Progress Controls & Dot Indicators */}
+          <div className="mt-8 flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => setHeroSlideIndex((prev) => (prev - 1 + KUSHINAGAR_FAZILNAGAR_HERO_IMAGES.length) % KUSHINAGAR_FAZILNAGAR_HERO_IMAGES.length)}
+              className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center text-sm backdrop-blur-md border border-white/20 transition cursor-pointer"
+              aria-label="Previous Slide"
+              title="Previous landmark"
+            >
+              ‹
+            </button>
+
+            {/* Dots */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
+              {KUSHINAGAR_FAZILNAGAR_HERO_IMAGES.map((img, dotIdx) => (
+                <button
+                  key={img.id || dotIdx}
+                  type="button"
+                  onClick={() => setHeroSlideIndex(dotIdx)}
+                  aria-label={`Jump to slide ${dotIdx + 1}: ${img.title}`}
+                  title={`${img.location}: ${img.title}`}
+                  className={`transition-all duration-300 rounded-full cursor-pointer ${
+                    dotIdx === heroSlideIndex
+                      ? "w-6 h-2 bg-[#B8323C] shadow-sm"
+                      : "w-2 h-2 bg-white/40 hover:bg-white/80"
+                  }`}
+                />
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setHeroSlideIndex((prev) => (prev + 1) % KUSHINAGAR_FAZILNAGAR_HERO_IMAGES.length)}
+              className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center text-sm backdrop-blur-md border border-white/20 transition cursor-pointer"
+              aria-label="Next Slide"
+              title="Next landmark"
+            >
+              ›
+            </button>
+
+            <span className="text-[11px] text-slate-300 font-mono font-semibold bg-black/40 px-2 py-0.5 rounded-md border border-white/10">
+              {heroSlideIndex + 1}/{KUSHINAGAR_FAZILNAGAR_HERO_IMAGES.length}
+            </span>
           </div>
 
           {/* Town Trust Badges */}
-          <div className="mt-10 pt-6 border-t border-slate-800 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-300">
+          <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-300">
             <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-[#168568]" /> Strictly Inside Town Limits
+              <ShieldCheck className="w-4 h-4 text-emerald-400" /> Strictly Inside Town Limits
             </span>
             <span className="flex items-center gap-1.5">
               <Navigation className="w-4 h-4 text-emerald-400" /> Exact Ground Coordinates
@@ -1105,7 +1400,10 @@ export default function TownPortal() {
               </div>
 
               {/* Synchronized Detail Card */}
-              <div className="bg-white rounded-2xl p-5 border border-[#E1E6EA] shadow-xs flex flex-col justify-between">
+              <div
+                key={selectedPlace.id}
+                className="bg-white rounded-2xl p-5 border border-[#E1E6EA] shadow-xs flex flex-col justify-between animate-fade-in-up transition-all duration-300"
+              >
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded bg-red-50 text-[#B8323C]">
@@ -1157,7 +1455,7 @@ export default function TownPortal() {
             </div>
           ) : (
             /* Map Alternative List View */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in-up">
               {places
                 .filter((p) => mapFilter === "all" || p.category === mapFilter || p.subcategory === mapFilter)
                 .map((p) => (
@@ -2103,12 +2401,12 @@ export default function TownPortal() {
               Quick Navigation
             </h4>
             <ul className="space-y-1.5 text-xs">
-              <li><a href="#hero-section" className="hover:text-white">Home</a></li>
+              <li><button onClick={(e) => handleSmoothScroll(e, "hero-section")} className="hover:text-white cursor-pointer transition">Home</button></li>
               <li><Link to="/directory" className="hover:text-white font-bold text-red-400">Town Directory (Map & List)</Link></li>
-              <li><a href="#town-map-section" className="hover:text-white">Interactive OpenStreetMap</a></li>
-              <li><a href="#local-updates-section" className="hover:text-white">Local Updates & Notices</a></li>
-              <li><a href="#about-fazilnagar-section" className="hover:text-white">About Fazilnagar</a></li>
-              <li><a href="#citizen-corner-section" className="hover:text-white">Citizen Corner</a></li>
+              <li><button onClick={(e) => handleSmoothScroll(e, "town-map-section")} className="hover:text-white cursor-pointer transition">Interactive OpenStreetMap</button></li>
+              <li><button onClick={(e) => handleSmoothScroll(e, "local-updates-section")} className="hover:text-white cursor-pointer transition">Local Updates & Notices</button></li>
+              <li><button onClick={(e) => handleSmoothScroll(e, "about-fazilnagar-section")} className="hover:text-white cursor-pointer transition">About Fazilnagar</button></li>
+              <li><button onClick={(e) => handleSmoothScroll(e, "citizen-corner-section")} className="hover:text-white cursor-pointer transition">Citizen Corner</button></li>
             </ul>
           </div>
 
@@ -2133,8 +2431,8 @@ export default function TownPortal() {
               Support & Legal
             </h4>
             <ul className="space-y-1.5 text-xs">
-              <li><button onClick={() => setModalType("correction")} className="hover:text-white text-left">Report Inaccurate Data</button></li>
-              <li><button onClick={() => setModalType("business")} className="hover:text-white text-left">Suggest New Place</button></li>
+              <li><button onClick={() => setModalType("correction")} className="hover:text-white text-left cursor-pointer">Report Inaccurate Data</button></li>
+              <li><button onClick={() => setModalType("business")} className="hover:text-white text-left cursor-pointer">Suggest New Place</button></li>
               <li><span className="text-slate-400">Postal Area: PIN 274401</span></li>
               <li><span className="text-slate-400">District: Kushinagar, UP</span></li>
               <li className="pt-2 text-[10px] text-slate-500">
@@ -2153,8 +2451,8 @@ export default function TownPortal() {
           INTERACTIVE MODALS: SUGGESTION, CORRECTION & EVENT
           ======================================================== */}
       {modalType && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl relative border border-[#E1E6EA]">
+        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 transition-all duration-300">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative border border-[#E1E6EA] animate-modal-pop">
             <button
               onClick={() => setModalType(null)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1 rounded-full hover:bg-slate-100"
@@ -2337,7 +2635,7 @@ export default function TownPortal() {
 
       {/* Global Toast */}
       {toastMsg && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#18232E] text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2.5 text-xs border border-slate-700">
+        <div className="fixed bottom-6 right-6 z-50 bg-[#18232E] text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 text-xs border border-slate-700 animate-slide-down">
           <CheckCircle className="w-4 h-4 text-emerald-400" />
           <span>{toastMsg}</span>
         </div>
