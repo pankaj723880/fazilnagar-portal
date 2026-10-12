@@ -96,15 +96,58 @@ export default function AdminReview({ user: propUser }) {
   const [newsPreviewModalItem, setNewsPreviewModalItem] = useState(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem("user");
-    if (saved) {
-      try {
-        setCurrentUser(JSON.parse(saved));
-      } catch (e) {}
-    }
+    const resolveUser = () => {
+      const saved = localStorage.getItem("user");
+      const token = localStorage.getItem("token");
+
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed) {
+            setCurrentUser(parsed);
+            return;
+          }
+        } catch (_) {}
+      }
+
+      if (token) {
+        try {
+          const payloadBase64 = token.split(".")[1];
+          if (payloadBase64) {
+            const decoded = JSON.parse(atob(payloadBase64.replace(/-/g, "+").replace(/_/g, "/")));
+            if (decoded) {
+              const u = {
+                id: decoded.id,
+                name: decoded.name || decoded.email?.split("@")[0] || "Admin",
+                email: decoded.email,
+                role: decoded.role || (decoded.email === "pankaj723880@gmail.com" || decoded.email === "admin@fazilnagar.com" ? "admin" : "user"),
+              };
+              setCurrentUser(u);
+              localStorage.setItem("user", JSON.stringify(u));
+              return;
+            }
+          }
+        } catch (_) {}
+      }
+
+      if (propUser) {
+        setCurrentUser(propUser);
+      }
+    };
+
+    resolveUser();
+    window.addEventListener("auth-change", resolveUser);
+    window.addEventListener("storage", resolveUser);
+    return () => {
+      window.removeEventListener("auth-change", resolveUser);
+      window.removeEventListener("storage", resolveUser);
+    };
   }, [propUser]);
 
-  const isAdmin = currentUser?.role === "admin";
+  const isAdmin =
+    currentUser?.role === "admin" ||
+    currentUser?.email === "admin@fazilnagar.com" ||
+    currentUser?.email === "pankaj723880@gmail.com";
 
   const showToast = (msg) => {
     setToastMessage(msg);

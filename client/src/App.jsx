@@ -265,6 +265,19 @@ export default function App() {
               >
                 Local Updates
               </Link>
+              {user?.role === "admin" && (
+                <Link
+                  to="/admin/review"
+                  className={`transition font-bold flex items-center gap-1 ${
+                    location.pathname.startsWith("/admin")
+                      ? "text-[#B8323C]"
+                      : "text-amber-600 hover:text-amber-700"
+                  }`}
+                >
+                  <span>🛡️</span>
+                  <span>Review Desk</span>
+                </Link>
+              )}
               <a
                 href="/#about-fazilnagar-section"
                 onClick={(e) => handleNavClick(e, "/#about-fazilnagar-section", true)}
@@ -437,6 +450,16 @@ export default function App() {
                 <span>📰</span>
                 <span>Local Updates</span>
               </Link>
+              {user?.role === "admin" && (
+                <Link
+                  to="/admin/review"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-amber-50 text-amber-900 border border-amber-300"
+                >
+                  <span>🛡️</span>
+                  <span>Review Desk</span>
+                </Link>
+              )}
               <a
                 href="/#about-fazilnagar-section"
                 onClick={(e) => {
