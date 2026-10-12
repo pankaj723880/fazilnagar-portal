@@ -1091,51 +1091,6 @@ export default function TownPortal() {
             </button>
           </div>
 
-          {/* Carousel Progress Controls & Dot Indicators */}
-          <div className="mt-8 flex items-center justify-center gap-3">
-            <button
-              type="button"
-              onClick={() => setHeroSlideIndex((prev) => (prev - 1 + KUSHINAGAR_FAZILNAGAR_HERO_IMAGES.length) % KUSHINAGAR_FAZILNAGAR_HERO_IMAGES.length)}
-              className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center text-sm backdrop-blur-md border border-white/20 transition cursor-pointer"
-              aria-label="Previous Slide"
-              title="Previous landmark"
-            >
-              ‹
-            </button>
-
-            {/* Dots */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
-              {KUSHINAGAR_FAZILNAGAR_HERO_IMAGES.map((img, dotIdx) => (
-                <button
-                  key={img.id || dotIdx}
-                  type="button"
-                  onClick={() => setHeroSlideIndex(dotIdx)}
-                  aria-label={`Jump to slide ${dotIdx + 1}: ${img.title}`}
-                  title={`${img.location}: ${img.title}`}
-                  className={`transition-all duration-300 rounded-full cursor-pointer ${
-                    dotIdx === heroSlideIndex
-                      ? "w-6 h-2 bg-[#B8323C] shadow-sm"
-                      : "w-2 h-2 bg-white/40 hover:bg-white/80"
-                  }`}
-                />
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setHeroSlideIndex((prev) => (prev + 1) % KUSHINAGAR_FAZILNAGAR_HERO_IMAGES.length)}
-              className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center text-sm backdrop-blur-md border border-white/20 transition cursor-pointer"
-              aria-label="Next Slide"
-              title="Next landmark"
-            >
-              ›
-            </button>
-
-            <span className="text-[11px] text-slate-300 font-mono font-semibold bg-black/40 px-2 py-0.5 rounded-md border border-white/10">
-              {heroSlideIndex + 1}/{KUSHINAGAR_FAZILNAGAR_HERO_IMAGES.length}
-            </span>
-          </div>
-
           {/* Town Trust Badges */}
           <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-300">
             <span className="flex items-center gap-1.5">
