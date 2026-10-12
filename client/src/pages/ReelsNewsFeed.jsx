@@ -35,22 +35,18 @@ const CATEGORY_FALLBACK_IMAGES = {
   General: "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?q=80&w=1200&auto=format&fit=crop",
 };
 
-// Robust Story Media Cover: Never shows broken icon or black void
+// Robust Story Media Cover: Shows user's uploaded photo/video or clean civic poster
 function StoryMediaCover({ story, active, muted }) {
   const [imgFailed, setImgFailed] = useState(false);
-  const [fallbackFailed, setFallbackFailed] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
 
   const hasVideo = !!story.video && !videoFailed;
   const rawImage = story.image && String(story.image).trim();
   const hasUserImage = rawImage && !imgFailed;
 
-  const fallbackPhoto =
-    CATEGORY_FALLBACK_IMAGES[story.category] || CATEGORY_FALLBACK_IMAGES.General;
-
   return (
     <div className="absolute inset-0 z-0 bg-[#0B1118] overflow-hidden flex items-center justify-center select-none">
-      {/* Dynamic Civic News Poster Backdrop - Always present underneath */}
+      {/* Dynamic Civic News Poster Backdrop - Shows when no user photo/video is attached */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#0a1017] via-[#0F1E2E] to-[#080d14] flex flex-col justify-between p-6 pointer-events-none">
         {/* Luminous ambient meshes */}
         <div className="absolute -top-20 -right-20 w-72 h-72 bg-[#B8323C]/20 rounded-full blur-3xl pointer-events-none" />
@@ -87,21 +83,14 @@ function StoryMediaCover({ story, active, muted }) {
         />
       )}
 
-      {/* Photo Layer: Prioritizes user's uploaded image (now persistent base64), or category fallback photo */}
-      {!hasVideo && (
+      {/* Photo Layer: Render ONLY if story has an actual user-uploaded image */}
+      {!hasVideo && hasUserImage && (
         <img
-          src={hasUserImage ? rawImage : fallbackPhoto}
+          src={rawImage}
           alt=""
           className="absolute inset-0 w-full h-full object-cover object-center z-10"
           loading={active ? "eager" : "lazy"}
-          onError={() => {
-            if (hasUserImage) {
-              setImgFailed(true);
-            } else {
-              setFallbackFailed(true);
-            }
-          }}
-          style={{ display: fallbackFailed && imgFailed ? "none" : "block" }}
+          onError={() => setImgFailed(true)}
         />
       )}
 
