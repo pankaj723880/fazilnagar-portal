@@ -113,6 +113,7 @@ async function autoSeedPlaces() {
 }
 
 import advertisementsRoutes from "./routes/advertisements.js";
+import googleDriveRoutes from "./routes/googleDrive.js";
 
 // Connect DB & Routes
 connectDB().then(() => {
@@ -125,6 +126,7 @@ app.use("/api/news", newsRoutes);
 app.use("/api/places", placesRoutes);
 app.use("/api/submissions", submissionsRoutes);
 app.use("/api/advertisements", advertisementsRoutes);
+app.use("/api/google-drive", googleDriveRoutes);
 
 // Fallback mounts in case client calls without /api prefix
 app.use("/auth", authRoutes);
@@ -132,6 +134,7 @@ app.use("/news", newsRoutes);
 app.use("/places", placesRoutes);
 app.use("/submissions", submissionsRoutes);
 app.use("/advertisements", advertisementsRoutes);
+app.use("/google-drive", googleDriveRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
