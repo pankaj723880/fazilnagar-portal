@@ -43,8 +43,13 @@ const advertisementSchema = new mongoose.Schema(
     },
     frequency: {
       type: String,
-      enum: ["once-per-session", "interval", "always"],
-      default: "once-per-session",
+      enum: ["once-per-session", "interval", "always", "permanent"],
+      default: "always",
+    },
+    isPermanent: {
+      type: Boolean,
+      default: false,
+      index: true,
     },
     redisplayIntervalMinutes: {
       type: Number,

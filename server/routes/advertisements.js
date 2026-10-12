@@ -68,30 +68,43 @@ router.get("/active", async (req, res) => {
   try {
     const now = new Date();
 
-    // Query for advertisements that are:
-    // 1. isPublished === true
-    // 2. isActive === true
-    // 3. startDate is null OR startDate <= now
-    // 4. endDate is null OR endDate >= now
+    // Query for advertisements that are published & active.
+    // Permanent ads are ALWAYS active regardless of dates.
+    // Scheduled ads check valid date window.
     const query = {
       isPublished: true,
       isActive: true,
-      $and: [
+      $or: [
+        { isPermanent: true },
+        { frequency: "permanent" },
         {
-          $or: [{ startDate: null }, { startDate: { $lte: now } }],
-        },
-        {
-          $or: [{ endDate: null }, { endDate: { $gte: now } }],
+          $and: [
+            {
+              $or: [
+                { startDate: null },
+                { startDate: { $exists: false } },
+                { startDate: { $lte: now } },
+              ],
+            },
+            {
+              $or: [
+                { endDate: null },
+                { endDate: { $exists: false } },
+                { endDate: { $gte: now } },
+              ],
+            },
+          ],
         },
       ],
     };
 
     // Public read-only projection: returns only display-necessary fields
-    const publicProjection = "_id title description imageUrl destinationUrl ctaText format placement frequency redisplayIntervalMinutes startDate endDate updatedAt";
+    const publicProjection =
+      "_id title description imageUrl destinationUrl ctaText format placement frequency isPermanent redisplayIntervalMinutes startDate endDate updatedAt";
 
     const activeAds = await Advertisement.find(query)
       .select(publicProjection)
-      .sort({ updatedAt: -1 })
+      .sort({ isPermanent: -1, updatedAt: -1 })
       .lean();
 
     if (!activeAds || activeAds.length === 0) {
@@ -216,6 +229,7 @@ router.post(
         format,
         placement,
         frequency,
+        isPermanent,
         redisplayIntervalMinutes,
         startDate,
         endDate,
@@ -272,9 +286,14 @@ router.post(
         ? placement
         : "bottom-right";
 
-      const validFrequency = ["once-per-session", "interval", "always"].includes(frequency)
+      const validFrequency = ["once-per-session", "interval", "always", "permanent"].includes(frequency)
         ? frequency
-        : "once-per-session";
+        : "always";
+
+      const adIsPermanent =
+        isPermanent === "true" ||
+        isPermanent === true ||
+        validFrequency === "permanent";
 
       const parsedInterval = parseInt(redisplayIntervalMinutes, 10);
       const validInterval = isNaN(parsedInterval) || parsedInterval < 1 ? 60 : parsedInterval;
@@ -288,9 +307,10 @@ router.post(
         format: validFormat,
         placement: validPlacement,
         frequency: validFrequency,
+        isPermanent: adIsPermanent,
         redisplayIntervalMinutes: validInterval,
-        startDate: parsedStart,
-        endDate: parsedEnd,
+        startDate: adIsPermanent ? null : parsedStart,
+        endDate: adIsPermanent ? null : parsedEnd,
         isActive: isActive === "true" || isActive === true,
         isPublished: isPublished === "true" || isPublished === true,
         createdBy: req.user.id,
@@ -340,6 +360,7 @@ router.put(
         format,
         placement,
         frequency,
+        isPermanent,
         redisplayIntervalMinutes,
         startDate,
         endDate,
@@ -380,8 +401,14 @@ router.put(
         ad.placement = placement;
       }
 
-      if (frequency !== undefined && ["once-per-session", "interval", "always"].includes(frequency)) {
+      if (frequency !== undefined && ["once-per-session", "interval", "always", "permanent"].includes(frequency)) {
         ad.frequency = frequency;
+      }
+
+      if (isPermanent !== undefined) {
+        ad.isPermanent = isPermanent === "true" || isPermanent === true;
+      } else if (frequency === "permanent") {
+        ad.isPermanent = true;
       }
 
       if (redisplayIntervalMinutes !== undefined) {

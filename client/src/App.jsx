@@ -291,6 +291,17 @@ export default function App() {
             {/* Auth & Post Actions Bar */}
             <div className="hidden sm:flex items-center gap-2.5 shrink-0">
               <InstallButton />
+
+              {/* Add Story Button - Always visible to all users (Normal users, citizens, & visitors) */}
+              <Link
+                to="/create-news"
+                className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-extrabold px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5"
+                title="Post local news story or community report"
+              >
+                <span>✍️</span>
+                <span>+ Add Story</span>
+              </Link>
+
               {user ? (
                 <>
                   {user.role === "admin" && (
@@ -304,12 +315,6 @@ export default function App() {
                   <span className="text-xs font-bold text-[#168568] bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
                     {user.role === "admin" ? "Admin" : (user.name || user.email)}
                   </span>
-                  <Link
-                    to="/create-news"
-                    className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1"
-                  >
-                    <span>✍️ Post News</span>
-                  </Link>
                   <button
                     onClick={handleLogout}
                     className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer"
@@ -321,7 +326,7 @@ export default function App() {
                 <>
                   <Link
                     to="/login"
-                    className="text-xs font-bold text-slate-700 hover:text-slate-900 px-3 py-2"
+                    className="text-xs font-bold text-slate-700 hover:text-slate-900 px-2.5 py-2"
                   >
                     Sign In
                   </Link>
@@ -331,18 +336,20 @@ export default function App() {
                   >
                     Register
                   </Link>
-                  <Link
-                    to="/directory"
-                    className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs"
-                  >
-                    Explore Town
-                  </Link>
                 </>
               )}
             </div>
 
             {/* Mobile Actions & Menu Toggle Button */}
             <div className="flex lg:hidden items-center gap-2">
+              <Link
+                to="/create-news"
+                className="bg-[#B8323C] hover:bg-red-700 text-white text-[11px] font-black px-2.5 py-1.5 rounded-xl flex items-center gap-1 shadow-xs"
+                title="Post a story"
+              >
+                <span>✍️</span>
+                <span>+Story</span>
+              </Link>
               <InstallButton compact={true} />
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -494,44 +501,47 @@ export default function App() {
               </div>
             </div>
 
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-              {user ? (
-                <>
-                  <Link
-                    to="/create-news"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex-1 bg-[#B8323C] text-white text-xs font-bold py-2 rounded-xl text-center shadow-xs"
-                  >
-                    ✍️ Post News
-                  </Link>
+            {/* Direct Add Story Button for All Users */}
+            <div className="pt-2 border-t border-slate-100 space-y-2">
+              <Link
+                to="/create-news"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full bg-[#B8323C] hover:bg-red-700 text-white text-xs font-black py-2.5 rounded-xl text-center shadow-xs flex items-center justify-center gap-1.5"
+              >
+                <span>✍️</span>
+                <span>+ Add News Story / समाचार जोड़ें</span>
+              </Link>
+
+              <div className="flex items-center justify-between gap-2">
+                {user ? (
                   <button
                     onClick={() => {
                       handleLogout();
                       setMobileMenuOpen(false);
                     }}
-                    className="bg-slate-100 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl"
+                    className="w-full bg-slate-100 text-slate-700 text-xs font-bold py-2 rounded-xl"
                   >
                     Logout
                   </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex-1 bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold py-2 rounded-xl text-center"
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    to="/register"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex-1 bg-slate-900 text-white text-xs font-bold py-2 rounded-xl text-center shadow-xs"
-                  >
-                    Register
-                  </Link>
-                </>
-              )}
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex-1 bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold py-2 rounded-xl text-center"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      to="/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex-1 bg-slate-900 text-white text-xs font-bold py-2 rounded-xl text-center shadow-xs"
+                    >
+                      Register
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         )}

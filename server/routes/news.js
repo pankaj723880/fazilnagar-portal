@@ -435,17 +435,17 @@ router.get("/admin/all", verifyToken, requireAdmin, async (req, res) => {
 });
 
 // @route   POST /api/news
-// @desc    Post news with optional image/video files (Admin publishes or drafts; Citizens submit to pending)
-// @access  Private
+// @desc    Post news with optional image/video files (Admin publishes or drafts; Citizens submit to pending review)
+// @access  Public / Private (Open to all visitors and citizens)
 router.post(
   "/",
-  verifyToken,
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "video", maxCount: 1 },
   ]),
   async (req, res) => {
     try {
+      req.user = getOptionalUser(req);
       const {
         title,
         titleHi,

@@ -74,6 +74,7 @@ export default function AdminReview({ user: propUser }) {
   const [adFormEnd, setAdFormEnd] = useState("");
   const [adFormActive, setAdFormActive] = useState(true);
   const [adFormPublished, setAdFormPublished] = useState(false);
+  const [adFormIsPermanent, setAdFormIsPermanent] = useState(false);
   const [adFormFile, setAdFormFile] = useState(null);
   const [adFormPreviewUrl, setAdFormPreviewUrl] = useState("");
   const [adFormSubmitting, setAdFormSubmitting] = useState(false);
@@ -317,13 +318,13 @@ export default function AdminReview({ user: propUser }) {
   // -------------------------------------------------------------
   // ADVERTISEMENT MANAGEMENT HANDLERS
   // -------------------------------------------------------------
-  const openCreateAdModal = (defaultFormat = "floating") => {
+  const openCreateAdModal = (defaultFormat = "floating", isPermanent = false) => {
     setEditingAd(null);
     setAdFormTitle("");
     setAdFormDesc("");
     setAdFormFormat(defaultFormat);
     setAdFormPlacement("bottom-right");
-    setAdFormFrequency("once-per-session");
+    setAdFormFrequency(isPermanent ? "permanent" : "always");
     setAdFormInterval(60);
     setAdFormCtaText("Learn More");
     setAdFormUrl("");
@@ -331,7 +332,8 @@ export default function AdminReview({ user: propUser }) {
     setAdFormStart("");
     setAdFormEnd("");
     setAdFormActive(true);
-    setAdFormPublished(false);
+    setAdFormPublished(true);
+    setAdFormIsPermanent(isPermanent);
     setAdFormFile(null);
     setAdFormPreviewUrl("");
     setAdModalOpen(true);
@@ -343,7 +345,7 @@ export default function AdminReview({ user: propUser }) {
     setAdFormDesc(ad.description || "");
     setAdFormFormat(ad.format || "floating");
     setAdFormPlacement(ad.placement || "bottom-right");
-    setAdFormFrequency(ad.frequency || "once-per-session");
+    setAdFormFrequency(ad.frequency || (ad.isPermanent ? "permanent" : "always"));
     setAdFormInterval(ad.redisplayIntervalMinutes || 60);
     setAdFormCtaText(ad.ctaText || "Learn More");
     setAdFormUrl(ad.imageUrl || "");
@@ -352,6 +354,7 @@ export default function AdminReview({ user: propUser }) {
     setAdFormEnd(ad.endDate ? new Date(ad.endDate).toISOString().slice(0, 16) : "");
     setAdFormActive(ad.isActive !== false);
     setAdFormPublished(ad.isPublished === true);
+    setAdFormIsPermanent(Boolean(ad.isPermanent || ad.frequency === "permanent"));
     setAdFormFile(null);
     setAdFormPreviewUrl(ad.imageUrl || "");
     setAdModalOpen(true);
@@ -386,6 +389,7 @@ export default function AdminReview({ user: propUser }) {
       if (adFormEnd) formData.append("endDate", adFormEnd);
       formData.append("isActive", adFormActive);
       formData.append("isPublished", adFormPublished);
+      formData.append("isPermanent", adFormIsPermanent);
 
       if (adFormFile) {
         formData.append("image", adFormFile);
@@ -1082,6 +1086,16 @@ export default function AdminReview({ user: propUser }) {
                   <span>🖼️</span>
                   <span>+ In-Feed Banner</span>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => openCreateAdModal("floating", true)}
+                  className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-md cursor-pointer border border-amber-300"
+                  title="स्थाई विज्ञापन - हमेशा दिखेगा, कभी एक्सपायर या गायब नहीं होगा (Never Expires & Always Visible)"
+                >
+                  <span>⭐</span>
+                  <span>+ Permanent Ad (स्थाई)</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1215,6 +1229,12 @@ export default function AdminReview({ user: propUser }) {
                               ? "📌 Sticky Top"
                               : "🖼️ In-Feed Banner"}
                           </span>
+
+                          {(ad.isPermanent || ad.frequency === "permanent") && (
+                            <span className="bg-gradient-to-r from-amber-200 to-yellow-200 text-amber-950 border border-amber-400 text-[10px] font-black uppercase px-2 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
+                              <span>⭐</span> Permanent Ad (स्थाई)
+                            </span>
+                          )}
                         </div>
 
                         {/* Impressions, Clicks & Dismissals */}
@@ -2041,12 +2061,18 @@ export default function AdminReview({ user: propUser }) {
                     <label className="block font-bold text-[#18232E] mb-1">Dismissal Behavior</label>
                     <select
                       value={adFormFrequency}
-                      onChange={(e) => setAdFormFrequency(e.target.value)}
+                      onChange={(e) => {
+                        setAdFormFrequency(e.target.value);
+                        if (e.target.value === "permanent") {
+                          setAdFormIsPermanent(true);
+                        }
+                      }}
                       className="w-full bg-white border border-[#E1E6EA] rounded-xl p-2.5 outline-none focus:border-[#B8323C] text-xs"
                     >
+                      <option value="always">Always Show Every Visit (Recommended)</option>
+                      <option value="permanent">⭐ Permanent (Never Dismissed / हमेशा दिखेगा)</option>
                       <option value="once-per-session">Once Per Session</option>
                       <option value="interval">Reappear After Interval</option>
-                      <option value="always">Always Show Every Visit</option>
                     </select>
                   </div>
 
@@ -2065,12 +2091,41 @@ export default function AdminReview({ user: propUser }) {
                   ) : (
                     <div>
                       <label className="block font-bold text-slate-400 mb-1">Cooldown</label>
-                      <div className="p-2.5 bg-slate-100 rounded-xl text-slate-500 text-xs">
-                        {adFormFrequency === "once-per-session" ? "Entire Browser Session" : "Immediate on Reload"}
+                      <div className="p-2.5 bg-slate-100 rounded-xl text-slate-500 text-xs font-semibold">
+                        {adFormFrequency === "permanent"
+                          ? "⭐ Never Dismissed"
+                          : adFormFrequency === "always"
+                          ? "Immediate on Reload"
+                          : "Entire Browser Session"}
                       </div>
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Permanent Advertisement Highlight Box */}
+              <div className="p-3.5 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-300 rounded-2xl flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="adFormIsPermanentCheckbox"
+                  checked={adFormIsPermanent}
+                  onChange={(e) => {
+                    setAdFormIsPermanent(e.target.checked);
+                    if (e.target.checked) {
+                      setAdFormFrequency("permanent");
+                    }
+                  }}
+                  className="mt-0.5 w-4 h-4 text-amber-600 rounded accent-amber-600 cursor-pointer"
+                />
+                <label htmlFor="adFormIsPermanentCheckbox" className="cursor-pointer select-none">
+                  <span className="font-extrabold text-amber-950 block text-xs flex items-center gap-1.5">
+                    <span>⭐</span>
+                    <span>Permanent Advertisement (स्थाई विज्ञापन - हमेशा दिखेगा)</span>
+                  </span>
+                  <span className="text-[11px] text-amber-900 leading-tight block mt-0.5">
+                    यदि यह चुना जाता है, तो विज्ञापन किसी भी यूजर द्वारा बंद (✕) करने पर हमेशा के लिए नहीं हटेगा। यह हर सेशन और हर पेज पर लगातार दिखाई देगा।
+                  </span>
+                </label>
               </div>
 
               {/* Schedule Dates */}

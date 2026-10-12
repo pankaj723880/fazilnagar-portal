@@ -32,15 +32,13 @@ const trackDismissal = (adId) => {
 // Helper: Check if an ad has been dismissed according to its configured policy
 const isAdDismissed = (ad) => {
   if (!ad?._id) return true;
-  const policy = ad.frequency || "once-per-session";
-
-  if (policy === "always") {
-    // Dismissing only lasts until next page visit, but in current view it stays hidden if dismissed in state
+  // Permanent ads and 'always' frequency ads are NEVER dismissed persistently
+  if (ad.isPermanent || ad.frequency === "permanent" || ad.frequency === "always") {
     return false;
   }
 
   const dismissedTimestamp = localStorage.getItem(`fazil_ad_dismissed_${ad._id}`);
-  if (policy === "interval" && dismissedTimestamp) {
+  if (ad.frequency === "interval" && dismissedTimestamp) {
     const minutesPassed = (Date.now() - parseInt(dismissedTimestamp, 10)) / (1000 * 60);
     const interval = ad.redisplayIntervalMinutes || 60;
     if (minutesPassed < interval) {
@@ -51,9 +49,11 @@ const isAdDismissed = (ad) => {
     return false;
   }
 
-  // Default: "once-per-session"
-  if (sessionStorage.getItem(`fazil_ad_dismissed_session_${ad._id}`)) {
-    return true;
+  // Once-per-session policy check
+  if (ad.frequency === "once-per-session") {
+    if (sessionStorage.getItem(`fazil_ad_dismissed_session_${ad._id}`)) {
+      return true;
+    }
   }
 
   return false;
@@ -62,11 +62,14 @@ const isAdDismissed = (ad) => {
 // Helper: Record dismissal in storage according to ad policy
 const recordAdDismissal = (ad) => {
   if (!ad?._id) return;
+  // Permanent ads should not be stored as permanently dismissed
+  if (ad.isPermanent || ad.frequency === "permanent" || ad.frequency === "always") return;
   const policy = ad.frequency || "once-per-session";
   const now = Date.now().toString();
 
-  sessionStorage.setItem(`fazil_ad_dismissed_session_${ad._id}`, now);
-  if (policy === "interval") {
+  if (policy === "once-per-session") {
+    sessionStorage.setItem(`fazil_ad_dismissed_session_${ad._id}`, now);
+  } else if (policy === "interval") {
     localStorage.setItem(`fazil_ad_dismissed_${ad._id}`, now);
   }
 };
@@ -87,8 +90,11 @@ export default function AdvertisementSlot() {
         const res = await API.get("/advertisements/active");
         if (isMounted) {
           const allAds = res.data?.ads || (res.data?.ad ? [res.data.ad] : []);
-          // Pick the active banner format ad
-          const bannerAd = allAds.find((a) => a.format === "banner");
+          // Pick the active banner format ad, or if no banner exists pick permanent/active ad
+          const bannerAd =
+            allAds.find((a) => a.format === "banner") ||
+            allAds.find((a) => a.isPermanent || a.frequency === "permanent") ||
+            (allAds.length > 0 ? allAds[0] : null);
 
           if (bannerAd && !isAdDismissed(bannerAd)) {
             setAd(bannerAd);
@@ -209,9 +215,9 @@ export default function AdvertisementSlot() {
 export function GlobalFloatingAndStickyAds() {
   const [ads, setAds] = useState([]);
   const [dismissedMap, setDismissedMap] = useState({});
+  const [activeFloatingIndex, setActiveFloatingIndex] = useState(0);
   const location = useLocation();
 
-  // Suppress floating & sticky overlay ads on full-screen Reels page so it doesn't cover swipe controls
   const isReelsPage =
     location.pathname === "/news" ||
     location.pathname === "/local-updates" ||
@@ -259,17 +265,30 @@ export function GlobalFloatingAndStickyAds() {
     return !isAdDismissed(ad);
   };
 
-  // If on Reels fullscreen view, do not obstruct controls or reels feed
-  if (isReelsPage) {
-    return null;
-  }
+  // Find eligible ads
+  const floatingAds = ads.filter(
+    (a) => (a.format === "floating" || (!a.format && a.format !== "banner")) && isVisible(a)
+  );
 
-  // Find eligible ads (rotation policy: picks latest active or matching format)
-  const floatingAds = ads.filter((a) => (a.format === "floating" || (!a.format && a.format !== "banner")) && isVisible(a));
-  const floatingAd = floatingAds.length > 0 ? floatingAds[0] : null;
+  // Auto-rotate among multiple active floating ads every 9 seconds
+  useEffect(() => {
+    if (floatingAds.length <= 1) return;
+    const interval = setInterval(() => {
+      setActiveFloatingIndex((prev) => (prev + 1) % floatingAds.length);
+    }, 9000);
+    return () => clearInterval(interval);
+  }, [floatingAds.length]);
 
-  const stickyBottomAd = ads.find((a) => a.format === "sticky-bottom" && isVisible(a));
-  const stickyTopAd = ads.find((a) => a.format === "sticky-top" && isVisible(a));
+  const floatingAd =
+    floatingAds.length > 0 ? floatingAds[activeFloatingIndex % floatingAds.length] : null;
+
+  // On Reels full-screen feed, suppress sticky banners so video controls are unobstructed
+  const stickyBottomAd = !isReelsPage
+    ? ads.find((a) => a.format === "sticky-bottom" && isVisible(a))
+    : null;
+  const stickyTopAd = !isReelsPage
+    ? ads.find((a) => a.format === "sticky-top" && isVisible(a))
+    : null;
 
   // If no ads match, render nothing - zero empty space
   if (!floatingAd && !stickyBottomAd && !stickyTopAd) {
@@ -417,17 +436,26 @@ export function GlobalFloatingAndStickyAds() {
           role="complementary"
           aria-label="Sponsored Floating Advertisement"
           className={`fixed z-40 transition-all duration-300 ease-out animate-in fade-in zoom-in-95 duration-300 ${
-            floatingAd.placement === "bottom-left"
-              ? "bottom-16 sm:bottom-6 left-3 sm:left-6"
-              : "bottom-16 sm:bottom-6 right-3 sm:right-6"
-          } w-[calc(100%-1.5rem)] sm:w-80 max-w-sm bg-gradient-to-br from-slate-900 via-[#18232E] to-slate-900 text-white rounded-2xl border border-slate-700/90 shadow-[0_12px_40px_rgba(0,0,0,0.4)] overflow-hidden`}
+            isReelsPage
+              ? "bottom-20 left-3 max-w-[260px] sm:max-w-xs"
+              : floatingAd.placement === "bottom-left"
+              ? "bottom-16 sm:bottom-6 left-3 sm:left-6 w-[calc(100%-1.5rem)] sm:w-80 max-w-sm"
+              : "bottom-16 sm:bottom-6 right-3 sm:right-6 w-[calc(100%-1.5rem)] sm:w-80 max-w-sm"
+          } bg-gradient-to-br from-slate-900 via-[#18232E] to-slate-900 text-white rounded-2xl border border-slate-700/90 shadow-[0_12px_40px_rgba(0,0,0,0.4)] overflow-hidden`}
         >
           {/* Header Bar with Badge and Close (X) button */}
           <div className="flex items-center justify-between px-3.5 py-2.5 bg-black/40 border-b border-white/10">
-            <span className="inline-flex items-center gap-1 bg-[#B8323C] text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-xs">
-              <Sparkles className="w-2.5 h-2.5" />
-              <span>Sponsored / विज्ञापन</span>
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 bg-[#B8323C] text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-xs">
+                <Sparkles className="w-2.5 h-2.5" />
+                <span>Sponsored / विज्ञापन</span>
+              </span>
+              {(floatingAd.isPermanent || floatingAd.frequency === "permanent") && (
+                <span className="bg-amber-400 text-slate-950 text-[9px] font-black px-1.5 py-0.2 rounded-full uppercase">
+                  ⭐ Permanent
+                </span>
+              )}
+            </div>
 
             <button
               type="button"
