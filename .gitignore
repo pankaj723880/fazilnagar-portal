@@ -13,4 +13,6 @@ client/dist/
 server/uploads/*
 !server/uploads/.gitkeep
 .DS_Store
-*.log
+server/data/db/
+server/data/*.log
+server/test_features.js

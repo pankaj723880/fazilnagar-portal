@@ -5,6 +5,7 @@ import API from "../api";
 import seedPlaces from "../data/places.json";
 import { openGoogleMapsDirections } from "../utils/directions";
 import InstallButton from "../components/InstallButton";
+import AdvertisementSlot from "../components/AdvertisementSlot";
 import {
   MapPin,
   ShieldCheck,
@@ -969,6 +970,9 @@ export default function TownPortal() {
           })}
         </div>
       </section>
+
+      {/* Dedicated Homepage Advertisement Slot (Zero footprint when inactive/unpublished) */}
+      <AdvertisementSlot />
 
       {/* ========================================================
           SECTION 4: ESSENTIAL SERVICES (High-Priority Civic Hub)

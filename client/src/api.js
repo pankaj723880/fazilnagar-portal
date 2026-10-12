@@ -10,6 +10,23 @@ const API = axios.create({
   timeout: 10000,
 });
 
+// Attach Authorization and Anonymous Client ID
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  let anonId = localStorage.getItem("fazil_anon_id");
+  if (!anonId) {
+    anonId = "anon_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now();
+    localStorage.setItem("fazil_anon_id", anonId);
+  }
+  if (!config.headers["x-anon-id"]) {
+    config.headers["x-anon-id"] = anonId;
+  }
+  return config;
+});
+
 // Automatic fallback interceptor:
 // If request to local fails (e.g. 404 from another app running on 5000, ECONNREFUSED, or timeout),
 // retry against the production Render API automatically.

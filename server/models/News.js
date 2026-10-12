@@ -2,22 +2,59 @@ import mongoose from "mongoose";
 
 const newsSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
-    titleHi: { type: String },
-    description: { type: String, required: true },
-    category: { type: String, default: "General" },
+    title: { type: String, required: true, trim: true },
+    titleHi: { type: String, default: "", trim: true },
+    summary: { type: String, default: "", trim: true },
+    description: { type: String, required: true, trim: true },
+    content: { type: String, default: "", trim: true },
+    category: { type: String, default: "General", index: true },
+    location: { type: String, default: "Fazilnagar", trim: true },
+    source: { type: String, default: "Town Bureau", trim: true },
     image: { type: String, default: "" },
     video: { type: String, default: "" },
     author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     status: {
       type: String,
-      enum: ["pending", "approved", "rejected"],
+      enum: ["pending", "approved", "rejected", "draft"],
       default: "pending",
       index: true,
+    },
+    isPublished: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    publishedAt: {
+      type: Date,
+      default: Date.now,
+      index: true,
+    },
+    views: {
+      type: Number,
+      default: 0,
+    },
+    likes: {
+      type: Number,
+      default: 0,
+    },
+    likeCount: {
+      type: Number,
+      default: 0,
+    },
+    commentCount: {
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true }
 );
+
+newsSchema.index({ isPublished: 1, isFeatured: -1, publishedAt: -1 });
 
 const News = mongoose.model("News", newsSchema);
 export default News;

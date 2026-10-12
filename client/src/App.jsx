@@ -3,6 +3,7 @@ import { Routes, Route, NavLink, Link, useNavigate, useLocation } from "react-ro
 
 // Existing Page Imports
 import News from "./pages/News";
+import ReelsNewsFeed from "./pages/ReelsNewsFeed";
 import EmergencyHub from "./pages/EmergencyHub";
 import HealthcareDirectory from "./pages/HealthcareDirectory";
 import EducationHub from "./pages/EducationHub";
@@ -38,7 +39,6 @@ const DIRECTORY_SUB_NAV = [
   { path: "/education", label: "Education", icon: "🎓" },
   { path: "/emergency", label: "Emergency", icon: "🚨", badge: "24/7" },
   { path: "/healthcare", label: "Healthcare", icon: "🏥" },
-  { path: "/news", label: "News", icon: "📰" },
   { path: "/jobs", label: "Jobs & Directory", icon: "💼" },
   { path: "/tourism", label: "Tourism", icon: "🏨" },
   { path: "/food", label: "Food Guide", icon: "🍛" },
@@ -53,7 +53,6 @@ const DIRECTORY_SUB_NAV_PATHS = [
   "/education",
   "/emergency",
   "/healthcare",
-  "/news",
   "/jobs",
   "/tourism",
   "/food",
@@ -76,7 +75,12 @@ export default function App() {
     location.pathname === "/portal" ||
     location.pathname === "/fazilnagar";
 
-  const hasSubNav = DIRECTORY_SUB_NAV_PATHS.includes(location.pathname);
+  const isNewsPage =
+    location.pathname === "/news" ||
+    location.pathname === "/local-updates" ||
+    location.pathname === "/directory/news";
+
+  const hasSubNav = DIRECTORY_SUB_NAV_PATHS.includes(location.pathname) && !isNewsPage;
 
   // Smooth scroll and route switch effect
   useEffect(() => {
@@ -257,7 +261,7 @@ export default function App() {
               </a>
               <Link
                 to="/news"
-                className={`transition ${location.pathname === "/news" ? "text-[#B8323C] font-bold" : "text-[#647180] hover:text-[#18232E]"}`}
+                className={`transition ${isNewsPage ? "text-[#B8323C] font-bold" : "text-[#647180] hover:text-[#18232E]"}`}
               >
                 Local Updates
               </Link>
@@ -515,19 +519,22 @@ export default function App() {
           ======================================================== */}
       <main
         className={`flex-1 w-full ${
-          isPortalPage ? "" : "max-w-7xl mx-auto px-3 sm:px-6"
-        } ${
-          hasSubNav
-            ? "pt-[136px] sm:pt-[144px]"
+          isNewsPage
+            ? "pt-[88px] sm:pt-[96px] pb-14 sm:pb-0 p-0 m-0 overflow-hidden"
             : isPortalPage
-            ? "pt-[88px] sm:pt-[96px]"
-            : "pt-[104px] sm:pt-[112px]"
-        } pb-24 sm:pb-8`}
+            ? "pt-[88px] sm:pt-[96px] pb-24 sm:pb-8"
+            : hasSubNav
+            ? "pt-[136px] sm:pt-[144px] pb-24 sm:pb-8 max-w-7xl mx-auto px-3 sm:px-6"
+            : "pt-[104px] sm:pt-[112px] pb-24 sm:pb-8 max-w-7xl mx-auto px-3 sm:px-6"
+        }`}
       >
-        <div key={location.pathname} className="animate-page-enter">
+        <div key={location.pathname} className={isNewsPage ? "h-full w-full" : "animate-page-enter"}>
           <Routes>
             <Route path="/" element={<TownPortal />} />
-            <Route path="/news" element={<News />} />
+            <Route path="/news" element={<ReelsNewsFeed />} />
+            <Route path="/local-updates" element={<ReelsNewsFeed />} />
+            <Route path="/directory/news" element={<ReelsNewsFeed />} />
+            <Route path="/news/classic" element={<News />} />
             <Route path="/directory" element={<Directory user={user} />} />
             <Route path="/local-directory" element={<Directory user={user} />} />
             <Route path="/town" element={<TownPortal />} />
@@ -557,58 +564,61 @@ export default function App() {
 
       {/* ========================================================
           FOOTER - Modern Civic Deep Slate with Crimson & Emerald Accents
+          (Hidden on /news full-screen reels page to preserve clean app experience)
           ======================================================== */}
-      <footer className="bg-[#18232E] text-slate-400 text-xs mt-12 border-t border-slate-800 pb-16 lg:pb-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="space-y-3">
-            <h3 className="text-white font-extrabold text-base tracking-tight font-heading">
-              FAZIL<span className="text-[#B8323C]">NAGAR</span> Civic Portal
-            </h3>
-            <p className="text-slate-400 text-xs leading-relaxed">
-              Fazilnagar's civic digital platform offering verified town directory, emergency helplines, public utilities, and community updates (PIN 274401, Kushinagar, UP).
-            </p>
-            <div className="flex items-center gap-2 pt-1">
-              <span className="inline-block w-2 h-2 rounded-full bg-[#168568] animate-pulse"></span>
-              <span className="text-[11px] font-semibold text-[#168568]">Verified Town Directory System</span>
+      {!isNewsPage && (
+        <footer className="bg-[#18232E] text-slate-400 text-xs mt-12 border-t border-slate-800 pb-16 lg:pb-0">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="space-y-3">
+              <h3 className="text-white font-extrabold text-base tracking-tight font-heading">
+                FAZIL<span className="text-[#B8323C]">NAGAR</span> Civic Portal
+              </h3>
+              <p className="text-slate-400 text-xs leading-relaxed">
+                Fazilnagar's civic digital platform offering verified town directory, emergency helplines, public utilities, and community updates (PIN 274401, Kushinagar, UP).
+              </p>
+              <div className="flex items-center gap-2 pt-1">
+                <span className="inline-block w-2 h-2 rounded-full bg-[#168568] animate-pulse"></span>
+                <span className="text-[11px] font-semibold text-[#168568]">Verified Town Directory System</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">Civic Navigation</h4>
+              <ul className="space-y-1.5">
+                <li><Link to="/directory" className="hover:text-red-300 font-bold text-[#B8323C] flex items-center gap-1.5"><span>📍</span> Town Directory (Map & List)</Link></li>
+                <li><Link to="/news" className="hover:text-white">Town News</Link></li>
+                <li><Link to="/emergency" className="hover:text-white">Emergency Helplines</Link></li>
+                <li><Link to="/healthcare" className="hover:text-white">Hospitals & Clinics</Link></li>
+                <li><Link to="/jobs" className="hover:text-white">Local Jobs & Trade</Link></li>
+                <li><Link to="/govt" className="hover:text-white">Government Services</Link></li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">Community Actions</h4>
+              <ul className="space-y-1.5">
+                <li><Link to="/create-news" className="hover:text-white">Submit Local News</Link></li>
+                <li><Link to="/login" className="hover:text-white">Citizen / Reporter Login</Link></li>
+                <li><Link to="/register" className="hover:text-white">Register Resident Account</Link></li>
+                {user?.role === "admin" && (
+                  <li><Link to="/admin/review" className="hover:text-amber-400 text-amber-300 font-bold flex items-center gap-1"><span>🛡️</span> Admin Review Desk</Link></li>
+                )}
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">Emergency Hotline</h4>
+              <p className="text-xs text-slate-300">Police Outpost: <strong className="text-[#B8323C]">112</strong></p>
+              <p className="text-xs text-slate-300">Ambulance Emergency: <strong className="text-[#168568]">108</strong></p>
+              <p className="text-xs text-slate-300">Women Helpline: <strong className="text-amber-400">1090</strong></p>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <h4 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">Civic Navigation</h4>
-            <ul className="space-y-1.5">
-              <li><Link to="/directory" className="hover:text-red-300 font-bold text-[#B8323C] flex items-center gap-1.5"><span>📍</span> Town Directory (Map & List)</Link></li>
-              <li><Link to="/news" className="hover:text-white">Town News</Link></li>
-              <li><Link to="/emergency" className="hover:text-white">Emergency Helplines</Link></li>
-              <li><Link to="/healthcare" className="hover:text-white">Hospitals & Clinics</Link></li>
-              <li><Link to="/jobs" className="hover:text-white">Local Jobs & Trade</Link></li>
-              <li><Link to="/govt" className="hover:text-white">Government Services</Link></li>
-            </ul>
+          <div className="border-t border-slate-800 py-4 text-center text-[11px] text-slate-500">
+            © {new Date().getFullYear()} Fazilnagar Town Portal • Modern Civic & Editorial System. All rights reserved.
           </div>
-
-          <div className="space-y-2">
-            <h4 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">Community Actions</h4>
-            <ul className="space-y-1.5">
-              <li><Link to="/create-news" className="hover:text-white">Submit Local News</Link></li>
-              <li><Link to="/login" className="hover:text-white">Citizen / Reporter Login</Link></li>
-              <li><Link to="/register" className="hover:text-white">Register Resident Account</Link></li>
-              {user?.role === "admin" && (
-                <li><Link to="/admin/review" className="hover:text-amber-400 text-amber-300 font-bold flex items-center gap-1"><span>🛡️</span> Admin Review Desk</Link></li>
-              )}
-            </ul>
-          </div>
-
-          <div className="space-y-2">
-            <h4 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">Emergency Hotline</h4>
-            <p className="text-xs text-slate-300">Police Outpost: <strong className="text-[#B8323C]">112</strong></p>
-            <p className="text-xs text-slate-300">Ambulance Emergency: <strong className="text-[#168568]">108</strong></p>
-            <p className="text-xs text-slate-300">Women Helpline: <strong className="text-amber-400">1090</strong></p>
-          </div>
-        </div>
-
-        <div className="border-t border-slate-800 py-4 text-center text-[11px] text-slate-500">
-          © {new Date().getFullYear()} Fazilnagar Town Portal • Modern Civic & Editorial System. All rights reserved.
-        </div>
-      </footer>
+        </footer>
+      )}
 
       {/* ========================================================
           MOBILE NATIVE BOTTOM APP BAR (Fixed at bottom for phones < 640px)

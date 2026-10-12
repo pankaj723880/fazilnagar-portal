@@ -21,16 +21,31 @@ import {
   ChevronRight,
   Lock,
   LogIn,
+  Megaphone,
+  Sparkles,
+  Eye,
+  MousePointer,
+  TrendingUp,
+  Plus,
+  Edit,
+  Star,
+  Upload,
+  X,
+  Check,
+  CalendarDays,
+  Globe,
+  Sliders,
 } from "lucide-react";
 
 export default function AdminReview({ user: propUser }) {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(propUser || null);
-  const [activeTab, setActiveTab] = useState("all"); // "all" | "news" | "business" | "correction" | "event"
+  const [activeTab, setActiveTab] = useState("all"); // "all" | "ads" | "news-manage" | "news" | "business" | "correction" | "event"
   const [statusFilter, setStatusFilter] = useState("pending"); // "pending" | "approved" | "rejected" | "all"
 
   const [submissions, setSubmissions] = useState([]);
   const [newsList, setNewsList] = useState([]);
+  const [adsList, setAdsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
@@ -41,8 +56,46 @@ export default function AdminReview({ user: propUser }) {
   const [loginError, setLoginError] = useState("");
   const [loginSubmitting, setLoginSubmitting] = useState(false);
 
+  // -------------------------------------------------------------
+  // ADVERTISEMENT MANAGEMENT MODAL STATE
+  // -------------------------------------------------------------
+  const [adModalOpen, setAdModalOpen] = useState(false);
+  const [editingAd, setEditingAd] = useState(null);
+  const [adFormTitle, setAdFormTitle] = useState("");
+  const [adFormDesc, setAdFormDesc] = useState("");
+  const [adFormUrl, setAdFormUrl] = useState("");
+  const [adFormDestUrl, setAdFormDestUrl] = useState("");
+  const [adFormStart, setAdFormStart] = useState("");
+  const [adFormEnd, setAdFormEnd] = useState("");
+  const [adFormActive, setAdFormActive] = useState(true);
+  const [adFormPublished, setAdFormPublished] = useState(false);
+  const [adFormFile, setAdFormFile] = useState(null);
+  const [adFormPreviewUrl, setAdFormPreviewUrl] = useState("");
+  const [adFormSubmitting, setAdFormSubmitting] = useState(false);
+  const [adDeleteConfirmId, setAdDeleteConfirmId] = useState(null);
+
+  // -------------------------------------------------------------
+  // NEWS STUDIO MODAL STATE
+  // -------------------------------------------------------------
+  const [newsModalOpen, setNewsModalOpen] = useState(false);
+  const [editingNews, setEditingNews] = useState(null);
+  const [newsFormTitle, setNewsFormTitle] = useState("");
+  const [newsFormTitleHi, setNewsFormTitleHi] = useState("");
+  const [newsFormSummary, setNewsFormSummary] = useState("");
+  const [newsFormContent, setNewsFormContent] = useState("");
+  const [newsFormCategory, setNewsFormCategory] = useState("Civic Updates");
+  const [newsFormLocation, setNewsFormLocation] = useState("Fazilnagar");
+  const [newsFormSource, setNewsFormSource] = useState("Municipal Bureau");
+  const [newsFormImageUrl, setNewsFormImageUrl] = useState("");
+  const [newsFormFile, setNewsFormFile] = useState(null);
+  const [newsFormPreviewUrl, setNewsFormPreviewUrl] = useState("");
+  const [newsFormIsFeatured, setNewsFormIsFeatured] = useState(false);
+  const [newsFormIsPublished, setNewsFormIsPublished] = useState(true);
+  const [newsFormSubmitting, setNewsFormSubmitting] = useState(false);
+  const [newsDeleteConfirmId, setNewsDeleteConfirmId] = useState(null);
+  const [newsPreviewModalItem, setNewsPreviewModalItem] = useState(null);
+
   useEffect(() => {
-    // Sync current user from localStorage
     const saved = localStorage.getItem("user");
     if (saved) {
       try {
@@ -70,12 +123,21 @@ export default function AdminReview({ user: propUser }) {
       });
       setSubmissions(Array.isArray(subRes.data) ? subRes.data : []);
 
-      // 2. Fetch News (all status)
-      const newsRes = await API.get(`/news?all=true`, {
+      // 2. Fetch News (admin all)
+      const newsRes = await API.get(`/news/admin/all`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(async () => {
+        return await API.get(`/news?all=true`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      });
+      setNewsList(Array.isArray(newsRes.data) ? newsRes.data : []);
+
+      // 3. Fetch Advertisements (admin)
+      const adsRes = await API.get(`/advertisements/admin`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const allNews = Array.isArray(newsRes.data) ? newsRes.data : [];
-      setNewsList(allNews);
+      setAdsList(Array.isArray(adsRes.data) ? adsRes.data : []);
     } catch (err) {
       console.error("Admin fetch error:", err);
       showToast("Error loading review items. Please re-authenticate.");
@@ -117,59 +179,67 @@ export default function AdminReview({ user: propUser }) {
     }
   };
 
-  // Moderation: Handle Submissions (Business, Correction, Event)
-  const handleSubmissionStatus = async (id, newStatus) => {
+  // Moderation: Handle Submissions
+  const handleSubmissionStatus = async (id, status) => {
     setActionLoadingId(id);
     const token = localStorage.getItem("token");
+
     try {
-      const res = await API.patch(
-        `/submissions/${id}`,
-        { status: newStatus },
+      await API.patch(
+        `/submissions/${id}/status`,
+        { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setSubmissions((prev) =>
-        prev.map((item) => (item._id === id ? { ...item, status: newStatus } : item))
-      );
-      showToast(res.data?.message || `Submission marked as ${newStatus}.`);
+      setSubmissions((prev) => prev.map((s) => (s._id === id ? { ...s, status } : s)));
+      showToast(`Submission marked as ${status}.`);
     } catch (err) {
-      showToast("Failed to update submission status.");
+      console.error("Submission status error:", err);
+      showToast("Failed to update status.");
     } finally {
       setActionLoadingId(null);
     }
   };
 
   const handleDeleteSubmission = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this submission?")) return;
+    if (!window.confirm("Permanently delete this citizen submission?")) return;
     setActionLoadingId(id);
     const token = localStorage.getItem("token");
+
     try {
       await API.delete(`/submissions/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSubmissions((prev) => prev.filter((item) => item._id !== id));
-      showToast("Submission deleted successfully.");
+      setSubmissions((prev) => prev.filter((s) => s._id !== id));
+      showToast("Submission deleted permanently.");
     } catch (err) {
+      console.error("Delete submission error:", err);
       showToast("Failed to delete submission.");
     } finally {
       setActionLoadingId(null);
     }
   };
 
-  // Moderation: Handle News Status
-  const handleNewsStatus = async (id, newStatus) => {
+  // Moderation: Handle Citizen Submitted News
+  const handleNewsStatus = async (id, status) => {
     setActionLoadingId(id);
     const token = localStorage.getItem("token");
+
     try {
-      const res = await API.patch(
+      await API.patch(
         `/news/${id}/status`,
-        { status: newStatus },
+        { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setNewsList((prev) =>
-        prev.map((item) => (item._id === id ? { ...item, status: newStatus } : item))
+        prev.map((n) =>
+          n._id === id
+            ? { ...n, status, isPublished: status === "approved" }
+            : n
+        )
       );
-      showToast(res.data?.message || `News status updated to ${newStatus}.`);
+      showToast(`News article marked as ${status}.`);
     } catch (err) {
+      console.error("News status error:", err);
       showToast("Failed to update news status.");
     } finally {
       setActionLoadingId(null);
@@ -177,33 +247,364 @@ export default function AdminReview({ user: propUser }) {
   };
 
   const handleDeleteNews = async (id) => {
-    if (!window.confirm("Are you sure you want to permanently delete this news bulletin?")) return;
+    if (!window.confirm("Permanently delete this news article?")) return;
     setActionLoadingId(id);
     const token = localStorage.getItem("token");
+
     try {
       await API.delete(`/news/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNewsList((prev) => prev.filter((item) => item._id !== id));
+      setNewsList((prev) => prev.filter((n) => n._id !== id));
       showToast("News article deleted.");
     } catch (err) {
+      console.error("Delete news error:", err);
       showToast("Failed to delete news.");
     } finally {
       setActionLoadingId(null);
     }
   };
 
-  // Calculate pending counts
+  // -------------------------------------------------------------
+  // ADVERTISEMENT MANAGEMENT HANDLERS
+  // -------------------------------------------------------------
+  const openCreateAdModal = () => {
+    setEditingAd(null);
+    setAdFormTitle("");
+    setAdFormDesc("");
+    setAdFormUrl("");
+    setAdFormDestUrl("");
+    setAdFormStart("");
+    setAdFormEnd("");
+    setAdFormActive(true);
+    setAdFormPublished(false);
+    setAdFormFile(null);
+    setAdFormPreviewUrl("");
+    setAdModalOpen(true);
+  };
+
+  const openEditAdModal = (ad) => {
+    setEditingAd(ad);
+    setAdFormTitle(ad.title || "");
+    setAdFormDesc(ad.description || "");
+    setAdFormUrl(ad.imageUrl || "");
+    setAdFormDestUrl(ad.destinationUrl || "");
+    setAdFormStart(ad.startDate ? new Date(ad.startDate).toISOString().slice(0, 16) : "");
+    setAdFormEnd(ad.endDate ? new Date(ad.endDate).toISOString().slice(0, 16) : "");
+    setAdFormActive(ad.isActive !== false);
+    setAdFormPublished(ad.isPublished === true);
+    setAdFormFile(null);
+    setAdFormPreviewUrl(ad.imageUrl || "");
+    setAdModalOpen(true);
+  };
+
+  const handleSaveAd = async (e) => {
+    e.preventDefault();
+    if (!adFormTitle.trim()) {
+      showToast("Please enter an advertisement title.");
+      return;
+    }
+
+    if (!adFormFile && !adFormUrl.trim()) {
+      showToast("Please provide a banner image or image URL.");
+      return;
+    }
+
+    setAdFormSubmitting(true);
+    const token = localStorage.getItem("token");
+
+    try {
+      const formData = new FormData();
+      formData.append("title", adFormTitle.trim());
+      formData.append("description", adFormDesc.trim());
+      formData.append("destinationUrl", adFormDestUrl.trim());
+      if (adFormStart) formData.append("startDate", adFormStart);
+      if (adFormEnd) formData.append("endDate", adFormEnd);
+      formData.append("isActive", adFormActive);
+      formData.append("isPublished", adFormPublished);
+
+      if (adFormFile) {
+        formData.append("image", adFormFile);
+      } else {
+        formData.append("imageUrl", adFormUrl.trim());
+      }
+
+      if (editingAd) {
+        const res = await API.put(`/advertisements/${editingAd._id}`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        setAdsList((prev) =>
+          prev.map((a) => (a._id === editingAd._id ? res.data?.ad || a : a))
+        );
+        showToast("Advertisement updated successfully.");
+      } else {
+        const res = await API.post("/advertisements", formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        if (res.data?.ad) {
+          setAdsList((prev) => [res.data.ad, ...prev]);
+        }
+        showToast("Advertisement created successfully.");
+      }
+      setAdModalOpen(false);
+    } catch (err) {
+      console.error("Save ad error:", err);
+      showToast(err.response?.data?.message || "Failed to save advertisement.");
+    } finally {
+      setAdFormSubmitting(false);
+    }
+  };
+
+  const handleToggleAdPublish = async (ad) => {
+    const token = localStorage.getItem("token");
+    const nextVal = !ad.isPublished;
+    setActionLoadingId(ad._id);
+
+    try {
+      await API.patch(
+        `/advertisements/${ad._id}/publish`,
+        { isPublished: nextVal },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setAdsList((prev) =>
+        prev.map((a) => (a._id === ad._id ? { ...a, isPublished: nextVal } : a))
+      );
+      showToast(`Advertisement ${nextVal ? "published live" : "unpublished"}.`);
+    } catch (err) {
+      console.error("Toggle ad publish error:", err);
+      showToast("Failed to update publication status.");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleToggleAdActive = async (ad) => {
+    const token = localStorage.getItem("token");
+    const nextVal = !ad.isActive;
+    setActionLoadingId(ad._id);
+
+    try {
+      await API.patch(
+        `/advertisements/${ad._id}/toggle`,
+        { isActive: nextVal },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setAdsList((prev) =>
+        prev.map((a) => (a._id === ad._id ? { ...a, isActive: nextVal } : a))
+      );
+      showToast(`Advertisement ${nextVal ? "enabled" : "disabled"}.`);
+    } catch (err) {
+      console.error("Toggle ad active error:", err);
+      showToast("Failed to toggle status.");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleDeleteAd = async (id) => {
+    const token = localStorage.getItem("token");
+    setActionLoadingId(id);
+
+    try {
+      await API.delete(`/advertisements/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setAdsList((prev) => prev.filter((a) => a._id !== id));
+      setAdDeleteConfirmId(null);
+      showToast("Advertisement deleted permanently.");
+    } catch (err) {
+      console.error("Delete ad error:", err);
+      showToast("Failed to delete advertisement.");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // -------------------------------------------------------------
+  // NEWS STUDIO HANDLERS
+  // -------------------------------------------------------------
+  const openCreateNewsModal = () => {
+    setEditingNews(null);
+    setNewsFormTitle("");
+    setNewsFormTitleHi("");
+    setNewsFormSummary("");
+    setNewsFormContent("");
+    setNewsFormCategory("Civic Updates");
+    setNewsFormLocation("Fazilnagar");
+    setNewsFormSource("Municipal Ward Bureau");
+    setNewsFormImageUrl("");
+    setNewsFormFile(null);
+    setNewsFormPreviewUrl("");
+    setNewsFormIsFeatured(false);
+    setNewsFormIsPublished(true);
+    setNewsModalOpen(true);
+  };
+
+  const openEditNewsModal = (item) => {
+    setEditingNews(item);
+    setNewsFormTitle(item.title || "");
+    setNewsFormTitleHi(item.titleHi || "");
+    setNewsFormSummary(item.summary || item.description || "");
+    setNewsFormContent(item.content || item.description || "");
+    setNewsFormCategory(item.category || "Civic Updates");
+    setNewsFormLocation(item.location || "Fazilnagar");
+    setNewsFormSource(item.source || "Town Reporter");
+    setNewsFormImageUrl(item.image || "");
+    setNewsFormFile(null);
+    setNewsFormPreviewUrl(item.image || "");
+    setNewsFormIsFeatured(item.isFeatured === true);
+    setNewsFormIsPublished(item.isPublished === true || item.status === "approved");
+    setNewsModalOpen(true);
+  };
+
+  const handleSaveNews = async (e) => {
+    e.preventDefault();
+    if (!newsFormTitle.trim()) {
+      showToast("Please enter headline.");
+      return;
+    }
+    if (!newsFormSummary.trim()) {
+      showToast("Please provide a summary for the Reels card.");
+      return;
+    }
+
+    setNewsFormSubmitting(true);
+    const token = localStorage.getItem("token");
+
+    try {
+      const formData = new FormData();
+      formData.append("title", newsFormTitle.trim());
+      formData.append("titleHi", newsFormTitleHi.trim());
+      formData.append("summary", newsFormSummary.trim());
+      formData.append("description", newsFormSummary.trim());
+      formData.append("content", newsFormContent.trim() || newsFormSummary.trim());
+      formData.append("category", newsFormCategory);
+      formData.append("location", newsFormLocation.trim());
+      formData.append("source", newsFormSource.trim());
+      formData.append("isFeatured", newsFormIsFeatured);
+      formData.append("isPublished", newsFormIsPublished);
+      formData.append("status", newsFormIsPublished ? "approved" : "draft");
+
+      if (newsFormFile) {
+        formData.append("image", newsFormFile);
+      } else if (newsFormImageUrl.trim()) {
+        formData.append("imageUrl", newsFormImageUrl.trim());
+      }
+
+      if (editingNews) {
+        const res = await API.put(`/news/${editingNews._id}`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        setNewsList((prev) =>
+          prev.map((n) => (n._id === editingNews._id ? res.data?.article || n : n))
+        );
+        showToast("Article updated successfully.");
+      } else {
+        const res = await API.post("/news", formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        if (res.data?._id) {
+          setNewsList((prev) => [res.data, ...prev]);
+        }
+        showToast("Article published to news registry.");
+      }
+      setNewsModalOpen(false);
+    } catch (err) {
+      console.error("Save news error:", err);
+      showToast(err.response?.data?.message || "Failed to save article.");
+    } finally {
+      setNewsFormSubmitting(false);
+    }
+  };
+
+  const handleToggleNewsFeatured = async (story) => {
+    const token = localStorage.getItem("token");
+    const nextVal = !story.isFeatured;
+    setActionLoadingId(story._id);
+
+    try {
+      await API.patch(
+        `/news/${story._id}/feature`,
+        { isFeatured: nextVal },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setNewsList((prev) =>
+        prev.map((n) => (n._id === story._id ? { ...n, isFeatured: nextVal } : n))
+      );
+      showToast(`Article ${nextVal ? "pinned to top ⭐" : "unpinned"}.`);
+    } catch (err) {
+      console.error("Toggle featured error:", err);
+      showToast("Failed to toggle pinned status.");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleToggleNewsPublish = async (story) => {
+    const token = localStorage.getItem("token");
+    const nextVal = !(story.isPublished || story.status === "approved");
+    setActionLoadingId(story._id);
+
+    try {
+      await API.patch(
+        `/news/${story._id}/publish`,
+        { isPublished: nextVal },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setNewsList((prev) =>
+        prev.map((n) =>
+          n._id === story._id
+            ? { ...n, isPublished: nextVal, status: nextVal ? "approved" : "draft" }
+            : n
+        )
+      );
+      showToast(`Article ${nextVal ? "published live" : "moved to drafts"}.`);
+    } catch (err) {
+      console.error("Toggle publish error:", err);
+      showToast("Failed to toggle publish status.");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // Calculations for stats
   const pendingNewsCount = newsList.filter((n) => n.status === "pending").length;
   const pendingBusinessCount = submissions.filter((s) => s.type === "business" && s.status === "pending").length;
   const pendingCorrectionCount = submissions.filter((s) => s.type === "correction" && s.status === "pending").length;
   const pendingEventCount = submissions.filter((s) => s.type === "event" && s.status === "pending").length;
   const totalPending = pendingNewsCount + pendingBusinessCount + pendingCorrectionCount + pendingEventCount;
 
+  // Advertisement stats
+  const liveAdsCount = adsList.filter((a) => {
+    if (!a.isActive || !a.isPublished) return false;
+    const now = new Date();
+    if (a.startDate && new Date(a.startDate) > now) return false;
+    if (a.endDate && new Date(a.endDate) < now) return false;
+    return true;
+  }).length;
+
+  const totalAdImpressions = adsList.reduce((acc, a) => acc + (a.impressions || 0), 0);
+  const totalAdClicks = adsList.reduce((acc, a) => acc + (a.clicks || 0), 0);
+
   // Filtered lists
   const filteredNews = newsList.filter((n) => {
     if (statusFilter === "all") return true;
-    return n.status === statusFilter || (!n.status && statusFilter === "approved");
+    if (statusFilter === "pending") return n.status === "pending";
+    if (statusFilter === "approved") return n.status === "approved" || n.isPublished === true;
+    if (statusFilter === "rejected") return n.status === "rejected";
+    return true;
   });
 
   const filteredSubmissions = submissions.filter((s) => {
@@ -211,7 +612,7 @@ export default function AdminReview({ user: propUser }) {
     return true;
   });
 
-  // If not logged in as Admin, show the Admin Login Panel
+  // If not logged in as Admin, show Admin Login Panel
   if (!isAdmin) {
     return (
       <div className="max-w-xl mx-auto my-12 p-6 sm:p-8 bg-white rounded-3xl border border-[#E1E6EA] shadow-xl">
@@ -220,13 +621,13 @@ export default function AdminReview({ user: propUser }) {
             <Lock className="w-7 h-7" />
           </div>
           <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#B8323C]">
-            Restricted Access
+            Restricted Admin Area
           </span>
           <h1 className="text-2xl font-extrabold text-[#18232E] mt-1 font-heading">
-            Fazilnagar Admin Review Portal
+            Fazilnagar Portal Administration
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Sign in with the fixed Administrator credentials to review and moderate Citizen Corner submissions and news bulletins.
+            Sign in with authorized administrator credentials to manage advertisements, news reels, citizen submissions, and directory verification.
           </p>
         </div>
 
@@ -234,7 +635,7 @@ export default function AdminReview({ user: propUser }) {
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-6 text-xs text-slate-700 space-y-1.5">
           <div className="flex items-center gap-1.5 font-bold text-[#18232E]">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Fixed Admin Credentials:</span>
+            <span>Administrator Credentials:</span>
           </div>
           <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-lg border border-slate-200">
             <span className="text-slate-500">Email ID:</span>
@@ -252,212 +653,693 @@ export default function AdminReview({ user: propUser }) {
           </div>
         )}
 
-        <form onSubmit={handleAdminLogin} className="space-y-4 text-xs">
+        <form onSubmit={handleAdminLogin} className="space-y-4">
           <div>
-            <label className="block font-bold text-[#18232E] mb-1">Admin Email Address</label>
+            <label className="block text-xs font-bold text-[#18232E] mb-1">Admin Email Address</label>
             <input
               type="email"
-              required
               value={adminEmail}
               onChange={(e) => setAdminEmail(e.target.value)}
-              className="w-full p-3 rounded-xl border border-[#E1E6EA] focus:border-[#B8323C] outline-none text-xs"
+              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-[#B8323C] focus:bg-white transition"
+              required
             />
           </div>
 
           <div>
-            <label className="block font-bold text-[#18232E] mb-1">Admin Secret Password</label>
+            <label className="block text-xs font-bold text-[#18232E] mb-1">Admin Password</label>
             <input
               type="password"
-              required
               value={adminPassword}
               onChange={(e) => setAdminPassword(e.target.value)}
-              className="w-full p-3 rounded-xl border border-[#E1E6EA] focus:border-[#B8323C] outline-none text-xs"
+              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-[#B8323C] focus:bg-white transition"
+              required
             />
           </div>
 
           <button
             type="submit"
             disabled={loginSubmitting}
-            className="w-full bg-[#18232E] hover:bg-[#B8323C] text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-md cursor-pointer disabled:opacity-50"
+            className="w-full bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold py-3 rounded-xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
           >
-            <LogIn className="w-4 h-4" />
-            <span>{loginSubmitting ? "Authenticating Admin..." : "Unlock Admin Review Desk"}</span>
+            {loginSubmitting ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <LogIn className="w-4 h-4" />
+            )}
+            <span>Sign In to Admin Dashboard</span>
           </button>
         </form>
-
-        <div className="mt-6 text-center">
-          <Link to="/" className="text-xs text-slate-500 hover:text-[#B8323C] font-semibold">
-            ← Return to Fazilnagar Town Portal
-          </Link>
-        </div>
       </div>
     );
   }
 
-  // Logged-in Admin Review Dashboard
   return (
-    <div className="space-y-6 pb-16">
+    <div className="max-w-7xl mx-auto space-y-6 pb-20 px-4 sm:px-6">
+      
       {/* Admin Header */}
-      <div className="bg-gradient-to-r from-slate-900 to-[#18232E] text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-slate-900 via-[#18232E] to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-800">
         <div>
           <div className="inline-flex items-center gap-2 bg-red-950/80 border border-red-700/50 text-red-300 px-3 py-1 rounded-full text-xs font-bold mb-2">
             <ShieldCheck className="w-3.5 h-3.5 text-red-400" />
-            <span>Moderator Control Center</span>
+            <span>Town Portal Admin Desk (प्रशासक नियंत्रण कक्ष)</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold font-heading text-white">
-            Review & Moderation Desk (समीक्षा पोर्टल)
+            Administration & Editorial Center
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 mt-1">
-            Review and accept/reject citizen-submitted businesses, error reports, community events, and news articles.
+            Private controls for homepage advertisements, Reels-style news articles, community updates, and directory moderation.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 self-start md:self-auto">
+        <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
+          <button
+            onClick={openCreateAdModal}
+            className="bg-[#B8323C] hover:bg-red-700 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-md cursor-pointer"
+          >
+            <Megaphone className="w-3.5 h-3.5" />
+            <span>+ New Ad</span>
+          </button>
+
+          <button
+            onClick={openCreateNewsModal}
+            className="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-md cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>+ New Story</span>
+          </button>
+
           <button
             onClick={fetchData}
             disabled={loading}
-            className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer"
+            className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer"
+            title="Refresh All Data"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-            <span>Refresh Queue</span>
+            <span>Refresh</span>
           </button>
-          <div className="bg-emerald-950/80 border border-emerald-700/60 text-emerald-300 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>{totalPending} Items Pending</span>
-          </div>
         </div>
       </div>
 
       {/* Overview Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-[#E1E6EA] shadow-xs flex items-center justify-between">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+        {/* Ads Stat */}
+        <div
+          onClick={() => setActiveTab("ads")}
+          className={`p-4 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+            activeTab === "ads"
+              ? "bg-red-50/70 border-[#B8323C] shadow-sm"
+              : "bg-white border-[#E1E6EA] hover:border-slate-300 shadow-2xs"
+          }`}
+        >
           <div>
-            <span className="text-[10px] font-bold uppercase text-slate-500">News Articles</span>
-            <h3 className="text-xl font-extrabold text-[#18232E]">{pendingNewsCount} Pending</h3>
-            <span className="text-[11px] text-slate-400">{newsList.length} total bulletins</span>
+            <span className="text-[10px] font-bold uppercase text-slate-500">Advertisements</span>
+            <h3 className="text-lg sm:text-xl font-extrabold text-[#18232E]">
+              {liveAdsCount} Live
+            </h3>
+            <span className="text-[11px] text-slate-400">{adsList.length} total banners</span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-xl bg-red-100 text-[#B8323C] flex items-center justify-center font-bold">
+            <Megaphone className="w-5 h-5" />
+          </div>
+        </div>
+
+        {/* News Stat */}
+        <div
+          onClick={() => setActiveTab("news-manage")}
+          className={`p-4 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+            activeTab === "news-manage"
+              ? "bg-blue-50/70 border-blue-500 shadow-sm"
+              : "bg-white border-[#E1E6EA] hover:border-slate-300 shadow-2xs"
+          }`}
+        >
+          <div>
+            <span className="text-[10px] font-bold uppercase text-slate-500">Reels Stories</span>
+            <h3 className="text-lg sm:text-xl font-extrabold text-[#18232E]">
+              {newsList.filter((n) => n.isPublished || n.status === "approved").length} Published
+            </h3>
+            <span className="text-[11px] text-slate-400">{newsList.length} total entries</span>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
             <Newspaper className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-[#E1E6EA] shadow-xs flex items-center justify-between">
+        {/* Pending Submissions */}
+        <div
+          onClick={() => setActiveTab("all")}
+          className={`p-4 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+            activeTab === "all"
+              ? "bg-amber-50/70 border-amber-500 shadow-sm"
+              : "bg-white border-[#E1E6EA] hover:border-slate-300 shadow-2xs"
+          }`}
+        >
           <div>
-            <span className="text-[10px] font-bold uppercase text-slate-500">Suggested Shops</span>
-            <h3 className="text-xl font-extrabold text-[#18232E]">{pendingBusinessCount} Pending</h3>
+            <span className="text-[10px] font-bold uppercase text-slate-500">Citizen Queue</span>
+            <h3 className="text-lg sm:text-xl font-extrabold text-[#18232E]">
+              {totalPending} Pending
+            </h3>
+            <span className="text-[11px] text-slate-400">Moderation requests</span>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+            <Clock className="w-5 h-5" />
+          </div>
+        </div>
+
+        {/* Suggested Places */}
+        <div
+          onClick={() => setActiveTab("business")}
+          className={`p-4 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+            activeTab === "business"
+              ? "bg-emerald-50/70 border-emerald-500 shadow-sm"
+              : "bg-white border-[#E1E6EA] hover:border-slate-300 shadow-2xs"
+          }`}
+        >
+          <div>
+            <span className="text-[10px] font-bold uppercase text-slate-500">Suggested Places</span>
+            <h3 className="text-lg sm:text-xl font-extrabold text-[#18232E]">
+              {pendingBusinessCount} Pending
+            </h3>
             <span className="text-[11px] text-slate-400">Citizen place listings</span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-red-50 text-[#B8323C] flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
             <Store className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-[#E1E6EA] shadow-xs flex items-center justify-between">
+        {/* Error Reports */}
+        <div
+          onClick={() => setActiveTab("correction")}
+          className={`p-4 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+            activeTab === "correction"
+              ? "bg-purple-50/70 border-purple-500 shadow-sm"
+              : "bg-white border-[#E1E6EA] hover:border-slate-300 shadow-2xs"
+          }`}
+        >
           <div>
             <span className="text-[10px] font-bold uppercase text-slate-500">Error Reports</span>
-            <h3 className="text-xl font-extrabold text-[#18232E]">{pendingCorrectionCount} Pending</h3>
-            <span className="text-[11px] text-slate-400">Phone/location corrections</span>
+            <h3 className="text-lg sm:text-xl font-extrabold text-[#18232E]">
+              {pendingCorrectionCount} Pending
+            </h3>
+            <span className="text-[11px] text-slate-400">Corrections needed</span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
             <AlertTriangle className="w-5 h-5" />
           </div>
         </div>
-
-        <div className="bg-white p-4 rounded-2xl border border-[#E1E6EA] shadow-xs flex items-center justify-between">
-          <div>
-            <span className="text-[10px] font-bold uppercase text-slate-500">Local Events</span>
-            <h3 className="text-xl font-extrabold text-[#18232E]">{pendingEventCount} Pending</h3>
-            <span className="text-[11px] text-slate-400">Community announcements</span>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#168568] flex items-center justify-center font-bold">
-            <Calendar className="w-5 h-5" />
-          </div>
-        </div>
       </div>
 
-      {/* Tabs & Filter Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-[#E1E6EA] shadow-xs">
-        {/* Category Tabs */}
+      {/* Tabs Navigation Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-[#E1E6EA] shadow-2xs">
         <div className="flex flex-wrap items-center gap-1.5">
+          <button
+            onClick={() => setActiveTab("ads")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "ads"
+                ? "bg-[#B8323C] text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <Megaphone className="w-3.5 h-3.5" />
+            <span>Advertisements ({adsList.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("news-manage")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "news-manage"
+                ? "bg-[#18232E] text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <Newspaper className="w-3.5 h-3.5" />
+            <span>News & Reels ({newsList.length})</span>
+          </button>
+
           <button
             onClick={() => setActiveTab("all")}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-              activeTab === "all" ? "bg-[#18232E] text-white" : "text-slate-600 hover:bg-slate-100"
+              activeTab === "all" ? "bg-[#18232E] text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
             }`}
           >
-            All Submissions
+            Submissions ({submissions.length})
           </button>
-          <button
-            onClick={() => setActiveTab("news")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-              activeTab === "news" ? "bg-[#18232E] text-white" : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            <span>📰 News ({pendingNewsCount})</span>
-          </button>
+
           <button
             onClick={() => setActiveTab("business")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-              activeTab === "business" ? "bg-[#18232E] text-white" : "text-slate-600 hover:bg-slate-100"
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+              activeTab === "business" ? "bg-[#18232E] text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
             }`}
           >
-            <span>🏬 Places ({pendingBusinessCount})</span>
+            Places ({pendingBusinessCount})
           </button>
+
           <button
             onClick={() => setActiveTab("correction")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-              activeTab === "correction" ? "bg-[#18232E] text-white" : "text-slate-600 hover:bg-slate-100"
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+              activeTab === "correction" ? "bg-[#18232E] text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
             }`}
           >
-            <span>⚠️ Reports ({pendingCorrectionCount})</span>
+            Reports ({pendingCorrectionCount})
           </button>
+
           <button
             onClick={() => setActiveTab("event")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-              activeTab === "event" ? "bg-[#18232E] text-white" : "text-slate-600 hover:bg-slate-100"
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+              activeTab === "event" ? "bg-[#18232E] text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
             }`}
           >
-            <span>📅 Events ({pendingEventCount})</span>
+            Events ({pendingEventCount})
           </button>
         </div>
 
-        {/* Status Filter */}
-        <div className="flex items-center gap-2 self-end sm:self-auto">
-          <span className="text-[11px] font-bold text-slate-500 uppercase">Status:</span>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="text-xs font-bold bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl px-3 py-1.5 text-[#18232E] outline-none"
-          >
-            <option value="pending">⏳ Pending Review</option>
-            <option value="approved">✅ Approved</option>
-            <option value="rejected">❌ Rejected</option>
-            <option value="all">🔍 Show All</option>
-          </select>
-        </div>
+        {/* Status Filter for Citizen Submissions */}
+        {activeTab !== "ads" && activeTab !== "news-manage" && (
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <span className="text-[11px] font-bold text-slate-500 uppercase">Status:</span>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="text-xs font-bold bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl px-3 py-1.5 text-[#18232E] outline-none"
+            >
+              <option value="pending">⏳ Pending Review</option>
+              <option value="approved">✅ Approved</option>
+              <option value="rejected">❌ Rejected</option>
+              <option value="all">🔍 Show All</option>
+            </select>
+          </div>
+        )}
       </div>
 
-      {/* Main Review Lists */}
-      {loading ? (
-        <div className="bg-white p-12 rounded-3xl border border-[#E1E6EA] text-center text-xs text-slate-500">
-          <div className="w-8 h-8 border-3 border-[#B8323C] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-          <span>Loading moderation queue...</span>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {/* SECTION A: NEWS MODERATION (If activeTab === "all" or "news") */}
+      {/* ========================================================
+          TAB 1: ADVERTISEMENT MANAGEMENT (FEATURE 1)
+          ======================================================== */}
+      {activeTab === "ads" && (
+        <section aria-label="Advertisement Management" className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-2xl border border-[#E1E6EA] shadow-2xs">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="bg-red-100 text-[#B8323C] text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full">
+                  Admin Private
+                </span>
+                <h2 className="text-base sm:text-lg font-extrabold text-[#18232E] font-heading">
+                  Homepage Advertisements Registry
+                </h2>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Manage private banners displayed on the homepage. If no active published ad exists, the homepage slot remains completely invisible with zero reserved space.
+              </p>
+            </div>
+
+            <button
+              onClick={openCreateAdModal}
+              className="bg-[#B8323C] hover:bg-red-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-sm cursor-pointer shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create Advertisement</span>
+            </button>
+          </div>
+
+          {/* Ad Analytics Summary */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="bg-white p-4 rounded-xl border border-[#E1E6EA] shadow-2xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                <Eye className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase text-slate-400">Total Impressions</span>
+                <h4 className="text-base font-extrabold text-[#18232E]">{totalAdImpressions} views</h4>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-xl border border-[#E1E6EA] shadow-2xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                <MousePointer className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase text-slate-400">Total Genuine Clicks</span>
+                <h4 className="text-base font-extrabold text-[#18232E]">{totalAdClicks} clicks</h4>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-xl border border-[#E1E6EA] shadow-2xs flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase text-slate-400">Avg Click-Through Rate</span>
+                <h4 className="text-base font-extrabold text-[#18232E]">
+                  {totalAdImpressions > 0
+                    ? ((totalAdClicks / totalAdImpressions) * 100).toFixed(1) + "%"
+                    : "0.0%"}
+                </h4>
+              </div>
+            </div>
+          </div>
+
+          {/* Ad Table / Cards */}
+          {adsList.length === 0 ? (
+            <div className="bg-white p-12 rounded-3xl border border-[#E1E6EA] text-center space-y-3">
+              <div className="w-12 h-12 bg-red-50 text-[#B8323C] rounded-2xl flex items-center justify-center mx-auto">
+                <Megaphone className="w-6 h-6" />
+              </div>
+              <h3 className="text-sm font-bold text-[#18232E]">No Advertisements Created Yet</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                The homepage advertisement slot is currently completely collapsed and invisible to public visitors. Click below to create your first sponsor banner.
+              </p>
+              <button
+                onClick={openCreateAdModal}
+                className="bg-[#B8323C] text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-red-700 transition"
+              >
+                + Create First Advertisement
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {adsList.map((ad) => {
+                const now = new Date();
+                const isScheduledFuture = ad.startDate && new Date(ad.startDate) > now;
+                const isExpired = ad.endDate && new Date(ad.endDate) < now;
+                const isLive = ad.isActive && ad.isPublished && !isScheduledFuture && !isExpired;
+
+                return (
+                  <div
+                    key={ad._id}
+                    className="bg-white p-5 rounded-2xl border border-[#E1E6EA] shadow-2xs flex flex-col justify-between space-y-4 hover:border-slate-300 transition"
+                  >
+                    <div className="space-y-3">
+                      {/* Status Badges */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div className="flex items-center gap-1.5">
+                          {isLive ? (
+                            <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping"></span>
+                              <span>Live on Homepage</span>
+                            </span>
+                          ) : isExpired ? (
+                            <span className="bg-slate-100 text-slate-600 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
+                              Expired Schedule
+                            </span>
+                          ) : isScheduledFuture ? (
+                            <span className="bg-amber-100 text-amber-800 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
+                              Scheduled Future
+                            </span>
+                          ) : (
+                            <span className="bg-slate-100 text-slate-600 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
+                              Inactive / Draft
+                            </span>
+                          )}
+
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              ad.isPublished
+                                ? "bg-blue-50 text-blue-700"
+                                : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
+                            {ad.isPublished ? "Published" : "Draft (Unpublished)"}
+                          </span>
+                        </div>
+
+                        {/* Impressions and Clicks */}
+                        <div className="flex items-center gap-2 text-[11px] text-slate-500 font-semibold">
+                          <span>{ad.impressions || 0} imp</span>
+                          <span>•</span>
+                          <span>{ad.clicks || 0} clicks</span>
+                        </div>
+                      </div>
+
+                      {/* Visual Banner Preview */}
+                      {ad.imageUrl && (
+                        <div className="w-full h-36 rounded-xl overflow-hidden bg-slate-900 border border-slate-200 relative group">
+                          <img
+                            src={ad.imageUrl}
+                            alt={ad.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+
+                      {/* Title & Description */}
+                      <div>
+                        <h3 className="text-sm font-bold text-[#18232E] leading-snug">{ad.title}</h3>
+                        {ad.description && (
+                          <p className="text-xs text-slate-600 mt-1 line-clamp-2">{ad.description}</p>
+                        )}
+                      </div>
+
+                      {/* Destination URL */}
+                      {ad.destinationUrl && (
+                        <div className="text-xs text-slate-500 flex items-center gap-1.5 truncate">
+                          <Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <a
+                            href={ad.destinationUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline truncate"
+                          >
+                            {ad.destinationUrl}
+                          </a>
+                        </div>
+                      )}
+
+                      {/* Schedule Info */}
+                      {(ad.startDate || ad.endDate) && (
+                        <div className="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-200 flex items-center gap-2">
+                          <CalendarDays className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span>
+                            {ad.startDate ? new Date(ad.startDate).toLocaleDateString() : "Immediate"} –{" "}
+                            {ad.endDate ? new Date(ad.endDate).toLocaleDateString() : "Indefinite"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Controls */}
+                    <div className="pt-3 border-t border-[#E1E6EA] flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => handleToggleAdPublish(ad)}
+                          disabled={actionLoadingId === ad._id}
+                          className={`font-bold px-3 py-1.5 rounded-xl transition text-[11px] cursor-pointer ${
+                            ad.isPublished
+                              ? "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                              : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                          }`}
+                        >
+                          {ad.isPublished ? "Unpublish" : "Publish"}
+                        </button>
+
+                        <button
+                          onClick={() => handleToggleAdActive(ad)}
+                          disabled={actionLoadingId === ad._id}
+                          className={`font-bold px-3 py-1.5 rounded-xl transition text-[11px] cursor-pointer ${
+                            ad.isActive
+                              ? "bg-amber-100 hover:bg-amber-200 text-amber-800"
+                              : "bg-blue-600 hover:bg-blue-700 text-white"
+                          }`}
+                        >
+                          {ad.isActive ? "Disable" : "Enable"}
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => openEditAdModal(ad)}
+                          className="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-xl transition cursor-pointer"
+                          title="Edit Advertisement"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+
+                        <button
+                          onClick={() => setAdDeleteConfirmId(ad._id)}
+                          className="bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-xl transition cursor-pointer"
+                          title="Delete Advertisement"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* ========================================================
+          TAB 2: NEWS STUDIO & REELS FEED MANAGEMENT (FEATURE 2)
+          ======================================================== */}
+      {activeTab === "news-manage" && (
+        <section aria-label="News Studio and Reels Management" className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-2xl border border-[#E1E6EA] shadow-2xs">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="bg-blue-100 text-blue-700 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full">
+                  Editorial Desk
+                </span>
+                <h2 className="text-base sm:text-lg font-extrabold text-[#18232E] font-heading">
+                  Fazilnagar News Reels Studio
+                </h2>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Author, preview, pin, and publish vertical mobile-first news stories. Drafts remain strictly hidden from public feeds.
+              </p>
+            </div>
+
+            <button
+              onClick={openCreateNewsModal}
+              className="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-sm cursor-pointer shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Create News Story</span>
+            </button>
+          </div>
+
+          {/* Stories Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {newsList.map((story) => {
+              const isPub = story.isPublished || story.status === "approved";
+
+              return (
+                <div
+                  key={story._id}
+                  className="bg-white p-5 rounded-2xl border border-[#E1E6EA] shadow-2xs flex flex-col justify-between space-y-3 hover:border-slate-300 transition"
+                >
+                  <div className="space-y-2.5">
+                    {/* Media Thumbnail */}
+                    {story.image ? (
+                      <div className="h-36 w-full rounded-xl overflow-hidden bg-slate-900 relative">
+                        <img
+                          src={story.image}
+                          alt={story.title}
+                          className="w-full h-full object-cover"
+                        />
+                        {story.isFeatured && (
+                          <div className="absolute top-2 left-2 bg-amber-400 text-slate-950 text-[10px] font-black uppercase px-2 py-0.5 rounded-md flex items-center gap-1 shadow-md">
+                            <Star className="w-3 h-3 fill-current" />
+                            <span>Pinned</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="h-28 w-full rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 text-xs">
+                        No cover image
+                      </div>
+                    )}
+
+                    {/* Status & Category */}
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-[10px] font-extrabold text-blue-700 bg-blue-50 px-2 py-0.5 rounded uppercase">
+                        {story.category || "General"}
+                      </span>
+
+                      <span
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded uppercase ${
+                          isPub
+                            ? "bg-emerald-50 text-emerald-700"
+                            : story.status === "draft"
+                            ? "bg-slate-100 text-slate-600"
+                            : "bg-amber-50 text-amber-700"
+                        }`}
+                      >
+                        {isPub ? "Published" : story.status === "draft" ? "Draft" : "Pending"}
+                      </span>
+                    </div>
+
+                    <h3 className="text-sm font-bold text-[#18232E] leading-snug line-clamp-2">
+                      {story.title}
+                    </h3>
+
+                    {story.summary && (
+                      <p className="text-xs text-slate-600 line-clamp-2">{story.summary}</p>
+                    )}
+
+                    <div className="text-[11px] text-slate-400 pt-2 border-t border-slate-100 flex items-center justify-between">
+                      <span>{story.location || "Fazilnagar"}</span>
+                      <span>{story.publishedAt ? new Date(story.publishedAt).toLocaleDateString() : ""}</span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="pt-3 border-t border-[#E1E6EA] flex items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleToggleNewsFeatured(story)}
+                        className={`p-1.5 rounded-lg border text-xs transition cursor-pointer ${
+                          story.isFeatured
+                            ? "bg-amber-50 border-amber-300 text-amber-700"
+                            : "bg-slate-50 border-slate-200 text-slate-400 hover:text-slate-700"
+                        }`}
+                        title={story.isFeatured ? "Unpin story" : "Pin story to top"}
+                      >
+                        <Star className={`w-3.5 h-3.5 ${story.isFeatured ? "fill-current" : ""}`} />
+                      </button>
+
+                      <button
+                        onClick={() => handleToggleNewsPublish(story)}
+                        className={`font-bold px-2.5 py-1.5 rounded-lg text-[11px] transition cursor-pointer ${
+                          isPub
+                            ? "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                            : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                        }`}
+                      >
+                        {isPub ? "Unpublish" : "Publish"}
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setNewsPreviewModalItem(story)}
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 p-1.5 rounded-lg transition cursor-pointer"
+                        title="Preview Mobile Reel"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        onClick={() => openEditNewsModal(story)}
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 p-1.5 rounded-lg transition cursor-pointer"
+                        title="Edit Story"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        onClick={() => setNewsDeleteConfirmId(story._id)}
+                        className="bg-red-50 hover:bg-red-100 text-red-600 p-1.5 rounded-lg transition cursor-pointer"
+                        title="Delete Story"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ========================================================
+          TABS 3+: CITIZEN CORNER SUBMISSIONS MODERATION
+          ======================================================== */}
+      {activeTab !== "ads" && activeTab !== "news-manage" && (
+        <section aria-label="Citizen Submissions Moderation" className="space-y-6">
+          {/* SECTION A: CITIZEN NEWS MODERATION (When activeTab === "all" or "news") */}
           {(activeTab === "all" || activeTab === "news") && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-extrabold text-[#18232E] flex items-center gap-2 font-heading">
                   <Newspaper className="w-4 h-4 text-blue-600" />
-                  <span>News & Bulletin Moderation ({filteredNews.length})</span>
+                  <span>Citizen Submitted News ({filteredNews.length})</span>
                 </h2>
               </div>
 
               {filteredNews.length === 0 ? (
                 <div className="bg-white p-6 rounded-2xl border border-[#E1E6EA] text-center text-xs text-slate-400">
-                  No news articles matching current filter ({statusFilter}).
+                  No citizen news articles matching filter ({statusFilter}).
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -528,7 +1410,7 @@ export default function AdminReview({ user: propUser }) {
                           onClick={() => handleDeleteNews(item._id)}
                           disabled={actionLoadingId === item._id}
                           className="bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 font-bold p-2 rounded-xl transition cursor-pointer"
-                          title="Delete News"
+                          title="Delete News Article"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -540,19 +1422,19 @@ export default function AdminReview({ user: propUser }) {
             </div>
           )}
 
-          {/* SECTION B: CITIZEN CORNER SUBMISSIONS */}
-          {(activeTab === "all" || activeTab !== "news") && (
-            <div className="space-y-3 pt-4">
+          {/* SECTION B: CITIZEN SUGGESTED PLACES, CORRECTIONS, EVENTS */}
+          {activeTab !== "news" && (
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-extrabold text-[#18232E] flex items-center gap-2 font-heading">
-                  <Store className="w-4 h-4 text-[#B8323C]" />
-                  <span>Citizen Corner Submissions ({filteredSubmissions.length})</span>
+                  <Store className="w-4 h-4 text-emerald-600" />
+                  <span>Places, Corrections & Events Submissions ({filteredSubmissions.length})</span>
                 </h2>
               </div>
 
               {filteredSubmissions.length === 0 ? (
-                <div className="bg-white p-6 rounded-2xl border border-[#E1E6EA] text-center text-xs text-slate-400">
-                  No submissions matching current filter ({statusFilter}).
+                <div className="bg-white p-8 rounded-2xl border border-[#E1E6EA] text-center text-xs text-slate-400">
+                  No citizen submissions currently in queue for this filter.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -561,22 +1443,22 @@ export default function AdminReview({ user: propUser }) {
                       key={sub._id}
                       className="bg-white p-5 rounded-2xl border border-[#E1E6EA] shadow-xs flex flex-col justify-between space-y-4"
                     >
-                      <div className="space-y-2">
+                      <div className="space-y-2.5">
                         <div className="flex items-center justify-between text-xs">
                           <span
-                            className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded ${
+                            className={`text-[10px] font-extrabold px-2 py-0.5 rounded uppercase ${
                               sub.type === "business"
                                 ? "bg-red-50 text-[#B8323C]"
                                 : sub.type === "correction"
                                 ? "bg-amber-50 text-amber-700"
-                                : "bg-emerald-50 text-[#168568]"
+                                : "bg-emerald-50 text-emerald-700"
                             }`}
                           >
                             {sub.type === "business"
-                              ? "🏬 Suggest Business"
+                              ? "New Place / Shop"
                               : sub.type === "correction"
-                              ? "⚠️ Error Correction"
-                              : "📅 Local Event"}
+                              ? "Data Correction"
+                              : "Local Event"}
                           </span>
                           <span
                             className={`text-[10px] font-extrabold px-2 py-0.5 rounded uppercase ${
@@ -591,10 +1473,10 @@ export default function AdminReview({ user: propUser }) {
                           </span>
                         </div>
 
-                        <h3 className="text-base font-bold text-[#18232E]">{sub.title}</h3>
+                        <h3 className="text-sm font-bold text-[#18232E]">{sub.title}</h3>
 
                         {sub.category && (
-                          <p className="text-xs text-slate-500 font-semibold">Category: {sub.category}</p>
+                          <p className="text-xs text-slate-500">Category: <strong>{sub.category}</strong></p>
                         )}
                         {sub.phone && (
                           <p className="text-xs text-slate-600 flex items-center gap-1.5">
@@ -672,6 +1554,555 @@ export default function AdminReview({ user: propUser }) {
               )}
             </div>
           )}
+        </section>
+      )}
+
+      {/* ========================================================
+          CREATE / EDIT ADVERTISEMENT MODAL
+          ======================================================== */}
+      {adModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-2xl max-h-[92vh] rounded-3xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50 sticky top-0 z-10">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-red-100 text-[#B8323C] flex items-center justify-center">
+                  <Megaphone className="w-4 h-4" />
+                </div>
+                <h3 className="text-base font-extrabold text-[#18232E] font-heading">
+                  {editingAd ? "Edit Advertisement" : "Create Homepage Advertisement"}
+                </h3>
+              </div>
+              <button
+                onClick={() => setAdModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-200/70 hover:bg-slate-300 text-slate-600 flex items-center justify-center transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveAd} className="overflow-y-auto p-6 space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-[#18232E] mb-1">
+                  Advertisement Title / Business Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={adFormTitle}
+                  onChange={(e) => setAdFormTitle(e.target.value)}
+                  placeholder="e.g. Royal Sweets & Bakery - Special Festive Discount"
+                  className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-3 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#18232E] mb-1">
+                  Short Description / Offer Text
+                </label>
+                <textarea
+                  rows={2}
+                  value={adFormDesc}
+                  onChange={(e) => setAdFormDesc(e.target.value)}
+                  placeholder="Fresh desi ghee sweets, cakes, and gift packs on NH-27 College Road Crossing..."
+                  className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-3 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs"
+                />
+              </div>
+
+              {/* Banner Image Upload or URL */}
+              <div className="space-y-2">
+                <label className="block font-bold text-[#18232E]">
+                  Banner Image (Upload or Image Link) <span className="text-red-500">*</span>
+                </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="border-2 border-dashed border-slate-300 hover:border-[#B8323C] rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer bg-slate-50 transition">
+                      <Upload className="w-6 h-6 text-slate-400 mb-1" />
+                      <span className="font-bold text-[#18232E]">Upload Banner File</span>
+                      <span className="text-[10px] text-slate-400">PNG, JPG, WebP up to 5MB</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setAdFormFile(file);
+                            setAdFormPreviewUrl(URL.createObjectURL(file));
+                          }
+                        }}
+                      />
+                    </label>
+                    {adFormFile && (
+                      <p className="text-[11px] text-emerald-600 font-semibold mt-1 truncate">
+                        Selected: {adFormFile.name}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <span className="block font-semibold text-slate-600 mb-1">Or Paste Image URL</span>
+                    <input
+                      type="url"
+                      value={adFormUrl}
+                      onChange={(e) => {
+                        setAdFormUrl(e.target.value);
+                        setAdFormPreviewUrl(e.target.value);
+                      }}
+                      placeholder="https://example.com/banner.jpg"
+                      className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-3 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Banner Preview Box */}
+                {adFormPreviewUrl && (
+                  <div className="mt-2 p-2 bg-slate-100 rounded-xl border border-slate-200">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                      Banner Image Preview:
+                    </span>
+                    <div className="h-28 rounded-lg overflow-hidden bg-slate-900">
+                      <img
+                        src={adFormPreviewUrl}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#18232E] mb-1">
+                  Destination URL (Optional Website / WhatsApp Link)
+                </label>
+                <input
+                  type="url"
+                  value={adFormDestUrl}
+                  onChange={(e) => setAdFormDestUrl(e.target.value)}
+                  placeholder="https://example.com or https://wa.me/91..."
+                  className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-3 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs"
+                />
+              </div>
+
+              {/* Schedule Dates */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#18232E] mb-1">
+                    Start Schedule Date & Time (Optional)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={adFormStart}
+                    onChange={(e) => setAdFormStart(e.target.value)}
+                    className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-2.5 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#18232E] mb-1">
+                    End Schedule Date & Time (Optional)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={adFormEnd}
+                    onChange={(e) => setAdFormEnd(e.target.value)}
+                    className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-2.5 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Toggles */}
+              <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={adFormActive}
+                    onChange={(e) => setAdFormActive(e.target.checked)}
+                    className="w-4 h-4 text-[#B8323C] rounded accent-[#B8323C]"
+                  />
+                  <span className="font-bold text-[#18232E]">Enable Advertisement (Active)</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={adFormPublished}
+                    onChange={(e) => setAdFormPublished(e.target.checked)}
+                    className="w-4 h-4 text-emerald-600 rounded accent-emerald-600"
+                  />
+                  <span className="font-bold text-emerald-800">
+                    Publish Immediately (Show on homepage)
+                  </span>
+                </label>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setAdModalOpen(false)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={adFormSubmitting}
+                  className="bg-[#B8323C] hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-xl transition flex items-center gap-2 shadow-md cursor-pointer"
+                >
+                  {adFormSubmitting ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Check className="w-4 h-4" />
+                  )}
+                  <span>{editingAd ? "Save Changes" : "Create Advertisement"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          CREATE / EDIT NEWS STORY MODAL
+          ======================================================== */}
+      {newsModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-2xl max-h-[92vh] rounded-3xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50 sticky top-0 z-10">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
+                  <Newspaper className="w-4 h-4" />
+                </div>
+                <h3 className="text-base font-extrabold text-[#18232E] font-heading">
+                  {editingNews ? "Edit News Story" : "Create News Article for Reels Feed"}
+                </h3>
+              </div>
+              <button
+                onClick={() => setNewsModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-200/70 hover:bg-slate-300 text-slate-600 flex items-center justify-center transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveNews} className="overflow-y-auto p-6 space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-[#18232E] mb-1">
+                  News Headline (English) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={newsFormTitle}
+                  onChange={(e) => setNewsFormTitle(e.target.value)}
+                  placeholder="e.g. Major Highway Expansion Project Completed on NH-27 Fazilnagar"
+                  className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-3 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#18232E] mb-1">
+                  Hindi Headline (हिंदी शीर्षक - Optional)
+                </label>
+                <input
+                  type="text"
+                  value={newsFormTitleHi}
+                  onChange={(e) => setNewsFormTitleHi(e.target.value)}
+                  placeholder="उदा. एनएच-27 फाजिलनगर पर प्रमुख राजमार्ग चौड़ीकरण कार्य पूर्ण"
+                  className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-3 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs font-serif"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#18232E] mb-1">
+                  Short Summary (Reels Card Hook) <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  rows={2}
+                  value={newsFormSummary}
+                  onChange={(e) => setNewsFormSummary(e.target.value)}
+                  placeholder="Brief 2-3 sentence overview visible immediately on the vertical reel card..."
+                  className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-3 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#18232E] mb-1">
+                  Full Article Body (Read More Modal Content) <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  rows={4}
+                  value={newsFormContent}
+                  onChange={(e) => setNewsFormContent(e.target.value)}
+                  placeholder="Detailed multi-paragraph report, background details, quotes from municipal officers..."
+                  className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-3 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-bold text-[#18232E] mb-1">Category</label>
+                  <select
+                    value={newsFormCategory}
+                    onChange={(e) => setNewsFormCategory(e.target.value)}
+                    className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-2.5 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs"
+                  >
+                    <option value="Civic Updates">Civic Updates</option>
+                    <option value="Healthcare">Healthcare</option>
+                    <option value="Education">Education</option>
+                    <option value="Events">Events</option>
+                    <option value="General">General</option>
+                    <option value="Public Welfare">Public Welfare</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#18232E] mb-1">Location Tag</label>
+                  <input
+                    type="text"
+                    value={newsFormLocation}
+                    onChange={(e) => setNewsFormLocation(e.target.value)}
+                    placeholder="e.g. NH-27 Corridor, Fazilnagar"
+                    className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-2.5 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#18232E] mb-1">Source / Reporter</label>
+                  <input
+                    type="text"
+                    value={newsFormSource}
+                    onChange={(e) => setNewsFormSource(e.target.value)}
+                    placeholder="e.g. Municipal Ward Bureau"
+                    className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-2.5 outline-none focus:border-[#B8323C] focus:bg-white transition text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Cover Image Upload or URL */}
+              <div className="space-y-2">
+                <label className="block font-bold text-[#18232E]">Cover Image</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer bg-slate-50 transition">
+                      <Upload className="w-5 h-5 text-slate-400 mb-1" />
+                      <span className="font-bold text-[#18232E]">Upload Cover File</span>
+                      <span className="text-[10px] text-slate-400">JPG, PNG, WebP</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setNewsFormFile(file);
+                            setNewsFormPreviewUrl(URL.createObjectURL(file));
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                  <div>
+                    <span className="block font-semibold text-slate-600 mb-1">Or Image URL</span>
+                    <input
+                      type="url"
+                      value={newsFormImageUrl}
+                      onChange={(e) => {
+                        setNewsFormImageUrl(e.target.value);
+                        setNewsFormPreviewUrl(e.target.value);
+                      }}
+                      placeholder="https://images.unsplash.com/..."
+                      className="w-full bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl p-3 outline-none focus:border-blue-500 focus:bg-white transition text-xs"
+                    />
+                  </div>
+                </div>
+
+                {newsFormPreviewUrl && (
+                  <div className="h-28 rounded-xl overflow-hidden bg-slate-900 mt-2">
+                    <img src={newsFormPreviewUrl} alt="Preview" className="w-full h-full object-cover" />
+                  </div>
+                )}
+              </div>
+
+              {/* Toggles */}
+              <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newsFormIsFeatured}
+                    onChange={(e) => setNewsFormIsFeatured(e.target.checked)}
+                    className="w-4 h-4 text-amber-500 rounded accent-amber-500"
+                  />
+                  <span className="font-bold text-[#18232E] flex items-center gap-1">
+                    <Star className="w-3.5 h-3.5 text-amber-500 fill-current" />
+                    <span>Pin Story to Top of Feed (Featured)</span>
+                  </span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newsFormIsPublished}
+                    onChange={(e) => setNewsFormIsPublished(e.target.checked)}
+                    className="w-4 h-4 text-emerald-600 rounded accent-emerald-600"
+                  />
+                  <span className="font-bold text-emerald-800">
+                    Publish Live (Uncheck to save as Draft)
+                  </span>
+                </label>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setNewsModalOpen(false)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={newsFormSubmitting}
+                  className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold px-5 py-2.5 rounded-xl transition flex items-center gap-2 shadow-md cursor-pointer"
+                >
+                  {newsFormSubmitting ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Check className="w-4 h-4" />
+                  )}
+                  <span>{editingNews ? "Update Story" : "Save Story"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          DELETE AD CONFIRMATION MODAL
+          ======================================================== */}
+      {adDeleteConfirmId && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white max-w-sm w-full p-6 rounded-3xl border border-slate-200 shadow-2xl text-center space-y-3">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-extrabold text-[#18232E]">Delete Advertisement?</h3>
+            <p className="text-xs text-slate-500">
+              Are you sure you want to permanently delete this advertisement? If active, it will immediately collapse from the public homepage.
+            </p>
+            <div className="pt-2 flex items-center justify-center gap-2">
+              <button
+                onClick={() => setAdDeleteConfirmId(null)}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteAd(adDeleteConfirmId)}
+                className="bg-[#B8323C] hover:bg-red-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          DELETE NEWS CONFIRMATION MODAL
+          ======================================================== */}
+      {newsDeleteConfirmId && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white max-w-sm w-full p-6 rounded-3xl border border-slate-200 shadow-2xl text-center space-y-3">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-extrabold text-[#18232E]">Delete Story?</h3>
+            <p className="text-xs text-slate-500">
+              Are you sure you want to permanently delete this news story from the Reels feed?
+            </p>
+            <div className="pt-2 flex items-center justify-center gap-2">
+              <button
+                onClick={() => setNewsDeleteConfirmId(null)}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  handleDeleteNews(newsDeleteConfirmId);
+                  setNewsDeleteConfirmId(null);
+                }}
+                className="bg-[#B8323C] hover:bg-red-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          MOBILE REEL PREVIEW MODAL
+          ======================================================== */}
+      {newsPreviewModalItem && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="relative w-full max-w-sm h-[640px] rounded-3xl overflow-hidden border-4 border-slate-700 shadow-2xl flex flex-col justify-end bg-black">
+            <button
+              onClick={() => setNewsPreviewModalItem(null)}
+              className="absolute top-4 right-4 z-30 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {newsPreviewModalItem.image && (
+              <img
+                src={newsPreviewModalItem.image}
+                alt="Reel Preview"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+
+            <div className="relative z-10 p-5 space-y-2 text-white">
+              <div className="flex items-center gap-1.5">
+                <span className="bg-[#B8323C] text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded">
+                  {newsPreviewModalItem.category || "News"}
+                </span>
+                {newsPreviewModalItem.isFeatured && (
+                  <span className="bg-amber-400 text-slate-950 text-[10px] font-black uppercase px-2 py-0.5 rounded">
+                    Pinned
+                  </span>
+                )}
+              </div>
+
+              <h3 className="text-base font-extrabold leading-snug">
+                {newsPreviewModalItem.title}
+              </h3>
+
+              <p className="text-xs text-slate-300 line-clamp-3">
+                {newsPreviewModalItem.summary || newsPreviewModalItem.description}
+              </p>
+
+              <div className="text-[11px] text-slate-400 pt-2 flex items-center justify-between">
+                <span>{newsPreviewModalItem.source || "Fazilnagar Bureau"}</span>
+                <span>{newsPreviewModalItem.location || "Fazilnagar"}</span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

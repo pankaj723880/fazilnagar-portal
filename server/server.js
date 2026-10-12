@@ -112,6 +112,8 @@ async function autoSeedPlaces() {
   }
 }
 
+import advertisementsRoutes from "./routes/advertisements.js";
+
 // Connect DB & Routes
 connectDB().then(() => {
   autoSeedPlaces();
@@ -122,12 +124,14 @@ app.use("/api/auth", authRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/places", placesRoutes);
 app.use("/api/submissions", submissionsRoutes);
+app.use("/api/advertisements", advertisementsRoutes);
 
 // Fallback mounts in case client calls without /api prefix
 app.use("/auth", authRoutes);
 app.use("/news", newsRoutes);
 app.use("/places", placesRoutes);
 app.use("/submissions", submissionsRoutes);
+app.use("/advertisements", advertisementsRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
