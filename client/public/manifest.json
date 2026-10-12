@@ -1,0 +1,25 @@
+{
+  "short_name": "Fazilnagar",
+  "name": "Fazilnagar Town Portal",
+  "description": "Discover local places, essential services, businesses, schools, and hospitals in Fazilnagar town, Kushinagar, UP.",
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#F5F7F8",
+  "theme_color": "#18232E",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/"
+}

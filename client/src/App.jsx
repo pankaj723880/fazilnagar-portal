@@ -23,6 +23,7 @@ import TownPortal from "./pages/TownPortal";
 import Directory from "./pages/Directory";
 import About from "./pages/About";
 import AdminReview from "./pages/AdminReview";
+import InstallButton from "./components/InstallButton";
 
 const MAIN_NAV_ITEMS = [
   { path: "/", label: "Home" },
@@ -235,6 +236,7 @@ export default function App() {
 
           {/* Auth & Post Actions Bar */}
           <div className="hidden sm:flex items-center gap-2.5 shrink-0">
+            <InstallButton />
             {user ? (
               <>
                 {user.role === "admin" && (
@@ -285,20 +287,23 @@ export default function App() {
             )}
           </div>
 
-          {/* Mobile Menu Toggle Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:outline-none"
-            aria-label="Toggle Navigation"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {mobileMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
+          {/* Mobile Actions & Menu Toggle Button */}
+          <div className="flex lg:hidden items-center gap-2">
+            <InstallButton compact={true} />
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 focus:outline-none cursor-pointer"
+              aria-label="Toggle Navigation"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {mobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Secondary Sub-Navbar - Visible across Directory & all Civic Hub pages */}
@@ -337,6 +342,10 @@ export default function App() {
         {/* Mobile Navigation Dropdown */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-4 space-y-3 shadow-lg">
+            <div className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-800">Install on Device</span>
+              <InstallButton compact={false} />
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <Link
                 to="/"

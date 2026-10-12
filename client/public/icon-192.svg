@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#18232E"/>
+      <stop offset="100%" stop-color="#0f171e"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B8323C"/>
+      <stop offset="100%" stop-color="#8a1f27"/>
+    </linearGradient>
+  </defs>
+  <!-- Background with rounded corners -->
+  <rect width="192" height="192" rx="42" fill="url(#bgGrad)"/>
+  <!-- Border highlight -->
+  <rect x="2" y="2" width="188" height="188" rx="40" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+  
+  <!-- Subtle emblem circle -->
+  <circle cx="96" cy="96" r="62" fill="none" stroke="url(#accentGrad)" stroke-width="4" stroke-dasharray="6 4" opacity="0.6"/>
+
+  <!-- Center Letter F badge -->
+  <rect x="62" y="58" width="68" height="76" rx="14" fill="url(#accentGrad)" filter="drop-shadow(0 4px 8px rgba(0,0,0,0.4))"/>
+  
+  <text x="96" y="112" font-family="Inter, -apple-system, sans-serif" font-weight="900" font-size="52" fill="#ffffff" text-anchor="middle">F</text>
+  
+  <!-- Bottom micro badge -->
+  <circle cx="96" cy="155" r="4" fill="#168568"/>
+</svg>

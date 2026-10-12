@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import L from "leaflet";
 import API from "../api";
 import { openGoogleMapsDirections } from "../utils/directions";
+import InstallButton from "../components/InstallButton";
 import {
   MapPin,
   ShieldCheck,
@@ -767,6 +768,7 @@ export default function TownPortal() {
 
             {/* Primary Action & Citizen Auth Bar */}
             <div className="hidden sm:flex items-center gap-2.5 shrink-0">
+              <InstallButton />
               {currentUser ? (
                 <>
                   {currentUser.role === "admin" && (
@@ -819,19 +821,26 @@ export default function TownPortal() {
               )}
             </div>
 
-            {/* Mobile Menu Toggle */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl text-[#18232E] hover:bg-slate-100"
-              aria-label="Toggle Navigation"
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+            {/* Mobile Actions & Menu Toggle */}
+            <div className="flex lg:hidden items-center gap-2">
+              <InstallButton compact={true} />
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 rounded-xl text-[#18232E] hover:bg-slate-100 cursor-pointer"
+                aria-label="Toggle Navigation"
+              >
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
 
           {/* Mobile Menu Dropdown */}
           {mobileMenuOpen && (
             <div className="lg:hidden bg-white border-t border-[#E1E6EA] py-3 px-2 space-y-1 text-xs font-semibold shadow-lg animate-slide-down">
+              <div className="mb-2 p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between">
+                <span className="text-xs font-bold text-[#18232E]">Install on Device</span>
+                <InstallButton compact={false} />
+              </div>
               <button
                 onClick={(e) => {
                   setMobileMenuOpen(false);
