@@ -657,7 +657,7 @@ export default function App() {
             `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition text-[10px] font-bold ${
               isActive && location.pathname === "/"
                 ? "text-[#B8323C]"
-                : "text-slate-500 hover:text-slate-900"
+                : "text-slate-600 hover:text-slate-900"
             }`
           }
         >
@@ -671,13 +671,13 @@ export default function App() {
             `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition text-[10px] font-bold relative ${
               isActive || location.pathname.startsWith("/directory")
                 ? "text-[#B8323C]"
-                : "text-slate-500 hover:text-slate-900"
+                : "text-slate-600 hover:text-slate-900"
             }`
           }
         >
           <Compass className="w-5 h-5 mb-0.5" />
           <span>Directory</span>
-          <span className="absolute top-1 right-2 w-1.5 h-1.5 rounded-full bg-[#168568]"></span>
+          <span className="absolute top-1 right-2 w-1.5 h-1.5 rounded-full bg-[#0D5E49]"></span>
         </NavLink>
 
         <NavLink
@@ -686,7 +686,7 @@ export default function App() {
             `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition text-[10px] font-bold ${
               isActive
                 ? "text-[#B8323C]"
-                : "text-slate-500 hover:text-slate-900"
+                : "text-slate-600 hover:text-slate-900"
             }`
           }
         >
@@ -700,7 +700,7 @@ export default function App() {
             `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition text-[10px] font-bold ${
               isActive
                 ? "text-[#B8323C]"
-                : "text-slate-500 hover:text-slate-900"
+                : "text-slate-600 hover:text-slate-900"
             }`
           }
         >
@@ -714,7 +714,7 @@ export default function App() {
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition text-[10px] font-bold cursor-pointer ${
             mobileMenuOpen
               ? "text-[#B8323C]"
-              : "text-slate-500 hover:text-slate-900"
+              : "text-slate-600 hover:text-slate-900"
           }`}
           aria-label="Toggle navigation menu"
         >
