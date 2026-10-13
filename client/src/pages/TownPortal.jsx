@@ -402,12 +402,16 @@ const INITIAL_PLACES = Array.isArray(seedPlaces) && seedPlaces.length > 0
       subcategory: p.subcategory,
       address: p.addressFull || p.locality,
       landmark: p.streetOrLandmark || p.addressFull || p.locality,
-      lat: parseFloat(p.latitude),
-      lng: parseFloat(p.longitude),
+      lat: !isNaN(parseFloat(p.latitude)) ? parseFloat(p.latitude) : null,
+      lng: !isNaN(parseFloat(p.longitude)) ? parseFloat(p.longitude) : null,
+      latitude: !isNaN(parseFloat(p.latitude)) ? parseFloat(p.latitude) : null,
+      longitude: !isNaN(parseFloat(p.longitude)) ? parseFloat(p.longitude) : null,
       hours: p.openingHours || "General Hours",
       phone: p.phone || "",
       desc: p.description,
       badge: p.subcategory || p.category,
+      verificationStatus: p.verificationStatus || "verified",
+      townBoundaryStatus: p.townBoundaryStatus || "confirmed",
     }))
   : VERIFIED_TOWN_PLACES;
 
@@ -535,12 +539,16 @@ export default function TownPortal() {
             subcategory: p.subcategory,
             address: p.addressFull,
             landmark: p.streetOrLandmark || p.locality,
-            lat: p.latitude || p.lat,
-            lng: p.longitude || p.lng,
+            lat: p.latitude || p.lat || null,
+            lng: p.longitude || p.lng || null,
+            latitude: p.latitude || p.lat || null,
+            longitude: p.longitude || p.lng || null,
             hours: p.openingHours || "General Hours",
             phone: p.phone || "Public Listing",
             desc: p.description,
             badge: p.subcategory || p.category,
+            verificationStatus: p.verificationStatus || "verified",
+            townBoundaryStatus: p.townBoundaryStatus || "confirmed",
           }));
           setPlaces(apiPlaces);
         }
@@ -651,12 +659,29 @@ export default function TownPortal() {
       }).addTo(mapInstanceRef.current);
 
       marker.bindPopup(`
-        <div style="font-family: Inter, sans-serif; font-size: 12px; min-width: 180px; color: #18232E;">
+        <div style="font-family: Inter, sans-serif; font-size: 12px; min-width: 200px; color: #18232E; padding: 2px;">
           <span style="font-size: 9px; font-weight: 800; color: #B8323C; text-transform: uppercase; letter-spacing: 0.5px;">${place.category}</span>
           <h4 style="margin: 2px 0 4px; font-size: 13px; font-weight: 700; color: #18232E;">${place.name}</h4>
-          <p style="margin: 0; font-size: 11px; color: #647180;">${place.landmark}</p>
+          <p style="margin: 0; font-size: 11px; color: #647180;">${place.landmark || place.address}</p>
+          <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #E1E6EA; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <button type="button" class="townportal-popup-directions-btn" style="color: #168568; background: none; border: none; padding: 0; font-weight: 700; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
+              <span>🧭 Live Directions</span>
+            </button>
+            ${place.phone ? `<a href="tel:${place.phone.replace(/\\s+/g, '')}" style="color: #18232E; text-decoration: none; font-weight: 700; font-size: 11px;">📞 Call</a>` : ''}
+          </div>
         </div>
       `);
+
+      marker.on("popupopen", (e) => {
+        const btn = e.popup.getElement()?.querySelector(".townportal-popup-directions-btn");
+        if (btn) {
+          btn.onclick = (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            openGoogleMapsDirections(place);
+          };
+        }
+      });
 
       marker.on("click", () => {
         setSelectedPlace(place);

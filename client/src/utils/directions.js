@@ -1,64 +1,71 @@
 /**
- * Smart Direction Utility: Launches Google Maps turn-by-turn directions
- * starting from the user's real-time live GPS device location to the destination.
+ * Fazilnagar Town Portal — Verified Direction Utility
  *
- * Uses synchronous navigation to prevent browser popup blockers from blocking
- * the new tab, with cached coordinates fallback to Google Maps' native 'Current+Location'.
+ * Coordinates turn-by-turn navigation starting from the user's authentic
+ * live GPS device location to the selected verified Fazilnagar destination.
+ *
+ * Dispatches an event to the DirectionsModal to handle user consent,
+ * high-accuracy Geolocation, permission states, and exact coordinate routing.
  */
 
-let cachedUserCoords = null;
-
-// Pre-fetch device coordinates in background if user already has permissions enabled
-if (typeof window !== "undefined" && "geolocation" in navigator) {
-  try {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        if (pos?.coords) {
-          cachedUserCoords = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-          };
-        }
-      },
-      () => {
-        // Silently ignore if not yet permitted or dismissed
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 8000,
-        maximumAge: 300000, // Cache for 5 minutes
-      }
-    );
-  } catch (e) {
-    // Ignore environments where geolocation is restricted
-  }
-}
-
+/**
+ * Open the comprehensive GPS directions flow for a given place
+ * @param {Object} place - Establishment or landmark object
+ */
 export function openGoogleMapsDirections(place) {
   if (!place) return;
 
-  const rawLat = place.latitude ?? place.lat;
-  const rawLng = place.longitude ?? place.lng;
-  const latNum = parseFloat(rawLat);
-  const lngNum = parseFloat(rawLng);
-  const placeName = place.name || "Fazilnagar";
+  if (typeof window !== "undefined") {
+    // Normalize coordinates so both lat/latitude and lng/longitude are available
+    const normalizedPlace = {
+      ...place,
+      lat: place.latitude ?? place.lat ?? null,
+      lng: place.longitude ?? place.lng ?? null,
+      latitude: place.latitude ?? place.lat ?? null,
+      longitude: place.longitude ?? place.lng ?? null,
+    };
 
-  const hasValidCoords = !isNaN(latNum) && !isNaN(lngNum) && latNum > 0 && lngNum > 0;
+    window.dispatchEvent(
+      new CustomEvent("open-directions", {
+        detail: normalizedPlace,
+      })
+    );
+  }
+}
 
-  // Use exact pinpoint GPS coordinates when available; fallback to landmark string with postal PIN
-  const destination = hasValidCoords
-    ? `${latNum},${lngNum}`
-    : encodeURIComponent(`${placeName}, Fazilnagar, Kushinagar, Uttar Pradesh 274401`);
+export function openDirections(place) {
+  openGoogleMapsDirections(place);
+}
 
-  // If exact coordinates are cached from background geolocation, pass them directly.
-  // Otherwise, 'Current+Location' instructs Google Maps to immediately grab the device's live GPS.
-  const origin = cachedUserCoords
-    ? `${cachedUserCoords.lat},${cachedUserCoords.lng}`
-    : "Current+Location";
+/**
+ * Helper to construct an exact Google Maps turn-by-turn directions URL
+ * @param {Object} options
+ * @param {string|{lat: number, lng: number}} options.origin - Starting GPS coordinates or address string
+ * @param {string|{lat: number, lng: number}} options.destination - Target GPS coordinates or address string
+ * @param {string} [options.travelmode='driving'] - Driving, walking, transit, bicycling
+ */
+export function buildGoogleMapsUrl({ origin, destination, travelmode = "driving" }) {
+  const originStr =
+    typeof origin === "object" && origin !== null && !isNaN(origin.lat) && !isNaN(origin.lng)
+      ? `${origin.lat},${origin.lng}`
+      : origin || "";
 
-  const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`;
+  const destStr =
+    typeof destination === "object" && destination !== null && !isNaN(destination.lat) && !isNaN(destination.lng)
+      ? `${destination.lat},${destination.lng}`
+      : destination || "";
 
-  // Always invoke window.open synchronously to prevent modern browsers (Chrome/Safari)
-  // from blocking the new window as an unsolicited async popup.
-  window.open(url, "_blank", "noopener,noreferrer");
+  const params = new URLSearchParams({
+    api: "1",
+    travelmode,
+  });
+
+  if (originStr) {
+    params.set("origin", originStr);
+  }
+  if (destStr) {
+    params.set("destination", destStr);
+  }
+
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { openGoogleMapsDirections } from "../utils/directions";
 
 // 17 Requested Categories
 const CATEGORIES = [
@@ -452,16 +453,13 @@ export default function InteractiveMap() {
                   </h2>
                 </div>
 
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                    selectedLocation.mapQuery
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors shadow-sm"
+                <button
+                  type="button"
+                  onClick={() => openGoogleMapsDirections(selectedLocation)}
+                  className="inline-flex items-center justify-center bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors shadow-sm cursor-pointer"
                 >
                   🧭 Get Directions
-                </a>
+                </button>
               </div>
 
               {/* Photo Gallery */}

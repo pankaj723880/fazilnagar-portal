@@ -23,6 +23,7 @@ import Directory from "./pages/Directory";
 import About from "./pages/About";
 import AdminReview from "./pages/AdminReview";
 import InstallButton from "./components/InstallButton";
+import DirectionsModal from "./components/DirectionsModal";
 import { GlobalFloatingAndStickyAds } from "./components/AdvertisementSlot";
 import { Home, Compass, PhoneCall, Newspaper, Menu, X, ShieldAlert } from "lucide-react";
 
@@ -719,6 +720,9 @@ export default function App() {
 
       {/* Global Floating Overlay & Sticky Banner Advertisements (Cancellable) */}
       <GlobalFloatingAndStickyAds />
+
+      {/* Global Turn-by-Turn GPS Directions Modal */}
+      <DirectionsModal />
     </div>
   );
 }

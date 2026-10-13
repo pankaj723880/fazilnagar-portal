@@ -1299,7 +1299,26 @@
 
       const directionsBtn = document.getElementById('btnGetDirections');
       if (directionsBtn) {
-        directionsBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}`;
+        directionsBtn.onclick = function(e) {
+          e.preventDefault();
+          const dest = `${place.lat},${place.lng}`;
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              function(pos) {
+                const url = `https://www.google.com/maps/dir/?api=1&origin=${pos.coords.latitude},${pos.coords.longitude}&destination=${dest}&travelmode=driving`;
+                window.open(url, '_blank', 'noopener,noreferrer');
+              },
+              function() {
+                const url = `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`;
+                window.open(url, '_blank', 'noopener,noreferrer');
+              },
+              { enableHighAccuracy: true, timeout: 8000 }
+            );
+          } else {
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`;
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }
+        };
       }
     }
 

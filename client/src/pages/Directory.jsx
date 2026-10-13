@@ -370,21 +370,30 @@ export default function Directory({ user }) {
         title: place.name,
       }).addTo(mapInstanceRef.current);
 
-      const directionsUrl = `https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${lat},${lng}&travelmode=driving`;
-
       marker.bindPopup(`
         <div style="font-size: 12px; min-width: 200px; font-family: system-ui, -apple-system, sans-serif; padding: 2px;">
           <span style="font-size: 9px; font-weight: 800; color: #0d9488; text-transform: uppercase; letter-spacing: 0.5px;">${place.category}</span>
           <h4 style="margin: 3px 0 4px; font-size: 14px; font-weight: 800; color: #0f172a; line-height: 1.2;">${place.name}</h4>
           <p style="margin: 0; font-size: 11px; color: #64748b; line-height: 1.3;">${place.streetOrLandmark || place.addressFull || place.locality}</p>
           <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-            <a href="${directionsUrl}" target="_blank" rel="noreferrer" style="color: #0f766e; text-decoration: none; font-weight: 700; font-size: 11px; display: inline-flex; align-items: center; gap: 3px;">
+            <button type="button" class="leaflet-popup-directions-btn" style="color: #0f766e; background: none; border: none; padding: 0; font-weight: 700; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
               <span>🧭 Live Directions</span>
-            </a>
+            </button>
             ${place.phone ? `<a href="tel:${place.phone.replace(/\\s+/g, '')}" style="color: #0f172a; text-decoration: none; font-weight: 700; font-size: 11px;">📞 Call</a>` : ''}
           </div>
         </div>
       `);
+
+      marker.on("popupopen", (e) => {
+        const btn = e.popup.getElement()?.querySelector(".leaflet-popup-directions-btn");
+        if (btn) {
+          btn.onclick = (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            openGoogleMapsDirections(place);
+          };
+        }
+      });
 
       marker.on("click", () => {
         handleSelectPlace(place);

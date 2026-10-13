@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { usePageSEO } from "../utils/seo";
+import { openGoogleMapsDirections } from "../utils/directions";
 
 const HEALTHCARE_PLACES = [
   {
@@ -9,9 +10,13 @@ const HEALTHCARE_PLACES = [
     specialization: "General Surgery, Medicine & Inpatient Care",
     timing: "24/7 OPD & Emergency",
     emergency: true,
-    location: "NH-27 Highway, Fazilnagar",
+    location: "Hospital Road, Fazilnagar",
+    addressFull: "Hospital Road, Fazilnagar - 274401",
     contact: "+91 5564 222100",
-    mapQuery: "Community+Health+Centre+Fazilnagar",
+    latitude: 26.6818,
+    longitude: 84.0531,
+    lat: 26.6818,
+    lng: 84.0531,
   },
   {
     id: 2,
@@ -21,8 +26,12 @@ const HEALTHCARE_PLACES = [
     timing: "09:00 AM - 02:00 PM | 05:00 PM - 08:00 PM",
     emergency: false,
     location: "College Road, Fazilnagar",
+    addressFull: "College Road, Fazilnagar - 274401",
     contact: "+91 98381 22334",
-    mapQuery: "Fazilnagar+Main+Market",
+    latitude: 26.684,
+    longitude: 84.0504,
+    lat: 26.684,
+    lng: 84.0504,
   },
   {
     id: 3,
@@ -32,8 +41,12 @@ const HEALTHCARE_PLACES = [
     timing: "08:00 AM - 10:30 PM",
     emergency: true,
     location: "Main Market Chauraha, Fazilnagar",
+    addressFull: "Main Market Chauraha, Fazilnagar - 274401",
     contact: "+91 94152 88776",
-    mapQuery: "Sanjivani+Medical+Fazilnagar",
+    latitude: 26.6836,
+    longitude: 84.0507,
+    lat: 26.6836,
+    lng: 84.0507,
   },
   {
     id: 4,
@@ -42,9 +55,13 @@ const HEALTHCARE_PLACES = [
     specialization: "Pathology, Blood Testing & Diagnostics",
     timing: "07:00 AM - 07:00 PM",
     emergency: false,
-    location: "Station Road, Fazilnagar",
+    location: "Hospital Road, Fazilnagar",
+    addressFull: "Hospital Road, Fazilnagar - 274401",
     contact: "+91 98110 44556",
-    mapQuery: "Fazilnagar+Station+Road",
+    latitude: 26.6822,
+    longitude: 84.0518,
+    lat: 26.6822,
+    lng: 84.0518,
   },
 ];
 
@@ -156,16 +173,13 @@ export default function HealthcareDirectory() {
               >
                 📞 Call ({place.contact})
               </a>
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                  place.mapQuery
-                )}`}
-                target="_blank"
-                rel="noreferrer"
-                className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold py-2.5 rounded-xl text-center"
+              <button
+                type="button"
+                onClick={() => openGoogleMapsDirections(place)}
+                className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold py-2.5 rounded-xl text-center cursor-pointer transition-colors"
               >
                 🧭 Directions
-              </a>
+              </button>
             </div>
           </div>
         ))}
