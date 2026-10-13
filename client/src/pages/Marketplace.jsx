@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePageSEO } from "../utils/seo";
 
 const PRODUCTS = [
   {
@@ -31,6 +32,11 @@ const PRODUCTS = [
 ];
 
 export default function Marketplace() {
+  usePageSEO({
+    title: "Fazilnagar Local Marketplace | Shops, Products & Artisan Goods",
+    description: "Browse products from local shops and artisans in Fazilnagar, Kushinagar. Discover handicrafts, sweets, textiles, clothing, electronics, and daily essentials.",
+    canonicalPath: "/marketplace",
+  });
   const [activeCategory, setActiveCategory] = useState("All");
 
   const categories = ["All", "Clothes", "Handicrafts", "Food", "Sweets", "Electronics", "Local products"];
@@ -46,9 +52,9 @@ export default function Marketplace() {
           <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
             Shop Local First
           </span>
-          <h1 className="text-3xl sm:text-4xl font-extrabold mt-2">🛍️ Local Marketplace</h1>
+          <h1 className="text-2xl sm:text-4xl font-extrabold mt-2">🛍️ Fazilnagar Local Marketplace &amp; Shops</h1>
           <p className="text-slate-300 text-sm mt-1">
-            Direct showcase for local stores, artisans, sweets, electronics, and handloom goods.
+            Direct showcase for local stores, artisans, sweets, electronics, and handloom goods in Fazilnagar.
           </p>
         </div>
       </div>

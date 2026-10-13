@@ -1,3 +1,5 @@
+import { usePageSEO } from "../utils/seo";
+
 const GOVT_SERVICES = [
   {
     title: "Birth & Death Certificate Registration",
@@ -30,15 +32,20 @@ const GOVT_SERVICES = [
 ];
 
 export default function GovtServices() {
+  usePageSEO({
+    title: "Fazilnagar Public Utilities & Civic Services | Municipal & Citizen Services",
+    description: "Citizen service portal for Fazilnagar, Kushinagar (PIN 274401). Access links and guidelines for municipal certificates, UP Bhulekh land records, UPPCL power connection, and Jal Nigam.",
+    canonicalPath: "/govt",
+  });
   return (
     <div className="space-y-6 pb-12">
       <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-2">
         <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
           Public Administrative Portal
         </span>
-        <h1 className="text-3xl sm:text-4xl font-extrabold">🏛️ Government Services & Forms</h1>
+        <h1 className="text-2xl sm:text-4xl font-extrabold">🏛️ Fazilnagar Public &amp; Civic Utilities Guide</h1>
         <p className="text-slate-300 text-sm">
-          Official guidelines, direct portal links, required documents, and municipal office contacts.
+          Official guidelines, municipal links, UP Bhulekh land records, electricity, and citizen services in Fazilnagar.
         </p>
       </div>
 

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePageSEO } from "../utils/seo";
 
 const LOCAL_JOBS = [
   {
@@ -45,6 +46,11 @@ const BUSINESS_DIRECTORY = [
 ];
 
 export default function JobsAndBusiness() {
+  usePageSEO({
+    title: "Fazilnagar Jobs & Local Business Directory | Vacancies & Enterprises",
+    description: "Find local jobs, career vacancies, and business listings in Fazilnagar, Kushinagar. Discover town enterprises, commercial shops, and local employment opportunities.",
+    canonicalPath: "/jobs",
+  });
   const [activeTab, setActiveTab] = useState("jobs");
 
   return (
@@ -54,8 +60,8 @@ export default function JobsAndBusiness() {
           <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
             Commerce & Employment
           </span>
-          <h1 className="text-3xl sm:text-4xl font-extrabold mt-2">
-            💼 Jobs & Business Directory
+          <h1 className="text-2xl sm:text-4xl font-extrabold mt-2">
+            💼 Fazilnagar Jobs &amp; Business Directory
           </h1>
           <p className="text-slate-300 text-sm mt-1">
             Browse local openings or claim and list your business.

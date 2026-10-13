@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePageSEO } from "../utils/seo";
 
 const INSTITUTES = [
   {
@@ -52,6 +53,11 @@ const INSTITUTES = [
 ];
 
 export default function EducationHub() {
+  usePageSEO({
+    title: "Fazilnagar Education Guide | Schools, Degree Colleges & Coaching Institutes",
+    description: "Explore top schools, intermediate colleges, degree colleges, computer academies, and competitive coaching centers in Fazilnagar, Kushinagar (PIN 274401).",
+    canonicalPath: "/education",
+  });
   const [activeCategory, setActiveCategory] = useState("All");
 
   const categories = [
@@ -76,9 +82,9 @@ export default function EducationHub() {
         <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
           Student & Academic Portal
         </span>
-        <h1 className="text-3xl sm:text-4xl font-extrabold">🎓 Education Hub</h1>
+        <h1 className="text-2xl sm:text-4xl font-extrabold">🎓 Fazilnagar Education Guide &amp; Colleges</h1>
         <p className="text-slate-300 text-sm">
-          Discover schools, colleges, competitive exam centers, courses, and fees in Fazilnagar.
+          Discover schools, colleges, competitive exam centers, computer academies, and courses in Fazilnagar.
         </p>
       </div>
 

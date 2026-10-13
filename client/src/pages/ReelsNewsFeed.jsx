@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import API from "../api";
+import { usePageSEO } from "../utils/seo";
 import {
   Newspaper,
   Share2,
@@ -283,6 +284,11 @@ function CommentBranchNode({
 }
 
 export default function ReelsNewsFeed() {
+  usePageSEO({
+    title: "Fazilnagar News & Community Updates | Local Headlines & Bulletins",
+    description: "Stay informed with real-time town news, civic announcements, local bulletins, public notices, and citizen reports from Fazilnagar, Kushinagar (PIN 274401).",
+    canonicalPath: "/news",
+  });
   const [searchParams] = useSearchParams();
   const targetStoryId = searchParams.get("storyId") || searchParams.get("targetId");
 

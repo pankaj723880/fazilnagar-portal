@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../api";
+import { usePageSEO } from "../utils/seo";
 import {
   ShieldCheck,
   CheckCircle,
@@ -42,6 +43,12 @@ import {
 } from "lucide-react";
 
 export default function AdminReview({ user: propUser }) {
+  usePageSEO({
+    title: "Admin Review Desk | Fazilnagar Town Portal",
+    description: "Administrative moderation and content review desk for Fazilnagar Town Portal.",
+    canonicalPath: "/admin/review",
+    noIndex: true,
+  });
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(propUser || null);
   const [activeTab, setActiveTab] = useState("all"); // "all" | "ads" | "news-manage" | "news" | "business" | "correction" | "event"

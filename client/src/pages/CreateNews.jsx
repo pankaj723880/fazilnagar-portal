@@ -1,6 +1,13 @@
 import UploadForm from "../components/UploadForm";
+import { usePageSEO } from "../utils/seo";
 
 export default function CreateNews({ user }) {
+  usePageSEO({
+    title: "Submit Local News & Announcements | Fazilnagar Town Portal",
+    description: "Citizen news submission desk for Fazilnagar. Submit town news, notices, and community announcements for review.",
+    canonicalPath: "/create-news",
+    noIndex: true,
+  });
   return (
     <div className="space-y-6 pb-12">
       <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-2">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import API from "../api";
+import { usePageSEO } from "../utils/seo";
 import { Newspaper, PlusCircle, Search, Calendar, User, Tag, Sparkles } from "lucide-react";
 
 const FALLBACK_NEWS = [
@@ -27,6 +28,11 @@ const FALLBACK_NEWS = [
 ];
 
 export default function News() {
+  usePageSEO({
+    title: "Fazilnagar News Archive & Bulletins | Local Community News",
+    description: "Read local articles, community notices, and municipal news updates from Fazilnagar town, Kushinagar (PIN 274401).",
+    canonicalPath: "/news/classic",
+  });
   const [newsList, setNewsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");

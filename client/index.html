@@ -2,10 +2,37 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/icon-192.svg" />
+    <link rel="alternate icon" href="/icon-192.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fazilnagar Town Portal | Your Town. Your Community. (Kushinagar, UP)</title>
-    <meta name="description" content="Discover local places, essential services, businesses, schools, and hospitals in Fazilnagar town, Kushinagar, Uttar Pradesh." />
+    <title>Fazilnagar Town Civic &amp; Local Directory Portal | Kushinagar, UP</title>
+    <meta name="description" content="Official civic and local directory portal for Fazilnagar town (PIN 274401, Kushinagar, Uttar Pradesh). Verified town directory of schools, hospitals, local doctors, emergency helplines, shops, markets, and community news." />
+    <link rel="canonical" href="https://fazilnagar.vercel.app/" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+
+    <!-- Geographic Location Meta Tags for Kushinagar / Fazilnagar Local SEO -->
+    <meta name="geo.region" content="IN-UP" />
+    <meta name="geo.placename" content="Fazilnagar, Kushinagar, Uttar Pradesh" />
+    <meta name="geo.position" content="26.6835;84.0489" />
+    <meta name="ICBM" content="26.6835, 84.0489" />
+
+    <!-- Open Graph / Facebook / WhatsApp Meta Tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_IN" />
+    <meta property="og:site_name" content="Fazilnagar Town Portal" />
+    <meta property="og:url" content="https://fazilnagar.vercel.app/" />
+    <meta property="og:title" content="Fazilnagar Town Civic &amp; Local Directory Portal | Kushinagar, UP" />
+    <meta property="og:description" content="Discover verified places, essential services, local businesses, schools, hospitals, emergency helplines, and community news in Fazilnagar town, Kushinagar, Uttar Pradesh (PIN 274401)." />
+    <meta property="og:image" content="https://fazilnagar.vercel.app/icon-512.svg" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="Fazilnagar Town Civic &amp; Local Directory Portal" />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Fazilnagar Town Civic &amp; Local Directory Portal | Kushinagar, UP" />
+    <meta name="twitter:description" content="Discover verified places, essential services, local businesses, schools, hospitals, emergency helplines, and community news in Fazilnagar town, Kushinagar, UP." />
+    <meta name="twitter:image" content="https://fazilnagar.vercel.app/icon-512.svg" />
 
     <!-- PWA & Device Installation Meta Tags -->
     <link rel="manifest" href="/manifest.json" />
@@ -15,6 +42,55 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Fazilnagar" />
     <link rel="apple-touch-icon" href="/icon-192.svg" />
+
+    <!-- Schema.org JSON-LD Structured Data for LocalCommunity & WebSite -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://fazilnagar.vercel.app/#website",
+          "url": "https://fazilnagar.vercel.app/",
+          "name": "Fazilnagar Town Portal",
+          "description": "Fazilnagar Town Civic & Local Directory Portal (PIN 274401, Kushinagar, Uttar Pradesh)",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Fazilnagar Civic Community Portal",
+            "url": "https://fazilnagar.vercel.app/",
+            "logo": "https://fazilnagar.vercel.app/icon-512.svg"
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://fazilnagar.vercel.app/directory?search={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "Place",
+          "@id": "https://fazilnagar.vercel.app/#place",
+          "name": "Fazilnagar",
+          "alternateName": ["फाजिलनगर", "Pawanagar", "Fazilnagar Kushinagar"],
+          "description": "Town and nagar panchayat in Kushinagar district, Uttar Pradesh, India (PIN 274401)",
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": "26.6835",
+            "longitude": "84.0489"
+          },
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Fazilnagar",
+            "addressRegion": "Uttar Pradesh",
+            "postalCode": "274401",
+            "addressCountry": "IN"
+          }
+        }
+      ]
+    }
+    </script>
 
     <!-- Google Fonts: Manrope, Inter, Noto Sans Devanagari -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

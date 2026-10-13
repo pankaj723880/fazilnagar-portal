@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import API from "../api";
 import seedPlaces from "../data/places.json";
 import { openGoogleMapsDirections } from "../utils/directions";
+import { usePageSEO } from "../utils/seo";
 import {
   Search,
   MapPin,
@@ -117,6 +118,12 @@ function filterPlaces(list, category, locality, search, sort) {
 }
 
 export default function Directory({ user }) {
+  usePageSEO({
+    title: "Fazilnagar Town Directory | Verified Local Places, Shops & Institutions",
+    description: "Browse the complete verified local directory of Fazilnagar (PIN 274401, Kushinagar, UP). Find schools, hospitals, doctors, pharmacies, shops, markets, banks, and essential civic facilities.",
+    canonicalPath: "/directory",
+  });
+
   // Verification & Moderation queue is strictly restricted to authenticated Admins
   const isAdmin =
     user?.role === "admin" ||

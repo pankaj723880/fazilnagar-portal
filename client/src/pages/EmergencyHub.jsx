@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePageSEO } from "../utils/seo";
 
 const EMERGENCY_SERVICES = [
   {
@@ -74,6 +75,11 @@ const EMERGENCY_SERVICES = [
 ];
 
 export default function EmergencyHub() {
+  usePageSEO({
+    title: "Fazilnagar Emergency Numbers & 24/7 Helplines | Police, Ambulance, Fire",
+    description: "Essential 24/7 emergency contacts for Fazilnagar and Kushinagar: Police (112), Ambulance (108/102), Fire (101), CHC Hospital, Women Helpline (1090), and Power Substation.",
+    canonicalPath: "/emergency",
+  });
   const [filter, setFilter] = useState("All");
 
   const categories = ["All", ...new Set(EMERGENCY_SERVICES.map((s) => s.category))];
@@ -91,9 +97,9 @@ export default function EmergencyHub() {
           <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
             24/7 Resident Support
           </span>
-          <h1 className="text-3xl sm:text-4xl font-black mt-2">🚨 Emergency Hub</h1>
+          <h1 className="text-2xl sm:text-4xl font-black mt-2">🚨 Fazilnagar Emergency Numbers &amp; 24/7 Helplines</h1>
           <p className="text-red-100 text-sm mt-1">
-            Instant dial helplines for police, medical, fire, utilities, and safety.
+            Instant dial helplines for Fazilnagar police, medical ambulance, fire station, utilities, and emergency safety.
           </p>
         </div>
       </div>

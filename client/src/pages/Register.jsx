@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../api";
+import { usePageSEO } from "../utils/seo";
 
 export default function Register({ setUser }) {
+  usePageSEO({
+    title: "Register Citizen Account | Fazilnagar Town Portal",
+    description: "Create an account on the Fazilnagar Town Portal to post community news and local business listings.",
+    canonicalPath: "/register",
+    noIndex: true,
+  });
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

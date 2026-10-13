@@ -6,6 +6,7 @@ import seedPlaces from "../data/places.json";
 import { openGoogleMapsDirections } from "../utils/directions";
 import InstallButton from "../components/InstallButton";
 import AdvertisementSlot from "../components/AdvertisementSlot";
+import { usePageSEO } from "../utils/seo";
 import {
   MapPin,
   ShieldCheck,
@@ -412,6 +413,11 @@ const INITIAL_PLACES = Array.isArray(seedPlaces) && seedPlaces.length > 0
 
 export default function TownPortal() {
   const navigate = useNavigate();
+  usePageSEO({
+    title: "Fazilnagar Town Civic & Local Directory Portal | Kushinagar, UP",
+    description: "Official civic and local directory portal for Fazilnagar town (PIN 274401, Kushinagar, Uttar Pradesh). Verified town directory of schools, hospitals, local doctors, emergency helplines, shops, markets, and community news.",
+    canonicalPath: "/",
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [places, setPlaces] = useState(INITIAL_PLACES);
@@ -792,13 +798,15 @@ export default function TownPortal() {
 
           {/* Master Headline */}
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 leading-tight font-heading drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
-            Apna Fazilnagar,{" "}
-            <span className="text-[#FF4D5A] inline-block drop-shadow-[0_4px_16px_rgba(255,77,90,0.6)]">Apni Pehchaan.</span>
+            Fazilnagar Town Civic &amp; Local Directory
+            <span className="block text-xl sm:text-3xl lg:text-3.5xl text-[#FF4D5A] font-bold mt-2 drop-shadow-[0_4px_16px_rgba(255,77,90,0.6)]">
+              Apna Fazilnagar, Apni Pehchaan
+            </span>
           </h1>
 
           {/* Subtitle */}
-          <p className="text-sm sm:text-lg text-slate-100 max-w-2xl mx-auto mb-9 font-medium leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
-            Discover local places, essential services, businesses and everything happening in Fazilnagar — all in one place.
+          <p className="text-sm sm:text-base text-slate-100 max-w-2xl mx-auto mb-9 font-medium leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
+            Fazilnagar Town Official Civic &amp; Local Directory Portal (PIN 274401, Kushinagar, Uttar Pradesh). Discover verified places, healthcare, schools, emergency helplines, shops, and community updates.
           </p>
 
           {/* Smart Search Bar */}

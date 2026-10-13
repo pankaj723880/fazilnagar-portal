@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePageSEO } from "../utils/seo";
 
 const FOOD_ITEMS = [
   {
@@ -31,6 +32,11 @@ const FOOD_ITEMS = [
 ];
 
 export default function FoodGuide() {
+  usePageSEO({
+    title: "Fazilnagar Food Guide | Best Restaurants, Sweet Shops & Street Food",
+    description: "Discover the best eateries, sweets, dhabas, tea stalls, and local dining spots in Fazilnagar, Kushinagar. Famous Litti Chokha, street food, and family restaurants.",
+    canonicalPath: "/food",
+  });
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   const categories = ["All", "🍗 Non-veg", "🌱 Vegetarian", "🍕 Fast food", "🍵 Cafés", "🥘 Local food", "🍰 Bakeries", "🥤 Street food"];
@@ -45,9 +51,9 @@ export default function FoodGuide() {
         <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
           Culinary Trail
         </span>
-        <h1 className="text-3xl sm:text-4xl font-extrabold">🍛 Local Food Guide</h1>
+        <h1 className="text-2xl sm:text-4xl font-extrabold">🍛 Fazilnagar Food Guide &amp; Restaurants</h1>
         <p className="text-slate-300 text-sm">
-          Discover legendary street stalls, iconic regional dishes, cafes, and bakeries.
+          Discover legendary street stalls, sweet shops, authentic regional Litti Chokha, cafes, and restaurants in Fazilnagar.
         </p>
       </div>
 

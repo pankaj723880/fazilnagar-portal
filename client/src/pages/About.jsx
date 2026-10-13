@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { usePageSEO } from "../utils/seo";
 import {
   BookOpen,
   Landmark,
@@ -15,6 +16,11 @@ import {
 } from "lucide-react";
 
 export default function About() {
+  usePageSEO({
+    title: "About Fazilnagar & Ancient Pawanagar | History, Heritage & Geography",
+    description: "Learn about Fazilnagar (ancient Pawanagar), its 2,600-year history in the Malla Mahajanapada, connection to Kushinagar, geography, culture, and civic community.",
+    canonicalPath: "/about",
+  });
   const [activeTab, setActiveTab] = useState("fazilnagar"); // "fazilnagar" | "kushinagar" | "connection"
 
   return (

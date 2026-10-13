@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePageSEO } from "../utils/seo";
 
 const TRANSIT_HUBS = [
   {
@@ -22,6 +23,11 @@ const TRANSIT_HUBS = [
 ];
 
 export default function Transportation() {
+  usePageSEO({
+    title: "Fazilnagar Transport & Connectivity | Bus Stand, Railway Station & Auto Hubs",
+    description: "Complete transit guide for Fazilnagar (NH-27, Kushinagar): UPSRTC roadways bus stand, Tamkuhi Road railway station connectivity, auto stands, and local routes.",
+    canonicalPath: "/transport",
+  });
   const [tab, setTab] = useState("reach");
 
   return (
@@ -30,9 +36,9 @@ export default function Transportation() {
         <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
           Transit & Commute Desk
         </span>
-        <h1 className="text-3xl sm:text-4xl font-extrabold">🚌 Local Transportation</h1>
+        <h1 className="text-2xl sm:text-4xl font-extrabold">🚌 Fazilnagar Transportation &amp; Transit Hubs</h1>
         <p className="text-slate-300 text-sm">
-          Bus routes, rail stations, local auto stands, parking hubs, and regional road connectivity.
+          Bus routes, Tamkuhi Road railway station connectivity, auto stands, and NH-27 travel options for Fazilnagar.
         </p>
       </div>
 

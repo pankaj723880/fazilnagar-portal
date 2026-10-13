@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePageSEO } from "../utils/seo";
 
 const HEALTHCARE_PLACES = [
   {
@@ -48,6 +49,11 @@ const HEALTHCARE_PLACES = [
 ];
 
 export default function HealthcareDirectory() {
+  usePageSEO({
+    title: "Fazilnagar Healthcare Directory | Hospitals, Doctors, Clinics & Pharmacies",
+    description: "Find hospitals, doctors, clinics, 24-hour pharmacies, and diagnostic centers in Fazilnagar, Kushinagar. Includes Community Health Centre (CHC) contact details and locations.",
+    canonicalPath: "/healthcare",
+  });
   const [activeType, setActiveType] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -70,11 +76,11 @@ export default function HealthcareDirectory() {
           <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
             Verified Medical Registry
           </span>
-          <h1 className="text-3xl sm:text-4xl font-extrabold mt-2">
-            🏥 Healthcare Directory
+          <h1 className="text-2xl sm:text-4xl font-extrabold mt-2">
+            🏥 Fazilnagar Healthcare &amp; Medical Directory
           </h1>
           <p className="text-slate-300 text-sm mt-1">
-            Search hospitals, clinics, pharmacies, diagnostic centers, and emergency services.
+            Search Fazilnagar hospitals, Community Health Centre (CHC), clinics, pharmacies, and diagnostic labs.
           </p>
         </div>
 

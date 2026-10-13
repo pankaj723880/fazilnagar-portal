@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePageSEO } from "../utils/seo";
 
 const ATTRACTIONS = [
   {
@@ -39,6 +40,11 @@ const HOTELS_RESTAURANTS = [
 ];
 
 export default function Tourism() {
+  usePageSEO({
+    title: "Fazilnagar Tourism & Heritage | Ancient Pawanagar, Stupa & Places to Visit",
+    description: "Explore Fazilnagar tourism, ancient Pawanagar Buddhist heritage site, local stupa, temples, photography spots, and nearby hotels in Kushinagar district.",
+    canonicalPath: "/tourism",
+  });
   const [activeTab, setActiveTab] = useState("places");
 
   return (
@@ -47,9 +53,9 @@ export default function Tourism() {
         <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
           City Tourism Desk
         </span>
-        <h1 className="text-3xl sm:text-4xl font-extrabold">🏨 Tourism & Heritage</h1>
+        <h1 className="text-2xl sm:text-4xl font-extrabold">🏨 Fazilnagar Tourism &amp; Pawanagar Heritage</h1>
         <p className="text-slate-300 text-sm">
-          Discover historic landmarks, spiritual sites, hidden photography spots, and curated city itineraries.
+          Discover ancient Pawanagar heritage, stupas, spiritual sites, photography spots, and town hotels in Kushinagar.
         </p>
       </div>
 
