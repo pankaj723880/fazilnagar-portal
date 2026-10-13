@@ -347,7 +347,7 @@ export default function ReelsNewsFeed() {
     };
   }, []);
 
-  // Fetch stories from MongoDB API
+  // Fetch stories from MongoDB API (with timeout to prevent infinite spinner)
   const fetchStories = useCallback(
     async (pageNum = 1, replace = false) => {
       if (pageNum === 1) {
@@ -369,7 +369,13 @@ export default function ReelsNewsFeed() {
           url += `&storyId=${encodeURIComponent(targetStoryId)}`;
         }
 
-        const res = await API.get(url);
+        // Use AbortController with 8s timeout to prevent infinite loading on cold starts
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        const res = await API.get(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
         const fetched = res.data?.stories || [];
 
         setTotalPages(res.data?.totalPages || 1);
@@ -387,7 +393,11 @@ export default function ReelsNewsFeed() {
         }
       } catch (err) {
         console.error("Failed to load reels news feed:", err);
-        setFetchError("Unable to load latest town news. Please check connection.");
+        if (err.name === "AbortError" || err.code === "ERR_CANCELED") {
+          setFetchError("Server is waking up. Please retry in a moment.");
+        } else {
+          setFetchError("Unable to load latest town news. Please check connection.");
+        }
       } finally {
         setLoading(false);
         setLoadingMore(false);
@@ -786,6 +796,35 @@ export default function ReelsNewsFeed() {
   return (
     <div className="w-full h-[calc(100dvh-88px-56px)] sm:h-[calc(100vh-96px)] bg-[#0B1118] flex items-center justify-center relative select-none overflow-hidden overscroll-none">
       
+      {/* SEO Content: Always in DOM for crawlers. Visually hidden but semantic. */}
+      <div className="sr-only" aria-hidden="false">
+        <h1>Fazilnagar News &amp; Community Updates</h1>
+        <p>
+          Stay informed with real-time local news, civic announcements, municipal bulletins,
+          public notices, and citizen reports from Fazilnagar town, Kushinagar district,
+          Uttar Pradesh (PIN 274401). Our news feed covers civic updates, healthcare announcements,
+          educational news, local events, market updates, and community stories.
+        </p>
+        <nav aria-label="Related pages">
+          <ul>
+            <li><a href="/">Fazilnagar Town Portal Homepage</a></li>
+            <li><a href="/directory">Fazilnagar Local Directory</a></li>
+            <li><a href="/emergency">Emergency Helplines (24/7)</a></li>
+            <li><a href="/healthcare">Healthcare Directory</a></li>
+            <li><a href="/education">Schools &amp; Education Hub</a></li>
+            <li><a href="/jobs">Jobs &amp; Local Business Directory</a></li>
+            <li><a href="/govt">Government Services</a></li>
+            <li><a href="/news/classic">News Archive (Classic View)</a></li>
+            <li><a href="/create-news">Submit Local News Story</a></li>
+          </ul>
+        </nav>
+        <p>
+          Fazilnagar (फाजिलनगर) is a nagar panchayat town in Kushinagar district along NH-27
+          in eastern Uttar Pradesh, India. This portal provides verified local information
+          and community news for residents, businesses, and visitors.
+        </p>
+      </div>
+
       {/* Toast Notification */}
       {copiedToast && (
         <div className="fixed top-24 z-50 bg-[#168568] text-white text-xs font-bold px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 animate-bounce">
@@ -804,8 +843,11 @@ export default function ReelsNewsFeed() {
         {loading && (
           <div className="w-full h-full flex flex-col items-center justify-center space-y-4 p-8 text-center bg-[#0B1118]">
             <div className="w-12 h-12 rounded-full border-4 border-slate-700 border-t-[#B8323C] animate-spin"></div>
-            <p className="text-xs text-slate-400 font-semibold">
-              Loading Fazilnagar Local Updates...
+            <h2 className="text-sm text-slate-300 font-semibold">
+              Loading Fazilnagar News &amp; Updates
+            </h2>
+            <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
+              Fetching the latest town bulletins, civic reports, and community news from Fazilnagar, Kushinagar (PIN 274401).
             </p>
           </div>
         )}
@@ -816,8 +858,11 @@ export default function ReelsNewsFeed() {
             <div className="w-14 h-14 rounded-2xl bg-red-950/60 border border-red-800 text-red-400 flex items-center justify-center mx-auto">
               <Newspaper className="w-7 h-7" />
             </div>
-            <h3 className="text-sm font-bold text-white">Connection Error</h3>
-            <p className="text-xs text-slate-400 max-w-xs">{fetchError}</p>
+            <h2 className="text-sm font-bold text-white">Fazilnagar News — Temporarily Unavailable</h2>
+            <p className="text-xs text-slate-400 max-w-xs leading-relaxed">{fetchError}</p>
+            <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
+              Local news, civic updates, and community bulletins from Fazilnagar town are loading. The server may be waking up — please try again shortly.
+            </p>
             <button
               onClick={() => fetchStories(1, true)}
               className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-4 py-2 rounded-xl transition flex items-center gap-2 cursor-pointer shadow-md"
@@ -825,6 +870,16 @@ export default function ReelsNewsFeed() {
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Retry</span>
             </button>
+            <nav className="pt-3 border-t border-slate-800 space-y-1.5 w-full max-w-xs" aria-label="Browse other sections">
+              <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Browse Fazilnagar</p>
+              <div className="flex flex-wrap gap-1.5 justify-center">
+                <a href="/" className="text-[11px] text-sky-400 hover:text-sky-300 underline">Home</a>
+                <a href="/directory" className="text-[11px] text-sky-400 hover:text-sky-300 underline">Directory</a>
+                <a href="/emergency" className="text-[11px] text-sky-400 hover:text-sky-300 underline">Emergency</a>
+                <a href="/healthcare" className="text-[11px] text-sky-400 hover:text-sky-300 underline">Healthcare</a>
+                <a href="/news/classic" className="text-[11px] text-sky-400 hover:text-sky-300 underline">News Archive</a>
+              </div>
+            </nav>
           </div>
         )}
 
@@ -834,10 +889,20 @@ export default function ReelsNewsFeed() {
             <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 text-slate-400 flex items-center justify-center mx-auto">
               <Newspaper className="w-8 h-8" />
             </div>
-            <h3 className="text-base font-bold text-white">No Stories Published Yet</h3>
+            <h2 className="text-base font-bold text-white">Fazilnagar News — Coming Soon</h2>
             <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
-              Town bulletins and civic reports will appear here as soon as approved by the admin desk.
+              Town bulletins, civic reports, and community news from Fazilnagar (Kushinagar, UP) will appear here as they are published and approved. Check back soon for the latest local updates.
             </p>
+            <nav className="pt-3 border-t border-slate-800 space-y-1.5 w-full max-w-xs" aria-label="Explore Fazilnagar">
+              <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Explore the Town</p>
+              <div className="flex flex-wrap gap-1.5 justify-center">
+                <a href="/" className="text-[11px] text-sky-400 hover:text-sky-300 underline">Home</a>
+                <a href="/directory" className="text-[11px] text-sky-400 hover:text-sky-300 underline">Directory</a>
+                <a href="/emergency" className="text-[11px] text-sky-400 hover:text-sky-300 underline">Emergency</a>
+                <a href="/healthcare" className="text-[11px] text-sky-400 hover:text-sky-300 underline">Healthcare</a>
+                <a href="/create-news" className="text-[11px] text-sky-400 hover:text-sky-300 underline">Submit News</a>
+              </div>
+            </nav>
           </div>
         )}
 
