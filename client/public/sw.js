@@ -13,7 +13,13 @@ self.addEventListener('fetch', (event) => {
   // Do not intercept non-GET requests or external API calls
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin || url.pathname.startsWith('/api')) {
+  if (
+    url.origin !== self.location.origin ||
+    url.pathname.startsWith('/api') ||
+    url.pathname === '/sitemap.xml' ||
+    url.pathname === '/robots.txt' ||
+    url.pathname.startsWith('/google')
+  ) {
     return;
   }
 
