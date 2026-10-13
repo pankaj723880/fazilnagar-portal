@@ -222,7 +222,8 @@ export async function uploadMediaToDrive({
     uploadedBy: user?.id || null,
   });
 
-  mediaDoc.deliveryUrl = `/api/google-drive/media/${mediaDoc._id}`;
+  const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal.onrender.com").replace(/\/+$/, "");
+  mediaDoc.deliveryUrl = `${backendBase}/api/google-drive/media/${mediaDoc._id}`;
   await mediaDoc.save();
 
   return { mediaDoc, driveData: fileData };

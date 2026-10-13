@@ -35,6 +35,10 @@ import {
   CalendarDays,
   Globe,
   Sliders,
+  HardDrive,
+  Copy,
+  CheckCheck,
+  FolderCheck,
 } from "lucide-react";
 
 export default function AdminReview({ user: propUser }) {
@@ -49,6 +53,13 @@ export default function AdminReview({ user: propUser }) {
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
+
+  // Google Drive Cloud Storage state
+  const [driveData, setDriveData] = useState(null);
+  const [driveLoading, setDriveLoading] = useState(false);
+  const [driveUploading, setDriveUploading] = useState(false);
+  const [copiedFileId, setCopiedFileId] = useState(null);
+  const [driveUploadFile, setDriveUploadFile] = useState(null);
 
   // Login form state if not authenticated as admin
   const [adminEmail, setAdminEmail] = useState("admin@fazilnagar.com");
@@ -196,9 +207,67 @@ export default function AdminReview({ user: propUser }) {
     }
   };
 
+  const fetchDriveData = async () => {
+    setDriveLoading(true);
+    try {
+      const res = await API.get("/google-drive/inspect");
+      setDriveData(res.data);
+    } catch (err) {
+      console.error("Failed to load Google Drive info:", err);
+    } finally {
+      setDriveLoading(false);
+    }
+  };
+
+  const handleUploadToDrive = async (file) => {
+    if (!file) return;
+    setDriveUploading(true);
+    const token = localStorage.getItem("token");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      await API.post("/google-drive/admin/upload", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      showToast("Media file uploaded successfully to Google Drive 'Fazilnagar Media'!");
+      setDriveUploadFile(null);
+      await fetchDriveData();
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to upload file to Google Drive.");
+    } finally {
+      setDriveUploading(false);
+    }
+  };
+
+  const handleDeleteDriveFile = async (id) => {
+    if (!window.confirm("Permanently delete this file from Google Drive and database?")) return;
+    const token = localStorage.getItem("token");
+    try {
+      await API.delete(`/google-drive/media/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      showToast("Media file deleted from Google Drive.");
+      await fetchDriveData();
+    } catch (err) {
+      showToast("Failed to delete media file.");
+    }
+  };
+
+  const handleCopyUrl = (url, id) => {
+    const fullUrl = url.startsWith("http") ? url : `https://fazilnagar-portal.onrender.com${url}`;
+    navigator.clipboard.writeText(fullUrl);
+    setCopiedFileId(id);
+    showToast("Direct Delivery URL copied to clipboard!");
+    setTimeout(() => setCopiedFileId(null), 2500);
+  };
+
   useEffect(() => {
     if (isAdmin) {
       fetchData();
+      fetchDriveData();
     }
   }, [isAdmin, statusFilter]);
 
@@ -945,6 +1014,21 @@ export default function AdminReview({ user: propUser }) {
           </button>
 
           <button
+            onClick={() => {
+              setActiveTab("drive");
+              fetchDriveData();
+            }}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "drive"
+                ? "bg-emerald-700 text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <HardDrive className="w-3.5 h-3.5" />
+            <span>Google Drive Media ({driveData?.folder?.filesUploadedCount ?? driveData?.mongo?.totalCount ?? 1})</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab("all")}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
               activeTab === "all" ? "bg-[#18232E] text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
@@ -982,7 +1066,7 @@ export default function AdminReview({ user: propUser }) {
         </div>
 
         {/* Status Filter for Citizen Submissions */}
-        {activeTab !== "ads" && activeTab !== "news-manage" && (
+        {activeTab !== "ads" && activeTab !== "news-manage" && activeTab !== "drive" && (
           <div className="flex items-center gap-2 self-end sm:self-auto">
             <span className="text-[11px] font-bold text-slate-500 uppercase">Status:</span>
             <select
@@ -1527,9 +1611,257 @@ export default function AdminReview({ user: propUser }) {
       )}
 
       {/* ========================================================
-          TABS 3+: CITIZEN CORNER SUBMISSIONS MODERATION
+          TAB 3: GOOGLE DRIVE CLOUD STORAGE MEDIA
           ======================================================== */}
-      {activeTab !== "ads" && activeTab !== "news-manage" && (
+      {activeTab === "drive" && (
+        <section aria-label="Google Drive Cloud Storage" className="space-y-5">
+          {/* Top Overview & Connection Card */}
+          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-[#E1E6EA] shadow-2xs space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3 text-emerald-600" />
+                    <span>OAuth Connected</span>
+                  </span>
+                  <span className="bg-slate-100 text-slate-700 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
+                    drive.file Scope
+                  </span>
+                </div>
+                <h2 className="text-base sm:text-lg font-black text-[#18232E] font-heading mt-1.5">
+                  Google Drive Cloud Storage Registry
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Media files stored persistently in your dedicated Google Drive account and served via secure CDN-cached proxy.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={fetchDriveData}
+                  disabled={driveLoading}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer"
+                  title="Refresh Drive Files"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${driveLoading ? "animate-spin" : ""}`} />
+                  <span>Refresh</span>
+                </button>
+
+                {driveData?.folder?.folderWebViewLink && (
+                  <a
+                    href={driveData.folder.folderWebViewLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-[#18232E] hover:bg-slate-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition flex items-center gap-1.5 shadow-xs"
+                  >
+                    <span>Open in Drive</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                )}
+              </div>
+            </div>
+
+            {/* Storage Info Details Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-100 text-xs">
+              <div className="bg-[#F8FAFC] p-3 rounded-xl border border-slate-200/80">
+                <span className="text-[10px] font-extrabold uppercase text-slate-400 block mb-0.5">Connected Account</span>
+                <span className="font-bold text-[#18232E] truncate block">{driveData?.accountEmail || "pss809352@gmail.com"}</span>
+              </div>
+
+              <div className="bg-[#F8FAFC] p-3 rounded-xl border border-slate-200/80">
+                <span className="text-[10px] font-extrabold uppercase text-slate-400 block mb-0.5">Dedicated Folder</span>
+                <span className="font-bold text-emerald-800 flex items-center gap-1">
+                  <FolderCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span className="truncate">{driveData?.folder?.folderName || "Fazilnagar Media"}</span>
+                </span>
+              </div>
+
+              <div className="bg-[#F8FAFC] p-3 rounded-xl border border-slate-200/80">
+                <span className="text-[10px] font-extrabold uppercase text-slate-400 block mb-0.5">Files Stored</span>
+                <span className="font-black text-[#18232E]">
+                  {driveData?.folder?.filesUploadedCount ?? driveData?.mongo?.totalCount ?? 0} media files
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Upload New Image Box */}
+          <div className="bg-gradient-to-br from-slate-900 to-[#18232E] text-white p-5 rounded-2xl border border-slate-700 shadow-md">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <span className="text-[10px] font-black uppercase text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 rounded-full inline-block mb-1">
+                  Direct Upload
+                </span>
+                <h3 className="text-sm sm:text-base font-extrabold">Upload Media to Google Drive</h3>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  Uploaded files go directly into the <strong className="text-emerald-300">Fazilnagar Media</strong> folder on Google Drive.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <label className="bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl px-4 py-2.5 text-xs font-bold text-white flex items-center gap-2 cursor-pointer transition">
+                  <Upload className="w-4 h-4 text-emerald-400" />
+                  <span>{driveUploadFile ? driveUploadFile.name : "Choose File"}</span>
+                  <input
+                    type="file"
+                    accept="image/*,video/mp4"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) setDriveUploadFile(f);
+                    }}
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => handleUploadToDrive(driveUploadFile)}
+                  disabled={!driveUploadFile || driveUploading}
+                  className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer shrink-0"
+                >
+                  {driveUploading ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Upload Now</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Files Gallery Grid */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-extrabold text-[#18232E] flex items-center gap-1.5">
+                <HardDrive className="w-4 h-4 text-emerald-700" />
+                <span>Uploaded Files in Fazilnagar Media</span>
+              </h3>
+            </div>
+
+            {driveLoading ? (
+              <div className="bg-white p-12 rounded-2xl border border-[#E1E6EA] text-center">
+                <RefreshCw className="w-6 h-6 animate-spin text-slate-400 mx-auto mb-2" />
+                <p className="text-xs text-slate-500 font-semibold">Loading files from Google Drive...</p>
+              </div>
+            ) : (!driveData?.mongo?.recentFiles || driveData.mongo.recentFiles.length === 0) && (!driveData?.folder?.files || driveData.folder.files.length === 0) ? (
+              <div className="bg-white p-12 rounded-2xl border border-[#E1E6EA] text-center">
+                <FolderCheck className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                <p className="text-sm font-bold text-slate-600">No media uploaded yet</p>
+                <p className="text-xs text-slate-400 mt-1">Upload an image above to verify Google Drive storage.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {(driveData?.mongo?.recentFiles && driveData.mongo.recentFiles.length > 0
+                  ? driveData.mongo.recentFiles
+                  : driveData?.folder?.files || []
+                ).map((file, idx) => {
+                  const fileId = file.id || file._id || file.driveFileId;
+                  const driveFileId = file.driveFileId || file.id;
+                  const fileName = file.fileName || file.name || "Media File";
+                  const fileSize = file.fileSize || file.size || 0;
+                  const deliveryUrl = file.deliveryUrl || `/api/google-drive/media/${fileId}`;
+                  const fullDeliveryUrl = deliveryUrl.startsWith("http")
+                    ? deliveryUrl
+                    : `https://fazilnagar-portal.onrender.com${deliveryUrl}`;
+                  const driveWebLink = file.webViewLink || `https://drive.google.com/file/d/${driveFileId}/view`;
+
+                  return (
+                    <div
+                      key={fileId || idx}
+                      className="bg-white rounded-2xl border border-[#E1E6EA] shadow-2xs overflow-hidden flex flex-col justify-between hover:shadow-md transition"
+                    >
+                      {/* Image Preview Container */}
+                      <div className="h-36 bg-slate-900 relative overflow-hidden group flex items-center justify-center">
+                        <img
+                          src={fullDeliveryUrl}
+                          alt={fileName}
+                          className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                        <div className="absolute top-2 right-2">
+                          <span className="bg-black/70 backdrop-blur-xs text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full">
+                            {file.mimeType || "image"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* File Details */}
+                      <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between text-xs">
+                        <div>
+                          <h4 className="font-bold text-[#18232E] line-clamp-1 text-xs" title={fileName}>
+                            {fileName}
+                          </h4>
+                          <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1">
+                            <span>{fileSize > 1024 ? `${Math.round(fileSize / 1024)} KB` : `${fileSize} B`}</span>
+                            <span>{file.createdAt ? new Date(file.createdAt).toLocaleDateString() : ""}</span>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleCopyUrl(deliveryUrl, fileId)}
+                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1.5 rounded-lg text-[10px] flex items-center gap-1 transition cursor-pointer"
+                            title="Copy delivery URL for articles/banners"
+                          >
+                            {copiedFileId === fileId ? (
+                              <>
+                                <CheckCheck className="w-3 h-3 text-emerald-600" />
+                                <span className="text-emerald-700">Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3 text-slate-500" />
+                                <span>Copy Link</span>
+                              </>
+                            )}
+                          </button>
+
+                          <div className="flex items-center gap-1">
+                            <a
+                              href={driveWebLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-slate-100 hover:bg-slate-200 text-slate-600 p-1.5 rounded-lg text-[10px] transition"
+                              title="Open in Google Drive"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteDriveFile(fileId)}
+                              className="bg-red-50 hover:bg-red-100 text-red-600 p-1.5 rounded-lg text-[10px] transition cursor-pointer"
+                              title="Delete from Google Drive"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ========================================================
+          TABS 4+: CITIZEN CORNER SUBMISSIONS MODERATION
+          ======================================================== */}
+      {activeTab !== "ads" && activeTab !== "news-manage" && activeTab !== "drive" && (
         <section aria-label="Citizen Submissions Moderation" className="space-y-6">
           {/* SECTION A: CITIZEN NEWS MODERATION (When activeTab === "all" or "news") */}
           {(activeTab === "all" || activeTab === "news") && (

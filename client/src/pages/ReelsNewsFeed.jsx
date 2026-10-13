@@ -40,8 +40,16 @@ function StoryMediaCover({ story, active, muted }) {
   const [imgFailed, setImgFailed] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
 
-  const hasVideo = !!story.video && !videoFailed;
-  const rawImage = story.image && String(story.image).trim();
+  let rawVideo = story.video && String(story.video).trim();
+  if (rawVideo && rawVideo.startsWith("/")) {
+    rawVideo = `https://fazilnagar-portal.onrender.com${rawVideo}`;
+  }
+  const hasVideo = !!rawVideo && !videoFailed;
+
+  let rawImage = story.image && String(story.image).trim();
+  if (rawImage && rawImage.startsWith("/")) {
+    rawImage = `https://fazilnagar-portal.onrender.com${rawImage}`;
+  }
   const hasUserImage = rawImage && !imgFailed;
 
   return (
@@ -73,7 +81,7 @@ function StoryMediaCover({ story, active, muted }) {
       {/* Video layer if present */}
       {hasVideo && (
         <video
-          src={story.video}
+          src={rawVideo}
           autoPlay={active}
           loop
           muted={muted}

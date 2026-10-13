@@ -8,6 +8,7 @@ import News from "../models/News.js";
 import Like from "../models/Like.js";
 import Comment from "../models/Comment.js";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
+import { uploadMediaToDrive } from "./googleDrive.js";
 
 const router = express.Router();
 
@@ -132,9 +133,13 @@ router.get("/feed", async (req, res) => {
       }
     }
 
+    const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal.onrender.com").replace(/\/+$/, "");
+
     // Map stories with accurate likeCount, commentCount, and isLiked boolean
     const enrichedStories = stories.map((s) => ({
       ...s,
+      image: s.image && s.image.startsWith("/") ? `${backendBase}${s.image}` : s.image,
+      video: s.video && s.video.startsWith("/") ? `${backendBase}${s.video}` : s.video,
       likeCount: s.likeCount ?? s.likes ?? 0,
       commentCount: s.commentCount ?? 0,
       isLiked: userLikedSet.has(String(s._id)),
@@ -804,7 +809,15 @@ router.get("/", async (req, res) => {
       .populate("author", "name email role")
       .sort({ isFeatured: -1, publishedAt: -1, createdAt: -1 });
 
-    res.status(200).json(news);
+    const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal.onrender.com").replace(/\/+$/, "");
+    const normalizedNews = news.map((item) => {
+      const obj = item.toObject();
+      if (obj.image && obj.image.startsWith("/")) obj.image = `${backendBase}${obj.image}`;
+      if (obj.video && obj.video.startsWith("/")) obj.video = `${backendBase}${obj.video}`;
+      return obj;
+    });
+
+    res.status(200).json(normalizedNews);
   } catch (err) {
     console.error("Fetch All News Error:", err);
     res.status(500).json({ message: "Error fetching news articles." });
@@ -820,7 +833,15 @@ router.get("/admin/all", verifyToken, requireAdmin, async (req, res) => {
       .populate("author", "name email role")
       .sort({ createdAt: -1 });
 
-    res.status(200).json(allStories);
+    const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal.onrender.com").replace(/\/+$/, "");
+    const normalizedStories = allStories.map((item) => {
+      const obj = item.toObject();
+      if (obj.image && obj.image.startsWith("/")) obj.image = `${backendBase}${obj.image}`;
+      if (obj.video && obj.video.startsWith("/")) obj.video = `${backendBase}${obj.video}`;
+      return obj;
+    });
+
+    res.status(200).json(normalizedStories);
   } catch (err) {
     console.error("Admin News Fetch Error:", err);
     res.status(500).json({ message: "Failed to fetch administrator news registry." });
@@ -873,11 +894,43 @@ router.post(
           const imgFile = req.files.image[0];
           const fileBuffer = fs.readFileSync(imgFile.path);
           const mime = imgFile.mimetype || "image/jpeg";
-          imagePath = `data:${mime};base64,${fileBuffer.toString("base64")}`;
+
+          // Upload to dedicated Google Drive folder (Fazilnagar Media)
+          try {
+            const { mediaDoc } = await uploadMediaToDrive({
+              buffer: fileBuffer,
+              originalName: imgFile.originalname || "news_image.jpg",
+              mimeType: mime,
+              user: req.user,
+            });
+            imagePath = mediaDoc.deliveryUrl;
+          } catch (driveErr) {
+            console.warn("[News] Drive upload fallback:", driveErr.message);
+            imagePath = `data:${mime};base64,${fileBuffer.toString("base64")}`;
+          }
+
           try { fs.unlinkSync(imgFile.path); } catch (_) {}
         } catch (e) {
           console.warn("Base64 conversion error:", e);
           imagePath = `${baseUrl}/uploads/${req.files.image[0].filename}`;
+        }
+      } else if (providedImageUrl && providedImageUrl.startsWith("data:image/")) {
+        // If client submitted base64 dataUrl, persist in Google Drive to avoid MongoDB bloat
+        try {
+          const matches = providedImageUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+          if (matches && matches.length === 3) {
+            const mime = matches[1];
+            const buffer = Buffer.from(matches[2], "base64");
+            const { mediaDoc } = await uploadMediaToDrive({
+              buffer,
+              originalName: "news_image.jpg",
+              mimeType: mime,
+              user: req.user,
+            });
+            imagePath = mediaDoc.deliveryUrl;
+          }
+        } catch (driveErr) {
+          console.warn("[News] Base64 Drive upload fallback:", driveErr.message);
         }
       }
 
@@ -981,10 +1034,41 @@ router.put(
           const imgFile = req.files.image[0];
           const fileBuffer = fs.readFileSync(imgFile.path);
           const mime = imgFile.mimetype || "image/jpeg";
-          article.image = `data:${mime};base64,${fileBuffer.toString("base64")}`;
+
+          try {
+            const { mediaDoc } = await uploadMediaToDrive({
+              buffer: fileBuffer,
+              originalName: imgFile.originalname || "news_image.jpg",
+              mimeType: mime,
+              user: req.user,
+            });
+            article.image = mediaDoc.deliveryUrl;
+          } catch (driveErr) {
+            console.warn("[News] Drive upload fallback:", driveErr.message);
+            article.image = `data:${mime};base64,${fileBuffer.toString("base64")}`;
+          }
+
           try { fs.unlinkSync(imgFile.path); } catch (_) {}
         } catch (e) {
           article.image = `${baseUrl}/uploads/${req.files.image[0].filename}`;
+        }
+      } else if (providedImageUrl && providedImageUrl.startsWith("data:image/")) {
+        try {
+          const matches = providedImageUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+          if (matches && matches.length === 3) {
+            const mime = matches[1];
+            const buffer = Buffer.from(matches[2], "base64");
+            const { mediaDoc } = await uploadMediaToDrive({
+              buffer,
+              originalName: "news_image.jpg",
+              mimeType: mime,
+              user: req.user,
+            });
+            article.image = mediaDoc.deliveryUrl;
+          }
+        } catch (driveErr) {
+          console.warn("[News] Base64 Drive upload fallback:", driveErr.message);
+          article.image = providedImageUrl.trim();
         }
       } else if (providedImageUrl && providedImageUrl.trim() !== "") {
         article.image = providedImageUrl.trim();
@@ -1146,7 +1230,13 @@ router.get("/:id", async (req, res) => {
     }
 
     News.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }).exec();
-    res.status(200).json(article);
+
+    const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal.onrender.com").replace(/\/+$/, "");
+    const obj = article.toObject();
+    if (obj.image && obj.image.startsWith("/")) obj.image = `${backendBase}${obj.image}`;
+    if (obj.video && obj.video.startsWith("/")) obj.video = `${backendBase}${obj.video}`;
+
+    res.status(200).json(obj);
   } catch (err) {
     console.error("Fetch Single News Error:", err);
     res.status(400).json({ message: "Invalid article ID or server error." });
