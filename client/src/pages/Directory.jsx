@@ -493,11 +493,23 @@ export default function Directory({ user }) {
       title: place.name,
     }).addTo(map);
 
+    const isVerified = place.verificationStatus === "verified";
+    const recordId = place.id || place._id || place.slug;
+
     marker.bindPopup(`
-      <div style="font-size: 12px; min-width: 190px; font-family: Inter, system-ui, sans-serif; padding: 2px;">
-        <span style="font-size: 9px; font-weight: 800; color: #0D5E49; text-transform: uppercase; letter-spacing: 0.5px;">${place.category}</span>
-        <h4 style="margin: 2px 0 4px; font-size: 13px; font-weight: 800; color: #18232E; line-height: 1.2;">${place.name}</h4>
+      <div style="font-size: 12px; min-width: 200px; font-family: Inter, system-ui, sans-serif; padding: 2px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-bottom: 3px;">
+          <span style="font-size: 9px; font-weight: 800; color: #0D5E49; text-transform: uppercase; letter-spacing: 0.5px;">${place.category}</span>
+          <span style="font-size: 8px; font-weight: 700; color: ${isVerified ? '#0D5E49' : '#B45309'}; background: ${isVerified ? '#ECFDF5' : '#FEF3C7'}; padding: 1px 5px; border-radius: 999px; border: 1px solid ${isVerified ? '#A7F3D0' : '#FDE68A'};">
+            ${isVerified ? '✓ Verified' : '⚠ Needs Verification'}
+          </span>
+        </div>
+        <h4 style="margin: 2px 0 3px; font-size: 13px; font-weight: 800; color: #18232E; line-height: 1.2;">${place.name}</h4>
         <p style="margin: 0; font-size: 11px; color: #647180; line-height: 1.3;">${place.streetOrLandmark || place.addressFull || place.locality}</p>
+        <div style="display: flex; justify-content: space-between; font-size: 9px; color: #94A3B8; margin-top: 4px; padding-top: 3px; border-top: 1px dashed #E2E8F0;">
+          <span>ID: ${recordId}</span>
+          <span>${place.latitude}, ${place.longitude}</span>
+        </div>
         <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #E1E6EA; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
           <button type="button" class="leaflet-popup-directions-btn" style="color: #0D5E49; background: none; border: none; padding: 0; font-weight: 700; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
             <span>🧭 Directions</span>
@@ -995,9 +1007,15 @@ export default function Directory({ user }) {
                       <ArrowLeft className="w-3.5 h-3.5" />
                       <span>Back to List ({places.length})</span>
                     </button>
-                    <span className="text-[10px] font-bold text-[#0D5E49] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3 text-[#0D5E49]" /> Verified
-                    </span>
+                    {selectedPlace.verificationStatus === "verified" ? (
+                      <span className="text-[10px] font-bold text-[#0D5E49] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-[#0D5E49]" /> Verified Location
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3 text-amber-700" /> Needs Verification
+                      </span>
+                    )}
                   </div>
 
                   <div className="space-y-2.5">
@@ -1016,6 +1034,11 @@ export default function Directory({ user }) {
                       <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
                         {selectedPlace.name}
                       </h3>
+                      <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono mt-0.5">
+                        <span>ID: {selectedPlace.id || selectedPlace._id || selectedPlace.slug}</span>
+                        <span>•</span>
+                        <span>{selectedPlace.latitude}° N, {selectedPlace.longitude}° E</span>
+                      </div>
                       {selectedPlace.alternateNames?.length > 0 && (
                         <p className="text-[11px] text-slate-500 mt-0.5">
                           {selectedPlace.alternateNames.join(", ")}
@@ -1202,9 +1225,13 @@ export default function Directory({ user }) {
                         )}
                       </div>
 
-                      {isVerified && (
+                      {isVerified ? (
                         <span className="text-[10px] text-[#0D5E49] font-bold flex items-center gap-1 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                          <CheckCircle2 className="w-3 h-3 text-[#0D5E49]" /> Verified
+                          <CheckCircle2 className="w-3 h-3 text-[#0D5E49]" /> Verified Location
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-amber-800 font-bold flex items-center gap-1 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                          <AlertTriangle className="w-3 h-3 text-amber-700" /> Needs Verification
                         </span>
                       )}
                     </div>
@@ -1344,19 +1371,39 @@ export default function Directory({ user }) {
               )}
 
               {/* Research & Verification Metadata */}
-              <div className="bg-emerald-50/70 p-3 rounded-xl border border-emerald-100 space-y-1 text-xs">
-                <div className="flex items-center gap-1.5 text-emerald-950 font-bold">
-                  <ShieldCheck className="w-4 h-4 text-[#0D5E49]" />
-                  <span>Geographical Audit Status</span>
+              <div className={`p-3 rounded-xl border space-y-1.5 text-xs ${
+                detailModalPlace.verificationStatus === "verified"
+                  ? "bg-emerald-50/70 border-emerald-100 text-emerald-950"
+                  : "bg-amber-50/70 border-amber-200 text-amber-950"
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <ShieldCheck className={`w-4 h-4 ${
+                      detailModalPlace.verificationStatus === "verified" ? "text-[#0D5E49]" : "text-amber-700"
+                    }`} />
+                    <span>Geographical Audit Status</span>
+                  </div>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    detailModalPlace.verificationStatus === "verified"
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-amber-100 text-amber-900"
+                  }`}>
+                    {detailModalPlace.verificationStatus === "verified" ? "Verified" : "Needs Review"}
+                  </span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-[11px] text-emerald-900 pt-0.5">
+                <div className="grid grid-cols-2 gap-2 text-[11px] pt-0.5">
+                  <div>
+                    <span className="font-semibold">Record ID:</span> {detailModalPlace.id || detailModalPlace._id || detailModalPlace.slug}
+                  </div>
                   <div>
                     <span className="font-semibold">Town Limits:</span> Confirmed Inside Town
                   </div>
-                  <div>
-                    <span className="font-semibold">Postal PIN:</span> 274401 (Fazilnagar)
-                  </div>
                 </div>
+                {detailModalPlace.reviewNotes && (
+                  <div className="text-[11px] pt-1 border-t border-slate-200/60 leading-normal">
+                    <span className="font-semibold">Audit Notes:</span> {detailModalPlace.reviewNotes}
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}

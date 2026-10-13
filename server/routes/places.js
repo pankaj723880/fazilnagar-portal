@@ -81,6 +81,30 @@ router.get("/", async (req, res) => {
       res.status(500).json({ message: "Failed to fetch directory places." });
     }
   }
+// @route   POST /api/places/sync (also GET /api/places/sync for browser trigger)
+// @desc    Synchronize MongoDB places with canonical server/data/places.json
+// @access  Public / Admin
+router.all("/sync", async (req, res) => {
+  try {
+    const raw = fs.readFileSync(path.join(__dirname, "../data/places.json"), "utf8");
+    const places = JSON.parse(raw);
+    let updatedCount = 0;
+    for (const p of places) {
+      await Place.findOneAndUpdate(
+        { slug: p.slug },
+        { ...p },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+      updatedCount++;
+    }
+    res.status(200).json({
+      message: `Successfully synchronized ${updatedCount} places into database.`,
+      count: updatedCount,
+    });
+  } catch (err) {
+    console.error("Sync error:", err);
+    res.status(500).json({ message: "Failed to synchronize places.", error: err.message });
+  }
 });
 
 // @route   GET /api/places/stats/summary
@@ -268,10 +292,12 @@ router.put("/:id", async (req, res) => {
     const { id } = req.params;
     const updateData = { ...req.body, lastVerifiedAt: new Date() };
 
-    // If publishing, ensure boundary is confirmed
+    // If publishing, ensure boundary is confirmed, and default verificationStatus only if omitted
     if (updateData.isPublished === true) {
-      updateData.townBoundaryStatus = "confirmed";
-      updateData.verificationStatus = "verified";
+      updateData.townBoundaryStatus = updateData.townBoundaryStatus || "confirmed";
+      if (!updateData.verificationStatus) {
+        updateData.verificationStatus = "verified";
+      }
     }
 
     const updated = await Place.findByIdAndUpdate(id, updateData, { new: true });

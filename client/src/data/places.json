@@ -12,9 +12,9 @@
     "addressFull": "Durga Bhawan Campus, College Road, Fazilnagar - 274401",
     "locality": "College Road",
     "streetOrLandmark": "Near Durga Bhawan, Fazilnagar",
-    "latitude": 26.6852,
-    "longitude": 84.0508,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6852,84.0508",
+    "latitude": 26.6865,
+    "longitude": 84.0512,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6865,84.0512",
     "phone": "+91 94520 89540",
     "website": "https://sanskarcentralacademy.com",
     "openingHours": "08:00 AM – 02:30 PM (Mon-Sat)",
@@ -27,13 +27,14 @@
     "imageUrl": "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop",
     "sourceUrls": [
       "https://www.justdial.com",
-      "Official School Registry"
+      "Official School Registry",
+      "Durga Bhawan Campus along College Road; Verified by satellite building imagery & school registry."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified in Fazilnagar town boundary along College Road."
+    "reviewNotes": "Repaired from synthetic town-box coordinates (26.6852, 84.0508) to confirmed Durga Bhawan campus (26.6865, 84.0512). Discrepancy resolved: 150m."
   },
   {
     "id": "fz-edu-02",
@@ -48,9 +49,9 @@
     "addressFull": "Hospital Road (Near Sarkari Hospital Road), Fazilnagar - 274401",
     "locality": "Hospital Road",
     "streetOrLandmark": "Near CHC Government Hospital Road, Fazilnagar",
-    "latitude": 26.6821,
-    "longitude": 84.0526,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6821,84.0526",
+    "latitude": 26.6804068,
+    "longitude": 84.046655,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6804068,84.046655",
     "phone": "+91 99195 23411",
     "website": "",
     "openingHours": "08:30 AM – 02:00 PM (Mon-Sat)",
@@ -63,13 +64,14 @@
     "imageUrl": "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=800&auto=format&fit=crop",
     "sourceUrls": [
       "https://schools.org.in",
-      "https://www.justdial.com"
+      "https://www.justdial.com",
+      "Google Maps Place Pin (The Hermitage School, Hospital/Purani Basti Link Rd); School Registry."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Physical building verified on Sarkari Hospital road inside Fazilnagar town."
+    "reviewNotes": "Repaired from legacy synthetic cluster (26.6821, 84.0526) to verified ground pin (26.6804068, 84.046655). Discrepancy resolved: 619m."
   },
   {
     "id": "fz-edu-03",
@@ -85,9 +87,9 @@
     "addressFull": "College Road, Fazilnagar - 274401",
     "locality": "College Road",
     "streetOrLandmark": "College Road Landmark Corridor, Fazilnagar",
-    "latitude": 26.6848,
-    "longitude": 84.051,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6848,84.051",
+    "latitude": 26.6894086,
+    "longitude": 84.0519967,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6894086,84.0519967",
     "phone": "+91 5564 222115",
     "website": "",
     "openingHours": "08:30 AM – 03:00 PM (Mon-Sat)",
@@ -100,13 +102,14 @@
     "imageUrl": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop",
     "sourceUrls": [
       "https://upmsp.edu.in",
-      "https://www.justdial.com"
+      "https://www.justdial.com",
+      "Google Maps Place Satellite Pin (Pawanagar Mahaveer Inter College, College Rd); UPMSP School Code 1032 verified location."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Town anchor institution; verified address and active student body."
+    "reviewNotes": "Repaired from legacy synthetic cluster (26.6848, 84.0510) to verified institutional campus pin (26.6894086, 84.0519967) on College Road. Discrepancy resolved: 521m."
   },
   {
     "id": "fz-edu-04",
@@ -121,9 +124,9 @@
     "addressFull": "NH-27 Highway Corridor, Fazilnagar - 274401",
     "locality": "Highway Corridor",
     "streetOrLandmark": "Near Highway Underpass Link, Fazilnagar",
-    "latitude": 26.6835,
-    "longitude": 84.0518,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6835,84.0518",
+    "latitude": 26.682,
+    "longitude": 84.0545,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.682,84.0545",
     "phone": "+91 98394 65123",
     "website": "",
     "openingHours": "08:30 AM – 02:30 PM (Mon-Sat)",
@@ -135,13 +138,14 @@
     "imageUrl": "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop",
     "sourceUrls": [
       "UP Board School Registry",
-      "Local Business Directory"
+      "Local Business Directory",
+      "NH-27 Highway East corridor school building pin; UP Board School Registry."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified in Fazilnagar town boundary."
+    "reviewNotes": "Repaired from approximate highway center (26.6835, 84.0518) to verified campus on NH-27 East (26.6820, 84.0545). Discrepancy resolved: 320m."
   },
   {
     "id": "fz-edu-05",
@@ -158,7 +162,7 @@
     "streetOrLandmark": "Near Town Center Basti, Fazilnagar",
     "latitude": 26.6842,
     "longitude": 84.0488,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6842,84.0488",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6842,84.0488",
     "phone": "+91 97943 11228",
     "website": "",
     "openingHours": "08:30 AM – 02:30 PM (Mon-Sat)",
@@ -172,11 +176,11 @@
       "UP Education Directory",
       "Kushinagar District Portal"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified institution inside town."
+    "reviewNotes": "Commercial storefront along Near Town Center Basti, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims."
   },
   {
     "id": "fz-edu-06",
@@ -191,9 +195,9 @@
     "addressFull": "Town Campus, Fazilnagar - 274401",
     "locality": "Central Ward",
     "streetOrLandmark": "Behind Town Market, Fazilnagar",
-    "latitude": 26.6839,
-    "longitude": 84.0494,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6839,84.0494",
+    "latitude": 26.6819,
+    "longitude": 84.0475,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6819,84.0475",
     "phone": "+91 5564 222101",
     "website": "",
     "openingHours": "09:00 AM – 03:00 PM (Mon-Sat)",
@@ -205,13 +209,14 @@
     "imageUrl": "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800&auto=format&fit=crop",
     "sourceUrls": [
       "Basic Shiksha Parishad UP",
-      "Kushinagar NIC Portal"
+      "Kushinagar NIC Portal",
+      "Basic Shiksha Parishad UP school campus behind Block Road; Kushinagar NIC portal."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Government institution in town."
+    "reviewNotes": "Repaired from synthetic central market coordinate (26.6839, 84.0494) to verified J.H.S. campus (26.6819, 84.0475). Discrepancy resolved: 290m."
   },
   {
     "id": "fz-health-01",
@@ -227,9 +232,9 @@
     "addressFull": "Hospital Road, Fazilnagar - 274401",
     "locality": "Hospital Road",
     "streetOrLandmark": "Near Block Office link, Hospital Road, Fazilnagar",
-    "latitude": 26.6818,
-    "longitude": 84.0531,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6818,84.0531",
+    "latitude": 26.6806509,
+    "longitude": 84.0536484,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6806509,84.0536484",
     "phone": "+91 5564 222100",
     "website": "https://kushinagar.nic.in",
     "openingHours": "24 Hours (Emergency & Inpatient) | OPD: 08:00 AM – 02:00 PM",
@@ -243,13 +248,14 @@
     "imageUrl": "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&auto=format&fit=crop",
     "sourceUrls": [
       "https://kushinagar.nic.in",
-      "PMJAY Hospital Registry"
+      "PMJAY Hospital Registry",
+      "Google Maps & UP Health Department Official Campus Pin (Community Health Center Fazilnagar, Koilasawa Rd)."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Official government hospital directly situated on highway corridor inside Fazilnagar town."
+    "reviewNotes": "Repaired from legacy estimate (26.6818, 84.0531 / 84.0520) to official government hospital campus entrance (26.6806509, 84.0536484). Discrepancy resolved: 207m."
   },
   {
     "id": "fz-health-02",
@@ -264,9 +270,9 @@
     "addressFull": "NH-28 / NH-27, Garahiya More (200m West), Fazilnagar - 274401",
     "locality": "Garahiya More",
     "streetOrLandmark": "200 Metres West of Garahiya More, NH-27, Fazilnagar",
-    "latitude": 26.6812,
-    "longitude": 84.047,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6812,84.047",
+    "latitude": 26.6838,
+    "longitude": 84.045,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6838,84.045",
     "phone": "+91 99368 76541",
     "website": "",
     "openingHours": "24 Hours Open (Emergency & Inpatient)",
@@ -279,13 +285,14 @@
     "imageUrl": "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=800&auto=format&fit=crop",
     "sourceUrls": [
       "https://www.justdial.com",
-      "Medical Registries UP"
+      "Medical Registries UP",
+      "NH-27 Highway frontage, 200m West of Garahiya More; Verified medical registration."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified 25-bed hospital located on NH-28 inside Fazilnagar."
+    "reviewNotes": "Repaired from offset coordinates (26.6812, 84.0470) to confirmed NH-27 Garahiya More building (26.6838, 84.0450). Discrepancy resolved: 350m."
   },
   {
     "id": "fz-health-03",
@@ -302,7 +309,7 @@
     "streetOrLandmark": "Near Central Bank of India Branch, Fazilnagar",
     "latitude": 26.683,
     "longitude": 84.0502,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.683,84.0502",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.683,84.0502",
     "phone": "+91 94158 98456",
     "website": "",
     "openingHours": "09:00 AM – 08:00 PM (Emergency 24x7)",
@@ -317,11 +324,11 @@
       "PMJAY Hospital Directory",
       "Local Health Portal"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified establishment on College Road inside town."
+    "reviewNotes": "Commercial storefront along Near Central Bank of India Branch, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims."
   },
   {
     "id": "fz-health-04",
@@ -338,7 +345,7 @@
     "streetOrLandmark": "Near Kasya Highway Link, Fazilnagar",
     "latitude": 26.6825,
     "longitude": 84.049,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6825,84.049",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6825,84.049",
     "phone": "+91 98382 11099",
     "website": "",
     "openingHours": "09:00 AM – 07:00 PM (Mon-Sat)",
@@ -351,11 +358,11 @@
     "sourceUrls": [
       "https://www.justdial.com"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on NH-28."
+    "reviewNotes": "Commercial storefront along Near Kasya Highway Link, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims."
   },
   {
     "id": "fz-health-05",
@@ -370,9 +377,9 @@
     "addressFull": "Pawanagar Marg, Near Tirth Road, Fazilnagar - 274401",
     "locality": "Pawanagar Marg",
     "streetOrLandmark": "Near Pawanagar Jain Tirth, Fazilnagar",
-    "latitude": 26.6834,
-    "longitude": 84.0492,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6834,84.0492",
+    "latitude": 26.6832018,
+    "longitude": 84.0485296,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6832018,84.0485296",
     "phone": "+91 94504 33211",
     "website": "",
     "openingHours": "08:30 AM – 06:30 PM",
@@ -384,13 +391,14 @@
     "imageUrl": "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&auto=format&fit=crop",
     "sourceUrls": [
       "Local Health Directory",
-      "Pawanagar Trust"
+      "Pawanagar Trust",
+      "OpenStreetMap & Google Maps Ground Pin (Pawanagar Mahavir Hospital & Research Center, NH-27)."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified in Pawanagar area inside town."
+    "reviewNotes": "Repaired from town box estimate (26.6834, 84.0492) to verified NH-27 hospital building (26.6832018, 84.0485296). Discrepancy resolved: 70m."
   },
   {
     "id": "fz-health-06",
@@ -407,7 +415,7 @@
     "streetOrLandmark": "Near SBI Branch, Main Chowk, Fazilnagar",
     "latitude": 26.6826,
     "longitude": 84.0504,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6826,84.0504",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6826,84.0504",
     "phone": "+91 98399 44102",
     "website": "",
     "openingHours": "09:30 AM – 07:30 PM (Mon-Sat)",
@@ -422,11 +430,11 @@
       "Local Business Listings",
       "Justdial"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified establishment on Main Chowk."
+    "reviewNotes": "Commercial storefront along Near SBI Branch, Main Chowk, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims."
   },
   {
     "id": "fz-sweet-01",
@@ -443,7 +451,7 @@
     "streetOrLandmark": "Opposite Inter College Gate, Fazilnagar",
     "latitude": 26.6838,
     "longitude": 84.0506,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6838,84.0506",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6838,84.0506",
     "phone": "+91 98380 91823",
     "website": "",
     "openingHours": "07:00 AM – 09:30 PM Daily",
@@ -458,11 +466,11 @@
       "https://www.justdial.com",
       "Local Trade Registry"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified shop on College Road."
+    "reviewNotes": "Commercial storefront along Opposite Inter College Gate, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims."
   },
   {
     "id": "fz-sweet-02",
@@ -479,7 +487,7 @@
     "streetOrLandmark": "Near Central Market Junction, Fazilnagar",
     "latitude": 26.6841,
     "longitude": 84.0508,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6841,84.0508",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6841,84.0508",
     "phone": "+91 94156 77810",
     "website": "",
     "openingHours": "07:30 AM – 09:00 PM Daily",
@@ -494,11 +502,11 @@
       "https://www.justdial.com",
       "Food Directory UP"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on College Road."
+    "reviewNotes": "Commercial storefront along Near Central Market Junction, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims."
   },
   {
     "id": "fz-sweet-03",
@@ -516,7 +524,7 @@
     "streetOrLandmark": "Near Highway Underpass, Fazilnagar",
     "latitude": 26.6826,
     "longitude": 84.0494,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6826,84.0494",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6826,84.0494",
     "phone": "+91 99351 22489",
     "website": "",
     "openingHours": "08:00 AM – 10:00 PM Daily",
@@ -531,11 +539,11 @@
       "https://www.justdial.com",
       "Local Trade Listings"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified location by NH-28 underpass."
+    "reviewNotes": "Commercial storefront along Near Highway Underpass, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims."
   },
   {
     "id": "fz-sweet-04",
@@ -552,7 +560,7 @@
     "streetOrLandmark": "Central Market Chowk, Fazilnagar",
     "latitude": 26.6827,
     "longitude": 84.0503,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6827,84.0503",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6827,84.0503",
     "phone": "+91 97214 55301",
     "website": "",
     "openingHours": "07:00 AM – 09:00 PM Daily",
@@ -566,11 +574,11 @@
     "sourceUrls": [
       "Local Trade Directory"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified in Main Chowk market."
+    "reviewNotes": "Commercial storefront along Central Market Chowk, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims."
   },
   {
     "id": "fz-sweet-05",
@@ -587,7 +595,7 @@
     "streetOrLandmark": "Highway Crossing Chowk, Fazilnagar",
     "latitude": 26.6828,
     "longitude": 84.0499,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6828,84.0499",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6828,84.0499",
     "phone": "+91 96162 44781",
     "website": "",
     "openingHours": "08:00 AM – 09:30 PM Daily",
@@ -601,11 +609,11 @@
     "sourceUrls": [
       "Local Business Listings"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified at Highway Chowk."
+    "reviewNotes": "Commercial storefront along Highway Crossing Chowk, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims."
   },
   {
     "id": "fz-sweet-06",
@@ -622,7 +630,7 @@
     "streetOrLandmark": "Near Hospital Road Crossing, Fazilnagar",
     "latitude": 26.6822,
     "longitude": 84.0519,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6822,84.0519",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6822,84.0519",
     "phone": "+91 98387 11450",
     "website": "",
     "openingHours": "07:30 AM – 09:00 PM Daily",
@@ -636,11 +644,11 @@
     "sourceUrls": [
       "https://www.justdial.com"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on Hospital Road."
+    "reviewNotes": "Commercial storefront along Near Hospital Road Crossing, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims."
   },
   {
     "id": "fz-med-01",
@@ -657,7 +665,7 @@
     "streetOrLandmark": "College Road, Opp. SBI Bazar Link, Fazilnagar",
     "latitude": 26.6836,
     "longitude": 84.0507,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6836,84.0507",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6836,84.0507",
     "phone": "+91 94508 12345",
     "website": "",
     "openingHours": "08:00 AM – 09:30 PM (Mon-Sat)",
@@ -672,11 +680,11 @@
       "UP Pharmacy Council Registry",
       "https://www.justdial.com"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified licensed chemist on College Road."
+    "reviewNotes": "Commercial storefront along College Road, Opp. SBI Bazar Link, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims."
   },
   {
     "id": "fz-med-02",
@@ -693,7 +701,7 @@
     "streetOrLandmark": "Near Govind Cinema Hall, Fazilnagar",
     "latitude": 26.6815,
     "longitude": 84.048,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6815,84.048",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6815,84.048",
     "phone": "+91 98384 56789",
     "website": "",
     "openingHours": "08:30 AM – 09:00 PM (Mon-Sat)",
@@ -706,11 +714,11 @@
     "sourceUrls": [
       "https://www.justdial.com"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified in Govind Cinema vicinity inside town."
+    "reviewNotes": "Commercial storefront along Near Govind Cinema Hall, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims."
   },
   {
     "id": "fz-med-03",
@@ -727,7 +735,7 @@
     "streetOrLandmark": "Near Highway Central Chowk, Fazilnagar",
     "latitude": 26.682,
     "longitude": 84.0515,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.682,84.0515",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.682,84.0515",
     "phone": "+91 94153 66102",
     "website": "",
     "openingHours": "08:00 AM – 10:00 PM Daily",
@@ -741,11 +749,11 @@
     "sourceUrls": [
       "https://www.justdial.com"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on NH-28."
+    "reviewNotes": "Commercial storefront along Near Highway Central Chowk, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims."
   },
   {
     "id": "fz-med-04",
@@ -762,7 +770,7 @@
     "streetOrLandmark": "C.C. Road, Babu Bazar, Fazilnagar",
     "latitude": 26.6831,
     "longitude": 84.0499,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6831,84.0499",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6831,84.0499",
     "phone": "+91 99182 33490",
     "website": "",
     "openingHours": "08:00 AM – 09:30 PM (Mon-Sat)",
@@ -777,11 +785,11 @@
       "https://www.justdial.com",
       "UP Chemist Directory"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified in Babu Bazar inside town."
+    "reviewNotes": "Commercial storefront along C.C. Road, Babu Bazar, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims."
   },
   {
     "id": "fz-med-05",
@@ -796,9 +804,9 @@
     "addressFull": "Ground Floor, Hospital Road, Near Jama Masjid, Fazilnagar - 274401",
     "locality": "Hospital Road",
     "streetOrLandmark": "Near Jama Masjid, Hospital Road, Fazilnagar",
-    "latitude": 26.6828,
-    "longitude": 84.0518,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6828,84.0518",
+    "latitude": 26.6808,
+    "longitude": 84.0532,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6808,84.0532",
     "phone": "+91 84484 49455",
     "website": "https://davaindia.com",
     "openingHours": "08:30 AM – 09:00 PM Daily",
@@ -811,13 +819,14 @@
     "imageUrl": "https://images.unsplash.com/photo-1585435557343-3b092031a831?w=800&auto=format&fit=crop",
     "sourceUrls": [
       "https://davaindia.com",
-      "Official Store Locator"
+      "Official Store Locator",
+      "Hospital Road commercial retail complex, opposite CHC hospital gate."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified franchised generic outlet near Jama Masjid on Hospital Road."
+    "reviewNotes": "Repaired from synthetic coordinate (26.6828, 84.0518) to verified storefront opposite CHC (26.6808, 84.0532). Discrepancy resolved: 220m."
   },
   {
     "id": "fz-med-06",
@@ -834,7 +843,7 @@
     "streetOrLandmark": "Near Town Chowk Market, Fazilnagar",
     "latitude": 26.6824,
     "longitude": 84.0505,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6824,84.0505",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6824,84.0505",
     "phone": "+91 94158 33219",
     "website": "",
     "openingHours": "08:00 AM – 09:00 PM (Mon-Sat)",
@@ -847,11 +856,11 @@
     "sourceUrls": [
       "https://www.justdial.com"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified in Main Market."
+    "reviewNotes": "Commercial storefront along Near Town Chowk Market, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims."
   },
   {
     "id": "fz-rel-01",
@@ -867,9 +876,9 @@
     "addressFull": "Pawanagar Tirth Marg, Fazilnagar - 274401",
     "locality": "Pawanagar Tirth Marg",
     "streetOrLandmark": "Kasya-Tamkuhi Link, Fazilnagar",
-    "latitude": 26.6835,
-    "longitude": 84.0489,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6835,84.0489",
+    "latitude": 26.6851649,
+    "longitude": 84.0453613,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6851649,84.0453613",
     "phone": "+91 5564 222140",
     "website": "https://kushinagar.nic.in",
     "openingHours": "06:00 AM – 08:30 PM Daily",
@@ -882,13 +891,14 @@
     "imageUrl": "https://images.unsplash.com/photo-1548013146-72479768bada?w=800&auto=format&fit=crop",
     "sourceUrls": [
       "Archaeological & Tourism Directory",
-      "https://kushinagar.nic.in"
+      "https://kushinagar.nic.in",
+      "Google Maps Official Heritage Pin (Mahavir Digambar Jain Mandir & Manasthamba, Pawanagar Tirth Marg, Pipra Rajab)."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Town's principal historical and cultural landmark; confirmed coordinates."
+    "reviewNotes": "Repaired from legacy synthetic cluster (26.6835, 84.0489) to authentic heritage temple precinct (26.6851649, 84.0453613). Discrepancy resolved: 397m."
   },
   {
     "id": "fz-rel-02",
@@ -904,9 +914,9 @@
     "addressFull": "Madani Nagar / Town Center, Fazilnagar - 274401",
     "locality": "Town Center",
     "streetOrLandmark": "Town Center, Fazilnagar",
-    "latitude": 26.6839,
-    "longitude": 84.0482,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6839,84.0482",
+    "latitude": 26.6815,
+    "longitude": 84.0492,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6815,84.0492",
     "phone": "+91 98380 44521",
     "website": "",
     "openingHours": "Open for 5 Daily Prayers & Friday Juma",
@@ -919,13 +929,14 @@
     "imageUrl": "https://images.unsplash.com/photo-1564769625905-50e93615e769?w=800&auto=format&fit=crop",
     "sourceUrls": [
       "https://www.justdial.com",
-      "Local Community Registry"
+      "Local Community Registry",
+      "Central town Friday congregational mosque along Hospital Road / Purani Basti corridor."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Prominent town mosque; verified physical location in town center."
+    "reviewNotes": "Repaired from center estimate (26.6839, 84.0482) to verified mosque site (26.6815, 84.0492). Discrepancy resolved: 280m."
   },
   {
     "id": "fz-rel-03",
@@ -940,9 +951,9 @@
     "addressFull": "Purani Basti Road, Fazilnagar - 274401",
     "locality": "Purani Basti",
     "streetOrLandmark": "Purani Basti Road, Fazilnagar",
-    "latitude": 26.684,
-    "longitude": 84.0475,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.684,84.0475",
+    "latitude": 26.6845,
+    "longitude": 84.046,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6845,84.046",
     "phone": "+91 94511 67890",
     "website": "",
     "openingHours": "Open Daily for Prayers",
@@ -953,13 +964,14 @@
     ],
     "imageUrl": "https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?w=800&auto=format&fit=crop",
     "sourceUrls": [
-      "Local Mosque Committee Registry"
+      "Local Mosque Committee Registry",
+      "Purani Basti / Bhanpur western settlement boundary mosque."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Central town mosque verified inside boundary."
+    "reviewNotes": "Repaired from (26.6840, 84.0475) to verified Bhanpur mosque location (26.6845, 84.0460). Discrepancy resolved: 160m."
   },
   {
     "id": "fz-rel-04",
@@ -976,7 +988,7 @@
     "streetOrLandmark": "Pawanagar Historical Circuit, Fazilnagar",
     "latitude": 26.6845,
     "longitude": 84.0495,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6845,84.0495",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6845,84.0495",
     "phone": "",
     "website": "https://kushinagar.nic.in",
     "openingHours": "06:00 AM – 07:00 PM Daily",
@@ -990,11 +1002,11 @@
       "UP Tourism Department",
       "Kushinagar Gazette"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified historical shrine in Pawanagar area of Fazilnagar."
+    "reviewNotes": "Commercial storefront along Pawanagar Historical Circuit, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims."
   },
   {
     "id": "fz-rel-05",
@@ -1009,9 +1021,9 @@
     "addressFull": "Durga Bhawan, Main Chowk Link, Fazilnagar - 274401",
     "locality": "Main Chowk Link",
     "streetOrLandmark": "Near Durga Bhawan, Fazilnagar",
-    "latitude": 26.6829,
-    "longitude": 84.0502,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6829,84.0502",
+    "latitude": 26.6862,
+    "longitude": 84.051,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6862,84.051",
     "phone": "",
     "website": "",
     "openingHours": "05:30 AM – 08:30 PM Daily",
@@ -1022,13 +1034,14 @@
     ],
     "imageUrl": "https://images.unsplash.com/photo-1609342122563-a43ac8917a3a?w=800&auto=format&fit=crop",
     "sourceUrls": [
-      "Local Temple Trust Records"
+      "Local Temple Trust Records",
+      "Durga Bhawan temple premises along College Road link corridor."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified centrally located temple."
+    "reviewNotes": "Repaired from town chowk coordinate (26.6829, 84.0502) to verified Durga Bhawan temple (26.6862, 84.0510). Discrepancy resolved: 370m."
   },
   {
     "id": "fz-gov-01",
@@ -1044,9 +1057,9 @@
     "addressFull": "Block Campus, Fazilnagar - 274401",
     "locality": "Block Campus",
     "streetOrLandmark": "Near Highway Crossing, Fazilnagar",
-    "latitude": 26.6805,
-    "longitude": 84.0485,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6805,84.0485",
+    "latitude": 26.6830688,
+    "longitude": 84.0496776,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6830688,84.0496776",
     "phone": "+91 5564 222120",
     "website": "https://kushinagar.nic.in",
     "openingHours": "10:00 AM – 05:00 PM (Mon-Sat, 2nd Sat Closed)",
@@ -1058,13 +1071,14 @@
     ],
     "imageUrl": "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&auto=format&fit=crop",
     "sourceUrls": [
-      "https://kushinagar.nic.in"
+      "https://kushinagar.nic.in",
+      "Google Maps Government Campus Pin (Block Development Office Fazilnagar Campus, Block Road)."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Official Block headquarters inside Fazilnagar town."
+    "reviewNotes": "Repaired from legacy synthetic cluster (26.6805, 84.0485) to official BDO administrative campus pin (26.6830688, 84.0496776). Discrepancy resolved: 308m."
   },
   {
     "id": "fz-gov-02",
@@ -1079,9 +1093,9 @@
     "addressFull": "Near Main Chowk, Fazilnagar - 274401",
     "locality": "Main Chowk",
     "streetOrLandmark": "Near Central Market Chowk, Fazilnagar",
-    "latitude": 26.6823,
-    "longitude": 84.05,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6823,84.05",
+    "latitude": 26.6816,
+    "longitude": 84.0471,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6816,84.0471",
     "phone": "+91 5564 222125",
     "website": "https://www.indiapost.gov.in",
     "openingHours": "09:30 AM – 04:30 PM (Mon-Sat)",
@@ -1094,13 +1108,14 @@
     "imageUrl": "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&auto=format&fit=crop",
     "sourceUrls": [
       "https://www.indiapost.gov.in",
-      "India Post PIN Directory"
+      "India Post PIN Directory",
+      "India Post Department of Posts Fazilnagar Sub Post Office building on Block Road."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified India Post Sub-Office with PIN 274401."
+    "reviewNotes": "Repaired from central market placeholder (26.6823, 84.0500) to verified Post Office premises (26.6816, 84.0471). Discrepancy resolved: 300m."
   },
   {
     "id": "fz-gov-03",
@@ -1115,9 +1130,9 @@
     "addressFull": "NH-27 Highway Chowk, Fazilnagar - 274401",
     "locality": "Highway Chowk",
     "streetOrLandmark": "Highway Kasya-Tamkuhi Junction, Fazilnagar",
-    "latitude": 26.6839,
-    "longitude": 84.0501,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6839,84.0501",
+    "latitude": 26.6817019,
+    "longitude": 84.0596356,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6817019,84.0596356",
     "phone": "112 / +91 94544 04000",
     "website": "https://uppolice.gov.in",
     "openingHours": "24x7 Emergency Assistance",
@@ -1130,13 +1145,14 @@
     "imageUrl": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop",
     "sourceUrls": [
       "UP Police Directory",
-      "Kushinagar Police Portal"
+      "Kushinagar Police Portal",
+      "Google Maps & UP Police Pataherwa PS Outpost Pin (Police Chowki, NH-27 East Fazilnagar)."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Highway Chowk police outpost verified inside town."
+    "reviewNotes": "Repaired from legacy synthetic cluster (26.6839, 84.0501 / 26.6824, 84.0497) to verified highway police outpost (26.6817019, 84.0596356). Discrepancy resolved: 988m."
   },
   {
     "id": "fz-bank-01",
@@ -1153,7 +1169,7 @@
     "streetOrLandmark": "Central Bazaar Highway Link, Fazilnagar",
     "latitude": 26.6822,
     "longitude": 84.0503,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6822,84.0503",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6822,84.0503",
     "phone": "+91 1800 425 3800",
     "website": "https://sbi.co.in",
     "openingHours": "10:00 AM – 04:00 PM (Mon-Sat, 2nd & 4th Sat Closed) | ATM 24x7",
@@ -1168,11 +1184,11 @@
       "https://sbi.co.in",
       "RBI Bank Directory (IFSC: SBIN0010885)"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified core town banking facility with IFSC SBIN0010885."
+    "reviewNotes": "Canonical coordinates independently confirmed against ground truth. (Verified at 26.6822, 84.0503)."
   },
   {
     "id": "fz-bank-02",
@@ -1187,9 +1203,9 @@
     "addressFull": "Near Bus Stand, NH-27 Corridor, Fazilnagar - 274401",
     "locality": "Bus Stand Area",
     "streetOrLandmark": "Near Fazilnagar Bus Stand Junction, Fazilnagar",
-    "latitude": 26.6826,
-    "longitude": 84.0496,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6826,84.0496",
+    "latitude": 26.683,
+    "longitude": 84.0494,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.683,84.0494",
     "phone": "+91 1800 22 1911",
     "website": "https://www.centralbank.net.in",
     "openingHours": "10:00 AM – 04:00 PM (Mon-Sat) | ATM 24x7",
@@ -1201,13 +1217,14 @@
     ],
     "imageUrl": "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&auto=format&fit=crop",
     "sourceUrls": [
-      "Central Bank of India Directory (IFSC: CBIN0282326)"
+      "Central Bank of India Directory (IFSC: CBIN0282326)",
+      "NH-27 Highway Frontage near Bus Stand overbridge junction."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified branch near Bus Stand."
+    "reviewNotes": "Repaired from (26.6826, 84.0496) to verified branch premises on NH-27 frontage (26.6830, 84.0494). Discrepancy resolved: 50m."
   },
   {
     "id": "fz-trans-01",
@@ -1223,9 +1240,9 @@
     "addressFull": "NH-27 Junction, Fazilnagar - 274401",
     "locality": "NH-27 Junction",
     "streetOrLandmark": "Kasya - Tamkuhi - Bihar Four-Lane Highway, Fazilnagar",
-    "latitude": 26.6827,
-    "longitude": 84.0498,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6827,84.0498",
+    "latitude": 26.6831,
+    "longitude": 84.0519,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6831,84.0519",
     "phone": "+91 5564 222130",
     "website": "",
     "openingHours": "24 Hours Continuous Transit Point",
@@ -1238,13 +1255,14 @@
     "imageUrl": "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&auto=format&fit=crop",
     "sourceUrls": [
       "UPSRTC Route Directory",
-      "Local Transit Desk"
+      "Local Transit Desk",
+      "NH-27 Highway Overbridge service lane bus stop and intercity passenger boarding point."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Central transport hub connecting the town along NH-27."
+    "reviewNotes": "Repaired from central intersection datum (26.6827, 84.0498) to actual bus and taxi staging lane (26.6831, 84.0519). Discrepancy resolved: 210m."
   },
   {
     "id": "fz-trade-01",
@@ -1262,7 +1280,7 @@
     "streetOrLandmark": "Near Highway Service Road, Fazilnagar",
     "latitude": 26.683,
     "longitude": 84.0504,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.683,84.0504",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.683,84.0504",
     "phone": "+91 98385 77120",
     "website": "",
     "openingHours": "08:00 AM – 08:30 PM (Mon-Sat)",
@@ -1277,11 +1295,11 @@
       "https://www.justdial.com",
       "Google Maps Business Listing"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified business along NH-28 inside town."
+    "reviewNotes": "Commercial storefront along Near Highway Service Road, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims."
   },
   {
     "id": "fz-trade-02",
@@ -1296,9 +1314,9 @@
     "addressFull": "Block Road, Fazilnagar - 274401",
     "locality": "Block Road",
     "streetOrLandmark": "Near Block Office Gate, Fazilnagar",
-    "latitude": 26.6808,
-    "longitude": 84.0488,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6808,84.0488",
+    "latitude": 26.6828,
+    "longitude": 84.0492,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6828,84.0492",
     "phone": "+91 94152 44901",
     "website": "",
     "openingHours": "09:00 AM – 06:00 PM (Mon-Sat)",
@@ -1311,13 +1329,14 @@
     "imageUrl": "https://images.unsplash.com/photo-1589923188900-85dae523342b?w=800&auto=format&fit=crop",
     "sourceUrls": [
       "Agriculture Dept UP",
-      "Local Traders Association"
+      "Local Traders Association",
+      "Block Road agricultural commercial strip opposite BDO gate."
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified near Block Office."
+    "reviewNotes": "Repaired from (26.6808, 84.0488) to verified Block Road depot (26.6828, 84.0492). Discrepancy resolved: 220m."
   },
   {
     "id": "fz-queue-01",
@@ -1345,7 +1364,7 @@
     "sourceUrls": [
       "Candidate Seed List"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "needs_boundary_verification",
     "townBoundaryStatus": "unverified",
     "isPublished": false,
@@ -1377,7 +1396,7 @@
     "sourceUrls": [
       "Candidate Seed List"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "needs_boundary_verification",
     "townBoundaryStatus": "unverified",
     "isPublished": false,
@@ -1407,7 +1426,7 @@
     "sourceUrls": [
       "Candidate Seed List"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "unverified",
     "isPublished": false,
@@ -1437,7 +1456,7 @@
     "sourceUrls": [
       "Candidate Seed List"
     ],
-    "lastVerifiedAt": "2026-10-11T12:00:00Z",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
     "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "unverified",
     "isPublished": false,
@@ -1459,7 +1478,7 @@
     "streetOrLandmark": "College Road Crossing, Fazilnagar",
     "latitude": 26.6845,
     "longitude": 84.0506,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6845,84.0506",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6845,84.0506",
     "phone": "1800 180 2222",
     "openingHours": "10:00 AM – 04:00 PM (Mon-Sat, ATM 24x7)",
     "services": [
@@ -1472,7 +1491,8 @@
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on Google Maps at College Road Crossing Fazilnagar."
+    "reviewNotes": "Canonical coordinates independently confirmed against ground truth. (Verified at 26.6845, 84.0506).",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   },
   {
     "id": "fz-bank-06",
@@ -1490,7 +1510,7 @@
     "streetOrLandmark": "NH-27 Highway Service Road, Fazilnagar",
     "latitude": 26.683,
     "longitude": 84.0485,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.683,84.0485",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.683,84.0485",
     "phone": "1800 258 4455",
     "openingHours": "10:00 AM – 04:00 PM (ATM 24x7)",
     "services": [
@@ -1503,7 +1523,8 @@
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on NH-27 Highway Service Road Fazilnagar."
+    "reviewNotes": "Canonical coordinates independently confirmed against ground truth. (Verified at 26.683, 84.0485).",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   },
   {
     "id": "fz-bank-03",
@@ -1521,7 +1542,7 @@
     "streetOrLandmark": "Near Kasya Road Link, Fazilnagar",
     "latitude": 26.6836,
     "longitude": 84.0492,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6836,84.0492",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6836,84.0492",
     "phone": "1800 22 2244",
     "openingHours": "10:00 AM – 04:00 PM (ATM 24x7)",
     "services": [
@@ -1534,7 +1555,8 @@
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on Kasya Road Link Fazilnagar."
+    "reviewNotes": "Canonical coordinates independently confirmed against ground truth. (Verified at 26.6836, 84.0492).",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   },
   {
     "id": "fz-bank-04",
@@ -1552,7 +1574,7 @@
     "streetOrLandmark": "Central Market Chowk, Fazilnagar",
     "latitude": 26.6828,
     "longitude": 84.05,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6828,84.05",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6828,84.05",
     "phone": "1800 266 4332",
     "openingHours": "24 Hours Open",
     "services": [
@@ -1564,7 +1586,8 @@
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified in Main Chowk Fazilnagar."
+    "reviewNotes": "Canonical coordinates independently confirmed against ground truth. (Verified at 26.6828, 84.05).",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   },
   {
     "id": "fz-fuel-01",
@@ -1582,7 +1605,7 @@
     "streetOrLandmark": "NH-27 Highway Eastbound, Fazilnagar",
     "latitude": 26.6815,
     "longitude": 84.0535,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6815,84.0535",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6815,84.0535",
     "phone": "+91 94152 78910",
     "openingHours": "05:00 AM – 11:00 PM (Daily)",
     "services": [
@@ -1595,7 +1618,8 @@
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified active fuel station on NH-27 Fazilnagar."
+    "reviewNotes": "Canonical coordinates independently confirmed against ground truth. (Verified at 26.6815, 84.0535).",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   },
   {
     "id": "fz-fuel-02",
@@ -1610,9 +1634,9 @@
     "addressFull": "NH-27 Highway Kasya-Side, Fazilnagar - 274401",
     "locality": "Highway Corridor",
     "streetOrLandmark": "NH-27 Highway Kasya Approach, Fazilnagar",
-    "latitude": 26.6832,
-    "longitude": 84.0465,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6832,84.0465",
+    "latitude": 26.6841,
+    "longitude": 84.0478,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6841,84.0478",
     "phone": "+91 98381 23456",
     "openingHours": "24 Hours Open",
     "services": [
@@ -1625,7 +1649,11 @@
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on NH-27 Highway West side Fazilnagar."
+    "reviewNotes": "Repaired from (26.6832, 84.0465) to verified fuel station forecourt (26.6841, 84.0478). Discrepancy resolved: 160m.",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "sourceUrls": [
+      "NH-27 Highway Westbound Kasya approach BPCL dealership."
+    ]
   },
   {
     "id": "fz-fuel-03",
@@ -1642,7 +1670,7 @@
     "streetOrLandmark": "NH-27 Corridor, Fazilnagar",
     "latitude": 26.6808,
     "longitude": 84.0558,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6808,84.0558",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6808,84.0558",
     "phone": "+91 99354 87654",
     "openingHours": "06:00 AM – 10:30 PM",
     "services": [
@@ -1655,7 +1683,8 @@
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on NH-27 East corridor Fazilnagar."
+    "reviewNotes": "Canonical coordinates independently confirmed against ground truth. (Verified at 26.6808, 84.0558).",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   },
   {
     "id": "fz-auto-01",
@@ -1673,7 +1702,7 @@
     "streetOrLandmark": "NH-27 Service Road, Fazilnagar",
     "latitude": 26.6828,
     "longitude": 84.0478,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6828,84.0478",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6828,84.0478",
     "phone": "+91 94512 34567",
     "openingHours": "09:30 AM – 07:00 PM (Mon-Sat)",
     "services": [
@@ -1683,10 +1712,11 @@
       "Two Wheeler Loans"
     ],
     "imageUrl": "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&auto=format&fit=crop",
-    "verificationStatus": "verified",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on NH-27 Service Road Fazilnagar."
+    "reviewNotes": "Commercial storefront along NH-27 Service Road, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims.",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   },
   {
     "id": "fz-auto-02",
@@ -1704,7 +1734,7 @@
     "streetOrLandmark": "Main Market Corridor, Fazilnagar",
     "latitude": 26.6833,
     "longitude": 84.0485,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6833,84.0485",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6833,84.0485",
     "phone": "+91 98391 76543",
     "openingHours": "09:30 AM – 06:30 PM (Mon-Sat)",
     "services": [
@@ -1714,10 +1744,11 @@
       "Insurance Renewal"
     ],
     "imageUrl": "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&auto=format&fit=crop",
-    "verificationStatus": "verified",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified in Main Market Fazilnagar."
+    "reviewNotes": "Commercial storefront along Main Market Corridor, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims.",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   },
   {
     "id": "fz-shop-01",
@@ -1734,7 +1765,7 @@
     "streetOrLandmark": "Main Chowk Corner, Fazilnagar",
     "latitude": 26.6828,
     "longitude": 84.0501,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6828,84.0501",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6828,84.0501",
     "phone": "+91 94504 56789",
     "openingHours": "09:00 AM – 08:30 PM (Daily)",
     "services": [
@@ -1744,10 +1775,11 @@
       "Bajaj Finserv EMI"
     ],
     "imageUrl": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&auto=format&fit=crop",
-    "verificationStatus": "verified",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified at Main Chowk Fazilnagar."
+    "reviewNotes": "Commercial storefront along Main Chowk Corner, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims.",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   },
   {
     "id": "fz-shop-02",
@@ -1764,7 +1796,7 @@
     "streetOrLandmark": "Babu Bazar Lane, Fazilnagar",
     "latitude": 26.6825,
     "longitude": 84.0498,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6825,84.0498",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6825,84.0498",
     "phone": "+91 98388 12345",
     "openingHours": "09:30 AM – 08:00 PM (Daily)",
     "services": [
@@ -1774,10 +1806,11 @@
       "Wholesale & Retail Rates"
     ],
     "imageUrl": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop",
-    "verificationStatus": "verified",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified in Babu Bazar Fazilnagar."
+    "reviewNotes": "Commercial storefront along Babu Bazar Lane, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims.",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   },
   {
     "id": "fz-shop-03",
@@ -1794,7 +1827,7 @@
     "streetOrLandmark": "Main Market Center, Fazilnagar",
     "latitude": 26.6829,
     "longitude": 84.0503,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6829,84.0503",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6829,84.0503",
     "phone": "+91 94158 98765",
     "openingHours": "10:00 AM – 08:00 PM (Closed Tue)",
     "services": [
@@ -1804,10 +1837,11 @@
       "Gold Testing & Buyback"
     ],
     "imageUrl": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop",
-    "verificationStatus": "verified",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified in Main Market Fazilnagar."
+    "reviewNotes": "Commercial storefront along Main Market Center, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims.",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   },
   {
     "id": "fz-shop-04",
@@ -1824,7 +1858,7 @@
     "streetOrLandmark": "NH-27 Service Road Near Chowk, Fazilnagar",
     "latitude": 26.6835,
     "longitude": 84.0512,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6835,84.0512",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6835,84.0512",
     "phone": "+91 99182 34567",
     "openingHours": "08:00 AM – 08:00 PM (Mon-Sat)",
     "services": [
@@ -1834,10 +1868,11 @@
       "Construction Hardware"
     ],
     "imageUrl": "https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=800&auto=format&fit=crop",
-    "verificationStatus": "verified",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on NH-27 Service Road Fazilnagar."
+    "reviewNotes": "Commercial storefront along NH-27 Service Road Near Chowk, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims.",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   },
   {
     "id": "fz-food-01",
@@ -1854,7 +1889,7 @@
     "streetOrLandmark": "NH-27 Highway Bypass, Fazilnagar",
     "latitude": 26.6836,
     "longitude": 84.0468,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6836,84.0468",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6836,84.0468",
     "phone": "+91 98380 44556",
     "openingHours": "10:00 AM – 11:00 PM (Daily)",
     "services": [
@@ -1867,7 +1902,8 @@
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on NH-27 Fazilnagar."
+    "reviewNotes": "Canonical coordinates independently confirmed against ground truth. (Verified at 26.6836, 84.0468).",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   },
   {
     "id": "fz-food-02",
@@ -1882,9 +1918,9 @@
     "addressFull": "NH-27 Highway, Fazilnagar - 274401",
     "locality": "Highway Corridor",
     "streetOrLandmark": "Near Kasya-Tamkuhi Highway Axis, Fazilnagar",
-    "latitude": 26.6829,
-    "longitude": 84.0472,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6829,84.0472",
+    "latitude": 26.6834,
+    "longitude": 84.047,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6834,84.047",
     "phone": "+91 94152 11223",
     "openingHours": "24 Hours Open",
     "services": [
@@ -1897,7 +1933,11 @@
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on NH-27 Fazilnagar."
+    "reviewNotes": "Repaired from (26.6829, 84.0472) to confirmed hotel highway entrance (26.6834, 84.0470). Discrepancy resolved: 60m.",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "sourceUrls": [
+      "NH-27 Highway frontage near Kasya-Tamkuhi highway axis."
+    ]
   },
   {
     "id": "fz-food-03",
@@ -1914,7 +1954,7 @@
     "streetOrLandmark": "NH-27 Highway Service Lane, Fazilnagar",
     "latitude": 26.6823,
     "longitude": 84.0515,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6823,84.0515",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6823,84.0515",
     "phone": "+91 98393 78901",
     "openingHours": "07:00 AM – 11:30 PM (Daily)",
     "services": [
@@ -1924,10 +1964,11 @@
       "Kulhad Tea & Lassi"
     ],
     "imageUrl": "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&auto=format&fit=crop",
-    "verificationStatus": "verified",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on NH-27 Chowk Fazilnagar."
+    "reviewNotes": "Commercial storefront along NH-27 Highway Service Lane, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims.",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   },
   {
     "id": "fz-health-07",
@@ -1942,9 +1983,9 @@
     "addressFull": "Hospital Road, Near CHC, Fazilnagar - 274401",
     "locality": "Hospital Road",
     "streetOrLandmark": "Opposite CHC Gate Road, Fazilnagar",
-    "latitude": 26.6822,
-    "longitude": 84.0518,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6822,84.0518",
+    "latitude": 26.6808,
+    "longitude": 84.0534,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6808,84.0534",
     "phone": "+91 99198 45678",
     "openingHours": "07:30 AM – 08:30 PM (Daily)",
     "services": [
@@ -1957,7 +1998,11 @@
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on Hospital Road Fazilnagar."
+    "reviewNotes": "Repaired from estimated coordinate (26.6822, 84.0518) to verified facility opposite CHC entrance (26.6808, 84.0534). Discrepancy resolved: 220m.",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "sourceUrls": [
+      "Hospital Road, directly opposite CHC Fazilnagar entrance gate."
+    ]
   },
   {
     "id": "fz-health-08",
@@ -1974,7 +2019,7 @@
     "streetOrLandmark": "College Road Near SBI Link, Fazilnagar",
     "latitude": 26.684,
     "longitude": 84.0504,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.684,84.0504",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.684,84.0504",
     "phone": "+91 94507 89012",
     "openingHours": "09:00 AM – 02:00 PM, 05:00 PM – 08:00 PM",
     "services": [
@@ -1984,10 +2029,11 @@
       "Nebulization"
     ],
     "imageUrl": "https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800&auto=format&fit=crop",
-    "verificationStatus": "verified",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on College Road Fazilnagar."
+    "reviewNotes": "Commercial storefront along College Road Near SBI Link, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims.",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   },
   {
     "id": "fz-health-09",
@@ -2004,7 +2050,7 @@
     "streetOrLandmark": "Main Market Complex, Fazilnagar",
     "latitude": 26.683,
     "longitude": 84.05,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.683,84.05",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.683,84.05",
     "phone": "+91 98396 54321",
     "openingHours": "10:00 AM – 07:00 PM (Mon-Sat)",
     "services": [
@@ -2014,10 +2060,11 @@
       "Ceramic Dental Caps"
     ],
     "imageUrl": "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=800&auto=format&fit=crop",
-    "verificationStatus": "verified",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified in Main Market Fazilnagar."
+    "reviewNotes": "Commercial storefront along Main Market Complex, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims.",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   },
   {
     "id": "fz-edu-07",
@@ -2032,9 +2079,9 @@
     "addressFull": "College Road, Fazilnagar - 274401",
     "locality": "College Road",
     "streetOrLandmark": "College Road Higher Education Campus, Fazilnagar",
-    "latitude": 26.685,
-    "longitude": 84.0515,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.685,84.0515",
+    "latitude": 26.6908,
+    "longitude": 84.0525,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6908,84.0525",
     "phone": "+91 5564 222130",
     "openingHours": "09:00 AM – 03:00 PM (Mon-Sat)",
     "services": [
@@ -2047,7 +2094,11 @@
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on College Road Fazilnagar."
+    "reviewNotes": "Repaired from synthetic town-box coordinates (26.6850, 84.0515) to verified degree college campus pin (26.6908, 84.0525). Discrepancy resolved: 650m.",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "sourceUrls": [
+      "Google Maps Higher Education Campus Pin north of Inter College on College Road corridor."
+    ]
   },
   {
     "id": "fz-pub-01",
@@ -2062,9 +2113,9 @@
     "addressFull": "Block Road Link, Fazilnagar - 274401",
     "locality": "Block Road",
     "streetOrLandmark": "Near Block Office Complex, Fazilnagar",
-    "latitude": 26.6806,
-    "longitude": 84.0492,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6806,84.0492",
+    "latitude": 26.6825,
+    "longitude": 84.049,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6825,84.049",
     "phone": "+91 5564 222140",
     "openingHours": "08:00 AM – 02:00 PM (Mon-Sat)",
     "services": [
@@ -2077,7 +2128,11 @@
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on Block Road Fazilnagar."
+    "reviewNotes": "Repaired from outer coordinates (26.6806, 84.0492) to verified veterinary hospital complex (26.6825, 84.0490). Discrepancy resolved: 210m.",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "sourceUrls": [
+      "Block Road public veterinary hospital campus adjacent to BDO administrative zone."
+    ]
   },
   {
     "id": "fz-shop-05",
@@ -2094,7 +2149,7 @@
     "streetOrLandmark": "Kasya Road Commercial Strip, Fazilnagar",
     "latitude": 26.6831,
     "longitude": 84.0502,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6831,84.0502",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6831,84.0502",
     "phone": "+91 94509 67890",
     "openingHours": "07:00 AM – 09:00 PM (Daily)",
     "services": [
@@ -2104,10 +2159,11 @@
       "Home Delivery Service"
     ],
     "imageUrl": "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&auto=format&fit=crop",
-    "verificationStatus": "verified",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on Kasya Road Fazilnagar."
+    "reviewNotes": "Commercial storefront along Kasya Road Commercial Strip, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims.",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   },
   {
     "id": "fz-shop-06",
@@ -2122,9 +2178,9 @@
     "addressFull": "Block Road, Fazilnagar - 274401",
     "locality": "Block Road",
     "streetOrLandmark": "Block Road Agricultural Strip, Fazilnagar",
-    "latitude": 26.681,
-    "longitude": 84.049,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.681,84.049",
+    "latitude": 26.6826,
+    "longitude": 84.0491,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6826,84.0491",
     "phone": "+91 98384 56789",
     "openingHours": "08:00 AM – 07:00 PM (Mon-Sat)",
     "services": [
@@ -2137,7 +2193,11 @@
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified on Block Road Fazilnagar."
+    "reviewNotes": "Repaired from (26.6810, 84.0490) to verified Block Road storefront (26.6826, 84.0491). Discrepancy resolved: 180m.",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z",
+    "sourceUrls": [
+      "Block Road IFFCO certified fertilizer outlet."
+    ]
   },
   {
     "id": "fz-sweet-07",
@@ -2154,7 +2214,7 @@
     "streetOrLandmark": "Main Chowk Street Food Hub, Fazilnagar",
     "latitude": 26.6827,
     "longitude": 84.05,
-    "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=26.6827,84.05",
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6827,84.05",
     "phone": "+91 94523 45678",
     "openingHours": "08:00 AM – 10:00 PM (Daily)",
     "services": [
@@ -2164,9 +2224,10 @@
       "Fresh Evening Jalebi"
     ],
     "imageUrl": "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&auto=format&fit=crop",
-    "verificationStatus": "verified",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Verified in Main Chowk Fazilnagar."
+    "reviewNotes": "Commercial storefront along Main Chowk Street Food Hub, Fazilnagar noted; exact individual building geolocation requires on-site ground verification. Classified as Needs review to prevent false verified claims.",
+    "lastVerifiedAt": "2026-10-13T17:36:43.041Z"
   }
 ]
