@@ -1014,13 +1014,15 @@ export default function TownPortal() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
-              <Link
-                to="/directory?add=true"
+              <button
+                type="button"
+                onClick={() => setCommunityModalOpen(true)}
                 className="bg-[#0D5E49] hover:bg-emerald-800 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
+                title="Add place with exact map location and images (4-Step Wizard)"
               >
                 <PlusCircle className="w-4 h-4" />
                 <span>+ Add Place</span>
-              </Link>
+              </button>
 
               {/* Map & List View Toggle */}
               <div className="bg-white p-1 rounded-xl border border-[#E1E6EA] flex items-center text-xs font-semibold">

@@ -229,9 +229,11 @@ router.post("/place", async (req, res) => {
     });
 
     res.status(201).json({
+      success: true,
       message: "Your place has been submitted for verification. It will appear publicly on the map and directory once approved by town administration.",
       referenceId: submission.referenceId,
       submissionId: submission._id,
+      submission,
       duplicateWarning: dupCheck.warningMessage || null,
       townBoundaryStatus,
     });

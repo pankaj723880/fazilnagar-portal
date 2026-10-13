@@ -103,6 +103,14 @@ async function autoSeedPlaces() {
         { upsert: true, new: true, setDefaultsOnInsert: true }
       );
     }
+    const canonicalSlugs = places.map((p) => p.slug);
+    const cleanupResult = await Place.deleteMany({
+      submissionSource: { $ne: "community" },
+      slug: { $nin: canonicalSlugs },
+    });
+    if (cleanupResult.deletedCount > 0) {
+      console.log(`[AutoSeed] Purged ${cleanupResult.deletedCount} deprecated non-canonical records.`);
+    }
     console.log(`[AutoSeed] Database successfully synchronized with ${places.length} places.`);
   } catch (e) {
     console.warn("[AutoSeed] Background seed error:", e.message);
@@ -111,6 +119,7 @@ async function autoSeedPlaces() {
 
 import advertisementsRoutes from "./routes/advertisements.js";
 import googleDriveRoutes from "./routes/googleDrive.js";
+import usersRoutes from "./routes/users.js";
 
 // Connect DB & Routes
 connectDB().then(() => {
@@ -124,6 +133,7 @@ app.use("/api/places", placesRoutes);
 app.use("/api/submissions", submissionsRoutes);
 app.use("/api/advertisements", advertisementsRoutes);
 app.use("/api/google-drive", googleDriveRoutes);
+app.use("/api/users", usersRoutes);
 
 // Fallback mounts in case client calls without /api prefix
 app.use("/auth", authRoutes);
@@ -132,6 +142,7 @@ app.use("/places", placesRoutes);
 app.use("/submissions", submissionsRoutes);
 app.use("/advertisements", advertisementsRoutes);
 app.use("/google-drive", googleDriveRoutes);
+app.use("/users", usersRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

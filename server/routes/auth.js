@@ -30,9 +30,12 @@ router.post("/register", async (req, res) => {
 
     // Save new user
     const newUser = await User.create({
-      name,
+      name: name.trim(),
       email: normalizedEmail,
       password: hashedPassword,
+      phone: req.body.phone ? req.body.phone.trim() : "",
+      status: "active",
+      lastLogin: new Date(),
     });
 
     // Create JWT Token
@@ -49,7 +52,9 @@ router.post("/register", async (req, res) => {
         id: newUser._id,
         name: newUser.name,
         email: newUser.email,
+        phone: newUser.phone,
         role: newUser.role || "user",
+        status: newUser.status,
       },
     });
   } catch (err) {
@@ -83,11 +88,22 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password." });
     }
 
+    // Check account status
+    if (user.status === "inactive" || user.status === "suspended") {
+      return res.status(403).json({
+        message: "Your account has been deactivated or suspended. Please contact portal administration.",
+      });
+    }
+
     // Compare password hash
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid email or password." });
     }
+
+    // Update lastLogin timestamp
+    user.lastLogin = new Date();
+    await user.save();
 
     // Create JWT Token
     const token = jwt.sign(
@@ -103,7 +119,10 @@ router.post("/login", async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone || "",
         role: user.role || "user",
+        status: user.status || "active",
+        lastLogin: user.lastLogin,
       },
     });
   } catch (err) {

@@ -16,7 +16,7 @@ const clientPlaces = JSON.parse(fs.readFileSync(clientPlacesPath, "utf8"));
 test("1. No swapped coordinates (Lat/Lng sanity and bounding box)", () => {
   const publishedPlaces = serverPlaces.filter((p) => p.latitude !== null && p.longitude !== null);
 
-  assert.equal(publishedPlaces.length, 22, "Exactly 22 clean establishments must have active coordinates");
+  assert.equal(publishedPlaces.length, 19, "Exactly 19 canonical establishments (9 schools/colleges, 10 hospitals/clinics) must be present");
 
   for (const place of publishedPlaces) {
     const lat = Number(place.latitude);
@@ -65,37 +65,37 @@ test("2. No synthetic default cluster assigning identical coordinates to unrelat
   }
 });
 
-test("3. Canonical ground truth coordinates for key anchor institutions and petrol pumps", () => {
+test("3. Canonical ground truth coordinates for key anchor institutions", () => {
   const keyAnchors = [
     {
       slug: "the-hermitage-school-fazilnagar",
       expectedLat: 26.6804068,
       expectedLng: 84.046655,
+      expectedStatus: "verified",
     },
     {
       slug: "pawanagar-mahavir-inter-college-fazilnagar",
-      expectedLat: 26.6894086,
-      expectedLng: 84.0519967,
+      expectedLat: 26.6842928,
+      expectedLng: 84.0454479,
+      expectedStatus: "verified",
     },
     {
       slug: "community-health-centre-chc-fazilnagar",
       expectedLat: 26.6808,
       expectedLng: 84.0472,
+      expectedStatus: "verified",
     },
     {
-      slug: "indian-oil-petrol-pump-fazilnagar",
-      expectedLat: 26.6812,
-      expectedLng: 84.0435,
+      slug: "star-hospital-fazilnagar",
+      expectedLat: 26.6831917,
+      expectedLng: 84.0478785,
+      expectedStatus: "verified",
     },
     {
-      slug: "hp-petrol-pump-fazilnagar",
-      expectedLat: 26.6821,
-      expectedLng: 84.0552,
-    },
-    {
-      slug: "bharat-petroleum-bpcl-fuel-station-fazilnagar",
-      expectedLat: 26.6838,
-      expectedLng: 84.0462,
+      slug: "pawanagar-mahavir-hospital-fazilnagar",
+      expectedLat: 26.6832018,
+      expectedLng: 84.0485296,
+      expectedStatus: "verified",
     },
   ];
 
@@ -112,7 +112,7 @@ test("3. Canonical ground truth coordinates for key anchor institutions and petr
       anchor.expectedLng,
       `Longitude mismatch for ${anchor.slug}: got ${record.longitude}, expected ${anchor.expectedLng}`
     );
-    assert.equal(record.verificationStatus, "verified");
+    assert.equal(record.verificationStatus, anchor.expectedStatus);
   }
 });
 
@@ -143,17 +143,26 @@ test("5. Directions URL uses exact canonical coordinates of the target entity", 
   assert.ok(!url.includes("26.6827,84.0498"), "Directions must not silently fall back to town center datum");
 });
 
-test("6. No commercial shops or unauthorized categories remain in dataset", () => {
-  const allowedCategories = ["Schools & Colleges", "Hospitals & Clinics", "Petrol Pumps"];
+test("6. Only Schools & Colleges and Hospitals & Clinics are retained (Petrol pumps & shops permanently removed)", () => {
+  const allowedCategories = ["Schools & Colleges", "Hospitals & Clinics"];
 
   for (const place of serverPlaces) {
     assert.ok(
       allowedCategories.includes(place.category),
       `Place ${place.name} has unauthorized category: ${place.category}`
     );
-    assert.equal(place.verificationStatus, "verified");
+    assert.ok(
+      ["verified", "needs_address_verification"].includes(place.verificationStatus),
+      `Invalid verificationStatus: ${place.verificationStatus}`
+    );
     assert.equal(place.isPublished, true);
   }
+
+  // Ensure petrol pumps are completely gone
+  const petrolPumps = serverPlaces.filter(
+    (p) => p.category.toLowerCase().includes("petrol") || p.slug.toLowerCase().includes("petrol")
+  );
+  assert.equal(petrolPumps.length, 0, "No petrol pumps should remain in active places");
 });
 
 test("7. MapsUrl correctly points to the updated coordinates", () => {

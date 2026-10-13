@@ -26,7 +26,6 @@ import {
 const CATEGORIES = [
   { id: "Schools & Colleges", name: "Schools & Colleges", icon: GraduationCap },
   { id: "Hospitals & Clinics", name: "Hospitals & Clinics", icon: Stethoscope },
-  { id: "Petrol Pumps", name: "Petrol Pumps", icon: Fuel },
 ];
 
 const LOCALITIES = [

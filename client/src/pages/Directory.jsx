@@ -167,8 +167,7 @@ export default function Directory({ user }) {
 
   useEffect(() => {
     if (searchParams.get("add") === "true") {
-      setEditModalPlace(null);
-      setShowEditModal(true);
+      setShowAddModal(true);
     }
   }, [searchParams]);
 
@@ -695,16 +694,27 @@ export default function Directory({ user }) {
           {/* Quick Action Buttons */}
           <div className="flex items-center gap-2 shrink-0 pt-1 sm:pt-0">
             <button
-              onClick={() => {
-                setEditModalPlace(null);
-                setShowEditModal(true);
-              }}
+              onClick={() => setShowAddModal(true)}
               className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs cursor-pointer active:scale-95"
-              title="Add place with map location and image"
+              title="Add place with exact map location and images (4-Step Wizard)"
             >
               <PlusCircle className="w-4 h-4" />
               <span>+ Add Place</span>
             </button>
+
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setEditModalPlace(null);
+                  setShowEditModal(true);
+                }}
+                className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow-xs cursor-pointer active:scale-95"
+                title="Create official civic place (Admin direct)"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>+ Official Place</span>
+              </button>
+            )}
 
             <a
               href={`${API.defaults.baseURL || "https://fazilnagar-portal.onrender.com/api"}/places/export/csv`}

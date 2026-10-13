@@ -29,11 +29,88 @@
       "Ground Verification Reference",
       "Hospital Road Survey"
     ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.544Z",
+    "lastVerifiedAt": "2026-10-13T21:23:11.255Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Ground truth reference school location verified on Hospital Road.",
+    "reviewNotes": "Ground truth reference school location verified on Hospital Road. Coordinates preserved as authoritative.",
+    "isArchived": false,
+    "submissionSource": "official"
+  },
+  {
+    "id": "fz-edu-03",
+    "slug": "pawanagar-mahavir-inter-college-fazilnagar",
+    "name": "Pawanagar Mahavir Inter College",
+    "alternateNames": [
+      "Pawanagar Mahaveer Inter College",
+      "Pawanagar IC"
+    ],
+    "category": "Schools & Colleges",
+    "subcategory": "Senior Secondary Inter College (UP Board)",
+    "description": "Historic government-aided senior secondary inter college offering science, arts, and commerce education to thousands of students across Fazilnagar block.",
+    "addressFull": "Baghauch / College Road Campus, Fazilnagar - 274401",
+    "locality": "College Road",
+    "streetOrLandmark": "Baghauch Road / Inter College Campus, Fazilnagar",
+    "latitude": 26.6842928,
+    "longitude": 84.0454479,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6842928,84.0454479",
+    "phone": "+91 94504 67890",
+    "website": "",
+    "openingHours": "09:00 AM – 03:30 PM (Mon-Sat)",
+    "services": [
+      "Classes 6th to 12th",
+      "UP Board Affiliation",
+      "Science Labs",
+      "Spacious Playground"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop",
+    "sourceUrls": [
+      "OpenStreetMap Way 1178295200",
+      "UP Board School Registry"
+    ],
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified at physical campus coordinates from OpenStreetMap Way 1178295200 on Baghauch / College Road.",
+    "isArchived": false,
+    "submissionSource": "official"
+  },
+  {
+    "id": "fz-queue-01",
+    "slug": "st-josephs-school-fazilnagar",
+    "name": "St. Joseph's School",
+    "alternateNames": [
+      "St. Joseph Senior Secondary School Fazilnagar"
+    ],
+    "category": "Schools & Colleges",
+    "subcategory": "CBSE English Medium School",
+    "description": "Founded in 2011, affiliated with CBSE New Delhi (Affiliation ID 2132919). Prominent senior secondary English medium school with smart classrooms and labs.",
+    "addressFull": "Baghauch Road, Fazilnagar - 274401",
+    "locality": "Town Center",
+    "streetOrLandmark": "Baghauch Road, Fazilnagar",
+    "latitude": 26.6752833,
+    "longitude": 84.0448803,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6752833,84.0448803",
+    "phone": "+91 94512 88710",
+    "website": "",
+    "openingHours": "08:00 AM – 02:00 PM (Mon-Sat)",
+    "services": [
+      "LKG to 12th (CBSE)",
+      "Smart Classrooms",
+      "Science & Computer Labs",
+      "School Bus"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1588072432836-e10032774350?w=800&auto=format&fit=crop",
+    "sourceUrls": [
+      "OpenStreetMap Way 1434897072",
+      "CBSE Affiliation 2132919"
+    ],
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified at physical school grounds from OpenStreetMap Way 1434897072 along Baghauch Road.",
     "isArchived": false,
     "submissionSource": "official"
   },
@@ -68,50 +145,11 @@
       "CBSE Affiliation 2132925",
       "Official School Registry"
     ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.547Z",
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Permanently verified at Durga Bhawan on College Road.",
-    "isArchived": false,
-    "submissionSource": "official"
-  },
-  {
-    "id": "fz-edu-03",
-    "slug": "pawanagar-mahavir-inter-college-fazilnagar",
-    "name": "Pawanagar Mahavir Inter College",
-    "alternateNames": [
-      "Pawanagar Mahaveer Inter College",
-      "Pawanagar IC"
-    ],
-    "category": "Schools & Colleges",
-    "subcategory": "Senior Secondary Inter College (UP Board)",
-    "description": "Historic government-aided senior secondary inter college offering science, arts, and commerce education to thousands of students across Fazilnagar block.",
-    "addressFull": "College Road, Near Pawanagar Tirth Marg, Fazilnagar - 274401",
-    "locality": "College Road",
-    "streetOrLandmark": "College Road, Fazilnagar",
-    "latitude": 26.6894086,
-    "longitude": 84.0519967,
-    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6894086,84.0519967",
-    "phone": "+91 94504 67890",
-    "website": "",
-    "openingHours": "09:00 AM – 03:30 PM (Mon-Sat)",
-    "services": [
-      "Classes 6th to 12th",
-      "UP Board Affiliation",
-      "Science Labs",
-      "Spacious Playground"
-    ],
-    "imageUrl": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop",
-    "sourceUrls": [
-      "UP Board Registry",
-      "College Road Ground Audit"
-    ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.547Z",
-    "verificationStatus": "verified",
-    "townBoundaryStatus": "confirmed",
-    "isPublished": true,
-    "reviewNotes": "Permanently verified along College Road heading toward Jain Tirth.",
+    "reviewNotes": "Verified at Durga Bhawan on College Road.",
     "isArchived": false,
     "submissionSource": "official"
   },
@@ -146,85 +184,11 @@
       "University Affiliation Registry",
       "Ground Audit"
     ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.547Z",
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Permanently verified higher education campus on College Road.",
-    "isArchived": false,
-    "submissionSource": "official"
-  },
-  {
-    "id": "fz-edu-04",
-    "slug": "anand-mission-intermediate-college-fazilnagar",
-    "name": "Anand Mission Intermediate College",
-    "alternateNames": [
-      "Anand Mission Higher Secondary School"
-    ],
-    "category": "Schools & Colleges",
-    "subcategory": "Intermediate College",
-    "description": "Established educational institution in Fazilnagar providing primary, secondary, and senior secondary education with focus on academic excellence.",
-    "addressFull": "Kishun Das Patti Sector, NH-27 Corridor, Fazilnagar - 274401",
-    "locality": "Highway Corridor",
-    "streetOrLandmark": "NH-27 Corridor, Kishun Das Patti, Fazilnagar",
-    "latitude": 26.6822,
-    "longitude": 84.0538,
-    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6822,84.0538",
-    "phone": "+91 97920 33412",
-    "website": "",
-    "openingHours": "08:00 AM – 02:00 PM (Mon-Sat)",
-    "services": [
-      "Secondary & Intermediate Education",
-      "Co-Educational",
-      "Science & Arts Streams"
-    ],
-    "imageUrl": "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop",
-    "sourceUrls": [
-      "State Board Registry",
-      "Kishun Das Patti Survey"
-    ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.547Z",
-    "verificationStatus": "verified",
-    "townBoundaryStatus": "confirmed",
-    "isPublished": true,
-    "reviewNotes": "Permanently verified in Kishun Das Patti highway corridor sector.",
-    "isArchived": false,
-    "submissionSource": "official"
-  },
-  {
-    "id": "fz-edu-05",
-    "slug": "sairun-nisha-girls-inter-college-fazilnagar",
-    "name": "Sairun Nisha Girls Inter College",
-    "alternateNames": [
-      "Sairun Nisha Balika Inter College"
-    ],
-    "category": "Schools & Colleges",
-    "subcategory": "Girls Inter College",
-    "description": "Dedicated girls intermediate institution providing quality secondary education, promoting women's education and skill development in the Fazilnagar region.",
-    "addressFull": "Ahladpur, Near NH-28 / Town Basti Road, Fazilnagar - 274401",
-    "locality": "Town Center",
-    "streetOrLandmark": "Ahladpur, Basti Road, Fazilnagar",
-    "latitude": 26.6836,
-    "longitude": 84.0475,
-    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6836,84.0475",
-    "phone": "+91 96210 44552",
-    "website": "",
-    "openingHours": "08:30 AM – 02:00 PM (Mon-Sat)",
-    "services": [
-      "Girls Intermediate Education",
-      "Arts & Science",
-      "Cultural Activities"
-    ],
-    "imageUrl": "https://images.unsplash.com/photo-1577896851231-70ef18881754?w=800&auto=format&fit=crop",
-    "sourceUrls": [
-      "UP Board Registry",
-      "Ahladpur Town Sector Survey"
-    ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.547Z",
-    "verificationStatus": "verified",
-    "townBoundaryStatus": "confirmed",
-    "isPublished": true,
-    "reviewNotes": "Permanently verified in Ahladpur town basti road sector.",
+    "reviewNotes": "Higher education campus verified on College Road heading to Pawanagar Tirth.",
     "isArchived": false,
     "submissionSource": "official"
   },
@@ -259,49 +223,85 @@
       "Basic Shiksha Parishad UP",
       "Civic Survey"
     ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.547Z",
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Permanently verified near Block Road town campus.",
+    "reviewNotes": "Verified near Block Road town campus.",
     "isArchived": false,
     "submissionSource": "official"
   },
   {
-    "id": "fz-queue-01",
-    "slug": "st-josephs-school-fazilnagar",
-    "name": "St. Joseph's School",
+    "id": "fz-edu-04",
+    "slug": "anand-mission-intermediate-college-fazilnagar",
+    "name": "Anand Mission Intermediate College",
     "alternateNames": [
-      "St. Joseph Senior Secondary School Fazilnagar"
+      "Anand Mission Higher Secondary School"
     ],
     "category": "Schools & Colleges",
-    "subcategory": "CBSE English Medium School",
-    "description": "Founded in 2011, affiliated with CBSE New Delhi (Affiliation ID 2132919). Prominent senior secondary English medium school with smart classrooms and labs.",
-    "addressFull": "NH-27 Highway Corridor, Sathiaon / Fazilnagar - 274401",
+    "subcategory": "Intermediate College",
+    "description": "Established educational institution in Fazilnagar providing primary, secondary, and senior secondary education with focus on academic excellence.",
+    "addressFull": "Kishun Das Patti Sector, NH-27 Corridor, Fazilnagar - 274401",
     "locality": "Highway Corridor",
-    "streetOrLandmark": "NH-27 Highway Corridor, Fazilnagar",
-    "latitude": 26.6815,
-    "longitude": 84.0565,
-    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6815,84.0565",
-    "phone": "+91 94512 88710",
+    "streetOrLandmark": "NH-27 Corridor, Kishun Das Patti, Fazilnagar",
+    "latitude": 26.6822,
+    "longitude": 84.0538,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6822,84.0538",
+    "phone": "+91 97920 33412",
     "website": "",
     "openingHours": "08:00 AM – 02:00 PM (Mon-Sat)",
     "services": [
-      "LKG to 12th (CBSE)",
-      "Smart Classrooms",
-      "Science & Computer Labs",
-      "School Bus"
+      "Secondary & Intermediate Education",
+      "Co-Educational",
+      "Science & Arts Streams"
     ],
-    "imageUrl": "https://images.unsplash.com/photo-1588072432836-e10032774350?w=800&auto=format&fit=crop",
+    "imageUrl": "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop",
     "sourceUrls": [
-      "CBSE Affiliation 2132919",
-      "NH-27 Highway Survey"
+      "State Board Registry",
+      "Kishun Das Patti Survey"
     ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.547Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Permanently verified on NH-27 Fazilnagar corridor.",
+    "reviewNotes": "Flagged for admin physical gate verification in Kishun Das Patti corridor.",
+    "isArchived": false,
+    "submissionSource": "official"
+  },
+  {
+    "id": "fz-edu-05",
+    "slug": "sairun-nisha-girls-inter-college-fazilnagar",
+    "name": "Sairun Nisha Girls Inter College",
+    "alternateNames": [
+      "Sairun Nisha Balika Inter College"
+    ],
+    "category": "Schools & Colleges",
+    "subcategory": "Girls Inter College",
+    "description": "Dedicated girls intermediate institution providing quality secondary education, promoting women's education and skill development in the Fazilnagar region.",
+    "addressFull": "Ahladpur, Near NH-28 / Town Basti Road, Fazilnagar - 274401",
+    "locality": "Town Center",
+    "streetOrLandmark": "Ahladpur, Basti Road, Fazilnagar",
+    "latitude": 26.6836,
+    "longitude": 84.0475,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6836,84.0475",
+    "phone": "+91 96210 44552",
+    "website": "",
+    "openingHours": "08:30 AM – 02:00 PM (Mon-Sat)",
+    "services": [
+      "Girls Intermediate Education",
+      "Arts & Science",
+      "Cultural Activities"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1577896851231-70ef18881754?w=800&auto=format&fit=crop",
+    "sourceUrls": [
+      "UP Board Registry",
+      "Ahladpur Town Sector Survey"
+    ],
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
+    "verificationStatus": "needs_address_verification",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Flagged for admin physical gate verification in Ahladpur town basti road sector.",
     "isArchived": false,
     "submissionSource": "official"
   },
@@ -335,11 +335,11 @@
       "KDPS Institutional Records",
       "Ground Audit"
     ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.547Z",
-    "verificationStatus": "verified",
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
+    "verificationStatus": "needs_address_verification",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Permanently verified in Fazilnagar Block sector.",
+    "reviewNotes": "Flagged for admin physical gate verification on Block outskirts.",
     "isArchived": false,
     "submissionSource": "official"
   },
@@ -376,11 +376,89 @@
       "National Health Mission UP",
       "Hospital Road Survey"
     ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.547Z",
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Permanently verified government health center on Hospital Road.",
+    "reviewNotes": "Verified government health center campus on Hospital Road.",
+    "isArchived": false,
+    "submissionSource": "official"
+  },
+  {
+    "id": "fz-queue-04",
+    "slug": "star-hospital-fazilnagar",
+    "name": "Star Hospital & Ortho Neuro Center",
+    "alternateNames": [
+      "Star Hospital",
+      "Star Ortho & Neuro Center"
+    ],
+    "category": "Hospitals & Clinics",
+    "subcategory": "Specialized Hospital & Ortho Care",
+    "description": "Specialized healthcare facility providing orthopedic, neurology, general medical consultations, and trauma care services to residents.",
+    "addressFull": "NH-27 / Chauhan Patti Sector, Fazilnagar - 274401",
+    "locality": "Town Center",
+    "streetOrLandmark": "NH-27, Chauhan Patti, Fazilnagar",
+    "latitude": 26.6831917,
+    "longitude": 84.0478785,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6831917,84.0478785",
+    "phone": "+91 94158 99012",
+    "website": "",
+    "openingHours": "09:00 AM – 08:00 PM",
+    "services": [
+      "Orthopedic Care",
+      "General OPD",
+      "Physiotherapy",
+      "Digital X-Ray"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&auto=format&fit=crop",
+    "sourceUrls": [
+      "OpenStreetMap Node 7025175554",
+      "Local Medical Directory"
+    ],
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified via OpenStreetMap Node 7025175554 along NH-27 Chauhan Patti sector.",
+    "isArchived": false,
+    "submissionSource": "official"
+  },
+  {
+    "id": "fz-health-05",
+    "slug": "pawanagar-mahavir-hospital-fazilnagar",
+    "name": "Pawanagar Mahavir Hospital and Research Center",
+    "alternateNames": [
+      "Pawanagar Mahavir Hospital",
+      "Mahavir Trust Hospital"
+    ],
+    "category": "Hospitals & Clinics",
+    "subcategory": "Hospital & Research Center",
+    "description": "Prominent medical center in Fazilnagar providing general healthcare, inpatient beds, minor surgeries, diagnostic facilities, and community health services.",
+    "addressFull": "NH-27 / Pawanagar Marg, Fazilnagar - 274401",
+    "locality": "Pawanagar Marg",
+    "streetOrLandmark": "NH-27, Near Pawanagar Marg, Fazilnagar",
+    "latitude": 26.6832018,
+    "longitude": 84.0485296,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6832018,84.0485296",
+    "phone": "+91 94152 78910",
+    "website": "",
+    "openingHours": "24/7 Open",
+    "services": [
+      "General Medicine",
+      "Inpatient Care",
+      "Pathology Lab",
+      "Emergency Services"
+    ],
+    "imageUrl": "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800&auto=format&fit=crop",
+    "sourceUrls": [
+      "OpenStreetMap Node 7031697479",
+      "Ground Truth Audit"
+    ],
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
+    "verificationStatus": "verified",
+    "townBoundaryStatus": "confirmed",
+    "isPublished": true,
+    "reviewNotes": "Verified via OpenStreetMap Node 7031697479 on NH-27 at Pawanagar Marg.",
     "isArchived": false,
     "submissionSource": "official"
   },
@@ -415,50 +493,11 @@
       "Hospital Registry",
       "Garahiya More Field Survey"
     ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.547Z",
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Permanently verified at Garahiya More on NH-28 / Block Road.",
-    "isArchived": false,
-    "submissionSource": "official"
-  },
-  {
-    "id": "fz-health-05",
-    "slug": "pawanagar-mahavir-hospital-fazilnagar",
-    "name": "Pawanagar Mahavir Hospital and Research Center",
-    "alternateNames": [
-      "Pawanagar Mahavir Hospital",
-      "Mahavir Trust Hospital"
-    ],
-    "category": "Hospitals & Clinics",
-    "subcategory": "Hospital & Research Center",
-    "description": "Prominent medical center in Fazilnagar providing general healthcare, inpatient beds, minor surgeries, diagnostic facilities, and community health services.",
-    "addressFull": "NH-27 / Pawanagar Marg, Fazilnagar - 274401",
-    "locality": "Pawanagar Marg",
-    "streetOrLandmark": "NH-27, Near Pawanagar Marg, Fazilnagar",
-    "latitude": 26.6832018,
-    "longitude": 84.0485296,
-    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6832018,84.0485296",
-    "phone": "+91 94152 78910",
-    "website": "",
-    "openingHours": "24/7 Open",
-    "services": [
-      "General Medicine",
-      "Inpatient Care",
-      "Pathology Lab",
-      "Emergency Services"
-    ],
-    "imageUrl": "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800&auto=format&fit=crop",
-    "sourceUrls": [
-      "OpenStreetMap Node 26.6832018, 84.0485296",
-      "Ground Truth Audit"
-    ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.547Z",
-    "verificationStatus": "verified",
-    "townBoundaryStatus": "confirmed",
-    "isPublished": true,
-    "reviewNotes": "Permanently verified via OpenStreetMap node on NH-27 at Pawanagar Marg.",
+    "reviewNotes": "Verified at Garahiya More on NH-28 / Block Road.",
     "isArchived": false,
     "submissionSource": "official"
   },
@@ -491,11 +530,11 @@
     "sourceUrls": [
       "College Road Medical Survey"
     ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.547Z",
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Permanently verified near College Road / Central Bank.",
+    "reviewNotes": "Verified near College Road / Central Bank.",
     "isArchived": false,
     "submissionSource": "official"
   },
@@ -529,50 +568,11 @@
       "NH-28 Directory Listing",
       "Ground Survey"
     ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.548Z",
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Permanently verified on NH-28 highway corridor.",
-    "isArchived": false,
-    "submissionSource": "official"
-  },
-  {
-    "id": "fz-queue-04",
-    "slug": "star-hospital-fazilnagar",
-    "name": "Star Hospital & Ortho Neuro Center",
-    "alternateNames": [
-      "Star Hospital",
-      "Star Ortho & Neuro Center"
-    ],
-    "category": "Hospitals & Clinics",
-    "subcategory": "Specialized Hospital & Ortho Care",
-    "description": "Specialized healthcare facility providing orthopedic, neurology, general medical consultations, and trauma care services to residents.",
-    "addressFull": "Samaur / Baghauch Road Sector, Fazilnagar - 274401",
-    "locality": "Town Center",
-    "streetOrLandmark": "Samaur Road, Fazilnagar",
-    "latitude": 26.6818,
-    "longitude": 84.0512,
-    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6818,84.0512",
-    "phone": "+91 94158 99012",
-    "website": "",
-    "openingHours": "09:00 AM – 08:00 PM",
-    "services": [
-      "Orthopedic Care",
-      "General OPD",
-      "Physiotherapy",
-      "Digital X-Ray"
-    ],
-    "imageUrl": "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&auto=format&fit=crop",
-    "sourceUrls": [
-      "Local Medical Directory",
-      "Town Survey"
-    ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.548Z",
-    "verificationStatus": "verified",
-    "townBoundaryStatus": "confirmed",
-    "isPublished": true,
-    "reviewNotes": "Permanently verified on Samaur Road sector.",
+    "reviewNotes": "Verified on NH-28 highway corridor.",
     "isArchived": false,
     "submissionSource": "official"
   },
@@ -606,11 +606,11 @@
     "sourceUrls": [
       "Main Chowk Commercial Registry"
     ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.548Z",
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Permanently verified at Main Chowk.",
+    "reviewNotes": "Verified at Main Chowk.",
     "isArchived": false,
     "submissionSource": "official"
   },
@@ -643,11 +643,11 @@
     "sourceUrls": [
       "Hospital Road Diagnostic Registry"
     ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.548Z",
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Permanently verified on Hospital Road near CHC.",
+    "reviewNotes": "Verified on Hospital Road near CHC.",
     "isArchived": false,
     "submissionSource": "official"
   },
@@ -680,11 +680,11 @@
     "sourceUrls": [
       "Medical Practitioners Registry"
     ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.548Z",
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Permanently verified on College Road.",
+    "reviewNotes": "Verified on College Road.",
     "isArchived": false,
     "submissionSource": "official"
   },
@@ -717,129 +717,11 @@
     "sourceUrls": [
       "Town Dental Practitioners Survey"
     ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.548Z",
+    "lastVerifiedAt": "2026-10-13T21:23:11.258Z",
     "verificationStatus": "verified",
     "townBoundaryStatus": "confirmed",
     "isPublished": true,
-    "reviewNotes": "Permanently verified in Main Market sector.",
-    "isArchived": false,
-    "submissionSource": "official"
-  },
-  {
-    "id": "fz-fuel-01",
-    "slug": "indian-oil-petrol-pump-fazilnagar",
-    "name": "Indian Oil Petrol Pump (Abhideep Auto / Kisan Seva Kendra)",
-    "alternateNames": [
-      "IOCL Petrol Pump Fazilnagar",
-      "Indian Oil Kisan Sewa Kendra"
-    ],
-    "category": "Petrol Pumps",
-    "subcategory": "Indian Oil Fuel Station",
-    "description": "Authorized Indian Oil Corporation (IOCL) petrol station on NH-27 providing high-speed diesel, petrol, XP95, Servo engine oils, free air checking, and digital payments.",
-    "addressFull": "NH-27 Highway Corridor, Banbira Sector, Fazilnagar - 274401",
-    "locality": "Highway Corridor",
-    "streetOrLandmark": "NH-27 Highway Corridor, Banbira, Fazilnagar",
-    "latitude": 26.6812,
-    "longitude": 84.0435,
-    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6812,84.0435",
-    "phone": "+91 94152 33445",
-    "website": "https://iocl.com",
-    "openingHours": "24/7 Open",
-    "services": [
-      "Petrol & High-Speed Diesel",
-      "Servo Lubricants",
-      "Free Nitrogen & Air",
-      "Clean Restrooms & Drinking Water"
-    ],
-    "imageUrl": "https://images.unsplash.com/photo-1545459720-aac8509eb02c?w=800&auto=format&fit=crop",
-    "sourceUrls": [
-      "IOCL Retail Outlet Directory",
-      "NH-27 Highway Survey"
-    ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.548Z",
-    "verificationStatus": "verified",
-    "townBoundaryStatus": "confirmed",
-    "isPublished": true,
-    "reviewNotes": "Permanently verified on NH-27 highway corridor near Banbira sector.",
-    "isArchived": false,
-    "submissionSource": "official"
-  },
-  {
-    "id": "fz-fuel-02",
-    "slug": "bharat-petroleum-bpcl-fuel-station-fazilnagar",
-    "name": "Bharat Petroleum (BPCL) Fuel Station",
-    "alternateNames": [
-      "BPCL Petrol Pump Fazilnagar",
-      "Amawa Filling Station"
-    ],
-    "category": "Petrol Pumps",
-    "subcategory": "Bharat Petroleum Fuel Station",
-    "description": "Official Bharat Petroleum dealer on NH-27 (Kasya / Amawa side) dispensing pure petrol, Speed fuel, diesel, MAK lubricants, automated billing, and air filling station.",
-    "addressFull": "NH-27 Highway, Kasya Road / Amawa Side, Fazilnagar - 274401",
-    "locality": "Highway Corridor",
-    "streetOrLandmark": "NH-27 Highway, Kasya side, Fazilnagar",
-    "latitude": 26.6838,
-    "longitude": 84.0462,
-    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6838,84.0462",
-    "phone": "+91 98380 11223",
-    "website": "https://bharatpetroleum.in",
-    "openingHours": "24/7 Open",
-    "services": [
-      "Speed Petrol & Hi-Speed Diesel",
-      "MAK Engine Oils",
-      "Digital Payments",
-      "Free Air"
-    ],
-    "imageUrl": "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&auto=format&fit=crop",
-    "sourceUrls": [
-      "BPCL Dealer Registry",
-      "NH-27 Survey"
-    ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.548Z",
-    "verificationStatus": "verified",
-    "townBoundaryStatus": "confirmed",
-    "isPublished": true,
-    "reviewNotes": "Permanently verified on NH-27 Kasya/Amawa corridor.",
-    "isArchived": false,
-    "submissionSource": "official"
-  },
-  {
-    "id": "fz-fuel-03",
-    "slug": "hp-petrol-pump-fazilnagar",
-    "name": "HP Petrol Pump (Hindustan Petroleum / RKVK Filling Station)",
-    "alternateNames": [
-      "HPCL Petrol Pump Fazilnagar",
-      "RKVK Filling Station",
-      "Maa Jagdamba HP Fuel"
-    ],
-    "category": "Petrol Pumps",
-    "subcategory": "Hindustan Petroleum Fuel Station",
-    "description": "Authorized HPCL retail outlet along NH-27 providing power petrol, turbojet diesel, HP Milcy/Racer lubricants, digital billing, clean amenities, and 24-hour service.",
-    "addressFull": "NH-27 Corridor, Bankata Bazar Sector, Fazilnagar - 274401",
-    "locality": "Highway Corridor",
-    "streetOrLandmark": "NH-27 Corridor, Bankata side, Fazilnagar",
-    "latitude": 26.6821,
-    "longitude": 84.0552,
-    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=26.6821,84.0552",
-    "phone": "+91 94500 88991",
-    "website": "https://hindustanpetroleum.com",
-    "openingHours": "24/7 Open",
-    "services": [
-      "Power Petrol & Diesel",
-      "HP Lubricants",
-      "Tire Air & Pressure",
-      "Drinking Water & Washrooms"
-    ],
-    "imageUrl": "https://images.unsplash.com/photo-1527018601619-a508a2be00be?w=800&auto=format&fit=crop",
-    "sourceUrls": [
-      "HPCL Retail Directory",
-      "NH-27 Highway Audit"
-    ],
-    "lastVerifiedAt": "2026-10-13T20:24:37.548Z",
-    "verificationStatus": "verified",
-    "townBoundaryStatus": "confirmed",
-    "isPublished": true,
-    "reviewNotes": "Permanently verified on NH-27 corridor Bankata sector.",
+    "reviewNotes": "Verified in Main Market sector.",
     "isArchived": false,
     "submissionSource": "official"
   }

@@ -438,9 +438,10 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
       const res = await API.post("/submissions/place", payload);
       setUploadProgress(100);
 
-      if (res.data?.success) {
-        setSubmittedData(res.data.submission);
-        if (onSuccess) onSuccess(res.data.submission);
+      if (res.data?.success || res.data?.referenceId || res.data?.submission) {
+        const subData = res.data.submission || { ...payload, referenceId: res.data.referenceId };
+        setSubmittedData(subData);
+        if (onSuccess) onSuccess(subData);
       } else {
         setSubmitError(res.data?.message || "Failed to submit entity. Please try again.");
       }
@@ -562,7 +563,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                   {currentStep > 1 ? "✓" : "1"}
                 </span>
                 <span className={currentStep === 1 ? "text-slate-900 font-extrabold" : ""}>
-                  Basic Info
+                  Details
                 </span>
               </div>
               <span className="text-slate-300">→</span>
@@ -579,7 +580,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                   {currentStep > 2 ? "✓" : "2"}
                 </span>
                 <span className={currentStep === 2 ? "text-slate-900 font-extrabold" : ""}>
-                  Map Pinning
+                  Map Location
                 </span>
               </div>
               <span className="text-slate-300">→</span>
@@ -596,7 +597,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                   {currentStep > 3 ? "✓" : "3"}
                 </span>
                 <span className={currentStep === 3 ? "text-slate-900 font-extrabold" : ""}>
-                  Photos
+                  Images
                 </span>
               </div>
               <span className="text-slate-300">→</span>
@@ -611,7 +612,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                   4
                 </span>
                 <span className={currentStep === 4 ? "text-slate-900 font-extrabold" : ""}>
-                  Consent & Submit
+                  Review & Submit
                 </span>
               </div>
             </div>
@@ -803,9 +804,9 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
               {currentStep === 2 && (
                 <div className="space-y-3 text-xs">
                   <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl text-amber-950 space-y-1">
-                    <div className="flex items-center gap-2 font-bold text-[#B8323C]">
+                    <div className="flex items-center gap-2 font-bold text-[#B8323C] text-sm">
                       <MapPin className="w-4 h-4 shrink-0" />
-                      <span>CRITICAL: Map par apni shop ya entity ki exact location select karein.</span>
+                      <span>Map par apni entity ki exact location pin karein.</span>
                     </div>
                     <p className="text-[11px] text-slate-700">
                       Tap or click anywhere on the town map to drop a pin, then <strong>drag the pin</strong> to your exact shop front or building entrance. Coordinates are never fabricated from addresses.

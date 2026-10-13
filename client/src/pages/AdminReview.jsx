@@ -4,6 +4,8 @@ import API from "../api";
 import { getAuthToken, getAuthUser, setAuthSession } from "../utils/authStorage";
 import { usePageSEO } from "../utils/seo";
 import AdminCommunityPlaces from "../components/AdminCommunityPlaces";
+import AdminManageEntities from "../components/AdminManageEntities";
+import AdminManageUsers from "../components/AdminManageUsers";
 import {
   ShieldCheck,
   CheckCircle,
@@ -18,6 +20,8 @@ import {
   Search,
   Filter,
   User,
+  Users,
+  Landmark,
   Phone,
   MapPin,
   ExternalLink,
@@ -854,7 +858,49 @@ export default function AdminReview({ user: propUser }) {
       </div>
 
       {/* Overview Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
+        {/* Manage Entities Stat */}
+        <div
+          onClick={() => setActiveTab("manage-entities")}
+          className={`p-4 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+            activeTab === "manage-entities"
+              ? "bg-emerald-50/70 border-emerald-600 shadow-sm"
+              : "bg-white border-[#E1E6EA] hover:border-slate-300 shadow-2xs"
+          }`}
+        >
+          <div>
+            <span className="text-[10px] font-bold uppercase text-slate-500">Official Places</span>
+            <h3 className="text-lg sm:text-xl font-extrabold text-[#18232E]">
+              19 Places
+            </h3>
+            <span className="text-[11px] text-slate-400">Schools & Hospitals</span>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+            <Landmark className="w-5 h-5" />
+          </div>
+        </div>
+
+        {/* Manage Users Stat */}
+        <div
+          onClick={() => setActiveTab("manage-users")}
+          className={`p-4 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+            activeTab === "manage-users"
+              ? "bg-indigo-50/70 border-indigo-600 shadow-sm"
+              : "bg-white border-[#E1E6EA] hover:border-slate-300 shadow-2xs"
+          }`}
+        >
+          <div>
+            <span className="text-[10px] font-bold uppercase text-slate-500">Accounts</span>
+            <h3 className="text-lg sm:text-xl font-extrabold text-[#18232E]">
+              Users
+            </h3>
+            <span className="text-[11px] text-slate-400">Security & Roles</span>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+            <Users className="w-5 h-5" />
+          </div>
+        </div>
+
         {/* Ads Stat */}
         <div
           onClick={() => setActiveTab("ads")}
@@ -965,6 +1011,30 @@ export default function AdminReview({ user: propUser }) {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-[#E1E6EA] shadow-2xs">
         <div className="flex flex-wrap items-center gap-1.5">
           <button
+            onClick={() => setActiveTab("manage-entities")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "manage-entities"
+                ? "bg-[#0D5E49] text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <Landmark className="w-3.5 h-3.5 text-emerald-300" />
+            <span>Manage Entities (19)</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("manage-users")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "manage-users"
+                ? "bg-indigo-700 text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <Users className="w-3.5 h-3.5 text-indigo-300" />
+            <span>Manage Users</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab("ads")}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
               activeTab === "ads"
@@ -1053,7 +1123,7 @@ export default function AdminReview({ user: propUser }) {
         </div>
 
         {/* Status Filter for Citizen Submissions */}
-        {activeTab !== "ads" && activeTab !== "news-manage" && activeTab !== "drive" && (
+        {activeTab !== "ads" && activeTab !== "news-manage" && activeTab !== "drive" && activeTab !== "manage-entities" && activeTab !== "manage-users" && (
           <div className="flex items-center gap-2 self-end sm:self-auto">
             <span className="text-[11px] font-bold text-slate-500 uppercase">Status:</span>
             <select
@@ -1069,6 +1139,24 @@ export default function AdminReview({ user: propUser }) {
           </div>
         )}
       </div>
+
+      {/* ========================================================
+          DEDICATED SECTION 1: MANAGE ALL ENTITIES (FEATURE 4)
+          ======================================================== */}
+      {activeTab === "manage-entities" && (
+        <section aria-label="Manage Official Entities and Listings" className="space-y-4">
+          <AdminManageEntities token={getAuthToken()} onStatsChange={fetchData} />
+        </section>
+      )}
+
+      {/* ========================================================
+          DEDICATED SECTION 2: MANAGE REGISTERED USERS (FEATURE 5)
+          ======================================================== */}
+      {activeTab === "manage-users" && (
+        <section aria-label="Manage Registered Users" className="space-y-4">
+          <AdminManageUsers token={getAuthToken()} currentAdminUser={currentUser} />
+        </section>
+      )}
 
       {/* ========================================================
           COMMUNITY SUBMISSIONS DIRECTORY & MAP PIN VERIFICATION
@@ -1873,7 +1961,7 @@ export default function AdminReview({ user: propUser }) {
       {/* ========================================================
           TABS 4+: CITIZEN CORNER SUBMISSIONS MODERATION
           ======================================================== */}
-      {activeTab !== "ads" && activeTab !== "news-manage" && activeTab !== "drive" && (
+      {activeTab !== "ads" && activeTab !== "news-manage" && activeTab !== "drive" && activeTab !== "manage-entities" && activeTab !== "manage-users" && (
         <section aria-label="Citizen Submissions Moderation" className="space-y-6">
           {/* SECTION A: CITIZEN NEWS MODERATION (When activeTab === "all" or "news") */}
           {(activeTab === "all" || activeTab === "news") && (
