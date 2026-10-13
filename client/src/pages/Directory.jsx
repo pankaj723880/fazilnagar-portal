@@ -6,6 +6,10 @@ import API from "../api";
 import seedPlaces from "../data/places.json";
 import { openGoogleMapsDirections } from "../utils/directions";
 import { usePageSEO } from "../utils/seo";
+import CommunityPlaceModal from "../components/CommunityPlaceModal";
+import AdminPlaceEditModal from "../components/AdminPlaceEditModal";
+import { isUserAdmin } from "../utils/authStorage";
+import { FAZILNAGAR_AREAS } from "../constants/areas";
 import {
   Search,
   MapPin,
@@ -25,11 +29,8 @@ import {
   Building,
   GraduationCap,
   Stethoscope,
-  Pill,
-  Cake,
-  Landmark,
-  Bus,
-  ShoppingBag,
+  Fuel,
+  Edit3,
   ExternalLink,
   ShieldCheck,
   X,
@@ -45,17 +46,12 @@ import {
   Compass,
 } from "lucide-react";
 
-// Category configurations with distinct styling and Lucide icons
+// Category configurations strictly for Schools & Colleges, Hospitals, and Petrol Pumps
 const CATEGORIES = [
   { id: "all", name: "All Categories", icon: Layers },
   { id: "Schools & Colleges", name: "Schools & Colleges", icon: GraduationCap },
   { id: "Hospitals & Clinics", name: "Hospitals & Clinics", icon: Stethoscope },
-  { id: "Sweet Shops & Bakeries", name: "Sweet Shops & Bakeries", icon: Cake },
-  { id: "Medical Stores & Pharmacies", name: "Medical Stores", icon: Pill },
-  { id: "Religious Places", name: "Religious Places", icon: Landmark },
-  { id: "Public Facilities", name: "Public & Banks", icon: Building },
-  { id: "Transport & Travel", name: "Transport", icon: Bus },
-  { id: "Shopping & Services", name: "Markets & Shops", icon: ShoppingBag },
+  { id: "Petrol Pumps", name: "Petrol Pumps", icon: Fuel },
 ];
 
 // Helper function to match place category and subcategory robustly
@@ -64,6 +60,16 @@ function matchesCategory(placeCat, placeSubcat, targetCat) {
   const target = targetCat.toLowerCase().trim();
   const c = (placeCat || "").toLowerCase().trim();
   const sc = (placeSubcat || "").toLowerCase().trim();
+
+  if (target.includes("petrol") || target.includes("fuel")) {
+    return c.includes("petrol") || c.includes("fuel") || sc.includes("petrol") || sc.includes("fuel") || c.includes("transport");
+  }
+  if (target.includes("school") || target.includes("college")) {
+    return c.includes("school") || c.includes("college") || sc.includes("school") || sc.includes("college") || c.includes("education");
+  }
+  if (target.includes("hospital") || target.includes("clinic")) {
+    return c.includes("hospital") || c.includes("clinic") || sc.includes("hospital") || sc.includes("clinic") || c.includes("health");
+  }
 
   if (c === target || sc === target) return true;
   if (c && (c.includes(target) || target.includes(c))) return true;
@@ -79,6 +85,7 @@ function filterPlaces(list, category, locality, search, sort) {
   filtered = filtered.filter(
     (p) =>
       p &&
+      !p.isArchived &&
       p.isPublished !== false &&
       p.latitude !== null &&
       p.longitude !== null &&
@@ -127,20 +134,24 @@ export default function Directory({ user }) {
     canonicalPath: "/directory",
   });
 
-  const isAdmin =
-    user?.role === "admin" ||
-    (() => {
-      try {
-        return JSON.parse(localStorage.getItem("user") || "{}")?.role === "admin";
-      } catch {
-        return false;
-      }
-    })();
+  const [isAdminState, setIsAdminState] = useState(() => user?.role === "admin" || isUserAdmin());
+  useEffect(() => {
+    const handleAuth = () => {
+      setIsAdminState(user?.role === "admin" || isUserAdmin());
+    };
+    window.addEventListener("auth-change", handleAuth);
+    return () => window.removeEventListener("auth-change", handleAuth);
+  }, [user]);
+  const isAdmin = user?.role === "admin" || isAdminState || isUserAdmin();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCat = searchParams.get("category") || "all";
   const initialSearch = searchParams.get("search") || "";
-  const [allMasterPlaces, setAllMasterPlaces] = useState(seedPlaces);
+  const [allMasterPlaces, setAllMasterPlaces] = useState(() =>
+    Array.isArray(seedPlaces)
+      ? seedPlaces.filter((p) => !p.isArchived && p.isPublished !== false)
+      : []
+  );
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [selectedCategory, setSelectedCategory] = useState(initialCat);
@@ -150,6 +161,16 @@ export default function Directory({ user }) {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [expandedEntityId, setExpandedEntityId] = useState(null);
   const [detailModalPlace, setDetailModalPlace] = useState(null);
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editModalPlace, setEditModalPlace] = useState(null);
+
+  useEffect(() => {
+    if (searchParams.get("add") === "true") {
+      setEditModalPlace(null);
+      setShowEditModal(true);
+    }
+  }, [searchParams]);
 
   const handleToggleAccordion = useCallback((entityId) => {
     setExpandedEntityId((prevId) => (prevId === entityId ? null : entityId));
@@ -249,7 +270,7 @@ export default function Directory({ user }) {
       const res = await API.get("/places");
       const data = Array.isArray(res.data) ? res.data : Array.isArray(res.data?.data) ? res.data.data : [];
       if (data.length > 0) {
-        setAllMasterPlaces(data);
+        setAllMasterPlaces(data.filter((p) => !p.isArchived && p.isPublished !== false));
       }
     } catch (err) {
       console.warn("API unavailable, keeping seed verified places:", err.message);
@@ -674,10 +695,14 @@ export default function Directory({ user }) {
           {/* Quick Action Buttons */}
           <div className="flex items-center gap-2 shrink-0 pt-1 sm:pt-0">
             <button
-              onClick={() => setShowAddModal(true)}
-              className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow-xs cursor-pointer active:scale-95"
+              onClick={() => {
+                setEditModalPlace(null);
+                setShowEditModal(true);
+              }}
+              className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs cursor-pointer active:scale-95"
+              title="Add place with map location and image"
             >
-              <PlusCircle className="w-3.5 h-3.5" />
+              <PlusCircle className="w-4 h-4" />
               <span>+ Add Place</span>
             </button>
 
@@ -885,23 +910,21 @@ export default function Directory({ user }) {
           </div>
 
           <div className="flex items-center gap-3">
-            {localities.length > 0 && (
-              <div className="flex items-center gap-1 text-slate-700">
-                <Filter className="w-3 h-3 text-slate-400" />
-                <select
-                  value={selectedLocality}
-                  onChange={(e) => setSelectedLocality(e.target.value)}
-                  className="bg-transparent font-medium outline-none cursor-pointer text-xs"
-                >
-                  <option value="all">All Wards / Areas</option>
-                  {localities.map((loc) => (
-                    <option key={loc} value={loc}>
-                      {loc}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <div className="flex items-center gap-1 text-slate-700">
+              <Filter className="w-3 h-3 text-slate-400" />
+              <select
+                value={selectedLocality}
+                onChange={(e) => setSelectedLocality(e.target.value)}
+                className="bg-transparent font-medium outline-none cursor-pointer text-xs"
+              >
+                <option value="all">All Wards / Areas</option>
+                {FAZILNAGAR_AREAS.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="flex items-center gap-1 text-slate-700">
               <ArrowUpDown className="w-3 h-3 text-slate-400" />
@@ -1078,6 +1101,21 @@ export default function Directory({ user }) {
                             <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" /> Verified
                           </span>
                         )}
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditModalPlace(place);
+                              setShowEditModal(true);
+                            }}
+                            className="bg-amber-500 hover:bg-amber-600 text-white text-[9px] font-bold px-2 py-0.5 rounded flex items-center gap-1 shadow-2xs transition cursor-pointer"
+                            title="Edit place location & details"
+                          >
+                            <Edit3 className="w-2.5 h-2.5" />
+                            <span>Edit</span>
+                          </button>
+                        )}
                       </div>
                       {isSelected && (
                         <span className="text-[9px] font-bold text-blue-700 bg-blue-100/90 px-2 py-0.5 rounded-full flex items-center gap-1">
@@ -1120,6 +1158,20 @@ export default function Directory({ user }) {
                             <Phone className="w-3 h-3" />
                             <span>Call</span>
                           </a>
+                        )}
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditModalPlace(place);
+                              setShowEditModal(true);
+                            }}
+                            className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-2xs transition cursor-pointer"
+                          >
+                            <Edit3 className="w-3 h-3" />
+                            <span>Edit</span>
+                          </button>
                         )}
                         <button
                           type="button"
@@ -1277,6 +1329,21 @@ export default function Directory({ user }) {
                         <span>Directions</span>
                       </button>
 
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditModalPlace(place);
+                            setShowEditModal(true);
+                          }}
+                          className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow-2xs cursor-pointer"
+                          title="Edit establishment details"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                          <span>Edit Place</span>
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         onClick={() => setDetailModalPlace(place)}
@@ -1412,130 +1479,80 @@ export default function Directory({ user }) {
                   <Navigation className="w-3.5 h-3.5" />
                   <span>Live Directions</span>
                 </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Suggest Place Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-white rounded-t-3xl sm:rounded-2xl max-w-lg w-full p-4 sm:p-5 shadow-2xl relative max-h-[88vh] overflow-y-auto animate-fade-in-up sm:animate-modal-pop">
-            <button
-              onClick={() => setShowAddModal(false)}
-              className="absolute top-3 right-3 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 cursor-pointer"
-              aria-label="Close modal"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-[#0D5E49] flex items-center justify-center">
-                <PlusCircle className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">Suggest Establishment for Directory</h3>
-                <p className="text-[11px] text-slate-500">
-                  Must be physically located within Fazilnagar town limits (PIN 274401).
-                </p>
-              </div>
-            </div>
-
-            <form onSubmit={handleAddSubmit} className="space-y-3 text-xs">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Establishment Name *</label>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  placeholder="e.g. Mahavir Inter College, Kisan Seva Kendra"
-                  className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#0D5E49]"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Category *</label>
-                  <select
-                    name="category"
-                    required
-                    className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#0D5E49] bg-white"
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const p = detailModalPlace;
+                      setDetailModalPlace(null);
+                      setEditModalPlace(p);
+                      setShowEditModal(true);
+                    }}
+                    className="col-span-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs py-2.5 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                   >
-                    <option value="">Select Category</option>
-                    <option value="Schools & Colleges">Schools & Colleges</option>
-                    <option value="Hospitals & Clinics">Hospitals & Clinics</option>
-                    <option value="Sweet Shops & Bakeries">Sweet Shops & Bakeries</option>
-                    <option value="Medical Stores & Pharmacies">Medical Stores & Pharmacies</option>
-                    <option value="Religious Places">Religious Places</option>
-                    <option value="Public Facilities">Public Facilities & Banks</option>
-                    <option value="Shopping & Services">Shopping & Services</option>
-                    <option value="Transport & Travel">Transport & Travel</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Subcategory</label>
-                  <input
-                    type="text"
-                    name="subcategory"
-                    placeholder="e.g. Pharmacy, Inter College"
-                    className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#0D5E49]"
-                  />
-                </div>
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Edit Establishment (Admin)</span>
+                  </button>
+                )}
               </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Exact Address in Fazilnagar *</label>
-                <input
-                  type="text"
-                  name="addressFull"
-                  required
-                  placeholder="e.g. College Road, Opp. SBI Branch, Fazilnagar - 274401"
-                  className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#0D5E49]"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Locality / Ward</label>
-                  <input
-                    type="text"
-                    name="locality"
-                    placeholder="e.g. College Road, Main Chowk"
-                    className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#0D5E49]"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Phone Number (Optional)</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    placeholder="10-digit phone number"
-                    className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#0D5E49]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Services / Description</label>
-                <textarea
-                  name="description"
-                  rows={2}
-                  placeholder="Describe services, opening hours, landmarks…"
-                  className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#0D5E49]"
-                ></textarea>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-[#18232E] hover:bg-[#0D5E49] text-white font-bold text-xs py-2.5 rounded-xl transition"
-              >
-                Submit Establishment for Verification
-              </button>
-            </form>
+            </div>
           </div>
         </div>
       )}
+
+      {/* Admin Place Add & Edit Modal */}
+      <AdminPlaceEditModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditModalPlace(null);
+        }}
+        place={editModalPlace}
+        onSave={(savedPlace) => {
+          setShowEditModal(false);
+          setEditModalPlace(null);
+          showToast(`Place "${savedPlace.name}" saved successfully!`);
+          setAllMasterPlaces((prev) => {
+            const id = savedPlace._id || savedPlace.id || savedPlace.slug;
+            const idx = prev.findIndex((p) => (p._id || p.id || p.slug) === id);
+            if (idx >= 0) {
+              const copy = [...prev];
+              copy[idx] = savedPlace;
+              return copy;
+            }
+            return [savedPlace, ...prev];
+          });
+          if (selectedPlace && isSamePlace(selectedPlace, savedPlace)) {
+            setSelectedPlace(savedPlace);
+          }
+          fetchPlaces();
+          fetchStats();
+        }}
+        onDelete={(deletedId) => {
+          setShowEditModal(false);
+          setEditModalPlace(null);
+          showToast("Place removed from directory.");
+          setAllMasterPlaces((prev) =>
+            prev.filter((p) => (p._id || p.id || p.slug) !== deletedId)
+          );
+          if (selectedPlace && (selectedPlace._id === deletedId || selectedPlace.id === deletedId || selectedPlace.slug === deletedId)) {
+            setSelectedPlace(null);
+          }
+          fetchPlaces();
+          fetchStats();
+        }}
+      />
+
+      {/* Community Place Submission Modal */}
+      <CommunityPlaceModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={(sub) => {
+          showToast(`Place "${sub.name}" submitted for verification! (Tracking Ref: ${sub.referenceId})`);
+          fetchStats();
+        }}
+      />
 
       {/* Toast Feedback */}
       {toastMessage && (

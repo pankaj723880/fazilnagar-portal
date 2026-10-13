@@ -113,9 +113,9 @@ export default function TownInteractiveMap({
     });
     markersRef.current = [];
 
-    let filtered = places;
+    let filtered = places.filter((p) => !p.isArchived && p.isPublished !== false);
     if (mapFilter !== "all" && matchesCategory) {
-      filtered = places.filter((p) =>
+      filtered = filtered.filter((p) =>
         matchesCategory(p.category, p.subcategory, mapFilter)
       );
     }
@@ -148,7 +148,10 @@ export default function TownInteractiveMap({
 
       marker.bindPopup(`
         <div style="font-family: Inter, sans-serif; font-size: 12px; min-width: 200px; color: #18232E; padding: 2px;">
-          <span style="font-size: 9px; font-weight: 800; color: #B8323C; text-transform: uppercase; letter-spacing: 0.5px;">${place.category}</span>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-bottom: 2px;">
+            <span style="font-size: 9px; font-weight: 800; color: #B8323C; text-transform: uppercase; letter-spacing: 0.5px;">${place.category}</span>
+            ${place.submissionSource === "community" ? '<span style="font-size:8px;font-weight:700;color:#0369a1;background:#e0f2fe;padding:1px 5px;border-radius:4px;">Community Listed</span>' : '<span style="font-size:8px;font-weight:700;color:#15803d;background:#dcfce7;padding:1px 5px;border-radius:4px;">Admin Verified</span>'}
+          </div>
           <h3 style="margin: 2px 0 4px; font-size: 13px; font-weight: 700; color: #18232E;">${place.name}</h3>
           <p style="margin: 0; font-size: 11px; color: #647180;">${place.landmark || place.address || ""}</p>
           <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #E1E6EA; display: flex; align-items: center; justify-content: space-between; gap: 8px;">

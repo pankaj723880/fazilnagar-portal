@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
+import { getAuthToken } from "../utils/authStorage";
 import { Sparkles, CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function UploadForm() {
-  const token = localStorage.getItem("token");
+  const token = getAuthToken();
   const navigate = useNavigate();
 
   const [title, setTitle] = useState("");

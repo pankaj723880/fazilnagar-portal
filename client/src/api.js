@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getAuthToken } from "./utils/authStorage";
 
 const RENDER_PROD_API = "https://fazilnagar-portal.onrender.com/api";
 
@@ -10,9 +11,9 @@ const API = axios.create({
   timeout: 8000,
 });
 
-// Attach Authorization token if available
+// Attach Authorization token if available (reads per-tab session first)
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token = getAuthToken();
   if (token && !config.headers.Authorization) {
     config.headers.Authorization = `Bearer ${token}`;
   }

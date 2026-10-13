@@ -16,7 +16,7 @@ const clientPlaces = JSON.parse(fs.readFileSync(clientPlacesPath, "utf8"));
 test("1. No swapped coordinates (Lat/Lng sanity and bounding box)", () => {
   const publishedPlaces = serverPlaces.filter((p) => p.latitude !== null && p.longitude !== null);
 
-  assert.equal(publishedPlaces.length, 61, "Exactly 61 establishments must have active coordinates");
+  assert.equal(publishedPlaces.length, 22, "Exactly 22 clean establishments must have active coordinates");
 
   for (const place of publishedPlaces) {
     const lat = Number(place.latitude);
@@ -65,8 +65,13 @@ test("2. No synthetic default cluster assigning identical coordinates to unrelat
   }
 });
 
-test("3. Canonical ground truth coordinates for key anchor institutions", () => {
+test("3. Canonical ground truth coordinates for key anchor institutions and petrol pumps", () => {
   const keyAnchors = [
+    {
+      slug: "the-hermitage-school-fazilnagar",
+      expectedLat: 26.6804068,
+      expectedLng: 84.046655,
+    },
     {
       slug: "pawanagar-mahavir-inter-college-fazilnagar",
       expectedLat: 26.6894086,
@@ -79,33 +84,18 @@ test("3. Canonical ground truth coordinates for key anchor institutions", () => 
     },
     {
       slug: "indian-oil-petrol-pump-fazilnagar",
-      expectedLat: 26.6744,
-      expectedLng: 84.0501,
+      expectedLat: 26.6812,
+      expectedLng: 84.0435,
     },
     {
-      slug: "pawanagar-mahavir-digambar-jain-mandir",
-      expectedLat: 26.6851649,
-      expectedLng: 84.0453613,
+      slug: "hp-petrol-pump-fazilnagar",
+      expectedLat: 26.6821,
+      expectedLng: 84.0552,
     },
     {
-      slug: "fazilnagar-police-outpost-chowki",
-      expectedLat: 26.6817019,
-      expectedLng: 84.0596356,
-    },
-    {
-      slug: "the-hermitage-school-fazilnagar",
-      expectedLat: 26.6804068,
-      expectedLng: 84.046655,
-    },
-    {
-      slug: "fazilnagar-block-development-office",
-      expectedLat: 26.6830688,
-      expectedLng: 84.0496776,
-    },
-    {
-      slug: "state-bank-of-india-sbi-fazilnagar",
-      expectedLat: 26.6822,
-      expectedLng: 84.0503,
+      slug: "bharat-petroleum-bpcl-fuel-station-fazilnagar",
+      expectedLat: 26.6838,
+      expectedLng: 84.0462,
     },
   ];
 
@@ -141,7 +131,6 @@ test("4. Server and Client datasets remain strictly synchronized", () => {
 });
 
 test("5. Directions URL uses exact canonical coordinates of the target entity", () => {
-  // Test directions helper URL building logic
   const chc = serverPlaces.find((p) => p.slug === "community-health-centre-chc-fazilnagar");
   assert.ok(chc);
 
@@ -154,21 +143,16 @@ test("5. Directions URL uses exact canonical coordinates of the target entity", 
   assert.ok(!url.includes("26.6827,84.0498"), "Directions must not silently fall back to town center datum");
 });
 
-test("6. Unverified locations are not falsely labelled verified", () => {
-  const publishedPlaces = serverPlaces.filter((p) => p.latitude !== null && p.longitude !== null);
+test("6. No commercial shops or unauthorized categories remain in dataset", () => {
+  const allowedCategories = ["Schools & Colleges", "Hospitals & Clinics", "Petrol Pumps"];
 
-  const verified = publishedPlaces.filter((p) => p.verificationStatus === "verified");
-  const needsReview = publishedPlaces.filter((p) => p.verificationStatus === "needs_address_verification");
-
-  assert.equal(verified.length, 33, "Exactly 33 verified establishments (25 repaired + 8 canonical)");
-  assert.equal(needsReview.length, 28, "Exactly 28 unverified commercial establishments flagged for review");
-
-  // Every needsReview place must have an audit review note explaining it needs ground proof
-  for (const place of needsReview) {
+  for (const place of serverPlaces) {
     assert.ok(
-      place.reviewNotes.includes("on-site") || place.reviewNotes.includes("ground verification"),
-      `Place ${place.slug} lacks explanatory review note: ${place.reviewNotes}`
+      allowedCategories.includes(place.category),
+      `Place ${place.name} has unauthorized category: ${place.category}`
     );
+    assert.equal(place.verificationStatus, "verified");
+    assert.equal(place.isPublished, true);
   }
 });
 

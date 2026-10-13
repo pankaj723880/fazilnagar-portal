@@ -1,28 +1,29 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { getAuthToken, getAuthUser, clearAuthSession } from "../utils/authStorage";
 
 export default function Navbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkAuth = () => {
-      const token = localStorage.getItem("token");
-      setIsLoggedIn(!!token);
+      setCurrentUser(getAuthUser());
     };
 
     checkAuth();
-    window.addEventListener("storage", checkAuth);
-    return () => window.removeEventListener("storage", checkAuth);
+    window.addEventListener("auth-change", checkAuth);
+    return () => window.removeEventListener("auth-change", checkAuth);
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("isLoggedIn");
-    setIsLoggedIn(false);
+    clearAuthSession(true);
+    setCurrentUser(null);
     navigate("/login");
   };
+
+  const isLoggedIn = !!currentUser;
 
   return (
     <nav className="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-50">

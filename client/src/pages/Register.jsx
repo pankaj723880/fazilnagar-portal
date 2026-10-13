@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../api";
+import { setAuthSession } from "../utils/authStorage";
 import { usePageSEO } from "../utils/seo";
 
 export default function Register({ setUser }) {
@@ -25,15 +26,11 @@ export default function Register({ setUser }) {
     try {
       const res = await API.post("/auth/register", { name, email, password });
 
-      // Save auth tokens & user info
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("isLoggedIn", "true");
+      // Save auth tokens & user info isolated to this tab
       const userData = res.data.user || { name, email };
-      localStorage.setItem("user", JSON.stringify(userData));
+      setAuthSession(res.data.token, userData);
       
       if (setUser) setUser(userData);
-      window.dispatchEvent(new Event("auth-change"));
-      window.dispatchEvent(new Event("storage"));
 
       navigate("/");
     } catch (err) {

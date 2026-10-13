@@ -6,6 +6,8 @@ import { openGoogleMapsDirections } from "../utils/directions";
 import InstallButton from "../components/InstallButton";
 import AdvertisementSlot from "../components/AdvertisementSlot";
 import { usePageSEO } from "../utils/seo";
+import CommunityPlaceModal from "../components/CommunityPlaceModal";
+import { getAuthUser, clearAuthSession } from "../utils/authStorage";
 
 // Lazy-load Leaflet Map to eliminate render-blocking JS and main-thread freeze
 const TownInteractiveMap = lazy(() => import("../components/TownInteractiveMap"));
@@ -62,82 +64,66 @@ import {
   Shield,
   Briefcase,
   AlertCircle,
+  Fuel,
 } from "lucide-react";
 
-// The 21 Required Categories from Master Design Prompt
+// Filtered Categories strictly for Schools & Colleges, Hospitals, and Petrol Pumps
 const EXPLORE_21_CATEGORIES = [
-  { id: "schools", name: "Schools & Colleges", query: "Schools & Colleges", icon: GraduationCap, count: 6 },
-  { id: "hospitals", name: "Hospitals", query: "Hospitals & Clinics", icon: HeartPulse, count: 6 },
-  { id: "clinics", name: "Clinics", query: "Hospitals & Clinics", icon: Stethoscope, count: 3 },
-  { id: "doctors", name: "Doctors", query: "Hospitals & Clinics", icon: Stethoscope, count: 4 },
-  { id: "medical-stores", name: "Medical Stores", query: "Medical Stores & Pharmacies", icon: Pill, count: 5 },
-  { id: "sweet-shops", name: "Sweet Shops", query: "Sweet Shops & Bakeries", icon: Cake, count: 6 },
-  { id: "bakeries", name: "Bakeries", query: "Sweet Shops & Bakeries", icon: Coffee, count: 2 },
-  { id: "temples", name: "Temples", query: "Religious Places", icon: Sun, count: 3 },
-  { id: "mosques", name: "Mosques", query: "Religious Places", icon: Moon, count: 2 },
-  { id: "other-religious", name: "Other Religious Places", query: "Religious Places", icon: Sparkles, count: 2 },
-  { id: "restaurants", name: "Restaurants & Cafes", query: "Shopping & Services", icon: Utensils, count: 4 },
-  { id: "street-food", name: "Street Food", query: "Sweet Shops & Bakeries", icon: Flame, count: 5 },
-  { id: "markets", name: "Markets & Shopping", query: "Shopping & Services", icon: ShoppingBag, count: 6 },
-  { id: "banks", name: "Banks & ATMs", query: "Public Facilities", icon: Landmark, count: 4 },
-  { id: "hotels", name: "Hotels & Accommodation", query: "Shopping & Services", icon: Bed, count: 2 },
-  { id: "govt-offices", name: "Government Offices", query: "Public Facilities", icon: Building2, count: 4 },
-  { id: "coaching", name: "Coaching Centres", query: "Schools & Colleges", icon: BookOpen, count: 3 },
-  { id: "libraries", name: "Libraries", query: "Public Facilities", icon: BookOpen, count: 2 },
-  { id: "transport", name: "Transport & Travel", query: "Transport & Travel", icon: Bus, count: 3 },
-  { id: "emergency", name: "Emergency Services", query: "Public Facilities", icon: PhoneCall, count: 4 },
-  { id: "all-places", name: "All Places", query: "all", icon: Layers, count: 37 },
+  { id: "schools", name: "Schools & Colleges", query: "Schools & Colleges", icon: GraduationCap, count: 9 },
+  { id: "hospitals", name: "Hospitals & Healthcare", query: "Hospitals & Clinics", icon: Stethoscope, count: 10 },
+  { id: "fuel", name: "Petrol Pumps & Fuel", query: "Petrol Pumps", icon: Fuel, count: 3 },
+  { id: "all-places", name: "All Verified Places", query: "all", icon: Layers, count: 22 },
 ];
 
-// Curated Real Town Establishments
+// Curated Real Town Establishments (Schools, Hospitals, Petrol Pumps)
 const VERIFIED_TOWN_PLACES = [
   {
-    id: "fz-1",
-    name: "Pawanagar Mahavir Jain Mandir",
-    nameHindi: "पावानगर भगवान महावीर दिगंबर जैन मंदिर",
-    category: "Religious Places",
-    subcategory: "Temples",
-    address: "Pawanagar Tirth Marg, Fazilnagar - 274401",
-    landmark: "Pawanagar Tirth Marg, Pipra Rajab, Fazilnagar",
-    lat: 26.6851649,
-    lng: 84.0453613,
-    hours: "06:00 AM – 08:30 PM",
+    id: "sch-01",
+    name: "The Hermitage School",
+    nameHindi: "द हर्मिटेज स्कूल फाजिलनगर",
+    category: "Schools & Colleges",
+    subcategory: "Senior Secondary School",
+    address: "Hospital Road, Fazilnagar - 274401",
+    landmark: "Hospital Road Corridor, Near CHC, Fazilnagar",
+    lat: 26.6804068,
+    lng: 84.046655,
+    hours: "08:00 AM – 02:00 PM",
     phone: "+91 94520 89540",
-    desc: "Ancient shrine and Manasthamba commemorating Lord Mahavira's nirvana tradition in ancient Pawa (Pawanagar).",
-    badge: "Heritage",
+    desc: "Renowned English-medium institution providing quality education with comprehensive campus facilities.",
+    badge: "CBSE / English Medium",
   },
   {
-    id: "fz-2",
+    id: "hosp-01",
     name: "Community Health Centre (CHC) Fazilnagar",
     nameHindi: "सामुदायिक स्वास्थ्य केंद्र (सीएचसी) फाजिलनगर",
     category: "Hospitals & Clinics",
     subcategory: "Public Hospital",
-    address: "Hospital Road (Sarkari Hospital Campus), Fazilnagar - 274401",
+    address: "Hospital Road, Fazilnagar - 274401",
     landmark: "Hospital Road Campus, Near The Hermitage School, Fazilnagar",
-    lat: 26.6808,
-    lng: 84.0472,
+    lat: 26.6807500,
+    lng: 84.0471500,
     hours: "24x7 Emergency Services",
     phone: "+91 5564 222102",
     desc: "30-bed public healthcare institution providing primary medical, emergency ambulance, and maternal health services.",
     badge: "Government",
   },
   {
-    id: "fz-3",
-    name: "Sanskar Central Academy",
-    nameHindi: "संस्कार सेंट्रल एकेडमी",
-    category: "Schools & Colleges",
-    subcategory: "CBSE School",
-    address: "Durga Bhawan Campus, College Road, Fazilnagar - 274401",
-    landmark: "Durga Bhawan Campus, College Road, Fazilnagar",
-    lat: 26.6865,
-    lng: 84.0512,
-    hours: "08:00 AM – 02:30 PM",
-    phone: "+91 94520 89540",
-    desc: "Premier English-medium secondary school offering modern smart classrooms, science labs, and sports amenities.",
-    badge: "CBSE",
+    id: "fuel-01",
+    name: "Indian Oil (IOCL) Kisan Sewa Kendra Petrol Pump",
+    nameHindi: "इंडियन ऑयल किसान सेवा केंद्र पेट्रोल पंप",
+    category: "Petrol Pumps",
+    subcategory: "Fuel Station",
+    address: "NH-27 Highway Corridor (Amawa Link), Fazilnagar - 274401",
+    landmark: "NH-27 Highway West Axis, Fazilnagar",
+    lat: 26.6826000,
+    lng: 84.0442000,
+    hours: "06:00 AM – 11:00 PM",
+    phone: "+91 94520 12345",
+    desc: "Authorized IOCL fueling station offering petrol, high-speed diesel, lubricants, automated air, and clean restrooms.",
+    badge: "Indian Oil",
   },
   {
-    id: "fz-4",
+    id: "sch-02",
     name: "Pawanagar Mahavir Inter College",
     nameHindi: "पावानगर महावीर इंटर कॉलेज",
     category: "Schools & Colleges",
@@ -152,94 +138,19 @@ const VERIFIED_TOWN_PLACES = [
     badge: "UP Board",
   },
   {
-    id: "fz-5",
-    name: "State Bank of India (SBI) & ATM Fazilnagar",
-    nameHindi: "भारतीय स्टेट बैंक एवं 24x7 एटीएम",
-    category: "Public Facilities",
-    subcategory: "Banks & ATMs",
-    address: "NH-27 Main Market, Fazilnagar - 274401",
-    landmark: "Central Bazaar Highway Link, Fazilnagar",
-    lat: 26.6822,
-    lng: 84.0503,
-    hours: "10:00 AM – 04:00 PM (ATM 24x7)",
-    phone: "1800 1234",
-    desc: "Primary nationalized commercial banking branch with locker facilities, foreign exchange, and multi-kiosk ATMs.",
-    badge: "Banking",
-  },
-  {
-    id: "fz-6",
-    name: "Prashant Sweet House",
-    nameHindi: "प्रशांत स्वीट हाउस एवं चाट भंडार",
-    category: "Sweet Shops & Bakeries",
-    subcategory: "Mithai & Chaat",
-    address: "College Road, Fazilnagar - 274401",
-    landmark: "College Road Corridor, Fazilnagar",
-    lat: 26.6838,
-    lng: 84.0506,
-    hours: "07:30 AM – 09:30 PM",
-    phone: "+91 98392 45678",
-    desc: "Famous local confectionery known for pure desi ghee peda, rasgulla, morning samosas, and evening chaat.",
-    badge: "Traditional",
-  },
-  {
-    id: "fz-7",
-    name: "Amit Medical Store",
-    nameHindi: "अमित मेडिकल स्टोर",
-    category: "Medical Stores & Pharmacies",
-    subcategory: "Retail Pharmacy",
-    address: "College Road, Fazilnagar - 274401",
-    landmark: "College Road, Opp. SBI Bazar Link, Fazilnagar",
-    lat: 26.6836,
-    lng: 84.0507,
-    hours: "08:00 AM – 09:30 PM",
-    phone: "+91 94508 12345",
-    desc: "Licensed pharmacy dispensing allopathic prescription drugs, baby food, surgical consumables, and OTC formulations.",
-    badge: "Pharmacy",
-  },
-  {
-    id: "fz-8",
-    name: "Fazilnagar Police Outpost (Chowki)",
-    nameHindi: "फाजिलनगर पुलिस चौकी",
-    category: "Public Facilities",
-    subcategory: "Emergency Services",
-    address: "NH-27 Highway East, Fazilnagar - 274401",
-    landmark: "NH-27 Highway East Outpost Corridor, Fazilnagar",
-    lat: 26.6817019,
-    lng: 84.0596356,
-    hours: "24x7 Law Enforcement",
-    phone: "112 / +91 5564 222100",
-    desc: "Local police administration and security outpost maintaining traffic regulation, law and order across Fazilnagar town.",
-    badge: "Police",
-  },
-  {
-    id: "fz-9",
-    name: "Jama Masjid (Masjid-e-Darool Uloom)",
-    nameHindi: "जामा मस्जिद (दारुल उलूम) फाजिलनगर",
-    category: "Religious Places",
-    subcategory: "Mosques",
-    address: "Hospital Road, Purani Basti Link, Fazilnagar - 274401",
-    landmark: "Purani Basti Road Link, Fazilnagar",
-    lat: 26.6815,
-    lng: 84.0492,
-    hours: "Open during daily prayer times",
-    phone: "Local Masjid Committee",
-    desc: "Central Friday congregational mosque and historic spiritual center for the town's Muslim community.",
-    badge: "Mosque",
-  },
-  {
-    id: "fz-10",
-    name: "Fazilnagar Sub Post Office (PIN 274401)",
-    nameHindi: "उप डाकघर फाजिलनगर",
-    category: "Public Facilities",
-    subcategory: "Postal & Speed Post",
-    address: "Block Road, Fazilnagar - 274401",
-    landmark: "Near BDO Complex, Fazilnagar",
-    lat: 26.6816,
-    lng: 84.0471,
-    hours: "09:00 AM – 05:00 PM (Mon-Sat)",
-    phone: "+91 5564 222120",
-    desc: "Department of Posts India sub-post office offering Speed Post, parcel booking, Postal Life Insurance, and savings accounts.",
-    badge: "Postal",
+    id: "fuel-02",
+    name: "HP Petrol Pump - Fazilnagar Highway Filling Station",
+    nameHindi: "एचपी पेट्रोल पंप - फाजिलनगर हाईवे",
+    category: "Petrol Pumps",
+    subcategory: "Fuel Station",
+    address: "NH-27 Highway East (Bankata Crossing), Fazilnagar - 274401",
+    landmark: "NH-27 Highway East, Near Bankata Turn, Fazilnagar",
+    lat: 26.6821000,
+    lng: 84.0556000,
+    hours: "24x7 Fueling Services",
+    phone: "+91 94520 23456",
+    desc: "Hindustan Petroleum retail outlet serving highway transit vehicles, local farm machinery, and commuters.",
+    badge: "Hindustan Petroleum",
   },
 ];
 
@@ -397,8 +308,12 @@ function matchesCategory(placeCat, placeSubcat, targetCat) {
   return targetWords.some((w) => c.includes(w) || sc.includes(w));
 }
 
-const INITIAL_PLACES = Array.isArray(seedPlaces) && seedPlaces.length > 0
-  ? seedPlaces.map((p) => ({
+const activeSeedPlaces = Array.isArray(seedPlaces)
+  ? seedPlaces.filter((p) => !p.isArchived && p.isPublished !== false)
+  : [];
+
+const INITIAL_PLACES = activeSeedPlaces.length > 0
+  ? activeSeedPlaces.map((p) => ({
       id: p.id || p._id,
       name: p.name,
       nameHindi: p.alternateNames?.[0] || p.name,
@@ -416,8 +331,13 @@ const INITIAL_PLACES = Array.isArray(seedPlaces) && seedPlaces.length > 0
       badge: p.subcategory || p.category,
       verificationStatus: p.verificationStatus || "verified",
       townBoundaryStatus: p.townBoundaryStatus || "confirmed",
+      submissionSource: p.submissionSource || "official",
     }))
-  : VERIFIED_TOWN_PLACES;
+  : VERIFIED_TOWN_PLACES.filter((p) => [
+      "Hospitals & Clinics",
+      "Schools & Colleges",
+      "Medical Stores & Pharmacies"
+    ].includes(p.category));
 
 export default function TownPortal() {
   const navigate = useNavigate();
@@ -434,6 +354,7 @@ export default function TownPortal() {
   const [mapViewMode, setMapViewMode] = useState("map"); // "map" | "list"
   const [schoolFilter, setSchoolFilter] = useState("all");
   const [modalType, setModalType] = useState(null); // "business" | "correction" | "event" | null
+  const [communityModalOpen, setCommunityModalOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -509,44 +430,19 @@ export default function TownPortal() {
 
   useEffect(() => {
     const syncUser = () => {
-      const saved = localStorage.getItem("user");
-      const token = localStorage.getItem("token");
-      if (saved) {
-        try {
-          setCurrentUser(JSON.parse(saved));
-          return;
-        } catch (e) {}
-      }
-      if (token) {
-        try {
-          const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
-          if (payload) {
-            const u = { name: payload.name || payload.email?.split("@")[0] || "Citizen", email: payload.email, id: payload.id };
-            setCurrentUser(u);
-            localStorage.setItem("user", JSON.stringify(u));
-            return;
-          }
-        } catch (e) {}
-      }
-      setCurrentUser(null);
+      setCurrentUser(getAuthUser());
     };
 
     syncUser();
-    window.addEventListener("storage", syncUser);
     window.addEventListener("auth-change", syncUser);
     return () => {
-      window.removeEventListener("storage", syncUser);
       window.removeEventListener("auth-change", syncUser);
     };
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("isLoggedIn");
+    clearAuthSession(true);
     setCurrentUser(null);
-    window.dispatchEvent(new Event("auth-change"));
-    window.dispatchEvent(new Event("storage"));
   };
 
   const [isMapVisible, setIsMapVisible] = useState(false);
@@ -687,10 +583,7 @@ export default function TownPortal() {
     { id: "all", label: "All Verified Places" },
     { id: "Schools & Colleges", label: "Schools & Colleges" },
     { id: "Hospitals & Clinics", label: "Hospitals & Healthcare" },
-    { id: "Sweet Shops & Bakeries", label: "Sweets & Mithai" },
-    { id: "Medical Stores & Pharmacies", label: "Medical Stores" },
-    { id: "Religious Places", label: "Temples & Shrines" },
-    { id: "Public Facilities", label: "Public & Banks" },
+    { id: "Petrol Pumps", label: "Petrol Pumps & Fuel" },
   ];
 
   const filteredMapPlaces = places.filter(
@@ -893,6 +786,13 @@ export default function TownPortal() {
               <Map className="w-4 h-4 text-emerald-400" />
               <span>View Map</span>
             </button>
+            <Link
+              to="/directory?add=true"
+              className="inline-flex items-center gap-2 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold px-6 py-3 rounded-xl shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>+ Add Place</span>
+            </Link>
           </div>
 
           {/* Town Trust Badges */}
@@ -924,27 +824,21 @@ export default function TownPortal() {
               Explore Fazilnagar
             </h2>
             <p className="text-xs sm:text-sm text-[#647180] mt-1">
-              Select any of the 21 town categories to access verified establishments.
+              Verified institutions across schools, colleges, hospitals, and fuel stations.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={toggleDirectoryExpanded}
+          <Link
+            to="/directory"
             className="text-xs font-bold px-4 py-2.5 rounded-xl bg-[#18232E] hover:bg-[#B8323C] text-white transition self-start md:self-auto cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-95 duration-150"
-            aria-expanded={isDirectoryExpanded}
           >
-            <span>{isDirectoryExpanded ? "Close Directory" : "Open Full Directory"}</span>
-            {isDirectoryExpanded ? (
-              <ChevronUp className="w-3.5 h-3.5 text-amber-400" />
-            ) : (
-              <ChevronDown className="w-3.5 h-3.5 text-amber-400" />
-            )}
-          </button>
+            <span>Open Full Directory</span>
+            <ChevronRight className="w-3.5 h-3.5 text-amber-400" />
+          </Link>
         </div>
 
-        {/* Categories Grid (4 cards collapsed, all 21 expanded) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 transition-all duration-300">
-          {displayedCategories.map((cat) => {
+        {/* Categories Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 transition-all duration-300">
+          {EXPLORE_21_CATEGORIES.map((cat) => {
             const Icon = cat.icon;
             return (
               <Link
@@ -1119,7 +1013,15 @@ export default function TownPortal() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Link
+                to="/directory?add=true"
+                className="bg-[#0D5E49] hover:bg-emerald-800 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>+ Add Place</span>
+              </Link>
+
               {/* Map & List View Toggle */}
               <div className="bg-white p-1 rounded-xl border border-[#E1E6EA] flex items-center text-xs font-semibold">
                 <button
@@ -2490,6 +2392,15 @@ export default function TownPortal() {
           </div>
         </div>
       )}
+
+      {/* Community Place Submission Modal */}
+      <CommunityPlaceModal
+        isOpen={communityModalOpen}
+        onClose={() => setCommunityModalOpen(false)}
+        onSuccess={(sub) => {
+          showToast(`Place "${sub.name}" submitted! Tracking ID: ${sub.referenceId}`);
+        }}
+      />
 
       {/* Global Toast */}
       {toastMsg && (

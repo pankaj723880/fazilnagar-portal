@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../api";
+import { getAuthToken, getAuthUser, setAuthSession } from "../utils/authStorage";
 import { usePageSEO } from "../utils/seo";
+import AdminCommunityPlaces from "../components/AdminCommunityPlaces";
 import {
   ShieldCheck,
   CheckCircle,
@@ -122,40 +124,10 @@ export default function AdminReview({ user: propUser }) {
 
   useEffect(() => {
     const resolveUser = () => {
-      const saved = localStorage.getItem("user");
-      const token = localStorage.getItem("token");
-
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (parsed) {
-            setCurrentUser(parsed);
-            return;
-          }
-        } catch (_) {}
-      }
-
-      if (token) {
-        try {
-          const payloadBase64 = token.split(".")[1];
-          if (payloadBase64) {
-            const decoded = JSON.parse(atob(payloadBase64.replace(/-/g, "+").replace(/_/g, "/")));
-            if (decoded) {
-              const u = {
-                id: decoded.id,
-                name: decoded.name || decoded.email?.split("@")[0] || "Admin",
-                email: decoded.email,
-                role: decoded.role || (decoded.email === "pankaj723880@gmail.com" || decoded.email === "admin@fazilnagar.com" ? "admin" : "user"),
-              };
-              setCurrentUser(u);
-              localStorage.setItem("user", JSON.stringify(u));
-              return;
-            }
-          }
-        } catch (_) {}
-      }
-
-      if (propUser) {
+      const u = getAuthUser();
+      if (u) {
+        setCurrentUser(u);
+      } else if (propUser) {
         setCurrentUser(propUser);
       }
     };
@@ -182,7 +154,7 @@ export default function AdminReview({ user: propUser }) {
   const fetchData = async () => {
     if (!isAdmin) return;
     setLoading(true);
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
 
     try {
       // 1. Fetch Citizen Corner Submissions
@@ -229,7 +201,7 @@ export default function AdminReview({ user: propUser }) {
   const handleUploadToDrive = async (file) => {
     if (!file) return;
     setDriveUploading(true);
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -251,7 +223,7 @@ export default function AdminReview({ user: propUser }) {
 
   const handleDeleteDriveFile = async (id) => {
     if (!window.confirm("Permanently delete this file from Google Drive and database?")) return;
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
     try {
       await API.delete(`/google-drive/media/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -290,12 +262,8 @@ export default function AdminReview({ user: propUser }) {
       });
 
       if (res.data?.token && res.data?.user) {
-        localStorage.setItem("token", res.data.token);
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-        localStorage.setItem("isLoggedIn", "true");
+        setAuthSession(res.data.token, res.data.user);
         setCurrentUser(res.data.user);
-        window.dispatchEvent(new Event("auth-change"));
-        window.dispatchEvent(new Event("storage"));
         showToast("Logged in successfully as Administrator.");
       }
     } catch (err) {
@@ -308,7 +276,7 @@ export default function AdminReview({ user: propUser }) {
   // Moderation: Handle Submissions
   const handleSubmissionStatus = async (id, status) => {
     setActionLoadingId(id);
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
 
     try {
       await API.patch(
@@ -329,7 +297,7 @@ export default function AdminReview({ user: propUser }) {
   const handleDeleteSubmission = async (id) => {
     if (!window.confirm("Permanently delete this citizen submission?")) return;
     setActionLoadingId(id);
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
 
     try {
       await API.delete(`/submissions/${id}`, {
@@ -348,7 +316,7 @@ export default function AdminReview({ user: propUser }) {
   // Moderation: Handle Citizen Submitted News
   const handleNewsStatus = async (id, status) => {
     setActionLoadingId(id);
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
 
     try {
       await API.patch(
@@ -375,7 +343,7 @@ export default function AdminReview({ user: propUser }) {
   const handleDeleteNews = async (id) => {
     if (!window.confirm("Permanently delete this news article?")) return;
     setActionLoadingId(id);
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
 
     try {
       await API.delete(`/news/${id}`, {
@@ -449,7 +417,7 @@ export default function AdminReview({ user: propUser }) {
     }
 
     setAdFormSubmitting(true);
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
 
     try {
       const formData = new FormData();
@@ -506,7 +474,7 @@ export default function AdminReview({ user: propUser }) {
   };
 
   const handleToggleAdPublish = async (ad) => {
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
     const nextVal = !ad.isPublished;
     setActionLoadingId(ad._id);
 
@@ -529,7 +497,7 @@ export default function AdminReview({ user: propUser }) {
   };
 
   const handleToggleAdActive = async (ad) => {
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
     const nextVal = !ad.isActive;
     setActionLoadingId(ad._id);
 
@@ -552,7 +520,7 @@ export default function AdminReview({ user: propUser }) {
   };
 
   const handleDeleteAd = async (id) => {
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
     setActionLoadingId(id);
 
     try {
@@ -619,7 +587,7 @@ export default function AdminReview({ user: propUser }) {
     }
 
     setNewsFormSubmitting(true);
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
 
     try {
       const formData = new FormData();
@@ -674,7 +642,7 @@ export default function AdminReview({ user: propUser }) {
   };
 
   const handleToggleNewsFeatured = async (story) => {
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
     const nextVal = !story.isFeatured;
     setActionLoadingId(story._id);
 
@@ -697,7 +665,7 @@ export default function AdminReview({ user: propUser }) {
   };
 
   const handleToggleNewsPublish = async (story) => {
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
     const nextVal = !(story.isPublished || story.status === "approved");
     setActionLoadingId(story._id);
 
@@ -1021,6 +989,18 @@ export default function AdminReview({ user: propUser }) {
           </button>
 
           <button
+            onClick={() => setActiveTab("community-places")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "community-places"
+                ? "bg-[#0D5E49] text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <Store className="w-3.5 h-3.5 text-amber-400" />
+            <span>Community Submissions</span>
+          </button>
+
+          <button
             onClick={() => {
               setActiveTab("drive");
               fetchDriveData();
@@ -1089,6 +1069,31 @@ export default function AdminReview({ user: propUser }) {
           </div>
         )}
       </div>
+
+      {/* ========================================================
+          COMMUNITY SUBMISSIONS DIRECTORY & MAP PIN VERIFICATION
+          ======================================================== */}
+      {(activeTab === "community-places" || activeTab === "business") && (
+        <section aria-label="Community Place Submissions" className="space-y-4">
+          <div className="bg-[#18232E] text-white p-4 sm:p-5 rounded-2xl flex items-center justify-between border border-slate-800 shadow-md">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="bg-[#0D5E49] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-amber-300" /> Ground Verification Desk
+                </span>
+                <span className="text-[11px] text-slate-400">PIN 274401 Official Registry</span>
+              </div>
+              <h2 className="text-base sm:text-lg font-extrabold text-white">
+                Community Directory & Map Pin Verification Desk
+              </h2>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Review community-submitted local businesses, shops, and public places. Audit exact map coordinates, verify storefront photos, and approve or reject submissions before public publication.
+              </p>
+            </div>
+          </div>
+          <AdminCommunityPlaces token={getAuthToken()} onStatsChange={fetchData} />
+        </section>
+      )}
 
       {/* ========================================================
           TAB 1: ADVERTISEMENT MANAGEMENT (FEATURE 1)

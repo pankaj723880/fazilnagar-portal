@@ -111,6 +111,46 @@ const placeSchema = new mongoose.Schema(
       default: false,
       index: true,
     },
+    isArchived: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    archiveReason: {
+      type: String,
+      default: "",
+    },
+    archivedAt: {
+      type: Date,
+      default: null,
+    },
+    submissionSource: {
+      type: String,
+      enum: ["official", "community"],
+      default: "official",
+      index: true,
+    },
+    ownerName: {
+      type: String,
+      default: "",
+    },
+    alternatePhone: {
+      type: String,
+      default: "",
+    },
+    whatsapp: {
+      type: String,
+      default: "",
+    },
+    galleryUrls: {
+      type: [String],
+      default: [],
+    },
+    submissionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Submission",
+      default: null,
+    },
     reviewNotes: {
       type: String,
       default: "",

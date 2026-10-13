@@ -1,8 +1,8 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { Routes, Route, NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 
-// Primary Homepage Import (Synchronous for fast first render)
 import TownPortal from "./pages/TownPortal";
+import { getAuthUser, clearAuthSession } from "./utils/authStorage";
 
 // Lazy-Loaded Route Components (Code-split to reduce initial unused JS)
 const News = lazy(() => import("./pages/News"));
@@ -122,64 +122,22 @@ export default function App() {
     }
   };
 
-  // Persistent user synchronization from LocalStorage and JWT token
+  // Persistent user synchronization (tab-isolated)
   useEffect(() => {
     const syncUser = () => {
-      const savedUser = localStorage.getItem("user");
-      const token = localStorage.getItem("token");
-
-      if (savedUser) {
-        try {
-          setUser(JSON.parse(savedUser));
-          return;
-        } catch (e) {
-          // continue to token decode
-        }
-      }
-
-      if (token) {
-        try {
-          const payloadBase64 = token.split(".")[1];
-          if (payloadBase64) {
-            const decoded = JSON.parse(
-              atob(payloadBase64.replace(/-/g, "+").replace(/_/g, "/"))
-            );
-            if (decoded) {
-              const u = {
-                id: decoded.id,
-                name: decoded.name || decoded.email?.split("@")[0] || "Citizen",
-                email: decoded.email,
-                role: decoded.role || (decoded.email === "pankaj723880@gmail.com" ? "admin" : "citizen"),
-              };
-              setUser(u);
-              localStorage.setItem("user", JSON.stringify(u));
-              return;
-            }
-          }
-        } catch (err) {
-          console.error("Token decode error:", err);
-        }
-      }
-
-      setUser(null);
+      setUser(getAuthUser());
     };
 
     syncUser();
-    window.addEventListener("storage", syncUser);
     window.addEventListener("auth-change", syncUser);
     return () => {
-      window.removeEventListener("storage", syncUser);
       window.removeEventListener("auth-change", syncUser);
     };
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("isLoggedIn");
+    clearAuthSession(true); // logs out current tab session
     setUser(null);
-    window.dispatchEvent(new Event("auth-change"));
-    window.dispatchEvent(new Event("storage"));
   };
 
   return (

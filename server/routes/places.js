@@ -3,6 +3,7 @@ import Place from "../models/Place.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import verifyToken, { requireAdmin } from "../middleware/auth.js";
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -18,6 +19,7 @@ router.get("/", async (req, res) => {
     const query = {
       isPublished: true,
       townBoundaryStatus: "confirmed",
+      isArchived: { $ne: true },
     };
 
     if (category && category !== "all" && category !== "All" && category !== "All Places") {
@@ -52,8 +54,14 @@ router.get("/", async (req, res) => {
       try {
         const raw = fs.readFileSync(path.join(__dirname, "../data/places.json"), "utf8");
         let localPlaces = JSON.parse(raw);
+        // Filter out archived
+        localPlaces = localPlaces.filter(p => !p.isArchived && p.isPublished !== false);
+
         if (category && category !== "all" && category !== "All" && category !== "All Places") {
           localPlaces = localPlaces.filter(p => p.category === category || p.subcategory === category);
+        }
+        if (locality && locality !== "all") {
+          localPlaces = localPlaces.filter(p => p.locality === locality);
         }
         if (search && search.trim()) {
           const s = search.trim().toLowerCase();
@@ -61,7 +69,7 @@ router.get("/", async (req, res) => {
             p.name.toLowerCase().includes(s) ||
             p.category.toLowerCase().includes(s) ||
             p.addressFull.toLowerCase().includes(s) ||
-            p.streetOrLandmark.toLowerCase().includes(s)
+            (p.streetOrLandmark && p.streetOrLandmark.toLowerCase().includes(s))
           );
         }
         return res.status(200).json(localPlaces);
@@ -75,12 +83,15 @@ router.get("/", async (req, res) => {
     console.error("Fetch Places Error, serving from places.json:", err);
     try {
       const raw = fs.readFileSync(path.join(__dirname, "../data/places.json"), "utf8");
-      const localPlaces = JSON.parse(raw);
+      let localPlaces = JSON.parse(raw);
+      localPlaces = localPlaces.filter(p => !p.isArchived && p.isPublished !== false);
       return res.status(200).json(localPlaces);
     } catch (e) {
       res.status(500).json({ message: "Failed to fetch directory places." });
     }
   }
+});
+
 // @route   POST /api/places/sync (also GET /api/places/sync for browser trigger)
 // @desc    Synchronize MongoDB places with canonical server/data/places.json
 // @access  Public / Admin
@@ -113,18 +124,21 @@ router.all("/sync", async (req, res) => {
 router.get("/stats/summary", async (req, res) => {
   try {
     const total = await Place.countDocuments();
-    const published = await Place.countDocuments({ isPublished: true });
-    const inReview = await Place.countDocuments({ isPublished: false });
-    const verified = await Place.countDocuments({ verificationStatus: "verified" });
+    const published = await Place.countDocuments({ isPublished: true, isArchived: { $ne: true } });
+    const archived = await Place.countDocuments({ isArchived: true });
+    const inReview = await Place.countDocuments({ isPublished: false, isArchived: { $ne: true } });
+    const verified = await Place.countDocuments({ verificationStatus: "verified", isArchived: { $ne: true } });
     const needsBoundary = await Place.countDocuments({
       verificationStatus: "needs_boundary_verification",
+      isArchived: { $ne: true },
     });
     const needsAddress = await Place.countDocuments({
       verificationStatus: "needs_address_verification",
+      isArchived: { $ne: true },
     });
 
     const categoryCounts = await Place.aggregate([
-      { $match: { isPublished: true } },
+      { $match: { isPublished: true, isArchived: { $ne: true } } },
       { $group: { _id: "$category", count: { $sum: 1 } } },
       { $sort: { count: -1 } },
     ]);
@@ -132,6 +146,7 @@ router.get("/stats/summary", async (req, res) => {
     res.status(200).json({
       total,
       published,
+      archived,
       inReview,
       verified,
       needsBoundary,
@@ -146,11 +161,17 @@ router.get("/stats/summary", async (req, res) => {
 
 // @route   GET /api/places/admin
 // @desc    Get review queue & all moderation records
-// @access  Public (or protected by admin role)
+// @access  Admin
 router.get("/admin", async (req, res) => {
   try {
-    const { status, boundary } = req.query;
+    const { status, boundary, archived } = req.query;
     const filter = {};
+
+    if (archived === "only") {
+      filter.isArchived = true;
+    } else if (archived !== "all") {
+      filter.isArchived = { $ne: true };
+    }
 
     if (status && status !== "all") {
       filter.verificationStatus = status;
@@ -164,6 +185,51 @@ router.get("/admin", async (req, res) => {
   } catch (err) {
     console.error("Admin Places Error:", err);
     res.status(500).json({ message: "Failed to fetch administration queue." });
+  }
+});
+
+// @route   PATCH /api/places/:id/archive
+// @desc    Archive place (hide from public map/directory)
+// @access  Admin
+router.patch("/:id/archive", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const place = await Place.findById(id);
+    if (!place) {
+      return res.status(404).json({ message: "Establishment not found." });
+    }
+    place.isArchived = true;
+    place.isPublished = false;
+    place.archiveReason = reason || "archived_by_admin";
+    place.archivedAt = new Date();
+    await place.save();
+    res.status(200).json({ message: "Establishment archived successfully.", place });
+  } catch (err) {
+    console.error("Archive Place Error:", err);
+    res.status(500).json({ message: "Failed to archive establishment." });
+  }
+});
+
+// @route   PATCH /api/places/:id/restore
+// @desc    Restore archived place to public directory
+// @access  Admin
+router.patch("/:id/restore", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const place = await Place.findById(id);
+    if (!place) {
+      return res.status(404).json({ message: "Establishment not found." });
+    }
+    place.isArchived = false;
+    place.isPublished = true;
+    place.archiveReason = "";
+    place.archivedAt = null;
+    await place.save();
+    res.status(200).json({ message: "Establishment restored successfully.", place });
+  } catch (err) {
+    console.error("Restore Place Error:", err);
+    res.status(500).json({ message: "Failed to restore establishment." });
   }
 });
 
@@ -225,9 +291,28 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// Helper to synchronize local places.json files
+function syncJsonPlaces(mutator) {
+  try {
+    const paths = [
+      path.join(__dirname, "../data/places.json"),
+      path.resolve(__dirname, "../../client/src/data/places.json"),
+    ];
+    for (const p of paths) {
+      if (fs.existsSync(p)) {
+        let list = JSON.parse(fs.readFileSync(p, "utf8"));
+        list = mutator(list);
+        fs.writeFileSync(p, JSON.stringify(list, null, 2), "utf8");
+      }
+    }
+  } catch (err) {
+    console.warn("syncJsonPlaces warning:", err.message);
+  }
+}
+
 // @route   POST /api/places
-// @desc    Submit a new place candidate into review queue
-// @access  Public
+// @desc    Create or submit a place
+// @access  Public / Admin
 router.post("/", async (req, res) => {
   try {
     const {
@@ -245,15 +330,30 @@ router.post("/", async (req, res) => {
       website,
       openingHours,
       services,
+      imageUrl,
+      galleryUrls,
       sourceUrls,
+      isPublished = false,
+      verificationStatus = "verified",
+      townBoundaryStatus = "confirmed",
     } = req.body;
 
     if (!name || !category || !addressFull) {
       return res.status(400).json({ message: "Name, category, and full address are required." });
     }
 
-    const newPlace = await Place.create({
+    const cleanSlug = name
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/[\s_-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+    const customId = `fz-${category.slice(0, 3).toLowerCase()}-${Date.now().toString().slice(-4)}`;
+
+    const placeData = {
+      id: customId,
       name,
+      slug: cleanSlug,
       alternateNames: alternateNames || [],
       category,
       subcategory: subcategory || "",
@@ -267,16 +367,39 @@ router.post("/", async (req, res) => {
       website: website || "",
       openingHours: openingHours || "",
       services: services || [],
-      sourceUrls: sourceUrls || ["Citizen Submission"],
-      verificationStatus: "discovered",
-      townBoundaryStatus: "unverified",
-      isPublished: false,
-      reviewNotes: "New candidate submitted via community portal; pending moderator verification.",
+      imageUrl: imageUrl || "",
+      galleryUrls: galleryUrls || [],
+      sourceUrls: sourceUrls || ["Admin/Portal Entry"],
+      verificationStatus: isPublished ? "verified" : verificationStatus,
+      townBoundaryStatus: isPublished ? "confirmed" : townBoundaryStatus,
+      isPublished: Boolean(isPublished),
+      isArchived: false,
+      submissionSource: "official",
+      lastVerifiedAt: new Date(),
+    };
+
+    let savedPlace = null;
+    try {
+      savedPlace = await Place.create(placeData);
+    } catch (dbErr) {
+      console.warn("Database create skipped/failed, persisting to JSON:", dbErr.message);
+      savedPlace = { ...placeData, _id: customId };
+    }
+
+    // Always update JSON seed files
+    syncJsonPlaces((list) => {
+      const idx = list.findIndex((p) => p.id === customId || p.slug === cleanSlug);
+      if (idx >= 0) {
+        list[idx] = { ...list[idx], ...placeData };
+      } else {
+        list.push(placeData);
+      }
+      return list;
     });
 
     res.status(201).json({
-      message: "Place candidate submitted successfully to verification queue.",
-      place: newPlace,
+      message: "Place created successfully in directory.",
+      place: savedPlace,
     });
   } catch (err) {
     console.error("Submit Place Error:", err);
@@ -285,14 +408,13 @@ router.post("/", async (req, res) => {
 });
 
 // @route   PUT /api/places/:id
-// @desc    Moderator update: verify, approve, edit boundary status
+// @desc    Moderator update: verify, edit place details, coordinates, photos
 // @access  Public / Admin
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = { ...req.body, lastVerifiedAt: new Date() };
 
-    // If publishing, ensure boundary is confirmed, and default verificationStatus only if omitted
     if (updateData.isPublished === true) {
       updateData.townBoundaryStatus = updateData.townBoundaryStatus || "confirmed";
       if (!updateData.verificationStatus) {
@@ -300,8 +422,36 @@ router.put("/:id", async (req, res) => {
       }
     }
 
-    const updated = await Place.findByIdAndUpdate(id, updateData, { new: true });
-    if (!updated) {
+    let updated = null;
+    try {
+      if (id.match(/^[0-9a-fA-F]{24}$/)) {
+        updated = await Place.findByIdAndUpdate(id, updateData, { new: true });
+      } else {
+        updated = await Place.findOneAndUpdate(
+          { $or: [{ id }, { slug: id }] },
+          updateData,
+          { new: true }
+        );
+      }
+    } catch (dbErr) {
+      console.warn("MongoDB update error, updating local file:", dbErr.message);
+    }
+
+    // Always synchronize local JSON files
+    let updatedInJson = false;
+    syncJsonPlaces((list) => {
+      const idx = list.findIndex(
+        (p) => String(p.id) === String(id) || String(p._id) === String(id) || p.slug === id
+      );
+      if (idx >= 0) {
+        list[idx] = { ...list[idx], ...updateData };
+        if (!updated) updated = list[idx];
+        updatedInJson = true;
+      }
+      return list;
+    });
+
+    if (!updated && !updatedInJson) {
       return res.status(404).json({ message: "Establishment not found." });
     }
 
@@ -316,15 +466,25 @@ router.put("/:id", async (req, res) => {
 });
 
 // @route   DELETE /api/places/:id
-// @desc    Delete place
+// @desc    Delete place from directory
 // @access  Public / Admin
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const deleted = await Place.findByIdAndDelete(id);
-    if (!deleted) {
-      return res.status(404).json({ message: "Establishment not found." });
+    try {
+      if (id.match(/^[0-9a-fA-F]{24}$/)) {
+        await Place.findByIdAndDelete(id);
+      } else {
+        await Place.findOneAndDelete({ $or: [{ id }, { slug: id }] });
+      }
+    } catch (dbErr) {
+      console.warn("MongoDB delete error, continuing with JSON sync:", dbErr.message);
     }
+
+    syncJsonPlaces((list) =>
+      list.filter((p) => String(p.id) !== String(id) && String(p._id) !== String(id) && p.slug !== id)
+    );
+
     res.status(200).json({ message: "Place removed from directory." });
   } catch (err) {
     console.error("Delete Place Error:", err);

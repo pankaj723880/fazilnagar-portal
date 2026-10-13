@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import API from "../api";
+import { setAuthSession } from "../utils/authStorage";
 import { usePageSEO } from "../utils/seo";
 
 export default function Login({ setUser }) {
@@ -29,15 +30,11 @@ export default function Login({ setUser }) {
     try {
       const res = await API.post("/auth/login", { email, password });
 
-      // Save credentials & user info
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("isLoggedIn", "true");
+      // Save credentials & user info isolated to this browser tab
       const userData = res.data.user || { email, name: email.split("@")[0] };
-      localStorage.setItem("user", JSON.stringify(userData));
+      setAuthSession(res.data.token, userData);
       
       if (setUser) setUser(userData);
-      window.dispatchEvent(new Event("auth-change"));
-      window.dispatchEvent(new Event("storage"));
 
       // Navigate dynamically based on where user came from
       navigate(redirectPath, { replace: true });
