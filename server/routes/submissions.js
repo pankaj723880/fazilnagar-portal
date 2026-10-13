@@ -303,7 +303,7 @@ router.get("/places/admin", verifyToken, requireAdmin, async (req, res) => {
 // @route   PATCH /api/submissions/places/:id/review or /api/submissions/places/admin/:id/review
 // @desc    Admin action on community place submission (approve, reject, edit, archive, restore)
 // @access  Private (Admin)
-router.patch(["/places/:id/review", "/places/admin/:id/review"], verifyToken, requireAdmin, async (req, res) => {
+const handlePlaceReview = async (req, res) => {
   try {
     const { action, rejectionReason, adminNotes, editedFields } = req.body;
     const submission = await Submission.findById(req.params.id);
@@ -434,7 +434,10 @@ router.patch(["/places/:id/review", "/places/admin/:id/review"], verifyToken, re
     console.error("Review Submission Error:", err);
     res.status(500).json({ message: err.message || "Failed to process review action." });
   }
-});
+};
+
+router.patch("/places/admin/:id/review", verifyToken, requireAdmin, handlePlaceReview);
+router.patch("/places/:id/review", verifyToken, requireAdmin, handlePlaceReview);
 
 // @route   POST /api/submissions (Legacy Citizen Corner compatibility)
 // @access  Public
@@ -497,7 +500,7 @@ router.get("/", verifyToken, requireAdmin, async (req, res) => {
 // @route   GET /api/submissions/:id/status or /api/submissions/status/:id
 // @desc    Retrieve submission status by ID or Reference ID
 // @access  Public
-router.get(["/:id/status", "/status/:id"], async (req, res) => {
+const handleGetStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const query = mongoose.Types.ObjectId.isValid(id)
@@ -522,7 +525,10 @@ router.get(["/:id/status", "/status/:id"], async (req, res) => {
     console.error("Get Submission Status Error:", err);
     res.status(500).json({ message: "Failed to retrieve submission status." });
   }
-});
+};
+
+router.get("/status/:id", handleGetStatus);
+router.get("/:id/status", handleGetStatus);
 
 // @route   PATCH or PUT /api/submissions/:id/status or /api/submissions/:id
 // @desc    Admin updates submission status (approve, reject, resolve, archive)
@@ -609,8 +615,10 @@ const handleStatusUpdate = async (req, res) => {
   }
 };
 
-router.patch(["/:id/status", "/:id"], verifyToken, requireAdmin, handleStatusUpdate);
-router.put(["/:id/status", "/:id"], verifyToken, requireAdmin, handleStatusUpdate);
+router.patch("/:id/status", verifyToken, requireAdmin, handleStatusUpdate);
+router.patch("/:id", verifyToken, requireAdmin, handleStatusUpdate);
+router.put("/:id/status", verifyToken, requireAdmin, handleStatusUpdate);
+router.put("/:id", verifyToken, requireAdmin, handleStatusUpdate);
 
 // @route   DELETE /api/submissions/:id
 // @desc    Admin deletes a submission
