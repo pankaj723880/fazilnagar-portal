@@ -539,7 +539,7 @@ export default function App() {
             : "pt-[104px] sm:pt-[112px] pb-24 sm:pb-8 max-w-7xl mx-auto px-3 sm:px-6"
         }`}
       >
-        <div key={location.pathname} className={isNewsPage ? "h-full w-full" : "animate-page-enter"}>
+        <div key={location.pathname} className={isNewsPage ? "h-full w-full" : isPortalPage ? "w-full" : "animate-page-enter"}>
           <Suspense
             fallback={
               <div className="min-h-[40vh] flex flex-col items-center justify-center p-8 gap-3">
