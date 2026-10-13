@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /create-news
+Disallow: /upload
+
+Sitemap: https://fazilnagar.vercel.app/sitemap.xml
