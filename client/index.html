@@ -103,9 +103,125 @@
     <noscript>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" />
     </noscript>
+
+    <!-- Critical CSS for Instant Above-the-fold Layout & Zero CLS -->
+    <style>
+      #hero-section { min-height: 440px; position: relative; background-color: #18232E; }
+      .font-heading { font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; }
+    </style>
   </head>
   <body class="bg-slate-100 font-sans antialiased text-slate-800">
-    <div id="root"></div>
+    <div id="root">
+      <!-- Critical Above-the-Fold Pre-Rendered Shell for Instant Mobile FCP & LCP -->
+      <div class="min-h-screen w-full max-w-full overflow-x-hidden bg-[#F5F7F8] text-[#18232E] flex flex-col font-sans">
+        <header class="fixed top-0 left-0 right-0 z-50 bg-[#FFFFFF] shadow-xs">
+          <div class="h-8 bg-[#18232E] text-slate-300 text-[11px] font-semibold px-4 flex justify-between items-center border-b border-slate-800 shadow-xs">
+            <div class="flex items-center gap-2 overflow-hidden whitespace-nowrap">
+              <span class="bg-[#B8323C] text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-xs">
+                LIVE CIVIC
+              </span>
+              <span class="truncate text-slate-300">
+                Fazilnagar Town Official Civic &amp; Local Directory Portal (PIN 274401)
+              </span>
+            </div>
+            <div class="flex items-center gap-4">
+              <a href="tel:112" class="hidden sm:inline-flex items-center gap-1 text-red-400 font-bold whitespace-nowrap">
+                <span>📞 Helpline: 112</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="bg-[#FFFFFF]/95 backdrop-blur-md border-b border-[#E1E6EA]">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16 gap-4">
+              <a href="/" class="flex items-center gap-2.5 shrink-0">
+                <div class="w-9 h-9 rounded-xl bg-[#18232E] flex items-center justify-center text-white font-extrabold text-base border border-slate-700 shadow-xs">
+                  F
+                </div>
+                <div>
+                  <span class="text-base font-extrabold tracking-tight text-[#18232E] leading-none block font-heading">
+                    FAZIL<span class="text-[#B8323C]">NAGAR</span>
+                  </span>
+                  <span class="text-[10px] font-medium text-[#647180] tracking-wider block">
+                    Your Town. Your Community.
+                  </span>
+                </div>
+              </a>
+
+              <nav class="hidden lg:flex items-center gap-6 text-xs font-semibold text-[#18232E]">
+                <a href="/" class="text-[#B8323C] font-bold">Home</a>
+                <a href="/#explore-categories" class="text-[#647180]">Explore</a>
+                <a href="/directory" class="text-[#647180] flex items-center gap-1">
+                  <span>Directory</span>
+                  <span class="text-[9px] bg-[#168568] text-white px-1.5 py-0.2 rounded-full font-bold">37</span>
+                </a>
+                <a href="/#town-map-section" class="text-[#647180]">Map</a>
+                <a href="/news" class="text-[#647180]">Local Updates</a>
+                <a href="/#about-fazilnagar-section" class="text-[#647180]">About</a>
+              </nav>
+            </div>
+          </div>
+        </header>
+
+        <main class="flex-1 w-full pt-[88px] sm:pt-[96px] pb-24 sm:pb-8">
+          <div class="w-full max-w-full overflow-x-hidden bg-[#F5F7F8] font-sans text-[#18232E]">
+            <section
+              id="hero-section"
+              class="relative text-white py-10 sm:py-20 lg:py-24 overflow-hidden border-b border-slate-800"
+            >
+              <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <div class="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-100 z-10">
+                  <img
+                    src="/images/hero/mahaparinirvana-temple-1.webp"
+                    alt="Mahaparinirvana Temple &amp; Stupa"
+                    fetchpriority="high"
+                    loading="eager"
+                    decoding="sync"
+                    width="1200"
+                    height="600"
+                    class="w-full h-full object-cover object-center scale-105"
+                  />
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/65 z-20"></div>
+              </div>
+
+              <div class="relative z-30 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/30 text-xs text-slate-100 font-medium mb-5 shadow-2xl">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                  <span class="text-amber-300 font-bold">📍 Kushinagar</span>
+                  <span class="text-slate-300">•</span>
+                  <span class="font-semibold text-white">Mahaparinirvana Temple &amp; Stupa</span>
+                </div>
+
+                <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 leading-tight font-heading drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
+                  Fazilnagar Town Civic &amp; Local Directory
+                  <span class="block text-xl sm:text-3xl lg:text-3.5xl text-[#FF4D5A] font-bold mt-2 drop-shadow-[0_4px_16px_rgba(255,77,90,0.6)]">
+                    Apna Fazilnagar, Apni Pehchaan
+                  </span>
+                </h1>
+
+                <p class="text-sm sm:text-base text-slate-100 max-w-2xl mx-auto mb-9 font-medium leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
+                  Fazilnagar Town Official Civic &amp; Local Directory Portal (PIN 274401, Kushinagar, Uttar Pradesh). Discover verified places, healthcare, schools, emergency helplines, shops, and community updates.
+                </p>
+
+                <div class="max-w-2xl mx-auto relative text-left">
+                  <div class="bg-white rounded-2xl p-2 shadow-2xl flex flex-col sm:flex-row items-center gap-2 border border-[#E1E6EA]">
+                    <div class="flex items-center gap-3 w-full px-3 py-2 text-[#18232E]">
+                      <svg class="w-5 h-5 text-[#647180] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                      <input
+                        type="text"
+                        placeholder="Search schools, hospitals, medical stores, sweet shops…"
+                        class="w-full text-xs sm:text-sm outline-none bg-transparent placeholder-slate-400 text-[#18232E] font-medium"
+                        aria-label="Search places in Fazilnagar"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
     <noscript>
       <div style="max-width:800px;margin:2rem auto;padding:1.5rem;font-family:system-ui,sans-serif;color:#18232E;">
         <h1>Fazilnagar Town Civic &amp; Local Directory Portal</h1>

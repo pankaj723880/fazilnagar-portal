@@ -796,7 +796,7 @@ export default function TownPortal() {
               <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-[#E1E6EA] z-50 overflow-hidden max-h-80 overflow-y-auto animate-slide-down">
                 <div className="p-3 border-b border-slate-100 text-[11px] font-bold text-[#647180] uppercase tracking-wider flex justify-between items-center">
                   <span>Verified Town Results</span>
-                  <span className="text-[#168568] font-bold">{searchMatches.length} matches</span>
+                  <span className="text-[#0D5E49] font-bold">{searchMatches.length} matches</span>
                 </div>
                 {searchMatches.length === 0 ? (
                   <div className="p-6 text-center text-slate-500">
@@ -820,7 +820,7 @@ export default function TownPortal() {
                           <h5 className="text-xs font-bold text-[#18232E]">{item.name}</h5>
                           <p className="text-[11px] text-[#647180] line-clamp-1">{item.landmark}</p>
                         </div>
-                        <span className="text-xs font-semibold text-[#168568] flex items-center gap-1">
+                        <span className="text-xs font-semibold text-[#0D5E49] flex items-center gap-1">
                           View <ChevronRight className="w-3.5 h-3.5" />
                         </span>
                       </div>
@@ -922,10 +922,10 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 4: ESSENTIAL SERVICES (High-Priority Civic Hub)
           ======================================================== */}
-      <section className="bg-white py-16 border-y border-[#E1E6EA]">
+      <section className="bg-white py-16 border-y border-[#E1E6EA] content-visibility-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-10">
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#168568] uppercase tracking-wider mb-1">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0D5E49] uppercase tracking-wider mb-1">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Public Welfare & Emergency</span>
             </div>
@@ -993,7 +993,7 @@ export default function TownPortal() {
             {/* Sub Post Office */}
             <div className="bg-[#F5F7F8] p-5 rounded-2xl border border-[#E1E6EA] flex flex-col justify-between">
               <div>
-                <span className="text-[10px] font-extrabold text-[#168568] uppercase tracking-wider block mb-1">
+                <span className="text-[10px] font-extrabold text-[#0D5E49] uppercase tracking-wider block mb-1">
                   Postal Services
                 </span>
                 <h3 className="text-sm font-bold text-[#18232E]">Fazilnagar Sub Post Office</h3>
@@ -1036,11 +1036,11 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 5: EXPLORE FAZILNAGAR ON MAP (Leaflet Synchronized)
           ======================================================== */}
-      <section id="town-map-section" className="py-16">
+      <section id="town-map-section" className="py-16 content-visibility-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#168568] uppercase tracking-wider mb-1">
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0D5E49] uppercase tracking-wider mb-1">
                 <Map className="w-3.5 h-3.5" />
                 <span>Geospatial Verification</span>
               </div>
@@ -1074,7 +1074,7 @@ export default function TownPortal() {
               </div>
 
               <div className="text-[11px] text-[#18232E] bg-white px-3 py-1.5 rounded-xl border border-[#E1E6EA] font-semibold hidden sm:flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#168568] animate-pulse"></span>
+                <span className="w-2 h-2 rounded-full bg-[#0D5E49] animate-pulse"></span>
                 <span>26.6827° N, 84.0498° E</span>
               </div>
             </div>
@@ -1147,7 +1147,7 @@ export default function TownPortal() {
                         <ArrowLeft className="w-3.5 h-3.5" />
                         <span>Back to {currentMapTabLabel} ({filteredMapPlaces.length})</span>
                       </button>
-                      <span className="text-[11px] font-semibold text-[#168568] flex items-center gap-1">
+                      <span className="text-[11px] font-semibold text-[#0D5E49] flex items-center gap-1">
                         <Check className="w-3.5 h-3.5" /> Town Verified
                       </span>
                     </div>
@@ -1203,7 +1203,7 @@ export default function TownPortal() {
                     <button
                       type="button"
                       onClick={() => openGoogleMapsDirections(selectedPlace)}
-                      className="w-full inline-flex items-center justify-center gap-2 bg-[#168568] hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-xs cursor-pointer"
+                      className="w-full inline-flex items-center justify-center gap-2 bg-[#0D5E49] hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-xs cursor-pointer"
                     >
                       <Navigation className="w-3.5 h-3.5" />
                       <span>Get Directions in Google Maps</span>
@@ -1252,7 +1252,7 @@ export default function TownPortal() {
                                   {p.badge || p.subcategory || p.category}
                                 </span>
                                 {p.phone && (
-                                  <span className="text-[9px] text-[#168568] font-semibold">
+                                  <span className="text-[9px] text-[#0D5E49] font-semibold">
                                     Verified
                                   </span>
                                 )}
@@ -1315,7 +1315,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 6: DISCOVER LOCAL BUSINESSES (Verified Shops)
           ======================================================== */}
-      <section className="bg-white py-16 border-b border-[#E1E6EA]">
+      <section className="bg-white py-16 border-b border-[#E1E6EA] content-visibility-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
@@ -1442,7 +1442,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 7: SCHOOLS & COLLEGES (Education Preview)
           ======================================================== */}
-      <section className="py-16">
+      <section className="py-16 content-visibility-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
@@ -1559,7 +1559,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 8: LOCAL NEWS & EVENTS (Dated & Credible)
           ======================================================== */}
-      <section id="local-updates-section" className="bg-[#18232E] text-white py-16">
+      <section id="local-updates-section" className="bg-[#18232E] text-white py-16 content-visibility-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-8 gap-4">
             <div>
@@ -1713,7 +1713,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 9: ABOUT FAZILNAGAR & KUSHINAGAR (History & Culture)
           ======================================================== */}
-      <section id="about-fazilnagar-section" className="py-16 bg-white border-t border-[#E1E6EA]">
+      <section id="about-fazilnagar-section" className="py-16 bg-white border-t border-[#E1E6EA] content-visibility-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center max-w-3xl mx-auto mb-10">
@@ -2126,10 +2126,10 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 10: CITIZEN CORNER (Actionable Forms)
           ======================================================== */}
-      <section id="citizen-corner-section" className="bg-white py-16 border-t border-[#E1E6EA]">
+      <section id="citizen-corner-section" className="bg-white py-16 border-t border-[#E1E6EA] content-visibility-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#168568] uppercase tracking-wider mb-1">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0D5E49] uppercase tracking-wider mb-1">
               <PlusCircle className="w-3.5 h-3.5" />
               <span>Community Participation</span>
             </div>
@@ -2185,7 +2185,7 @@ export default function TownPortal() {
             {/* Action 3 */}
             <div className="bg-[#F5F7F8] rounded-2xl p-6 border border-[#E1E6EA] flex flex-col justify-between">
               <div>
-                <div className="w-11 h-11 rounded-xl bg-white text-[#168568] flex items-center justify-center mb-3.5 border border-[#E1E6EA]">
+                <div className="w-11 h-11 rounded-xl bg-white text-[#0D5E49] flex items-center justify-center mb-3.5 border border-[#E1E6EA]">
                   <CalendarPlus className="w-5 h-5" />
                 </div>
                 <h3 className="text-sm font-bold text-[#18232E] mb-1">Submit a Local Event</h3>
@@ -2195,7 +2195,7 @@ export default function TownPortal() {
               </div>
               <button
                 onClick={() => setModalType("event")}
-                className="w-full bg-[#168568] hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs"
+                className="w-full bg-[#0D5E49] hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs"
               >
                 <CalendarPlus className="w-4 h-4" />
                 <span>Submit Event</span>
@@ -2236,13 +2236,13 @@ export default function TownPortal() {
             <h3 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">
               Quick Navigation
             </h3>
-            <ul className="space-y-1.5 text-xs">
-              <li><button onClick={(e) => handleSmoothScroll(e, "hero-section")} className="hover:text-white cursor-pointer transition">Home</button></li>
-              <li><Link to="/directory" className="hover:text-white font-bold text-red-400">Town Directory (Map & List)</Link></li>
-              <li><button onClick={(e) => handleSmoothScroll(e, "town-map-section")} className="hover:text-white cursor-pointer transition">Interactive OpenStreetMap</button></li>
-              <li><button onClick={(e) => handleSmoothScroll(e, "local-updates-section")} className="hover:text-white cursor-pointer transition">Local Updates & Notices</button></li>
-              <li><button onClick={(e) => handleSmoothScroll(e, "about-fazilnagar-section")} className="hover:text-white cursor-pointer transition">About Fazilnagar</button></li>
-              <li><button onClick={(e) => handleSmoothScroll(e, "citizen-corner-section")} className="hover:text-white cursor-pointer transition">Citizen Corner</button></li>
+            <ul className="space-y-2 text-xs">
+              <li><button onClick={(e) => handleSmoothScroll(e, "hero-section")} className="hover:text-white cursor-pointer transition py-1 inline-block">Home</button></li>
+              <li><Link to="/directory" className="hover:text-white font-bold text-red-400 py-1 inline-block">Town Directory (Map & List)</Link></li>
+              <li><button onClick={(e) => handleSmoothScroll(e, "town-map-section")} className="hover:text-white cursor-pointer transition py-1 inline-block">Interactive OpenStreetMap</button></li>
+              <li><button onClick={(e) => handleSmoothScroll(e, "local-updates-section")} className="hover:text-white cursor-pointer transition py-1 inline-block">Local Updates & Notices</button></li>
+              <li><button onClick={(e) => handleSmoothScroll(e, "about-fazilnagar-section")} className="hover:text-white cursor-pointer transition py-1 inline-block">About Fazilnagar</button></li>
+              <li><button onClick={(e) => handleSmoothScroll(e, "citizen-corner-section")} className="hover:text-white cursor-pointer transition py-1 inline-block">Citizen Corner</button></li>
             </ul>
           </div>
 
@@ -2251,13 +2251,13 @@ export default function TownPortal() {
             <h3 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">
               Popular Categories
             </h3>
-            <ul className="space-y-1.5 text-xs">
-              <li><Link to="/directory?category=Schools%20%26%20Colleges" className="hover:text-white">Schools & Colleges</Link></li>
-              <li><Link to="/directory?category=Hospitals%20%26%20Clinics" className="hover:text-white">Hospitals & Clinics</Link></li>
-              <li><Link to="/directory?category=Medical%20Stores%20%26%20Pharmacies" className="hover:text-white">Medical Stores</Link></li>
-              <li><Link to="/directory?category=Sweet%20Shops%20%26%20Bakeries" className="hover:text-white">Sweet Shops & Bakeries</Link></li>
-              <li><Link to="/directory?category=Religious%20Places" className="hover:text-white">Temples & Mosques</Link></li>
-              <li><Link to="/directory?category=Public%20Facilities" className="hover:text-white">Banks & Post Office</Link></li>
+            <ul className="space-y-2 text-xs">
+              <li><Link to="/directory?category=Schools%20%26%20Colleges" className="hover:text-white py-1 inline-block">Schools & Colleges</Link></li>
+              <li><Link to="/directory?category=Hospitals%20%26%20Clinics" className="hover:text-white py-1 inline-block">Hospitals & Clinics</Link></li>
+              <li><Link to="/directory?category=Medical%20Stores%20%26%20Pharmacies" className="hover:text-white py-1 inline-block">Medical Stores</Link></li>
+              <li><Link to="/directory?category=Sweet%20Shops%20%26%20Bakeries" className="hover:text-white py-1 inline-block">Sweet Shops & Bakeries</Link></li>
+              <li><Link to="/directory?category=Religious%20Places" className="hover:text-white py-1 inline-block">Temples & Mosques</Link></li>
+              <li><Link to="/directory?category=Public%20Facilities" className="hover:text-white py-1 inline-block">Banks & Post Office</Link></li>
             </ul>
           </div>
 
@@ -2266,9 +2266,9 @@ export default function TownPortal() {
             <h3 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">
               Support & Legal
             </h3>
-            <ul className="space-y-1.5 text-xs">
-              <li><button onClick={() => setModalType("correction")} className="hover:text-white text-left cursor-pointer">Report Inaccurate Data</button></li>
-              <li><button onClick={() => setModalType("business")} className="hover:text-white text-left cursor-pointer">Suggest New Place</button></li>
+            <ul className="space-y-2 text-xs">
+              <li><button onClick={() => setModalType("correction")} className="hover:text-white text-left cursor-pointer py-1 inline-block">Report Inaccurate Data</button></li>
+              <li><button onClick={() => setModalType("business")} className="hover:text-white text-left cursor-pointer py-1 inline-block">Suggest New Place</button></li>
               <li><Link to="/admin/review" className="hover:text-amber-300 text-amber-400 font-bold flex items-center gap-1"><span>🛡️</span> Admin Review Desk</Link></li>
               <li><span className="text-slate-400">Postal Area: PIN 274401</span></li>
               <li><span className="text-slate-400">District: Kushinagar, UP</span></li>
@@ -2406,7 +2406,7 @@ export default function TownPortal() {
             {modalType === "event" && (
               <>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#168568] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#0D5E49] flex items-center justify-center">
                     <CalendarPlus className="w-5 h-5" />
                   </div>
                   <div>
@@ -2423,7 +2423,7 @@ export default function TownPortal() {
                       name="title"
                       required
                       placeholder="e.g. Free Blood Donation Camp, Sports Meet"
-                      className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#168568]"
+                      className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#0D5E49]"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -2433,7 +2433,7 @@ export default function TownPortal() {
                         type="date"
                         name="eventDate"
                         required
-                        className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#168568]"
+                        className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#0D5E49]"
                       />
                     </div>
                     <div>
@@ -2443,7 +2443,7 @@ export default function TownPortal() {
                         name="venue"
                         required
                         placeholder="e.g. College Ground, CHC"
-                        className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#168568]"
+                        className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#0D5E49]"
                       />
                     </div>
                   </div>
@@ -2454,12 +2454,12 @@ export default function TownPortal() {
                       name="organizer"
                       required
                       placeholder="Name of school, hospital, or trust"
-                      className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#168568]"
+                      className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#0D5E49]"
                     />
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-[#168568] hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition shadow-xs cursor-pointer"
+                    className="w-full bg-[#0D5E49] hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition shadow-xs cursor-pointer"
                   >
                     Broadcast Event
                   </button>

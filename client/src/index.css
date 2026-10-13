@@ -220,3 +220,9 @@
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
 }
+
+/* Off-screen DOM rendering optimization to slash initial Style & Layout computation */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+}
