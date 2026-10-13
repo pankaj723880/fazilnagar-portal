@@ -287,12 +287,19 @@ export default function AdminReview({ user: propUser }) {
         `/submissions/${id}/status`,
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
-      );
+      ).catch(async () => {
+        return await API.patch(
+          `/submissions/${id}`,
+          { status },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      });
       setSubmissions((prev) => prev.map((s) => (s._id === id ? { ...s, status } : s)));
       showToast(`Submission marked as ${status}.`);
+      if (typeof fetchData === "function") fetchData();
     } catch (err) {
       console.error("Submission status error:", err);
-      showToast("Failed to update status.");
+      showToast(err.response?.data?.message || "Failed to update status.");
     } finally {
       setActionLoadingId(null);
     }
@@ -309,9 +316,10 @@ export default function AdminReview({ user: propUser }) {
       });
       setSubmissions((prev) => prev.filter((s) => s._id !== id));
       showToast("Submission deleted permanently.");
+      if (typeof fetchData === "function") fetchData();
     } catch (err) {
       console.error("Delete submission error:", err);
-      showToast("Failed to delete submission.");
+      showToast(err.response?.data?.message || "Failed to delete submission.");
     } finally {
       setActionLoadingId(null);
     }

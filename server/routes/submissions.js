@@ -3,6 +3,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import mongoose from "mongoose";
 import Submission from "../models/Submission.js";
 import Place from "../models/Place.js";
 import News from "../models/News.js";
@@ -299,10 +300,10 @@ router.get("/places/admin", verifyToken, requireAdmin, async (req, res) => {
   }
 });
 
-// @route   PATCH /api/submissions/places/:id/review
+// @route   PATCH /api/submissions/places/:id/review or /api/submissions/places/admin/:id/review
 // @desc    Admin action on community place submission (approve, reject, edit, archive, restore)
 // @access  Private (Admin)
-router.patch("/places/:id/review", verifyToken, requireAdmin, async (req, res) => {
+router.patch(["/places/:id/review", "/places/admin/:id/review"], verifyToken, requireAdmin, async (req, res) => {
   try {
     const { action, rejectionReason, adminNotes, editedFields } = req.body;
     const submission = await Submission.findById(req.params.id);
@@ -493,14 +494,45 @@ router.get("/", verifyToken, requireAdmin, async (req, res) => {
   }
 });
 
-// @route   PATCH /api/submissions/:id
-// @desc    Admin legacy patch
-// @access  Private (Admin)
-router.patch("/:id", verifyToken, requireAdmin, async (req, res) => {
+// @route   GET /api/submissions/:id/status or /api/submissions/status/:id
+// @desc    Retrieve submission status by ID or Reference ID
+// @access  Public
+router.get(["/:id/status", "/status/:id"], async (req, res) => {
   try {
-    const { status, adminNotes } = req.body;
+    const { id } = req.params;
+    const query = mongoose.Types.ObjectId.isValid(id)
+      ? { _id: id }
+      : { referenceId: id };
 
-    if (!["approved", "rejected", "pending", "archived"].includes(status)) {
+    const submission = await Submission.findOne(query).select(
+      "title type category status referenceId createdAt townBoundaryStatus rejectionReason duplicateWarning"
+    );
+
+    if (!submission) {
+      return res.status(404).json({ message: "Submission not found." });
+    }
+
+    res.status(200).json({
+      success: true,
+      status: submission.status,
+      referenceId: submission.referenceId,
+      submission,
+    });
+  } catch (err) {
+    console.error("Get Submission Status Error:", err);
+    res.status(500).json({ message: "Failed to retrieve submission status." });
+  }
+});
+
+// @route   PATCH or PUT /api/submissions/:id/status or /api/submissions/:id
+// @desc    Admin updates submission status (approve, reject, resolve, archive)
+// @access  Private (Admin)
+const handleStatusUpdate = async (req, res) => {
+  try {
+    const { status, adminNotes, rejectionReason } = req.body;
+
+    const allowed = ["approved", "rejected", "pending", "archived", "resolved"];
+    if (!status || !allowed.includes(status)) {
       return res.status(400).json({ message: "Invalid status value." });
     }
 
@@ -509,19 +541,76 @@ router.patch("/:id", verifyToken, requireAdmin, async (req, res) => {
       return res.status(404).json({ message: "Submission not found." });
     }
 
-    submission.status = status;
+    const nextStatus = status === "resolved" ? "approved" : status;
+    submission.status = nextStatus;
     if (adminNotes !== undefined) submission.adminNotes = adminNotes;
+    if (rejectionReason !== undefined) submission.rejectionReason = rejectionReason;
+    submission.reviewedBy = req.user?.id || null;
+    submission.reviewedAt = new Date();
+
+    // If approving a community business or place, ensure Place record is published
+    let placeResult = null;
+    if (nextStatus === "approved" && (submission.type === "business" || submission.type === "community_place")) {
+      const lat = parseFloat(submission.latitude);
+      const lng = parseFloat(submission.longitude);
+
+      const placePayload = {
+        name: submission.title,
+        category: submission.category,
+        subcategory: submission.subcategory || "Community Listed",
+        description: submission.description || submission.details || "",
+        addressFull: submission.addressFull || submission.landmark || "Fazilnagar",
+        locality: submission.locality || "Fazilnagar",
+        streetOrLandmark: submission.streetOrLandmark || submission.landmark || submission.locality || "Fazilnagar",
+        latitude: !isNaN(lat) ? lat : 26.6827,
+        longitude: !isNaN(lng) ? lng : 84.0498,
+        mapsUrl: !isNaN(lat) && !isNaN(lng) ? `https://www.google.com/maps?q=${lat},${lng}` : "",
+        phone: submission.phone || "",
+        alternatePhone: submission.alternatePhone || "",
+        whatsapp: submission.whatsapp || "",
+        website: submission.website || "",
+        openingHours: submission.openingHours || "",
+        services: submission.services || [],
+        imageUrl: submission.primaryImage || "",
+        galleryUrls: submission.images || [],
+        ownerName: submission.ownerName || submission.submittedBy?.name || "",
+        submissionSource: "community",
+        submissionId: submission._id,
+        verificationStatus: "verified",
+        townBoundaryStatus: submission.townBoundaryStatus || "confirmed",
+        isPublished: true,
+        isArchived: false,
+        reviewNotes: `Approved by admin from submission ID: ${submission.referenceId || submission._id}`,
+      };
+
+      if (submission.placeId) {
+        placeResult = await Place.findByIdAndUpdate(submission.placeId, placePayload, { new: true });
+      } else {
+        placeResult = await Place.create(placePayload);
+        submission.placeId = placeResult._id;
+      }
+    } else if (nextStatus === "rejected" && submission.placeId) {
+      await Place.findByIdAndUpdate(submission.placeId, {
+        isPublished: false,
+        reviewNotes: `Rejected by admin: ${submission.rejectionReason || "Criteria not met"}`,
+      });
+    }
+
     await submission.save();
 
     res.status(200).json({
-      message: `Submission marked as ${status}.`,
+      message: `Submission marked as ${nextStatus}.`,
       submission,
+      place: placeResult,
     });
   } catch (err) {
     console.error("Update Submission Error:", err);
     res.status(500).json({ message: "Failed to update submission status." });
   }
-});
+};
+
+router.patch(["/:id/status", "/:id"], verifyToken, requireAdmin, handleStatusUpdate);
+router.put(["/:id/status", "/:id"], verifyToken, requireAdmin, handleStatusUpdate);
 
 // @route   DELETE /api/submissions/:id
 // @desc    Admin deletes a submission
