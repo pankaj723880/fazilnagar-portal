@@ -37,6 +37,7 @@ import {
   Calendar,
   Check,
   ChevronRight,
+  ChevronDown,
   RotateCcw,
   Maximize2,
   Minimize2,
@@ -147,7 +148,12 @@ export default function Directory({ user }) {
   const [viewMode, setViewMode] = useState(searchParams.get("view") || "map"); // "map" | "list"
   const [sortBy, setSortBy] = useState("name"); // "name" | "category"
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const [expandedEntityId, setExpandedEntityId] = useState(null);
   const [detailModalPlace, setDetailModalPlace] = useState(null);
+
+  const handleToggleAccordion = useCallback((entityId) => {
+    setExpandedEntityId((prevId) => (prevId === entityId ? null : entityId));
+  }, []);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAdminQueue, setShowAdminQueue] = useState(false);
   const [adminQueuePlaces, setAdminQueuePlaces] = useState([]);
@@ -1129,77 +1135,152 @@ export default function Directory({ user }) {
           </div>
         </div>
       ) : (
-        /* List View (Compact, Consistent Cards) */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {places.map((place, idx) => (
-            <div
-              key={`${place._id || place.id || 'place'}-${idx}`}
-              className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs hover:shadow-xs transition flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                    {place.category}
-                  </span>
-                  <span className="text-[10px] text-[#0D5E49] font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3 text-[#0D5E49]" /> Verified
-                  </span>
-                </div>
+        /* List View (Single-Open Accordion Layout) */
+        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs divide-y divide-slate-100 overflow-hidden">
+          {places.map((place) => {
+            const entityId = place._id || place.id || place.slug;
+            const isExpanded = expandedEntityId === entityId;
+            const isVerified = place.verificationStatus === "verified" || place.isVerified === true;
 
-                <h3 className="text-sm font-bold text-slate-900 leading-snug">{place.name}</h3>
-                {place.subcategory && (
-                  <p className="text-[11px] font-medium text-slate-500 mt-0.5">{place.subcategory}</p>
-                )}
-                {place.description && (
-                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed mt-1.5">
-                    {place.description}
-                  </p>
-                )}
-              </div>
+            return (
+              <div key={entityId} className="transition-colors">
+                {/* Collapsed State Row - Minimum 48px touch target */}
+                <button
+                  type="button"
+                  onClick={() => handleToggleAccordion(entityId)}
+                  className={`w-full text-left px-3.5 py-3.5 sm:px-4 sm:py-3.5 min-h-[48px] flex items-center justify-between gap-3 transition cursor-pointer select-none group ${
+                    isExpanded ? "bg-slate-50/90" : "bg-white hover:bg-slate-50/60"
+                  }`}
+                  aria-expanded={isExpanded}
+                  aria-controls={`details-${entityId}`}
+                >
+                  <div className="min-w-0 flex-1 flex items-center gap-2">
+                    <span
+                      className={`text-xs sm:text-sm truncate transition ${
+                        isExpanded
+                          ? "text-[#B8323C] font-bold"
+                          : "text-slate-900 font-semibold group-hover:text-[#B8323C]"
+                      }`}
+                    >
+                      {place.name}
+                    </span>
+                    {place.subcategory ? (
+                      <span className="hidden sm:inline-block text-[11px] text-slate-400 font-normal truncate shrink-0">
+                        • {place.subcategory}
+                      </span>
+                    ) : null}
+                  </div>
 
-              <div className="pt-2.5 border-t border-slate-100 mt-3 space-y-2">
-                <div className="text-[11px] text-slate-500 flex items-center gap-1.5 truncate">
-                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span className="truncate">{place.streetOrLandmark || place.addressFull}</span>
-                </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[10px] text-slate-400 font-medium hidden xs:inline-block max-w-[120px] truncate">
+                      {place.category}
+                    </span>
+                    <ChevronDown
+                      className={`w-4 h-4 text-slate-400 group-hover:text-slate-700 transition-transform duration-200 shrink-0 ${
+                        isExpanded ? "rotate-180 text-[#B8323C]" : ""
+                      }`}
+                    />
+                  </div>
+                </button>
 
-                {place.openingHours && (
-                  <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span className="truncate">{place.openingHours}</span>
+                {/* Expanded State Details Panel - Directly underneath row */}
+                {isExpanded && (
+                  <div
+                    id={`details-${entityId}`}
+                    className="bg-slate-50/90 border-t border-slate-100 px-3.5 py-3.5 sm:px-4 sm:py-4 space-y-2.5 transition-all duration-200 animate-fade-in"
+                  >
+                    {/* Category tag & Verified badge */}
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-50 text-[#B8323C] border border-red-100">
+                          {place.category}
+                        </span>
+                        {place.subcategory && (
+                          <span className="text-[10px] font-medium text-slate-600 bg-slate-200/60 px-2 py-0.5 rounded">
+                            {place.subcategory}
+                          </span>
+                        )}
+                      </div>
+
+                      {isVerified && (
+                        <span className="text-[10px] text-[#0D5E49] font-bold flex items-center gap-1 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                          <CheckCircle2 className="w-3 h-3 text-[#0D5E49]" /> Verified
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Description */}
+                    {place.description && (
+                      <p className="text-xs text-slate-600 leading-relaxed bg-white/80 p-2.5 rounded-xl border border-slate-200/60">
+                        {place.description}
+                      </p>
+                    )}
+
+                    {/* Full Address */}
+                    {(place.addressFull || place.streetOrLandmark) && (
+                      <div className="flex items-start gap-1.5 text-xs text-slate-700">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                        <span className="leading-snug">
+                          {place.addressFull || place.streetOrLandmark}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Opening Hours & Phone */}
+                    <div className="flex flex-wrap gap-y-1.5 gap-x-4 text-xs text-slate-600">
+                      {place.openingHours && (
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span>{place.openingHours}</span>
+                        </div>
+                      )}
+                      {place.phone && (
+                        <div className="flex items-center gap-1.5">
+                          <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <a
+                            href={`tel:${place.phone.replace(/\s+/g, "")}`}
+                            className="text-[#0D5E49] hover:underline font-bold"
+                          >
+                            {place.phone}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions: Call, Directions, More Info Modal */}
+                    <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200/70">
+                      {place.phone && (
+                        <a
+                          href={`tel:${place.phone.replace(/\s+/g, "")}`}
+                          className="bg-[#18232E] hover:bg-slate-800 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl transition flex items-center gap-1 shadow-2xs"
+                        >
+                          <Phone className="w-3 h-3" />
+                          <span>Call</span>
+                        </a>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => openGoogleMapsDirections(place)}
+                        className="bg-[#0D5E49] hover:bg-emerald-800 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl transition flex items-center gap-1 shadow-2xs cursor-pointer"
+                      >
+                        <Navigation className="w-3 h-3" />
+                        <span>Directions</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setDetailModalPlace(place)}
+                        className="text-xs text-slate-500 hover:text-slate-800 font-semibold px-2 py-1 transition cursor-pointer ml-auto"
+                      >
+                        More Info
+                      </button>
+                    </div>
                   </div>
                 )}
-
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  {place.phone ? (
-                    <a
-                      href={`tel:${place.phone.replace(/\s+/g, "")}`}
-                      className="bg-[#18232E] hover:bg-slate-800 text-white font-bold text-xs py-1.5 rounded-xl transition text-center flex items-center justify-center gap-1"
-                    >
-                      <Phone className="w-3 h-3" />
-                      <span>Call</span>
-                    </a>
-                  ) : (
-                    <button
-                      onClick={() => setDetailModalPlace(place)}
-                      className="text-center text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 font-semibold py-1.5 rounded-xl transition"
-                    >
-                      Details
-                    </button>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => openGoogleMapsDirections(place)}
-                    className="bg-[#0D5E49] hover:bg-emerald-800 text-white font-bold text-xs py-1.5 rounded-xl transition text-center flex items-center justify-center gap-1 shadow-2xs cursor-pointer"
-                  >
-                    <Navigation className="w-3 h-3" />
-                    <span>Directions</span>
-                  </button>
-                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
