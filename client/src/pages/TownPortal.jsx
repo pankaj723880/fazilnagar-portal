@@ -700,22 +700,44 @@ export default function TownPortal() {
                 key={img.id || idx}
                 className="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-100 z-10"
               >
-                <img
-                  src={img.src}
-                  alt={img.title}
-                  fetchPriority={idx === 0 ? "high" : "auto"}
-                  loading={idx === 0 ? "eager" : "lazy"}
-                  decoding={idx === 0 ? "sync" : "async"}
-                  width="1200"
-                  height="600"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    if (img.fallback && e.currentTarget.src !== img.fallback) {
-                      e.currentTarget.src = img.fallback;
-                    }
-                  }}
-                  className="w-full h-full object-cover object-center animate-ken-burns scale-105 transition-transform duration-1000 ease-out"
-                />
+                {idx === 0 ? (
+                  <picture>
+                    <source media="(max-width: 640px)" srcSet="/images/hero/mahaparinirvana-temple-mobile.webp" type="image/webp" />
+                    <img
+                      src={img.src}
+                      alt={img.title}
+                      fetchPriority="high"
+                      loading="eager"
+                      decoding="sync"
+                      width="719"
+                      height="916"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        if (img.fallback && e.currentTarget.src !== img.fallback) {
+                          e.currentTarget.src = img.fallback;
+                        }
+                      }}
+                      className="w-full h-full object-cover object-center animate-ken-burns scale-105 transition-transform duration-1000 ease-out"
+                    />
+                  </picture>
+                ) : (
+                  <img
+                    src={img.src}
+                    alt={img.title}
+                    fetchPriority="auto"
+                    loading="lazy"
+                    decoding="async"
+                    width="1200"
+                    height="600"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      if (img.fallback && e.currentTarget.src !== img.fallback) {
+                        e.currentTarget.src = img.fallback;
+                      }
+                    }}
+                    className="w-full h-full object-cover object-center animate-ken-burns scale-105 transition-transform duration-1000 ease-out"
+                  />
+                )}
               </div>
             );
           })}
