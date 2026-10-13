@@ -112,10 +112,10 @@ const VERIFIED_TOWN_PLACES = [
     nameHindi: "सामुदायिक स्वास्थ्य केंद्र (सीएचसी) फाजिलनगर",
     category: "Hospitals & Clinics",
     subcategory: "Public Hospital",
-    address: "Hospital Road, Fazilnagar - 274401",
-    landmark: "Koilasawa Road Campus, Fazilnagar",
-    lat: 26.6806509,
-    lng: 84.0536484,
+    address: "Hospital Road (Sarkari Hospital Campus), Fazilnagar - 274401",
+    landmark: "Hospital Road Campus, Near The Hermitage School, Fazilnagar",
+    lat: 26.6808,
+    lng: 84.0472,
     hours: "24x7 Emergency Services",
     phone: "+91 5564 222102",
     desc: "30-bed public healthcare institution providing primary medical, emergency ambulance, and maternal health services.",
@@ -1197,152 +1197,106 @@ export default function TownPortal() {
                 )}
               </div>
 
-              {/* Synchronized Detail Card OR Category Places List */}
-              {selectedPlace ? (
-                <div
-                  key={selectedPlace.id || selectedPlace._id}
-                  className="bg-white rounded-2xl p-4 sm:p-5 border border-[#E1E6EA] shadow-xs flex flex-col justify-between animate-fade-in-up transition-all duration-300 min-h-[360px] sm:min-h-[440px]"
-                >
-                  <div>
-                    {/* Back to List Navigation */}
-                    <div className="flex items-center justify-between pb-3 border-b border-[#E1E6EA] mb-3">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedPlace(null)}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#18232E] hover:text-[#B8323C] bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition cursor-pointer"
-                      >
-                        <ArrowLeft className="w-3.5 h-3.5" />
-                        <span>Back to {currentMapTabLabel} ({filteredMapPlaces.length})</span>
-                      </button>
-                      <span className="text-[11px] font-semibold text-[#0D5E49] flex items-center gap-1">
-                        <Check className="w-3.5 h-3.5" /> Town Verified
+              {/* Category Places List View (Maintains list visible at all times per user requirement) */}
+              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#E1E6EA] shadow-xs flex flex-col justify-between h-full min-h-[360px] sm:min-h-[440px] animate-fade-in-up">
+                <div className="flex flex-col h-full">
+                  <div className="pb-3 border-b border-[#E1E6EA] mb-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold text-[#18232E] flex items-center gap-1.5">
+                        <Layers className="w-4 h-4 text-[#B8323C]" />
+                        <span>{currentMapTabLabel}</span>
+                      </span>
+                      <span className="text-[11px] font-bold bg-slate-100 text-[#18232E] px-2.5 py-0.5 rounded-full">
+                        {filteredMapPlaces.length} places
                       </span>
                     </div>
-
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded bg-red-50 text-[#B8323C]">
-                        {selectedPlace.category}
-                      </span>
-                      {selectedPlace.subcategory && (
-                        <span className="text-[10px] font-semibold text-[#647180]">
-                          {selectedPlace.subcategory}
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className="text-lg font-bold text-[#18232E] mb-1 font-heading">{selectedPlace.name}</h3>
-                    {selectedPlace.nameHindi && (
-                      <p className="text-xs text-[#647180] mb-3">{selectedPlace.nameHindi}</p>
-                    )}
-
-                    <div className="space-y-2 text-xs text-[#647180] py-3 border-y border-[#E1E6EA]">
-                      <div className="flex items-start gap-2">
-                        <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
-                        <span>{selectedPlace.address || selectedPlace.landmark}</span>
-                      </div>
-                      {selectedPlace.hours && (
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                          <span>{selectedPlace.hours}</span>
-                        </div>
-                      )}
-                      {selectedPlace.phone && (
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                          <span>{selectedPlace.phone}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <p className="text-xs text-slate-600 mt-3 leading-relaxed">{selectedPlace.desc}</p>
+                    <p className="text-[11px] text-[#647180] mt-1">
+                      Click any place below to zoom & highlight pin on map:
+                    </p>
                   </div>
 
-                  <div className="pt-4 border-t border-[#E1E6EA] mt-4 space-y-2">
-                    {selectedPlace.phone && (
-                      <a
-                        href={`tel:${selectedPlace.phone.replace(/\s+/g, "")}`}
-                        className="w-full inline-flex items-center justify-center gap-2 bg-[#18232E] hover:bg-slate-800 text-white font-bold text-xs py-2 rounded-xl transition"
-                      >
-                        <Phone className="w-3.5 h-3.5" />
-                        <span>Call ({selectedPlace.phone})</span>
-                      </a>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => openGoogleMapsDirections(selectedPlace)}
-                      className="w-full inline-flex items-center justify-center gap-2 bg-[#0D5E49] hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-xs cursor-pointer"
-                    >
-                      <Navigation className="w-3.5 h-3.5" />
-                      <span>Get Directions in Google Maps</span>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                /* Category Places List View */
-                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#E1E6EA] shadow-xs flex flex-col justify-between h-full min-h-[360px] sm:min-h-[440px] animate-fade-in-up">
-                  <div className="flex flex-col h-full">
-                    <div className="pb-3 border-b border-[#E1E6EA] mb-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-extrabold text-[#18232E] flex items-center gap-1.5">
-                          <Layers className="w-4 h-4 text-[#B8323C]" />
-                          <span>{currentMapTabLabel}</span>
-                        </span>
-                        <span className="text-[11px] font-bold bg-slate-100 text-[#18232E] px-2.5 py-0.5 rounded-full">
-                          {filteredMapPlaces.length} places
-                        </span>
+                  <div className="space-y-2 overflow-y-auto max-h-[360px] lg:max-h-[420px] pr-1 custom-scrollbar flex-1">
+                    {filteredMapPlaces.length === 0 ? (
+                      <div className="text-center py-10 text-xs text-[#647180]">
+                        No verified places found in this category.
                       </div>
-                      <p className="text-[11px] text-[#647180] mt-1">
-                        Click any place below to see details & map location:
-                      </p>
-                    </div>
-
-                    <div className="space-y-2 overflow-y-auto max-h-[360px] pr-1 custom-scrollbar flex-1">
-                      {filteredMapPlaces.length === 0 ? (
-                        <div className="text-center py-10 text-xs text-[#647180]">
-                          No verified places found in this category.
-                        </div>
-                      ) : (
-                        filteredMapPlaces.map((p) => (
+                    ) : (
+                      filteredMapPlaces.map((p) => {
+                        const isSelected = selectedPlace && (
+                          (selectedPlace.id && (selectedPlace.id === p.id || selectedPlace.id === p._id)) ||
+                          (selectedPlace._id && (selectedPlace._id === p._id || selectedPlace._id === p.id)) ||
+                          selectedPlace.name === p.name
+                        );
+                        return (
                           <div
                             key={p.id || p._id}
                             onClick={() => {
                               setSelectedPlace(p);
-                              if (mapInstanceRef.current && p.lat && p.lng) {
-                                mapInstanceRef.current.flyTo([p.lat, p.lng], 16, { duration: 1 });
-                              }
                             }}
-                            className="p-3 rounded-xl border border-[#E1E6EA] hover:border-[#B8323C] bg-[#F5F7F8] hover:bg-white transition cursor-pointer group flex items-start justify-between gap-2 shadow-2xs hover:shadow-xs"
+                            className={`p-3 rounded-xl border transition cursor-pointer group flex items-start justify-between gap-2 shadow-2xs ${
+                              isSelected
+                                ? "border-blue-500 bg-blue-50/70 shadow-xs ring-2 ring-blue-500/30"
+                                : "border-[#E1E6EA] hover:border-[#B8323C] bg-[#F5F7F8] hover:bg-white"
+                            }`}
                           >
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-red-50 text-[#B8323C]">
+                                <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded ${
+                                  isSelected ? "bg-blue-100 text-blue-800" : "bg-red-50 text-[#B8323C]"
+                                }`}>
                                   {p.badge || p.subcategory || p.category}
                                 </span>
-                                {p.phone && (
-                                  <span className="text-[9px] text-[#0D5E49] font-semibold">
-                                    Verified
+                                {isSelected ? (
+                                  <span className="text-[9px] text-blue-700 bg-white/90 px-1.5 py-0.2 rounded-full border border-blue-200 font-bold flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>
+                                    <span>Pinned & Zoomed</span>
                                   </span>
+                                ) : (
+                                  p.phone && (
+                                    <span className="text-[9px] text-[#0D5E49] font-semibold">
+                                      Verified
+                                    </span>
+                                  )
                                 )}
                               </div>
-                              <h3 className="text-sm font-bold text-[#18232E] group-hover:text-[#B8323C] transition mt-1 truncate">
+                              <h3 className={`text-sm font-bold transition mt-1 truncate ${
+                                isSelected ? "text-blue-900" : "text-[#18232E] group-hover:text-[#B8323C]"
+                              }`}>
                                 {p.name}
                               </h3>
                               {p.nameHindi && (
                                 <p className="text-[10px] text-[#647180] truncate">{p.nameHindi}</p>
                               )}
                               <p className="text-[11px] text-[#647180] flex items-center gap-1 mt-1 truncate">
-                                <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                                <MapPin className={`w-3 h-3 shrink-0 ${isSelected ? "text-blue-600 animate-bounce" : "text-slate-400"}`} />
                                 <span>{p.landmark || p.address}</span>
                               </p>
                             </div>
-                            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#B8323C] group-hover:translate-x-0.5 transition shrink-0 mt-3" />
+                            <div className="shrink-0 pt-2 flex items-center gap-1">
+                              {isSelected && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openGoogleMapsDirections(p);
+                                  }}
+                                  className="text-[10px] font-bold text-white bg-[#0D5E49] hover:bg-emerald-700 px-2 py-1 rounded-lg shadow-2xs transition"
+                                  title="Get Google Maps Directions"
+                                >
+                                  🧭 Go
+                                </button>
+                              )}
+                              <ChevronRight className={`w-4 h-4 transition shrink-0 ${
+                                isSelected ? "text-blue-600" : "text-slate-400 group-hover:text-[#B8323C] group-hover:translate-x-0.5"
+                              }`} />
+                            </div>
                           </div>
-                        ))
-                      )}
-                    </div>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           ) : (
             /* Map Alternative List View */

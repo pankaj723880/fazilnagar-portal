@@ -74,8 +74,13 @@ test("3. Canonical ground truth coordinates for key anchor institutions", () => 
     },
     {
       slug: "community-health-centre-chc-fazilnagar",
-      expectedLat: 26.6806509,
-      expectedLng: 84.0536484,
+      expectedLat: 26.6808,
+      expectedLng: 84.0472,
+    },
+    {
+      slug: "indian-oil-petrol-pump-fazilnagar",
+      expectedLat: 26.6744,
+      expectedLng: 84.0501,
     },
     {
       slug: "pawanagar-mahavir-digambar-jain-mandir",
@@ -144,7 +149,7 @@ test("5. Directions URL uses exact canonical coordinates of the target entity", 
   const originStr = "26.6822,84.0503"; // User device GPS sample
   const url = `https://www.google.com/maps/dir/?api=1&origin=${originStr}&destination=${destStr}&travelmode=driving`;
 
-  assert.ok(url.includes("destination=26.6806509,84.0536484"));
+  assert.ok(url.includes("destination=26.6808,84.0472"));
   assert.ok(url.includes("origin=26.6822,84.0503"));
   assert.ok(!url.includes("26.6827,84.0498"), "Directions must not silently fall back to town center datum");
 });

@@ -275,23 +275,26 @@ export default function Directory({ user }) {
     }
   };
 
-  // Custom vector SVG marker icon
+  // Custom vector SVG marker icon (Standard Red vs Active Highlight Blue)
   const createMarkerIcon = (isSelected) => {
-    const color = isSelected ? "#B8323C" : "#0D5E49";
-    const size = isSelected ? 34 : 26;
-    const height = isSelected ? 42 : 34;
+    const color = isSelected ? "#2563EB" : "#B8323C";
+    const size = isSelected ? 34 : 28;
+    const height = isSelected ? 44 : 36;
+    const strokeWidth = isSelected ? 2.2 : 1.8;
+    const shadow = isSelected ? "0 4px 10px rgba(37,99,235,0.5)" : "0 2px 4px rgba(0,0,0,0.35)";
+
     const svgHtml = `
-      <div role="img" aria-label="Map location pin" style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${height}px;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35));transition:transform 0.2s;">
-        <svg viewBox="0 0 24 24" width="${size}" height="${height}" fill="${color}" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <div role="img" aria-label="Map location pin" style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${height}px;cursor:pointer;filter:drop-shadow(${shadow});transition:transform 0.2s;">
+        <svg viewBox="0 0 24 24" width="${size}" height="${height}" fill="${color}" stroke="#ffffff" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round">
           <title>Location Pin</title>
           <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-          <circle cx="12" cy="9" r="2.8" fill="#ffffff" />
+          <circle cx="12" cy="9" r="${isSelected ? 3.2 : 2.8}" fill="#ffffff" />
         </svg>
       </div>
     `;
     return L.divIcon({
       html: svgHtml,
-      className: "fazilnagar-custom-pin",
+      className: isSelected ? "fazilnagar-custom-pin-selected" : "fazilnagar-custom-pin",
       iconSize: [size, height],
       iconAnchor: [size / 2, height],
       popupAnchor: [0, -height + 2],
@@ -326,15 +329,13 @@ export default function Directory({ user }) {
     if (!mapInstanceRef.current) {
       const townLat = 26.6827;
       const townLng = 84.0498;
-      const isDesktop = window.innerWidth >= 1024;
-
       const map = L.map(mapContainerRef.current, {
         center: [townLat, townLng],
         zoom: 15,
-        // On mobile, dragging and touchZoom are disabled by default to fix the scroll conflict
-        dragging: isDesktop,
-        touchZoom: isDesktop,
-        scrollWheelZoom: isDesktop,
+        // Map scrolling and gestures locked by default on all devices until activated by click
+        dragging: false,
+        touchZoom: false,
+        scrollWheelZoom: false,
       });
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -375,13 +376,12 @@ export default function Directory({ user }) {
     };
   }, []);
 
-  // Update map interaction state on mobile (Part B: Gesture Control)
+  // Update map interaction state (Lock map until user clicks on it)
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
-    const isDesktop = window.innerWidth >= 1024;
 
-    if (isDesktop || isMapActive) {
+    if (isMapActive) {
       map.dragging.enable();
       map.touchZoom.enable();
       map.scrollWheelZoom.enable();
@@ -542,14 +542,20 @@ export default function Directory({ user }) {
     if (mapInstanceRef.current && place.latitude && place.longitude) {
       const lat = parseFloat(place.latitude);
       const lng = parseFloat(place.longitude);
-      mapInstanceRef.current.setView([lat, lng], 16, { animate: true });
+      // Instant little zoom to 17 and focus on pinned location
+      mapInstanceRef.current.setView([lat, lng], 17, { animate: true });
 
       markersRef.current.forEach((m) => {
         if (m.getLatLng) {
           const pos = m.getLatLng();
           const isMatch = Math.abs(pos.lat - lat) < 0.0001 && Math.abs(pos.lng - lng) < 0.0001;
           if (m.setIcon) m.setIcon(createMarkerIcon(isMatch));
-          if (isMatch && m.openPopup) m.openPopup();
+          if (isMatch) {
+            if (m.setZIndexOffset) m.setZIndexOffset(1000);
+            if (m.openPopup) m.openPopup();
+          } else {
+            if (m.setZIndexOffset) m.setZIndexOffset(0);
+          }
         }
       });
     }
@@ -926,9 +932,16 @@ export default function Directory({ user }) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 sm:gap-5">
           {/* Leaflet Map with Gesture Control (Part B Fix) */}
           <div
-            className={`lg:col-span-2 bg-slate-50 rounded-2xl overflow-hidden border border-slate-200/90 shadow-sm relative transition-all duration-300 ${
+            className={`lg:col-span-2 bg-slate-50 rounded-2xl overflow-hidden border border-slate-200/90 shadow-sm relative transition-all duration-300 group ${
               isMapExpanded ? "h-[460px] sm:h-[520px] lg:h-[620px]" : "h-[270px] sm:h-[380px] lg:h-[560px]"
             }`}
+            onClick={() => {
+              if (!isMapActive) setIsMapActive(true);
+            }}
+            onMouseLeave={() => {
+              // Disengage scroll wheel when mouse leaves map container to allow page scrolling
+              if (isMapActive) setIsMapActive(false);
+            }}
           >
             <div
               ref={mapContainerRef}
@@ -943,11 +956,14 @@ export default function Directory({ user }) {
               <span>26.6827° N, 84.0498° E (Fazilnagar)</span>
             </div>
 
-            {/* Mobile Map Expand/Collapse Toggle */}
+            {/* Mobile/Desktop Map Expand/Collapse Toggle */}
             <button
               type="button"
-              onClick={() => setIsMapExpanded((prev) => !prev)}
-              className="absolute top-2.5 right-2.5 z-20 bg-white/95 hover:bg-white text-slate-700 hover:text-slate-900 p-1.5 rounded-lg border border-slate-200 shadow-2xs text-[10px] font-bold flex items-center gap-1 transition"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMapExpanded((prev) => !prev);
+              }}
+              className="absolute top-2.5 right-2.5 z-20 bg-white/95 hover:bg-white text-slate-700 hover:text-slate-900 p-1.5 rounded-lg border border-slate-200 shadow-2xs text-[10px] font-bold flex items-center gap-1 transition cursor-pointer"
               title={isMapExpanded ? "Compact map" : "Expand map"}
             >
               {isMapExpanded ? (
@@ -963,30 +979,36 @@ export default function Directory({ user }) {
               )}
             </button>
 
-            {/* Mobile Interaction Mode Activator Overlay (Part B Fix) */}
+            {/* Interaction Mode Activator Overlay (Locks scroll until clicked on both mobile & desktop) */}
             {!isMapActive && (
-              <div className="absolute inset-x-0 bottom-3 z-20 flex justify-center pointer-events-none lg:hidden">
+              <div className="absolute inset-x-0 bottom-3 z-20 flex justify-center pointer-events-none">
                 <button
                   type="button"
-                  onClick={() => setIsMapActive(true)}
-                  className="pointer-events-auto bg-[#18232E]/95 hover:bg-[#18232E] text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-lg border border-slate-700/80 backdrop-blur-md flex items-center gap-1.5 active:scale-95 transition"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsMapActive(true);
+                  }}
+                  className="pointer-events-auto bg-[#18232E]/95 hover:bg-[#18232E] text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-lg border border-slate-700/80 backdrop-blur-md flex items-center gap-1.5 active:scale-95 transition cursor-pointer"
                 >
                   <Compass className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Tap to interact with map</span>
+                  <span>Click map to interact & zoom</span>
                 </button>
               </div>
             )}
 
-            {/* Mobile Active Interaction Badge: Allows User to Lock Map & Resume Page Scrolling */}
+            {/* Active Interaction Badge: Allows User to Lock Map & Resume Page Scrolling */}
             {isMapActive && (
-              <div className="absolute top-11 right-2.5 z-20 lg:hidden">
+              <div className="absolute top-11 right-2.5 z-20">
                 <button
                   type="button"
-                  onClick={() => setIsMapActive(false)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsMapActive(false);
+                  }}
                   className="bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg border border-emerald-400 backdrop-blur-md flex items-center gap-1 active:scale-95 transition cursor-pointer"
                 >
                   <Lock className="w-3 h-3" />
-                  <span>Lock map to scroll</span>
+                  <span>Lock map to scroll page</span>
                 </button>
               </div>
             )}
