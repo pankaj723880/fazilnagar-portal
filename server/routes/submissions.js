@@ -59,48 +59,67 @@ const PROTECTED_CATEGORIES = [
 // @access  Public
 router.post(
   "/upload-images",
-  upload.fields([
-    { name: "primaryImage", maxCount: 1 },
-    { name: "additionalImages", maxCount: 4 },
-  ]),
+  (req, res, next) => {
+    upload.any()(req, res, (err) => {
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({ message: `Upload error: ${err.message}` });
+      } else if (err) {
+        return res.status(400).json({ message: err.message || "Failed to process photo upload." });
+      }
+      next();
+    });
+  },
   async (req, res) => {
     try {
-      if (!req.files || !req.files.primaryImage || req.files.primaryImage.length === 0) {
-        return res.status(400).json({ message: "Primary photo is required." });
+      const files = req.files || [];
+      if (!files || files.length === 0) {
+        return res.status(400).json({ message: "No photos were received. Please select an image." });
       }
 
-      const backendBase = (process.env.BACKEND_URL || "").replace(/\/+$/, "");
+      const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal.onrender.com").replace(/\/+$/, "");
 
       const getFileUrl = async (file) => {
         try {
-          const fileBuffer = fs.readFileSync(file.path);
-          const driveResult = await uploadMediaToDrive({
-            buffer: fileBuffer,
-            originalName: file.originalname,
-            mimeType: file.mimetype,
-          });
-          if (driveResult?.mediaDoc?.deliveryUrl) {
-            return driveResult.mediaDoc.deliveryUrl;
+          if (file?.path && fs.existsSync(file.path)) {
+            const fileBuffer = fs.readFileSync(file.path);
+            const driveResult = await uploadMediaToDrive({
+              buffer: fileBuffer,
+              originalName: file.originalname,
+              mimeType: file.mimetype,
+            });
+            if (driveResult?.mediaDoc?.deliveryUrl) {
+              return driveResult.mediaDoc.deliveryUrl;
+            }
           }
-        } catch (_) {
-          // Google Drive offline or unauthenticated; fallback to local URL
+        } catch (driveErr) {
+          console.warn("[Upload] Drive upload fallback to local:", driveErr.message);
         }
         return `${backendBase}/uploads/community/${file.filename}`;
       };
 
-      const primaryFile = req.files.primaryImage[0];
+      // Identify primary image: by field name or first file
+      let primaryFile = files.find(
+        (f) => f.fieldname === "primaryImage" || f.fieldname === "primary"
+      );
+      if (!primaryFile) {
+        primaryFile = files[0];
+      }
+
       const primaryImageUrl = await getFileUrl(primaryFile);
 
+      // Remaining files are gallery / additional images
+      const additionalFiles = files.filter((f) => f !== primaryFile);
       const additionalImageUrls = [];
-      if (req.files.additionalImages && req.files.additionalImages.length > 0) {
-        for (const f of req.files.additionalImages) {
-          const url = await getFileUrl(f);
-          additionalImageUrls.push(url);
-        }
+      for (const f of additionalFiles) {
+        const url = await getFileUrl(f);
+        additionalImageUrls.push(url);
       }
 
       res.status(200).json({
+        success: true,
+        primaryImage: primaryImageUrl,
         primaryImageUrl,
+        images: additionalImageUrls,
         additionalImageUrls,
         message: "Images uploaded successfully.",
       });

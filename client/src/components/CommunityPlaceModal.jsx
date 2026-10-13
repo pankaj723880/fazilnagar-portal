@@ -395,21 +395,35 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
 
     try {
       // 1. Upload Images to Backend
-      const uploadFormData = new FormData();
-      if (primaryFile) {
-        uploadFormData.append("images", primaryFile);
+      let uploadedPrimary = primaryPreview || "";
+      let uploadedGallery = [];
+
+      if (primaryFile || galleryFiles.length > 0) {
+        const uploadFormData = new FormData();
+        if (primaryFile) {
+          uploadFormData.append("primaryImage", primaryFile);
+          uploadFormData.append("images", primaryFile);
+        }
+        galleryFiles.forEach((file) => {
+          uploadFormData.append("additionalImages", file);
+          uploadFormData.append("images", file);
+        });
+
+        setUploadProgress(35);
+        const uploadRes = await API.post("/submissions/upload-images", uploadFormData, {
+          headers: { "Content-Type": "multipart/form-data" },
+          timeout: 30000,
+        });
+
+        uploadedPrimary =
+          uploadRes.data?.primaryImage ||
+          uploadRes.data?.primaryImageUrl ||
+          uploadedPrimary;
+        uploadedGallery =
+          uploadRes.data?.images ||
+          uploadRes.data?.additionalImageUrls ||
+          [];
       }
-      galleryFiles.forEach((file) => {
-        uploadFormData.append("images", file);
-      });
-
-      setUploadProgress(35);
-      const uploadRes = await API.post("/submissions/upload-images", uploadFormData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      const uploadedPrimary = uploadRes.data?.primaryImage || primaryPreview || "";
-      const uploadedGallery = uploadRes.data?.images || [];
       setUploadProgress(70);
 
       // 2. Submit Place Data
