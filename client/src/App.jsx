@@ -1,27 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Routes, Route, NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 
-// Existing Page Imports
-import News from "./pages/News";
-import ReelsNewsFeed from "./pages/ReelsNewsFeed";
-import EmergencyHub from "./pages/EmergencyHub";
-import HealthcareDirectory from "./pages/HealthcareDirectory";
-import EducationHub from "./pages/EducationHub";
-import JobsAndBusiness from "./pages/JobsAndBusiness";
-import Tourism from "./pages/Tourism";
-import FoodGuide from "./pages/FoodGuide";
-import Marketplace from "./pages/Marketplace";
-import Transportation from "./pages/Transportation";
-import GovtServices from "./pages/GovtServices";
-
-// New Auth & Admin Page Imports
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import CreateNews from "./pages/CreateNews";
+// Primary Homepage Import (Synchronous for fast first render)
 import TownPortal from "./pages/TownPortal";
-import Directory from "./pages/Directory";
-import About from "./pages/About";
-import AdminReview from "./pages/AdminReview";
+
+// Lazy-Loaded Route Components (Code-split to reduce initial unused JS)
+const News = lazy(() => import("./pages/News"));
+const ReelsNewsFeed = lazy(() => import("./pages/ReelsNewsFeed"));
+const EmergencyHub = lazy(() => import("./pages/EmergencyHub"));
+const HealthcareDirectory = lazy(() => import("./pages/HealthcareDirectory"));
+const EducationHub = lazy(() => import("./pages/EducationHub"));
+const JobsAndBusiness = lazy(() => import("./pages/JobsAndBusiness"));
+const Tourism = lazy(() => import("./pages/Tourism"));
+const FoodGuide = lazy(() => import("./pages/FoodGuide"));
+const Marketplace = lazy(() => import("./pages/Marketplace"));
+const Transportation = lazy(() => import("./pages/Transportation"));
+const GovtServices = lazy(() => import("./pages/GovtServices"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const CreateNews = lazy(() => import("./pages/CreateNews"));
+const Directory = lazy(() => import("./pages/Directory"));
+const About = lazy(() => import("./pages/About"));
+const AdminReview = lazy(() => import("./pages/AdminReview"));
 import InstallButton from "./components/InstallButton";
 import DirectionsModal from "./components/DirectionsModal";
 import { GlobalFloatingAndStickyAds } from "./components/AdvertisementSlot";
@@ -540,36 +540,45 @@ export default function App() {
         }`}
       >
         <div key={location.pathname} className={isNewsPage ? "h-full w-full" : "animate-page-enter"}>
-          <Routes>
-            <Route path="/" element={<TownPortal />} />
-            <Route path="/news" element={<ReelsNewsFeed />} />
-            <Route path="/local-updates" element={<ReelsNewsFeed />} />
-            <Route path="/directory/news" element={<ReelsNewsFeed />} />
-            <Route path="/news/classic" element={<News />} />
-            <Route path="/directory" element={<Directory user={user} />} />
-            <Route path="/local-directory" element={<Directory user={user} />} />
-            <Route path="/town" element={<TownPortal />} />
-            <Route path="/portal" element={<TownPortal />} />
-            <Route path="/fazilnagar" element={<TownPortal />} />
-            <Route path="/emergency" element={<EmergencyHub />} />
-            <Route path="/healthcare" element={<HealthcareDirectory />} />
-            <Route path="/education" element={<EducationHub />} />
-            <Route path="/jobs" element={<JobsAndBusiness />} />
-            <Route path="/tourism" element={<Tourism />} />
-            <Route path="/food" element={<FoodGuide />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/transport" element={<Transportation />} />
-            <Route path="/govt" element={<GovtServices />} />
-            <Route path="/about" element={<About />} />
+          <Suspense
+            fallback={
+              <div className="min-h-[40vh] flex flex-col items-center justify-center p-8 gap-3">
+                <div className="w-8 h-8 border-3 border-[#B8323C] border-t-transparent rounded-full animate-spin" />
+                <span className="text-xs text-slate-500 font-medium">Loading civic section...</span>
+              </div>
+            }
+          >
+            <Routes>
+              <Route path="/" element={<TownPortal />} />
+              <Route path="/news" element={<ReelsNewsFeed />} />
+              <Route path="/local-updates" element={<ReelsNewsFeed />} />
+              <Route path="/directory/news" element={<ReelsNewsFeed />} />
+              <Route path="/news/classic" element={<News />} />
+              <Route path="/directory" element={<Directory user={user} />} />
+              <Route path="/local-directory" element={<Directory user={user} />} />
+              <Route path="/town" element={<TownPortal />} />
+              <Route path="/portal" element={<TownPortal />} />
+              <Route path="/fazilnagar" element={<TownPortal />} />
+              <Route path="/emergency" element={<EmergencyHub />} />
+              <Route path="/healthcare" element={<HealthcareDirectory />} />
+              <Route path="/education" element={<EducationHub />} />
+              <Route path="/jobs" element={<JobsAndBusiness />} />
+              <Route path="/tourism" element={<Tourism />} />
+              <Route path="/food" element={<FoodGuide />} />
+              <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/transport" element={<Transportation />} />
+              <Route path="/govt" element={<GovtServices />} />
+              <Route path="/about" element={<About />} />
 
-            {/* Auth & Admin Routes */}
-            <Route path="/login" element={<Login setUser={setUser} />} />
-            <Route path="/register" element={<Register setUser={setUser} />} />
-            <Route path="/create-news" element={<CreateNews user={user} />} />
-            <Route path="/upload" element={<CreateNews user={user} />} />
-            <Route path="/admin/review" element={<AdminReview user={user} />} />
-            <Route path="/admin" element={<AdminReview user={user} />} />
-          </Routes>
+              {/* Auth & Admin Routes */}
+              <Route path="/login" element={<Login setUser={setUser} />} />
+              <Route path="/register" element={<Register setUser={setUser} />} />
+              <Route path="/create-news" element={<CreateNews user={user} />} />
+              <Route path="/upload" element={<CreateNews user={user} />} />
+              <Route path="/admin/review" element={<AdminReview user={user} />} />
+              <Route path="/admin" element={<AdminReview user={user} />} />
+            </Routes>
+          </Suspense>
         </div>
       </main>
 
@@ -594,7 +603,7 @@ export default function App() {
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">Civic Navigation</h4>
+              <h3 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">Civic Navigation</h3>
               <ul className="space-y-1.5">
                 <li><Link to="/directory" className="hover:text-red-300 font-bold text-[#B8323C] flex items-center gap-1.5"><span>📍</span> Town Directory (Map & List)</Link></li>
                 <li><Link to="/news" className="hover:text-white">Town News</Link></li>
@@ -606,7 +615,7 @@ export default function App() {
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">Community Actions</h4>
+              <h3 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">Community Actions</h3>
               <ul className="space-y-1.5">
                 <li><Link to="/create-news" className="hover:text-white">Submit Local News</Link></li>
                 <li><Link to="/login" className="hover:text-white">Citizen / Reporter Login</Link></li>
@@ -618,14 +627,14 @@ export default function App() {
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">Emergency Hotline</h4>
+              <h3 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">Emergency Hotline</h3>
               <p className="text-xs text-slate-300">Police Outpost: <strong className="text-[#B8323C]">112</strong></p>
-              <p className="text-xs text-slate-300">Ambulance Emergency: <strong className="text-[#168568]">108</strong></p>
+              <p className="text-xs text-slate-300">Ambulance Emergency: <strong className="text-[#0D5E49]">108</strong></p>
               <p className="text-xs text-slate-300">Women Helpline: <strong className="text-amber-400">1090</strong></p>
             </div>
           </div>
 
-          <div className="border-t border-slate-800 py-4 text-center text-[11px] text-slate-500">
+          <div className="border-t border-slate-800 py-4 text-center text-[11px] text-slate-400">
             © {new Date().getFullYear()} Fazilnagar Town Portal • Modern Civic & Editorial System. All rights reserved.
           </div>
         </footer>

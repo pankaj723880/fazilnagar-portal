@@ -272,8 +272,9 @@ export default function Directory({ user }) {
     const size = isSelected ? 36 : 28;
     const height = isSelected ? 44 : 36;
     const svgHtml = `
-      <div style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${height}px;cursor:pointer;filter:drop-shadow(0 3px 5px rgba(0,0,0,0.35));transition:transform 0.2s;">
+      <div role="img" aria-label="Map location pin" style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${height}px;cursor:pointer;filter:drop-shadow(0 3px 5px rgba(0,0,0,0.35));transition:transform 0.2s;">
         <svg viewBox="0 0 24 24" width="${size}" height="${height}" fill="${color}" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <title>Location Pin</title>
           <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
           <circle cx="12" cy="9" r="2.8" fill="#ffffff" />
         </svg>

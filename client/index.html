@@ -92,16 +92,17 @@
     }
     </script>
 
-    <!-- Google Fonts: Manrope, Inter, Noto Sans Devanagari -->
+    <!-- Preload Critical Hero LCP Image -->
+    <link rel="preload" as="image" href="/images/hero/mahaparinirvana-temple-1.webp" type="image/webp" fetchpriority="high" />
+
+    <!-- Google Fonts: Manrope, Inter, Noto Sans Devanagari (Non-render-blocking with font-display: swap) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
-    <!-- Leaflet CSS for Maps -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-
-    <!-- Local Tailwind / PostCSS Stylesheet -->
-    <link rel="stylesheet" href="/src/index.css" />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" />
+    </noscript>
   </head>
   <body class="bg-slate-100 font-sans antialiased text-slate-800">
     <div id="root"></div>

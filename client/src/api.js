@@ -7,7 +7,7 @@ const baseURL = rawUrl.endsWith("/api") ? rawUrl : `${rawUrl}/api`;
 
 const API = axios.create({
   baseURL,
-  timeout: 30000,
+  timeout: 8000,
 });
 
 // Attach Authorization token if available

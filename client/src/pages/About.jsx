@@ -106,9 +106,13 @@ export default function About() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="group relative rounded-3xl overflow-hidden shadow-xl border border-slate-200 bg-slate-900 aspect-16/10">
                 <img
-                  src="/images/fazilnagar_pawanagar.jpg"
+                  src="/images/fazilnagar_pawanagar.webp"
                   alt="Pawanagar Jain Temple, Fazilnagar"
+                  width="800"
+                  height="500"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent flex flex-col justify-end p-6">
                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/80 border border-amber-600/50 px-2.5 py-0.5 rounded-full w-fit mb-2">
@@ -125,9 +129,13 @@ export default function About() {
 
               <div className="group relative rounded-3xl overflow-hidden shadow-xl border border-slate-200 bg-slate-900 aspect-16/10">
                 <img
-                  src="/images/fazilnagar_kakodha.jpg"
+                  src="/images/fazilnagar_kakodha.webp"
                   alt="Historic Kakodha Ghat, Fazilnagar"
+                  width="800"
+                  height="500"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent flex flex-col justify-end p-6">
                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-600/50 px-2.5 py-0.5 rounded-full w-fit mb-2">

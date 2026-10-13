@@ -16,3 +16,4 @@ server/uploads/*
 server/data/db/
 server/data/*.log
 server/test_features.js
+*-lighthouse.json

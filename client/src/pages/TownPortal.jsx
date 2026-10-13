@@ -243,136 +243,136 @@ const VERIFIED_TOWN_PLACES = [
 const KUSHINAGAR_FAZILNAGAR_HERO_IMAGES = [
   {
     id: 1,
-    src: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1400&auto=format&fit=crop",
-    fallback: "/images/hero/mahaparinirvana-temple-1.jpg",
+    src: "/images/hero/mahaparinirvana-temple-1.webp",
+    fallback: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=75&w=900&auto=format&fit=crop",
     title: "Mahaparinirvana Temple & Stupa",
     location: "Kushinagar",
     caption: "Sacred historical site of Lord Buddha's Parinirvana with 5th-century reclining Buddha",
   },
   {
     id: 2,
-    src: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?q=80&w=1400&auto=format&fit=crop",
-    fallback: "/images/hero/stupa-ruins-kushinagar.jpg",
+    src: "/images/hero/stupa-ruins-kushinagar.webp",
+    fallback: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?q=75&w=900&auto=format&fit=crop",
     title: "Ramabhar Stupa (Mukutbandhana)",
     location: "Kushinagar",
     caption: "Ancient 15-meter monumental brick stupa where last rites were performed",
   },
   {
     id: 3,
-    src: "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?q=80&w=1400&auto=format&fit=crop",
-    fallback: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1400&auto=format&fit=crop",
+    src: "/images/fazilnagar_pawanagar.webp",
+    fallback: "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?q=75&w=900&auto=format&fit=crop",
     title: "Pawanagar Mahavir Jain Tirth",
     location: "Fazilnagar (Ancient Pawa)",
     caption: "Nirvana Bhoomi of 24th Tirthankara Lord Mahavira and historic Manasthambha",
   },
   {
     id: 4,
-    src: "https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?q=80&w=1400&auto=format&fit=crop",
-    fallback: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1400&auto=format&fit=crop",
+    src: "https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?q=75&w=900&auto=format&fit=crop",
+    fallback: "/images/hero/mahaparinirvana-temple-1.webp",
     title: "Wat Thai Buddhist Monastery & Gardens",
     location: "Kushinagar",
     caption: "Siamese-style grand temple complex and serene meditation grounds",
   },
   {
     id: 5,
-    src: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?q=80&w=1400&auto=format&fit=crop",
-    fallback: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?q=80&w=1400&auto=format&fit=crop",
+    src: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?q=75&w=900&auto=format&fit=crop",
+    fallback: "/images/hero/stupa-ruins-kushinagar.webp",
     title: "Indo-Japan Buddhist Lotus Stupa",
     location: "Kushinagar",
     caption: "Circular architectural marvel erected by Indo-Japanese cultural society",
   },
   {
     id: 6,
-    src: "https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=1400&auto=format&fit=crop",
-    fallback: "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?q=80&w=1400&auto=format&fit=crop",
+    src: "/images/fazilnagar_kakodha.webp",
+    fallback: "https://images.unsplash.com/photo-1564507592333-c60657eea523?q=75&w=900&auto=format&fit=crop",
     title: "Pawanagar Tirth Marg Gateway",
     location: "Fazilnagar",
     caption: "Heritage corridor connecting NH-27 to ancient Pawanagar temple complexes",
   },
   {
     id: 7,
-    src: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?q=80&w=1400&auto=format&fit=crop",
-    fallback: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1400&auto=format&fit=crop",
+    src: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?q=75&w=900&auto=format&fit=crop",
+    fallback: "/images/hero/mahaparinirvana-temple-1.webp",
     title: "Chinese Buddhist Temple & Pagoda",
     location: "Kushinagar",
     caption: "Authentic East Asian Buddhist temple housing sacred marble statue",
   },
   {
     id: 8,
-    src: "https://images.unsplash.com/photo-1590766940554-634a7ed41450?q=80&w=1400&auto=format&fit=crop",
-    fallback: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?q=80&w=1400&auto=format&fit=crop",
+    src: "https://images.unsplash.com/photo-1590766940554-634a7ed41450?q=75&w=900&auto=format&fit=crop",
+    fallback: "/images/hero/stupa-ruins-kushinagar.webp",
     title: "Matha Kuar Shrine & Ancient Sal Grove",
     location: "Kushinagar",
     caption: "Colossal blue stone image of Lord Buddha in Bhumisparsha Mudra",
   },
   {
     id: 9,
-    src: "https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=1400&auto=format&fit=crop",
-    fallback: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?q=80&w=1400&auto=format&fit=crop",
+    src: "/images/kushinagar_ramabhar.webp",
+    fallback: "https://images.unsplash.com/photo-1548013146-72479768bada?q=75&w=900&auto=format&fit=crop",
     title: "Ancient Pawa Excavations & Monastic Viharas",
     location: "Fazilnagar & Kushinagar",
     caption: "ASI protected archaeological brick foundations and stupa ruins",
   },
   {
     id: 10,
-    src: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?q=80&w=1400&auto=format&fit=crop",
-    fallback: "https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?q=80&w=1400&auto=format&fit=crop",
+    src: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?q=75&w=900&auto=format&fit=crop",
+    fallback: "/images/hero/mahaparinirvana-temple-1.webp",
     title: "Tibetan Buddhist Temple & Prayer Wheels",
     location: "Kushinagar",
     caption: "Spiritual sanctuary decorated with traditional Tibetan thangka frescoes",
   },
   {
     id: 11,
-    src: "https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=1400&auto=format&fit=crop",
-    fallback: "https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=1400&auto=format&fit=crop",
+    src: "https://images.unsplash.com/photo-1587474260584-136574528ed5?q=75&w=900&auto=format&fit=crop",
+    fallback: "/images/hero/stupa-ruins-kushinagar.webp",
     title: "Linh-Son Monastery & Meditation Hall",
     location: "Kushinagar",
     caption: "Vietnamese-style multi-tiered sanctum for peace and spiritual retreat",
   },
   {
     id: 12,
-    src: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=80&w=1400&auto=format&fit=crop",
-    fallback: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1400&auto=format&fit=crop",
+    src: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=75&w=900&auto=format&fit=crop",
+    fallback: "/images/hero/mahaparinirvana-temple-1.webp",
     title: "Parinirvana Stupa Sunset Panorama",
     location: "Kushinagar",
     caption: "Golden evening hour over the world-renowned Buddhist pilgrimage hub",
   },
   {
     id: 13,
-    src: "https://images.unsplash.com/photo-1616046229478-9901c5536a45?q=80&w=1400&auto=format&fit=crop",
-    fallback: "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?q=80&w=1400&auto=format&fit=crop",
+    src: "/images/fazilnagar_pawanagar.webp",
+    fallback: "https://images.unsplash.com/photo-1616046229478-9901c5536a45?q=75&w=900&auto=format&fit=crop",
     title: "Pawanagar Spiritual Heritage Grounds",
     location: "Fazilnagar",
     caption: "Peaceful sacred town center preserving historic Jain pilgrimage values",
   },
   {
     id: 14,
-    src: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1400&auto=format&fit=crop",
-    fallback: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1400&auto=format&fit=crop",
+    src: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=75&w=900&auto=format&fit=crop",
+    fallback: "/images/hero/mahaparinirvana-temple-1.webp",
     title: "Kushinagar - Fazilnagar Pilgrimage Corridor",
     location: "NH-27 Heritage Axis",
     caption: "Historic transit corridor traversed by pilgrims from across the globe",
   },
   {
     id: 15,
-    src: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1400&auto=format&fit=crop",
-    fallback: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?q=80&w=1400&auto=format&fit=crop",
+    src: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=75&w=900&auto=format&fit=crop",
+    fallback: "/images/hero/stupa-ruins-kushinagar.webp",
     title: "Archaeological Garden & Sal Tree Canopy",
     location: "Kushinagar & Pawa",
     caption: "Ancient Sal groves where historical events of 5th century BCE unfolded",
   },
   {
     id: 16,
-    src: "/images/hero/mahaparinirvana-temple-1.jpg",
-    fallback: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1400&auto=format&fit=crop",
+    src: "/images/hero/mahaparinirvana-temple-1.webp",
+    fallback: "/images/hero/mahaparinirvana-temple-1.jpg",
     title: "Mahaparinirvana Temple Sanctum",
     location: "Kushinagar",
     caption: "ASI preserved sacred monolith housing the Nirvana Buddha statue",
   },
   {
     id: 17,
-    src: "/images/hero/stupa-ruins-kushinagar.jpg",
-    fallback: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?q=80&w=1400&auto=format&fit=crop",
+    src: "/images/hero/stupa-ruins-kushinagar.webp",
+    fallback: "/images/hero/stupa-ruins-kushinagar.jpg",
     title: "Ancient Stupa Foundations & Relics",
     location: "Kushinagar & Fazilnagar",
     caption: "Timeless brick masonry depicting 2,500 years of civilization",
@@ -440,24 +440,25 @@ export default function TownPortal() {
   const [heroSlideIndex, setHeroSlideIndex] = useState(0);
   const [isHeroHovered, setIsHeroHovered] = useState(false);
 
-  // Auto-advance Carousel every 3.5 seconds
+  // Auto-advance Carousel every 6 seconds (Allows initial hero LCP to settle cleanly)
   useEffect(() => {
     if (isHeroHovered) return;
     const carouselTimer = setInterval(() => {
       setHeroSlideIndex((prev) => (prev + 1) % KUSHINAGAR_FAZILNAGAR_HERO_IMAGES.length);
-    }, 3500);
+    }, 6000);
     return () => clearInterval(carouselTimer);
   }, [isHeroHovered]);
 
-  // Smooth scroll handler with visual landing glow pulse animation
+  // Smooth scroll handler with visual landing glow pulse animation (Reflow-free)
   const handleSmoothScroll = (e, targetId) => {
     if (e && e.preventDefault) e.preventDefault();
     const element = document.getElementById(targetId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
       element.classList.remove("section-highlight-active");
-      void element.offsetWidth; // Force CSS reflow to re-trigger keyframe animation
-      element.classList.add("section-highlight-active");
+      requestAnimationFrame(() => {
+        element.classList.add("section-highlight-active");
+      });
       setTimeout(() => {
         element.classList.remove("section-highlight-active");
       }, 2200);
@@ -563,8 +564,8 @@ export default function TownPortal() {
           setLiveNews(res.data);
         }
       })
-      .catch((err) => {
-        console.error("Live news fetch error:", err);
+      .catch(() => {
+        // Graceful fallback to verified news without console error
       });
   }, []);
 
@@ -634,10 +635,10 @@ export default function TownPortal() {
       );
     }
 
-    const createTownMarkerIcon = () => {
+    const createTownMarkerIcon = (placeName) => {
       const svgHtml = `
-        <div style="display:flex;align-items:center;justify-content:center;width:28px;height:36px;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
-          <svg viewBox="0 0 24 24" width="28" height="36" fill="#B8323C" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <div role="img" aria-label="${placeName || 'Town place pin'}" style="display:flex;align-items:center;justify-content:center;width:28px;height:36px;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+          <svg viewBox="0 0 24 24" width="28" height="36" fill="#B8323C" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
             <circle cx="12" cy="9" r="2.8" fill="#ffffff" />
           </svg>
@@ -655,16 +656,26 @@ export default function TownPortal() {
     filtered.forEach((place) => {
       if (!place.lat || !place.lng) return;
       const marker = L.marker([place.lat, place.lng], {
-        icon: createTownMarkerIcon(),
+        icon: createTownMarkerIcon(place.name),
+        title: place.name,
+        alt: `${place.name} map pin`,
       }).addTo(mapInstanceRef.current);
+
+      marker.on("add", () => {
+        const el = marker.getElement();
+        if (el) {
+          el.setAttribute("aria-label", place.name);
+          el.setAttribute("title", place.name);
+        }
+      });
 
       marker.bindPopup(`
         <div style="font-family: Inter, sans-serif; font-size: 12px; min-width: 200px; color: #18232E; padding: 2px;">
           <span style="font-size: 9px; font-weight: 800; color: #B8323C; text-transform: uppercase; letter-spacing: 0.5px;">${place.category}</span>
-          <h4 style="margin: 2px 0 4px; font-size: 13px; font-weight: 700; color: #18232E;">${place.name}</h4>
+          <h3 style="margin: 2px 0 4px; font-size: 13px; font-weight: 700; color: #18232E;">${place.name}</h3>
           <p style="margin: 0; font-size: 11px; color: #647180;">${place.landmark || place.address}</p>
           <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #E1E6EA; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-            <button type="button" class="townportal-popup-directions-btn" style="color: #168568; background: none; border: none; padding: 0; font-weight: 700; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
+            <button type="button" class="townportal-popup-directions-btn" style="color: #0D5E49; background: none; border: none; padding: 0; font-weight: 700; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
               <span>🧭 Live Directions</span>
             </button>
             ${place.phone ? `<a href="tel:${place.phone.replace(/\\s+/g, '')}" style="color: #18232E; text-decoration: none; font-weight: 700; font-size: 11px;">📞 Call</a>` : ''}
@@ -783,30 +794,36 @@ export default function TownPortal() {
         onMouseLeave={() => setIsHeroHovered(false)}
         className="relative text-white py-10 sm:py-20 lg:py-24 overflow-hidden border-b border-slate-800"
       >
-        {/* Dynamic Multi-Image Carousel of Kushinagar & Fazilnagar (17 Landmark Images, Auto-advancing every 3.5s) */}
+        {/* Dynamic Multi-Image Carousel of Kushinagar & Fazilnagar (Only renders active slide in DOM to eliminate concurrent image requests & optimize LCP) */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          {KUSHINAGAR_FAZILNAGAR_HERO_IMAGES.map((img, idx) => (
-            <div
-              key={img.id || idx}
-              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                idx === heroSlideIndex ? "opacity-100 z-10" : "opacity-0 z-0"
-              }`}
-            >
-              <img
-                src={img.src}
-                alt={img.title}
-                referrerPolicy="no-referrer"
-                onError={(e) => {
-                  if (img.fallback && e.currentTarget.src !== img.fallback) {
-                    e.currentTarget.src = img.fallback;
-                  }
-                }}
-                className={`w-full h-full object-cover object-center ${
-                  idx === heroSlideIndex ? "animate-ken-burns scale-105" : "scale-100"
-                } transition-transform duration-1000 ease-out`}
-              />
-            </div>
-          ))}
+          {KUSHINAGAR_FAZILNAGAR_HERO_IMAGES.map((img, idx) => {
+            const isCurrent = idx === heroSlideIndex;
+            if (!isCurrent) return null;
+
+            return (
+              <div
+                key={img.id || idx}
+                className="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-100 z-10"
+              >
+                <img
+                  src={img.src}
+                  alt={img.title}
+                  fetchPriority={idx === 0 ? "high" : "auto"}
+                  loading={idx === 0 ? "eager" : "lazy"}
+                  decoding={idx === 0 ? "sync" : "async"}
+                  width="1200"
+                  height="600"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    if (img.fallback && e.currentTarget.src !== img.fallback) {
+                      e.currentTarget.src = img.fallback;
+                    }
+                  }}
+                  className="w-full h-full object-cover object-center animate-ken-burns scale-105 transition-transform duration-1000 ease-out"
+                />
+              </div>
+            );
+          })}
 
           {/* Minimal soft transparent gradient - preserves full photo clarity, natural colors & brightness without any grey fog */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/65 z-20"></div>
@@ -1840,10 +1857,13 @@ export default function TownPortal() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="group relative rounded-2xl overflow-hidden shadow-lg border border-[#E1E6EA] bg-slate-900 aspect-16/10">
                   <img
-                    src="/images/fazilnagar_pawanagar.jpg"
+                    src="/images/fazilnagar_pawanagar.webp"
                     alt="Pawanagar Jain Mandir, Fazilnagar"
+                    width="800"
+                    height="500"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-5">
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/80 border border-amber-600/50 px-2 py-0.5 rounded-full w-fit mb-1.5">
@@ -1860,10 +1880,13 @@ export default function TownPortal() {
 
                 <div className="group relative rounded-2xl overflow-hidden shadow-lg border border-[#E1E6EA] bg-slate-900 aspect-16/10">
                   <img
-                    src="/images/fazilnagar_kakodha.jpg"
+                    src="/images/fazilnagar_kakodha.webp"
                     alt="Kakodha Ghat and Kukuttha River, Fazilnagar"
+                    width="800"
+                    height="500"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-5">
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-600/50 px-2 py-0.5 rounded-full w-fit mb-1.5">
@@ -1932,27 +1955,27 @@ export default function TownPortal() {
                 {/* Modern Importance Column */}
                 <div className="bg-white p-6 rounded-2xl border border-[#E1E6EA] space-y-4 flex flex-col justify-between">
                   <div>
-                    <span className="text-[10px] font-bold uppercase text-[#168568] tracking-wider block mb-1">
+                    <span className="text-[10px] font-bold uppercase text-[#0D5E49] tracking-wider block mb-1">
                       Present-Day Importance
                     </span>
-                    <h4 className="text-base font-bold text-[#18232E] font-heading mb-3">
+                    <h3 className="text-base font-bold text-[#18232E] font-heading mb-3">
                       Modern Civic, Educational & Commercial Hub
-                    </h4>
+                    </h3>
                     <ul className="space-y-3 text-xs text-slate-600 leading-relaxed">
                       <li className="flex items-start gap-2">
-                        <span className="text-[#168568] font-bold text-sm">✓</span>
+                        <span className="text-[#0D5E49] font-bold text-sm">✓</span>
                         <span><strong>Education Center:</strong> Houses prominent institutions including Pawanagar Mahavir Inter College, Degree Colleges, and private academies serving 15+ surrounding gram panchayats.</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-[#168568] font-bold text-sm">✓</span>
+                        <span className="text-[#0D5E49] font-bold text-sm">✓</span>
                         <span><strong>Strategic Highway Corridor:</strong> Directly situated on the Golden East-West corridor NH-27 (Old NH-28), connecting Gorakhpur with Bihar and Assam.</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-[#168568] font-bold text-sm">✓</span>
+                        <span className="text-[#0D5E49] font-bold text-sm">✓</span>
                         <span><strong>Public Health Care:</strong> Community Health Centre (CHC) Fazilnagar provides 24/7 maternal, emergency ambulance, and immunization care.</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-[#168568] font-bold text-sm">✓</span>
+                        <span className="text-[#0D5E49] font-bold text-sm">✓</span>
                         <span><strong>Grain & Trade Mandi:</strong> A prime marketplace for sugarcane, grains, electronics, fertilizers, and building materials.</span>
                       </li>
                     </ul>
@@ -1976,10 +1999,13 @@ export default function TownPortal() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="group relative rounded-2xl overflow-hidden shadow-lg border border-[#E1E6EA] bg-slate-900 aspect-16/10">
                   <img
-                    src="/images/kushinagar_mahaparinirvana.jpg"
+                    src="/images/kushinagar_mahaparinirvana.webp"
                     alt="Mahaparinirvana Stupa and Temple, Kushinagar"
+                    width="800"
+                    height="500"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-5">
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 bg-rose-950/80 border border-rose-600/50 px-2 py-0.5 rounded-full w-fit mb-1.5">
@@ -1996,10 +2022,13 @@ export default function TownPortal() {
 
                 <div className="group relative rounded-2xl overflow-hidden shadow-lg border border-[#E1E6EA] bg-slate-900 aspect-16/10">
                   <img
-                    src="/images/kushinagar_ramabhar.jpg"
+                    src="/images/kushinagar_ramabhar.webp"
                     alt="Ramabhar Stupa, Kushinagar"
+                    width="800"
+                    height="500"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-5">
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/80 border border-amber-600/50 px-2 py-0.5 rounded-full w-fit mb-1.5">
@@ -2071,9 +2100,9 @@ export default function TownPortal() {
                     <span className="text-[10px] font-bold uppercase text-[#B8323C] tracking-wider block mb-1">
                       Key Pilgrimage Monuments
                     </span>
-                    <h4 className="text-base font-bold text-[#18232E] font-heading mb-3">
+                    <h3 className="text-base font-bold text-[#18232E] font-heading mb-3">
                       World Heritage Archaeological Wonders
-                    </h4>
+                    </h3>
                     <ul className="space-y-3 text-xs text-slate-600 leading-relaxed">
                       <li className="flex items-start gap-2">
                         <span className="text-[#B8323C] font-bold text-sm">☸</span>
