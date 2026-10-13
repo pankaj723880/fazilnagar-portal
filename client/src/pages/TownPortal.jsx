@@ -28,6 +28,8 @@ import {
   ArrowLeft,
   ArrowRight,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Landmark,
   Navigation,
   GraduationCap,
@@ -437,6 +439,28 @@ export default function TownPortal() {
   const [currentUser, setCurrentUser] = useState(null);
   const [liveNews, setLiveNews] = useState([]);
   const [aboutTab, setAboutTab] = useState("fazilnagar"); // "fazilnagar" | "kushinagar" | "connection"
+  const [isDirectoryExpanded, setIsDirectoryExpanded] = useState(false);
+
+  const toggleDirectoryExpanded = () => {
+    if (isDirectoryExpanded) {
+      setIsDirectoryExpanded(false);
+      const section = document.getElementById("explore-categories");
+      if (section) {
+        const rect = section.getBoundingClientRect();
+        if (rect.top < 0) {
+          const yOffset = -96;
+          const y = rect.top + (window.scrollY || window.pageYOffset || 0) + yOffset;
+          window.scrollTo({ top: y, behavior: "smooth" });
+        }
+      }
+    } else {
+      setIsDirectoryExpanded(true);
+    }
+  };
+
+  const displayedCategories = isDirectoryExpanded
+    ? EXPLORE_21_CATEGORIES
+    : EXPLORE_21_CATEGORIES.slice(0, 4);
 
   // Hero Background Carousel States (Changes automatically every 3.5 seconds)
   const [heroSlideIndex, setHeroSlideIndex] = useState(0);
@@ -903,17 +927,24 @@ export default function TownPortal() {
               Select any of the 21 town categories to access verified establishments.
             </p>
           </div>
-          <Link
-            to="/directory"
-            className="text-xs font-bold px-4 py-2 rounded-xl bg-[#18232E] hover:bg-[#B8323C] text-white transition self-start md:self-auto"
+          <button
+            type="button"
+            onClick={toggleDirectoryExpanded}
+            className="text-xs font-bold px-4 py-2.5 rounded-xl bg-[#18232E] hover:bg-[#B8323C] text-white transition self-start md:self-auto cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-95 duration-150"
+            aria-expanded={isDirectoryExpanded}
           >
-            Open Full Directory →
-          </Link>
+            <span>{isDirectoryExpanded ? "Close Directory" : "Open Full Directory"}</span>
+            {isDirectoryExpanded ? (
+              <ChevronUp className="w-3.5 h-3.5 text-amber-400" />
+            ) : (
+              <ChevronDown className="w-3.5 h-3.5 text-amber-400" />
+            )}
+          </button>
         </div>
 
-        {/* 21 Categories Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
-          {EXPLORE_21_CATEGORIES.map((cat) => {
+        {/* Categories Grid (4 cards collapsed, all 21 expanded) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 transition-all duration-300">
+          {displayedCategories.map((cat) => {
             const Icon = cat.icon;
             return (
               <Link
@@ -936,6 +967,20 @@ export default function TownPortal() {
             );
           })}
         </div>
+
+        {/* Bottom Collapse Button when expanded */}
+        {isDirectoryExpanded && (
+          <div className="mt-6 flex justify-center">
+            <button
+              type="button"
+              onClick={toggleDirectoryExpanded}
+              className="text-xs font-bold px-5 py-2.5 rounded-xl bg-[#18232E] hover:bg-[#B8323C] text-white transition cursor-pointer flex items-center gap-1.5 shadow-xs active:scale-95 duration-150"
+            >
+              <span>Close Directory</span>
+              <ChevronUp className="w-3.5 h-3.5 text-amber-400" />
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Dedicated Homepage Advertisement Slot (Zero footprint when inactive/unpublished) */}
