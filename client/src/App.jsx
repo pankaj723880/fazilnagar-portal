@@ -188,8 +188,8 @@ export default function App() {
           PERMANENT FIXED TOP SHELL (Never moves, Constant on all pages)
           ======================================================== */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-[#FFFFFF] shadow-xs">
-        {/* Top Alert & User Status Bar - Modern Civic Deep Slate & Crimson */}
-        <div className="h-8 bg-[#18232E] text-slate-300 text-[11px] font-semibold px-4 flex justify-between items-center border-b border-slate-800 shadow-xs">
+        {/* Top Alert & User Status Bar - Modern Civic Deep Slate & Crimson (Desktop / Tablet) */}
+        <div className="hidden sm:flex h-8 bg-[#18232E] text-slate-300 text-[11px] font-semibold px-4 justify-between items-center border-b border-slate-800 shadow-xs">
           <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
             <span className="bg-[#B8323C] text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-xs">
               LIVE CIVIC
@@ -201,7 +201,7 @@ export default function App() {
           <div className="flex items-center gap-4">
             <a
               href="tel:112"
-              className="hidden sm:inline-flex items-center gap-1 text-red-400 hover:text-red-300 font-bold whitespace-nowrap"
+              className="inline-flex items-center gap-1 text-red-400 hover:text-red-300 font-bold whitespace-nowrap"
             >
               <span>📞 Helpline: 112</span>
             </a>

@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { openGoogleMapsDirections } from "../utils/directions";
+import { Compass, Lock } from "lucide-react";
 
 export default function TownInteractiveMap({
   places = [],
@@ -13,6 +14,7 @@ export default function TownInteractiveMap({
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
+  const [isMapActive, setIsMapActive] = useState(false);
 
   // Initialize Leaflet Map
   useEffect(() => {
@@ -25,11 +27,14 @@ export default function TownInteractiveMap({
     if (!mapInstanceRef.current) {
       const townCenterLat = 26.6827;
       const townCenterLng = 84.0498;
+      const isDesktop = window.innerWidth >= 1024;
 
       const map = L.map(mapContainerRef.current, {
         center: [townCenterLat, townCenterLng],
         zoom: 15,
-        scrollWheelZoom: true,
+        dragging: isDesktop,
+        touchZoom: isDesktop,
+        scrollWheelZoom: isDesktop,
       });
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -55,6 +60,23 @@ export default function TownInteractiveMap({
       }
     };
   }, []);
+
+  // Update map interaction state on mobile
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    const isDesktop = window.innerWidth >= 1024;
+
+    if (isDesktop || isMapActive) {
+      map.dragging.enable();
+      map.touchZoom.enable();
+      map.scrollWheelZoom.enable();
+    } else {
+      map.dragging.disable();
+      map.touchZoom.disable();
+      map.scrollWheelZoom.disable();
+    }
+  }, [isMapActive]);
 
   // Update markers when places or filter changes
   useEffect(() => {
@@ -151,5 +173,37 @@ export default function TownInteractiveMap({
     }
   }, [selectedPlace]);
 
-  return <div ref={mapContainerRef} className="w-full h-full min-h-[290px] z-10" />;
+  return (
+    <div className="relative w-full h-full min-h-[290px] overflow-hidden rounded-2xl">
+      <div ref={mapContainerRef} className="w-full h-full min-h-[290px] z-10" />
+
+      {/* Mobile Interaction Mode Activator Overlay (Part B Fix) */}
+      {!isMapActive && (
+        <div className="absolute inset-x-0 bottom-3 z-20 flex justify-center pointer-events-none lg:hidden">
+          <button
+            type="button"
+            onClick={() => setIsMapActive(true)}
+            className="pointer-events-auto bg-[#18232E]/95 hover:bg-[#18232E] text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-lg border border-slate-700/80 backdrop-blur-md flex items-center gap-1.5 active:scale-95 transition cursor-pointer"
+          >
+            <Compass className="w-3.5 h-3.5 text-amber-400" />
+            <span>Tap to interact with map</span>
+          </button>
+        </div>
+      )}
+
+      {/* Mobile Active Interaction Badge: Allows User to Lock Map & Resume Page Scrolling */}
+      {isMapActive && (
+        <div className="absolute top-3 right-3 z-20 lg:hidden">
+          <button
+            type="button"
+            onClick={() => setIsMapActive(false)}
+            className="bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg border border-emerald-400 backdrop-blur-md flex items-center gap-1 active:scale-95 transition cursor-pointer"
+          >
+            <Lock className="w-3 h-3" />
+            <span>Lock map to scroll</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }

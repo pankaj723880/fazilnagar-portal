@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -14,8 +14,8 @@ import {
   CheckCircle2,
   Clock,
   Layers,
-  Map,
-  List,
+  Map as MapIcon,
+  List as ListIcon,
   Filter,
   ArrowUpDown,
   ArrowLeft,
@@ -38,19 +38,23 @@ import {
   Check,
   ChevronRight,
   RotateCcw,
+  Maximize2,
+  Minimize2,
+  Lock,
+  Compass,
 } from "lucide-react";
 
 // Category configurations with distinct styling and Lucide icons
 const CATEGORIES = [
-  { id: "all", name: "All Categories", icon: Layers, color: "slate" },
-  { id: "Schools & Colleges", name: "Schools & Colleges", icon: GraduationCap, color: "blue" },
-  { id: "Hospitals & Clinics", name: "Hospitals & Clinics", icon: Stethoscope, color: "rose" },
-  { id: "Sweet Shops & Bakeries", name: "Sweet Shops & Bakeries", icon: Cake, color: "amber" },
-  { id: "Medical Stores & Pharmacies", name: "Medical Stores", icon: Pill, color: "emerald" },
-  { id: "Religious Places", name: "Religious Places", icon: Landmark, color: "purple" },
-  { id: "Public Facilities", name: "Public Facilities & Banks", icon: Building, color: "sky" },
-  { id: "Transport & Travel", name: "Transport & Travel", icon: Bus, color: "lime" },
-  { id: "Shopping & Services", name: "Shopping & Trade", icon: ShoppingBag, color: "orange" },
+  { id: "all", name: "All Categories", icon: Layers },
+  { id: "Schools & Colleges", name: "Schools & Colleges", icon: GraduationCap },
+  { id: "Hospitals & Clinics", name: "Hospitals & Clinics", icon: Stethoscope },
+  { id: "Sweet Shops & Bakeries", name: "Sweet Shops & Bakeries", icon: Cake },
+  { id: "Medical Stores & Pharmacies", name: "Medical Stores", icon: Pill },
+  { id: "Religious Places", name: "Religious Places", icon: Landmark },
+  { id: "Public Facilities", name: "Public & Banks", icon: Building },
+  { id: "Transport & Travel", name: "Transport", icon: Bus },
+  { id: "Shopping & Services", name: "Markets & Shops", icon: ShoppingBag },
 ];
 
 // Helper function to match place category and subcategory robustly
@@ -64,15 +68,13 @@ function matchesCategory(placeCat, placeSubcat, targetCat) {
   if (c && (c.includes(target) || target.includes(c))) return true;
   if (sc && (sc.includes(target) || target.includes(sc))) return true;
 
-  // Split multi-word categories for fuzzy match (e.g., "Medical Stores" -> "Medical Stores & Pharmacies")
   const targetWords = target.split(/[\s&,/]+/).filter((w) => w.length > 3);
   return targetWords.some((w) => c.includes(w) || sc.includes(w));
 }
 
-// Helper to filter embedded verified places - strictly includes confirmed town locations with valid GPS coordinates
+// Helper to filter embedded verified places
 function filterPlaces(list, category, locality, search, sort) {
   let filtered = Array.isArray(list) ? [...list] : [];
-  // Ensure unverified candidates without coordinates or unpublished places are quarantined
   filtered = filtered.filter(
     (p) =>
       p &&
@@ -124,7 +126,6 @@ export default function Directory({ user }) {
     canonicalPath: "/directory",
   });
 
-  // Verification & Moderation queue is strictly restricted to authenticated Admins
   const isAdmin =
     user?.role === "admin" ||
     (() => {
@@ -164,12 +165,15 @@ export default function Directory({ user }) {
   });
   const [toastMessage, setToastMessage] = useState("");
 
+  // Mobile Map Scrolling Conflict & Height Controls (Part B)
+  const [isMapActive, setIsMapActive] = useState(false);
+  const [isMapExpanded, setIsMapExpanded] = useState(false);
+
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
   const sideListRef = useRef(null);
 
-  // Instant synchronous filtered places: always perfectly in sync with selected category
   const places = useMemo(() => {
     return filterPlaces(allMasterPlaces, selectedCategory, selectedLocality, searchQuery, sortBy);
   }, [allMasterPlaces, selectedCategory, selectedLocality, searchQuery, sortBy]);
@@ -219,7 +223,7 @@ export default function Directory({ user }) {
     try {
       setLoading(true);
       const res = await API.get("/places");
-      const data = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+      const data = Array.isArray(res.data) ? res.data : Array.isArray(res.data?.data) ? res.data.data : [];
       if (data.length > 0) {
         setAllMasterPlaces(data);
       }
@@ -255,24 +259,23 @@ export default function Directory({ user }) {
   const fetchAdminQueue = async () => {
     try {
       const res = await API.get("/places/admin");
-      let data = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+      let data = Array.isArray(res.data) ? res.data : Array.isArray(res.data?.data) ? res.data.data : [];
       if (data.length === 0) {
         data = seedPlaces.filter((p) => p.isPublished === false);
       }
       setAdminQueuePlaces(data);
     } catch (err) {
-      console.warn("Failed to fetch admin queue from API, loading local seed queue:", err);
       setAdminQueuePlaces(seedPlaces.filter((p) => p.isPublished === false));
     }
   };
 
-  // Custom vector SVG marker icon to prevent broken Leaflet image 404s
+  // Custom vector SVG marker icon
   const createMarkerIcon = (isSelected) => {
-    const color = isSelected ? "#B8323C" : "#0f766e";
-    const size = isSelected ? 36 : 28;
-    const height = isSelected ? 44 : 36;
+    const color = isSelected ? "#B8323C" : "#0D5E49";
+    const size = isSelected ? 34 : 26;
+    const height = isSelected ? 42 : 34;
     const svgHtml = `
-      <div role="img" aria-label="Map location pin" style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${height}px;cursor:pointer;filter:drop-shadow(0 3px 5px rgba(0,0,0,0.35));transition:transform 0.2s;">
+      <div role="img" aria-label="Map location pin" style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${height}px;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35));transition:transform 0.2s;">
         <svg viewBox="0 0 24 24" width="${size}" height="${height}" fill="${color}" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <title>Location Pin</title>
           <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
@@ -289,12 +292,27 @@ export default function Directory({ user }) {
     });
   };
 
-  // Map initialization & synchronization
+  // Cluster icon when multiple places are very close to prevent overlapping pins
+  const createClusterIcon = (count) => {
+    const size = 32;
+    const svgHtml = `
+      <div style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;background:#18232E;border:2.5px solid #0D5E49;border-radius:50%;color:#ffffff;font-size:11px;font-weight:800;font-family:system-ui,sans-serif;box-shadow:0 3px 6px rgba(0,0,0,0.35);cursor:pointer;">
+        <span>${count}</span>
+      </div>
+    `;
+    return L.divIcon({
+      html: svgHtml,
+      className: "fazilnagar-cluster-pin",
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2],
+    });
+  };
+
+  // Initialize Leaflet Map
   useEffect(() => {
     if (viewMode !== "map") return;
     if (!mapContainerRef.current) return;
 
-    // Clean up stale leaflet id if instance was lost (StrictMode / unmount)
     if (mapContainerRef.current._leaflet_id && !mapInstanceRef.current) {
       delete mapContainerRef.current._leaflet_id;
     }
@@ -302,22 +320,32 @@ export default function Directory({ user }) {
     if (!mapInstanceRef.current) {
       const townLat = 26.6827;
       const townLng = 84.0498;
+      const isDesktop = window.innerWidth >= 1024;
 
       const map = L.map(mapContainerRef.current, {
         center: [townLat, townLng],
         zoom: 15,
-        scrollWheelZoom: true,
+        // On mobile, dragging and touchZoom are disabled by default to fix the scroll conflict
+        dragging: isDesktop,
+        touchZoom: isDesktop,
+        scrollWheelZoom: isDesktop,
       });
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       }).addTo(map);
 
       mapInstanceRef.current = map;
+
+      // On zoom, re-render markers to handle clustering dynamically
+      map.on("zoomend", () => {
+        if (mapInstanceRef.current) {
+          renderMapMarkers(places);
+        }
+      });
     }
 
-    // Force Leaflet to compute container dimensions once rendered
     const resizeTimer = setTimeout(() => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.invalidateSize();
@@ -341,14 +369,40 @@ export default function Directory({ user }) {
     };
   }, []);
 
-  const renderMapMarkers = (items) => {
-    if (!mapInstanceRef.current) return;
+  // Update map interaction state on mobile (Part B: Gesture Control)
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    const isDesktop = window.innerWidth >= 1024;
 
-    // Clear previous markers
-    markersRef.current.forEach((m) => {
+    if (isDesktop || isMapActive) {
+      map.dragging.enable();
+      map.touchZoom.enable();
+      map.scrollWheelZoom.enable();
+    } else {
+      map.dragging.disable();
+      map.touchZoom.disable();
+      map.scrollWheelZoom.disable();
+    }
+  }, [isMapActive]);
+
+  // Invalidate map size when expanded / collapsed
+  useEffect(() => {
+    const timer = setTimeout(() => {
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.removeLayer(m);
+        mapInstanceRef.current.invalidateSize();
       }
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [isMapExpanded]);
+
+  // Render Map Markers with smart clustering for nearby places to prevent overlapping
+  const renderMapMarkers = (items) => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    markersRef.current.forEach((m) => {
+      map.removeLayer(m);
     });
     markersRef.current = [];
 
@@ -361,56 +415,108 @@ export default function Directory({ user }) {
         !isNaN(parseFloat(p.longitude))
     );
 
-    itemsWithCoords.forEach((place) => {
-      const lat = parseFloat(place.latitude);
-      const lng = parseFloat(place.longitude);
-      const isSelected = selectedPlace && (selectedPlace._id === place._id || selectedPlace.id === place.id);
+    const currentZoom = map.getZoom();
 
-      const marker = L.marker([lat, lng], {
-        icon: createMarkerIcon(isSelected),
-        title: place.name,
-      }).addTo(mapInstanceRef.current);
+    // Group close coordinates when zoomed out (< 16) to prevent pin overlap
+    if (currentZoom < 16 && itemsWithCoords.length > 8) {
+      const clusters = [];
+      const threshold = 0.0018; // approx 150m grouping
 
-      marker.bindPopup(`
-        <div style="font-size: 12px; min-width: 200px; font-family: system-ui, -apple-system, sans-serif; padding: 2px;">
-          <span style="font-size: 9px; font-weight: 800; color: #0d9488; text-transform: uppercase; letter-spacing: 0.5px;">${place.category}</span>
-          <h4 style="margin: 3px 0 4px; font-size: 14px; font-weight: 800; color: #0f172a; line-height: 1.2;">${place.name}</h4>
-          <p style="margin: 0; font-size: 11px; color: #64748b; line-height: 1.3;">${place.streetOrLandmark || place.addressFull || place.locality}</p>
-          <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-            <button type="button" class="leaflet-popup-directions-btn" style="color: #0f766e; background: none; border: none; padding: 0; font-weight: 700; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
-              <span>🧭 Live Directions</span>
-            </button>
-            ${place.phone ? `<a href="tel:${place.phone.replace(/\\s+/g, '')}" style="color: #0f172a; text-decoration: none; font-weight: 700; font-size: 11px;">📞 Call</a>` : ''}
-          </div>
-        </div>
-      `);
+      itemsWithCoords.forEach((place) => {
+        const lat = parseFloat(place.latitude);
+        const lng = parseFloat(place.longitude);
+        let addedToCluster = false;
 
-      marker.on("popupopen", (e) => {
-        const btn = e.popup.getElement()?.querySelector(".leaflet-popup-directions-btn");
-        if (btn) {
-          btn.onclick = (ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            openGoogleMapsDirections(place);
-          };
+        for (const cluster of clusters) {
+          const cLat = cluster.lat;
+          const cLng = cluster.lng;
+          const dist = Math.hypot(lat - cLat, lng - cLng);
+          if (dist < threshold) {
+            cluster.places.push(place);
+            addedToCluster = true;
+            break;
+          }
+        }
+
+        if (!addedToCluster) {
+          clusters.push({ lat, lng, places: [place] });
         }
       });
 
-      marker.on("click", () => {
-        handleSelectPlace(place);
-      });
+      clusters.forEach((cluster) => {
+        if (cluster.places.length === 1) {
+          createSinglePlaceMarker(cluster.places[0]);
+        } else {
+          // Render cluster pin
+          const clusterMarker = L.marker([cluster.lat, cluster.lng], {
+            icon: createClusterIcon(cluster.places.length),
+            title: `${cluster.places.length} places in this area`,
+          }).addTo(map);
 
-      markersRef.current.push(marker);
-    });
+          clusterMarker.on("click", () => {
+            map.setView([cluster.lat, cluster.lng], Math.min(currentZoom + 2, 17), { animate: true });
+          });
+
+          markersRef.current.push(clusterMarker);
+        }
+      });
+    } else {
+      // Zoomed in: render individual pins
+      itemsWithCoords.forEach((place) => {
+        createSinglePlaceMarker(place);
+      });
+    }
 
     if (itemsWithCoords.length > 0) {
       if (selectedPlace && selectedPlace.latitude && selectedPlace.longitude) {
-        mapInstanceRef.current.panTo([parseFloat(selectedPlace.latitude), parseFloat(selectedPlace.longitude)], { animate: true });
-      } else {
-        const bounds = L.latLngBounds(itemsWithCoords.map((p) => [parseFloat(p.latitude), parseFloat(p.longitude)]));
-        mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+        map.panTo([parseFloat(selectedPlace.latitude), parseFloat(selectedPlace.longitude)], { animate: true });
       }
     }
+  };
+
+  const createSinglePlaceMarker = (place) => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    const lat = parseFloat(place.latitude);
+    const lng = parseFloat(place.longitude);
+    const isSelected = selectedPlace && (selectedPlace._id === place._id || selectedPlace.id === place.id);
+
+    const marker = L.marker([lat, lng], {
+      icon: createMarkerIcon(isSelected),
+      title: place.name,
+    }).addTo(map);
+
+    marker.bindPopup(`
+      <div style="font-size: 12px; min-width: 190px; font-family: Inter, system-ui, sans-serif; padding: 2px;">
+        <span style="font-size: 9px; font-weight: 800; color: #0D5E49; text-transform: uppercase; letter-spacing: 0.5px;">${place.category}</span>
+        <h4 style="margin: 2px 0 4px; font-size: 13px; font-weight: 800; color: #18232E; line-height: 1.2;">${place.name}</h4>
+        <p style="margin: 0; font-size: 11px; color: #647180; line-height: 1.3;">${place.streetOrLandmark || place.addressFull || place.locality}</p>
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #E1E6EA; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+          <button type="button" class="leaflet-popup-directions-btn" style="color: #0D5E49; background: none; border: none; padding: 0; font-weight: 700; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
+            <span>🧭 Directions</span>
+          </button>
+          ${place.phone ? `<a href="tel:${place.phone.replace(/\s+/g, '')}" style="color: #18232E; text-decoration: none; font-weight: 700; font-size: 11px;">📞 Call</a>` : ''}
+        </div>
+      </div>
+    `);
+
+    marker.on("popupopen", (e) => {
+      const btn = e.popup.getElement()?.querySelector(".leaflet-popup-directions-btn");
+      if (btn) {
+        btn.onclick = (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          openGoogleMapsDirections(place);
+        };
+      }
+    });
+
+    marker.on("click", () => {
+      handleSelectPlace(place);
+    });
+
+    markersRef.current.push(marker);
   };
 
   const handleSelectPlace = (place) => {
@@ -420,13 +526,12 @@ export default function Directory({ user }) {
       const lng = parseFloat(place.longitude);
       mapInstanceRef.current.setView([lat, lng], 16, { animate: true });
 
-      // Update marker icons to highlight the selected place
       markersRef.current.forEach((m) => {
-        const pos = m.getLatLng();
-        const isMatch = Math.abs(pos.lat - lat) < 0.0001 && Math.abs(pos.lng - lng) < 0.0001;
-        m.setIcon(createMarkerIcon(isMatch));
-        if (isMatch) {
-          m.openPopup();
+        if (m.getLatLng) {
+          const pos = m.getLatLng();
+          const isMatch = Math.abs(pos.lat - lat) < 0.0001 && Math.abs(pos.lng - lng) < 0.0001;
+          if (m.setIcon) m.setIcon(createMarkerIcon(isMatch));
+          if (isMatch && m.openPopup) m.openPopup();
         }
       });
     }
@@ -474,7 +579,7 @@ export default function Directory({ user }) {
 
     try {
       await API.post("/places", data);
-      showToast("Place submitted successfully to verification queue!");
+      showToast("Place submitted successfully to verification desk!");
       setShowAddModal(false);
       fetchStats();
     } catch (err) {
@@ -490,7 +595,7 @@ export default function Directory({ user }) {
         townBoundaryStatus: "confirmed",
         verificationStatus: "verified",
       });
-      showToast("Establishment approved and published to public town directory!");
+      showToast("Establishment approved and published!");
       fetchAdminQueue();
       fetchPlaces();
       fetchStats();
@@ -500,108 +605,102 @@ export default function Directory({ user }) {
     }
   };
 
-  // Extract distinct localities from verified places for filter dropdown
   const localities = Array.from(new Set(allMasterPlaces.map((p) => p.locality).filter(Boolean)));
 
   return (
-    <div className="space-y-4 sm:space-y-6 pb-24 sm:pb-16 font-sans">
-      {/* Header Banner - Modern Civic Slate with Crimson & Emerald Accents */}
-      <div className="bg-slate-900 text-white p-4 sm:p-8 rounded-2xl sm:rounded-3xl shadow-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 sm:gap-6 border border-slate-800">
-        <div>
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
-            <span className="bg-emerald-600 text-white text-[10px] sm:text-xs font-bold px-2.5 sm:px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
-              <ShieldCheck className="w-3.5 h-3.5" /> Town Boundary Verified (PIN 274401)
-            </span>
-            <span className="text-[10px] sm:text-xs text-slate-400 font-medium">NH-27 Highway Corridor</span>
+    <div className="space-y-3.5 sm:space-y-5 pb-24 sm:pb-16 font-sans max-w-7xl mx-auto px-2.5 sm:px-4 lg:px-6">
+      {/* ========================================================
+          1. SIMPLIFIED HEADER & HERO (Compact on Mobile)
+          ======================================================== */}
+      <div className="bg-[#18232E] text-white p-3.5 sm:p-5 lg:p-6 rounded-2xl shadow-md border border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="bg-[#0D5E49] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-2xs">
+                <ShieldCheck className="w-3 h-3" /> PIN 274401
+              </span>
+              <span className="text-[11px] text-slate-400 font-medium truncate">
+                NH-27 Corridor, Kushinagar
+              </span>
+            </div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white tracking-tight leading-snug">
+              Fazilnagar Town Directory
+            </h1>
+            <p className="text-slate-300 text-xs mt-0.5 max-w-xl line-clamp-1 sm:line-clamp-none font-medium">
+              Verified local schools, healthcare, shops, pharmacies, markets, and public services.
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
-            Fazilnagar Complete Local Directory
-          </h1>
-          <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
-            Exact, verified physical locations strictly within Fazilnagar town limits. Complete directory of schools,
-            colleges, hospitals, clinics, sweet shops, pharmacies, religious shrines, banks, and essential services.
-          </p>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 sm:gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 sm:px-4 py-2.5 rounded-xl transition shadow-sm cursor-pointer active:scale-95"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>Add / Suggest Place</span>
-          </button>
-
-          <a
-            href={`${API.defaults.baseURL || "https://fazilnagar-portal.onrender.com/api"}/places/export/csv`}
-            className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-700 transition"
-          >
-            <Download className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Export CSV</span>
-          </a>
-
-          {/* Admin-only review queue toggle */}
-          {isAdmin && (
+          {/* Quick Action Buttons */}
+          <div className="flex items-center gap-2 shrink-0 pt-1 sm:pt-0">
             <button
-              onClick={() => {
-                setShowAdminQueue(!showAdminQueue);
-                if (!showAdminQueue) fetchAdminQueue();
-              }}
-              className="inline-flex items-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold px-3.5 py-2.5 rounded-xl border border-amber-300 transition cursor-pointer shadow-xs"
+              onClick={() => setShowAddModal(true)}
+              className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow-xs cursor-pointer active:scale-95"
             >
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-              <span>{showAdminQueue ? "Close Review Queue" : `Review Queue (${stats?.inReview || adminQueuePlaces.filter((p) => !p.isPublished).length || 4})`}</span>
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>+ Add Place</span>
             </button>
-          )}
+
+            <a
+              href={`${API.defaults.baseURL || "https://fazilnagar-portal.onrender.com/api"}/places/export/csv`}
+              className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-700 transition"
+              title="Download CSV directory"
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-400" />
+              <span>CSV</span>
+            </a>
+
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setShowAdminQueue(!showAdminQueue);
+                  if (!showAdminQueue) fetchAdminQueue();
+                }}
+                className="inline-flex items-center gap-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold px-3 py-2 rounded-xl border border-amber-300 transition cursor-pointer shadow-xs"
+              >
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                <span>Queue ({stats?.inReview || adminQueuePlaces.filter((p) => !p.isPublished).length || 4})</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Moderation & Review Queue Drawer (Admin Only) */}
+      {/* Moderation Queue Drawer (Admin Only) */}
       {isAdmin && showAdminQueue && (
-        <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6 shadow-sm space-y-4">
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-amber-600" />
-              <h3 className="text-sm font-bold text-amber-900">
-                Verification & Boundary Moderation Queue (Admin Desk Only)
+            <div className="flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+              <h3 className="text-xs font-bold text-amber-900">
+                Verification Desk & Boundary Moderation (Admin Desk)
               </h3>
             </div>
-            <span className="text-xs font-semibold text-amber-800">
-              {adminQueuePlaces.filter((p) => !p.isPublished).length || 4} Candidates Pending Ground Verification
+            <span className="text-[11px] font-semibold text-amber-800">
+              {adminQueuePlaces.filter((p) => !p.isPublished).length || 4} Pending Ground Audit
             </span>
           </div>
-          <p className="text-xs text-amber-800 leading-relaxed">
-            Per the Non-Negotiable Geographical Rule, establishments whose physical location falls outside town boundaries
-            or whose exact street address is unconfirmed are quarantined in this review queue and excluded from public listings.
-          </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             {(adminQueuePlaces.length > 0 ? adminQueuePlaces : seedPlaces)
               .filter((p) => !p.isPublished)
               .map((item) => (
-                <div key={item._id || item.id} className="bg-white p-4 rounded-2xl border border-amber-200 shadow-sm space-y-2">
+                <div key={item._id || item.id} className="bg-white p-3.5 rounded-xl border border-amber-200 shadow-2xs space-y-1.5 text-xs">
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800">
-                        {(item.verificationStatus || "Needs Boundary Audit").replace(/_/g, " ")}
-                      </span>
-                      <h4 className="text-sm font-bold text-slate-900 mt-1">{item.name}</h4>
-                      <p className="text-xs text-slate-500">{item.addressFull || item.locality}</p>
+                      <h4 className="font-bold text-slate-900">{item.name}</h4>
+                      <p className="text-[11px] text-slate-500">{item.addressFull || item.locality}</p>
                     </div>
-                    <span className="text-[10px] font-semibold text-slate-400">{item.category}</span>
+                    <span className="text-[10px] uppercase font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
+                      {item.category}
+                    </span>
                   </div>
-
-                  <p className="text-[11px] text-amber-700 italic bg-amber-50 p-2 rounded-lg border border-amber-100">
-                    Reason: {item.reviewNotes || "Pending ground coordinate and boundary audit."}
-                  </p>
-
-                  <div className="flex items-center justify-end gap-2 pt-1">
+                  <div className="flex justify-end pt-1">
                     <button
                       onClick={() => handleApprovePlace(item._id || item.id)}
-                      className="text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg transition cursor-pointer"
+                      className="text-xs font-bold bg-[#0D5E49] hover:bg-emerald-800 text-white px-2.5 py-1.5 rounded-lg transition"
                     >
-                      Verify & Publish Inside Town
+                      Verify & Publish
                     </button>
                   </div>
                 </div>
@@ -610,71 +709,50 @@ export default function Directory({ user }) {
         </div>
       )}
 
-      {/* Verification Metrics Bar */}
+      {/* ========================================================
+          2. COMPACT SUMMARY STATS ROW (Replaces 4 oversized cards)
+          ======================================================== */}
       {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-            <div>
-              <span className="text-slate-400 text-[10px] uppercase font-bold">Total Researched</span>
-              <p className="text-lg font-extrabold text-slate-900">{stats.total}</p>
-            </div>
-            <Building className="w-5 h-5 text-slate-400" />
+        <div className="bg-white px-3.5 py-2.5 rounded-xl border border-slate-200/90 shadow-2xs flex items-center justify-between text-xs overflow-x-auto gap-3 scrollbar-none">
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="font-extrabold text-slate-900 text-sm">{stats.published || places.length}</span>
+            <span className="text-slate-600 font-medium">Verified Town Places</span>
           </div>
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-            <div>
-              <span className="text-emerald-700 text-[10px] uppercase font-bold">Town Verified (274401)</span>
-              <p className="text-lg font-extrabold text-emerald-700">{stats.published}</p>
-            </div>
-            <ShieldCheck className="w-5 h-5 text-emerald-600" />
+
+          <div className="h-4 w-px bg-slate-200 shrink-0"></div>
+
+          <div className="flex items-center gap-1.5 shrink-0 text-slate-600">
+            <Layers className="w-3.5 h-3.5 text-slate-400" />
+            <span className="font-bold text-slate-800">{stats.categoryCounts?.length || 9}</span>
+            <span>Civic Categories</span>
           </div>
-          {isAdmin ? (
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-amber-700 text-[10px] uppercase font-bold">In Review Queue</span>
-                <p className="text-lg font-extrabold text-amber-700">{stats.inReview || adminQueuePlaces.filter((p) => !p.isPublished).length || 4}</p>
-              </div>
-              <AlertTriangle className="w-5 h-5 text-amber-600" />
-            </div>
-          ) : (
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-emerald-700 text-[10px] uppercase font-bold">Accuracy Standard</span>
-                <p className="text-lg font-extrabold text-emerald-800">100% Town Ground</p>
-              </div>
-              <ShieldCheck className="w-5 h-5 text-emerald-600" />
-            </div>
-          )}
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-            <div>
-              <span className="text-red-700 text-[10px] uppercase font-bold">Audited Categories</span>
-              <p className="text-lg font-extrabold text-red-700">{stats.categoryCounts?.length || 8}</p>
-            </div>
-            <Layers className="w-5 h-5 text-red-600" />
+
+          <div className="h-4 w-px bg-slate-200 shrink-0"></div>
+
+          <div className="flex items-center gap-1.5 shrink-0 text-slate-600">
+            <MapPin className="w-3.5 h-3.5 text-red-500" />
+            <span>Fazilnagar Town (PIN 274401)</span>
           </div>
         </div>
       )}
 
-      {/* Search & Filter Bar */}
-      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-        <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row items-center gap-3">
-          <div className="relative flex-1 w-full">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+      {/* ========================================================
+          3. SEARCH & CATEGORY FILTERS (Primary Action Block)
+          ======================================================== */}
+      <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/90 shadow-2xs space-y-2.5">
+        {/* Search input + View Switcher */}
+        <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search by school, clinic, sweet shop, pharmacy, landmark (e.g. NH-27, College Road)..."
+              placeholder="Search schools, hospitals, shops, pharmacies, landmarks…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50 text-slate-900 placeholder-slate-400 text-xs sm:text-sm pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-red-600"
+              className="w-full bg-slate-50/80 text-slate-900 placeholder-slate-400 text-xs sm:text-sm pl-9 pr-8 py-2 rounded-xl border border-slate-200 outline-none focus:border-[#B8323C] focus:bg-white transition"
+              aria-label="Search directory"
             />
-          </div>
-
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button
-              type="submit"
-              className="flex-1 sm:flex-none bg-slate-900 hover:bg-red-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition shadow-sm"
-            >
-              Search
-            </button>
             {searchQuery && (
               <button
                 type="button"
@@ -682,81 +760,100 @@ export default function Directory({ user }) {
                   setSearchQuery("");
                   fetchPlaces();
                 }}
-                className="p-2.5 text-slate-400 hover:text-slate-600 rounded-xl border border-slate-200"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600"
+                aria-label="Clear search"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
+          </div>
 
-            {/* View Mode Switcher */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 ml-auto">
-              <button
-                type="button"
-                onClick={() => setViewMode("map")}
-                className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
-                  viewMode === "map" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Map className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Map View</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("list")}
-                className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
-                  viewMode === "list" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <List className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">List View</span>
-              </button>
-            </div>
+          <button
+            type="submit"
+            className="bg-[#18232E] hover:bg-[#B8323C] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-2xs shrink-0 cursor-pointer"
+          >
+            Search
+          </button>
+
+          {/* View Mode Switcher */}
+          <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 shrink-0">
+            <button
+              type="button"
+              onClick={() => setViewMode("map")}
+              className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition ${
+                viewMode === "map"
+                  ? "bg-white text-slate-900 shadow-2xs"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+              title="Map View"
+            >
+              <MapIcon className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Map</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition ${
+                viewMode === "list"
+                  ? "bg-white text-slate-900 shadow-2xs"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+              title="List View"
+            >
+              <ListIcon className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">List</span>
+            </button>
           </div>
         </form>
 
-        {/* Category Pills Slider */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-semibold custom-scrollbar">
+        {/* Category Pills (Smooth Horizontal Scrolling Without Clipping) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 -mx-1 px-1">
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
             const isSelected =
               selectedCategory === cat.id ||
               (cat.id === "all" && (!selectedCategory || selectedCategory === "all")) ||
               matchesCategory(cat.id, "", selectedCategory);
+
             return (
               <button
                 key={cat.id}
                 onClick={() => handleCategorySelect(cat.id)}
-                className={`px-3.5 py-1.5 rounded-xl whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition flex items-center gap-1.5 text-xs font-semibold shrink-0 cursor-pointer ${
                   isSelected
-                    ? "bg-slate-900 text-white shadow-sm ring-2 ring-red-600/30"
-                    : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/80"
+                    ? "bg-[#18232E] text-white shadow-xs ring-1 ring-slate-800"
+                    : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/70"
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-red-400" : "text-slate-500"}`} />
+                <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-amber-400" : "text-slate-500"}`} />
                 <span>{cat.name}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Secondary Filters Bar */}
+        {/* Secondary Filter & Result Counter */}
         <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100 gap-2">
-          <div className="flex items-center gap-2">
-            <span>Showing:</span>
-            <span className="font-bold text-slate-900">{places.length} Verified Establishments</span>
-            <span>in Fazilnagar Town</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-400">Showing:</span>
+            <span className="font-extrabold text-slate-900">{places.length} places</span>
+            {selectedCategory !== "all" && (
+              <span className="text-[11px] bg-red-50 text-[#B8323C] font-semibold px-2 py-0.2 rounded-full">
+                {selectedCategory}
+              </span>
+            )}
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {localities.length > 0 && (
-              <div className="flex items-center gap-1.5">
-                <Filter className="w-3.5 h-3.5 text-slate-400" />
+              <div className="flex items-center gap-1 text-slate-700">
+                <Filter className="w-3 h-3 text-slate-400" />
                 <select
                   value={selectedLocality}
                   onChange={(e) => setSelectedLocality(e.target.value)}
-                  className="bg-transparent text-slate-700 font-semibold outline-none cursor-pointer text-xs"
+                  className="bg-transparent font-medium outline-none cursor-pointer text-xs"
                 >
-                  <option value="all">All Localities</option>
+                  <option value="all">All Wards / Areas</option>
                   {localities.map((loc) => (
                     <option key={loc} value={loc}>
                       {loc}
@@ -766,31 +863,32 @@ export default function Directory({ user }) {
               </div>
             )}
 
-            <div className="flex items-center gap-1.5">
-              <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
+            <div className="flex items-center gap-1 text-slate-700">
+              <ArrowUpDown className="w-3 h-3 text-slate-400" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="bg-transparent text-slate-700 font-semibold outline-none cursor-pointer text-xs"
+                className="bg-transparent font-medium outline-none cursor-pointer text-xs"
               >
-                <option value="name">Sort Alphabetically (A-Z)</option>
-                <option value="category">Sort by Category</option>
-                <option value="newest">Sort by Recently Verified</option>
+                <option value="name">Sort: A to Z</option>
+                <option value="category">Sort: Category</option>
               </select>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* ========================================================
+          4. MAIN VIEWPORT (Map View or List View)
+          ======================================================== */}
       {places.length === 0 && !loading ? (
-        <div className="bg-white rounded-2xl p-12 text-center border border-[#E1E6EA] shadow-xs max-w-xl mx-auto my-8">
-          <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto mb-3">
-            <Search className="w-6 h-6 text-slate-400" />
+        <div className="bg-white rounded-2xl p-8 sm:p-12 text-center border border-slate-200 shadow-2xs max-w-md mx-auto my-6">
+          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto mb-2.5">
+            <Search className="w-5 h-5 text-slate-400" />
           </div>
-          <h3 className="text-base font-bold text-[#18232E] font-heading">No establishments found</h3>
-          <p className="text-xs text-[#647180] mt-1 max-w-md mx-auto">
-            No verified places matched your search query or category filter within Fazilnagar town limits.
+          <h3 className="text-sm font-bold text-slate-900">No establishments found</h3>
+          <p className="text-xs text-slate-500 mt-1">
+            No verified places matched your filters within Fazilnagar town limits.
           </p>
           <button
             onClick={() => {
@@ -799,200 +897,230 @@ export default function Directory({ user }) {
               setSearchQuery("");
               setSearchParams({});
             }}
-            className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#18232E] hover:bg-[#B8323C] text-white text-xs font-bold transition shadow-xs"
+            className="mt-3.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#18232E] hover:bg-[#B8323C] text-white text-xs font-bold transition shadow-xs"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset All Filters</span>
+            <RotateCcw className="w-3 h-3" />
+            <span>Reset Filters</span>
           </button>
         </div>
       ) : viewMode === "map" ? (
         /* Map View + Synchronized List */
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          {/* Leaflet Map */}
-          <div className="lg:col-span-2 bg-slate-50 rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200 shadow-md relative min-h-[290px] h-[310px] sm:h-[420px] lg:h-[580px]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 sm:gap-5">
+          {/* Leaflet Map with Gesture Control (Part B Fix) */}
+          <div
+            className={`lg:col-span-2 bg-slate-50 rounded-2xl overflow-hidden border border-slate-200/90 shadow-sm relative transition-all duration-300 ${
+              isMapExpanded ? "h-[460px] sm:h-[520px] lg:h-[620px]" : "h-[270px] sm:h-[380px] lg:h-[560px]"
+            }`}
+          >
             <div
               ref={mapContainerRef}
               id="fazilnagar-leaflet-map"
-              className="w-full h-full z-10 min-h-[290px]"
-              style={{ minHeight: "290px", height: "100%", width: "100%", position: "relative" }}
+              className="w-full h-full z-10"
+              style={{ height: "100%", width: "100%", position: "relative" }}
             />
-            <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-20 bg-white/95 backdrop-blur-sm px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl border border-slate-200 text-[10px] sm:text-[11px] font-semibold text-slate-700 shadow-sm flex items-center gap-1.5 sm:gap-2 pointer-events-none">
+
+            {/* Top Info Badge */}
+            <div className="absolute top-2.5 left-2.5 z-20 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-200 text-[10px] sm:text-[11px] font-semibold text-slate-700 shadow-2xs flex items-center gap-1.5 pointer-events-none">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Coordinates: 26.6827° N, 84.0498° E (Fazilnagar)</span>
+              <span>26.6827° N, 84.0498° E (Fazilnagar)</span>
             </div>
+
+            {/* Mobile Map Expand/Collapse Toggle */}
+            <button
+              type="button"
+              onClick={() => setIsMapExpanded((prev) => !prev)}
+              className="absolute top-2.5 right-2.5 z-20 bg-white/95 hover:bg-white text-slate-700 hover:text-slate-900 p-1.5 rounded-lg border border-slate-200 shadow-2xs text-[10px] font-bold flex items-center gap-1 transition"
+              title={isMapExpanded ? "Compact map" : "Expand map"}
+            >
+              {isMapExpanded ? (
+                <>
+                  <Minimize2 className="w-3.5 h-3.5 text-slate-600" />
+                  <span className="hidden sm:inline">Compact</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-3.5 h-3.5 text-slate-600" />
+                  <span className="hidden sm:inline">Expand</span>
+                </>
+              )}
+            </button>
+
+            {/* Mobile Interaction Mode Activator Overlay (Part B Fix) */}
+            {!isMapActive && (
+              <div className="absolute inset-x-0 bottom-3 z-20 flex justify-center pointer-events-none lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => setIsMapActive(true)}
+                  className="pointer-events-auto bg-[#18232E]/95 hover:bg-[#18232E] text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-lg border border-slate-700/80 backdrop-blur-md flex items-center gap-1.5 active:scale-95 transition"
+                >
+                  <Compass className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Tap to interact with map</span>
+                </button>
+              </div>
+            )}
+
+            {/* Mobile Active Interaction Badge: Allows User to Lock Map & Resume Page Scrolling */}
+            {isMapActive && (
+              <div className="absolute top-11 right-2.5 z-20 lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => setIsMapActive(false)}
+                  className="bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg border border-emerald-400 backdrop-blur-md flex items-center gap-1 active:scale-95 transition cursor-pointer"
+                >
+                  <Lock className="w-3 h-3" />
+                  <span>Lock map to scroll</span>
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Synchronized Place Details Card OR Category Items List */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-sm flex flex-col justify-between min-h-[380px] sm:min-h-[480px]">
+          {/* Synchronized Place Details Card OR Side List */}
+          <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs flex flex-col justify-between min-h-[320px] sm:min-h-[420px]">
             {selectedPlace ? (
-              <div className="flex flex-col justify-between h-full space-y-4">
+              <div className="flex flex-col justify-between h-full space-y-3">
                 <div>
                   {/* Back to List Navigation Button */}
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                  <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-2.5">
                     <button
                       type="button"
                       onClick={() => setSelectedPlace(null)}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-[#B8323C] bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition cursor-pointer"
+                      className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-[#B8323C] bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition cursor-pointer"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" />
-                      <span>
-                        Back to{" "}
-                        {selectedCategory === "all"
-                          ? "All Places"
-                          : (CATEGORIES.find((c) => c.id === selectedCategory || matchesCategory(c.id, "", selectedCategory))?.name || selectedCategory)}{" "}
-                        ({places.length})
-                      </span>
+                      <span>Back to List ({places.length})</span>
                     </button>
-                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Verified
+                    <span className="text-[10px] font-bold text-[#0D5E49] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3 text-[#0D5E49]" /> Verified
                     </span>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-red-50 text-red-800 border border-red-100">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-50 text-[#B8323C] border border-red-100">
                         {selectedPlace.category}
                       </span>
                       {selectedPlace.subcategory && (
-                        <span className="text-[10px] font-semibold text-slate-500">
+                        <span className="text-[10px] font-medium text-slate-500">
                           {selectedPlace.subcategory}
                         </span>
                       )}
                     </div>
 
                     <div>
-                      <h3 className="text-xl font-extrabold text-slate-900 leading-snug">{selectedPlace.name}</h3>
+                      <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
+                        {selectedPlace.name}
+                      </h3>
                       {selectedPlace.alternateNames?.length > 0 && (
-                        <p className="text-xs text-slate-500 mt-0.5">{selectedPlace.alternateNames.join(", ")}</p>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          {selectedPlace.alternateNames.join(", ")}
+                        </p>
                       )}
                     </div>
 
-                    <div className="space-y-2.5 text-xs text-slate-600 py-3 border-y border-slate-100">
-                      <div className="flex items-start gap-2">
-                        <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                    <div className="space-y-1.5 text-xs text-slate-600 py-2 border-y border-slate-100">
+                      <div className="flex items-start gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
                         <span>{selectedPlace.addressFull}</span>
                       </div>
                       {selectedPlace.openingHours && (
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <span>{selectedPlace.openingHours}</span>
                         </div>
                       )}
                       {selectedPlace.phone && (
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                        <div className="flex items-center gap-1.5">
+                          <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <span>{selectedPlace.phone}</span>
                         </div>
                       )}
                     </div>
 
                     {selectedPlace.description && (
-                      <p className="text-xs text-slate-600 leading-relaxed">{selectedPlace.description}</p>
-                    )}
-
-                    {selectedPlace.services?.length > 0 && (
-                      <div className="pt-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
-                          Services / Offerings
-                        </span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {selectedPlace.services.map((srv, i) => (
-                            <span key={i} className="text-[11px] bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-lg">
-                              {srv}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+                      <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
+                        {selectedPlace.description}
+                      </p>
                     )}
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-slate-100 space-y-2">
+                <div className="pt-3 border-t border-slate-100 space-y-2">
                   <div className="grid grid-cols-2 gap-2">
                     {selectedPlace.phone ? (
                       <a
                         href={`tel:${selectedPlace.phone.replace(/\s+/g, "")}`}
-                        className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2.5 rounded-xl transition text-center flex items-center justify-center gap-1.5"
+                        className="bg-[#18232E] hover:bg-slate-800 text-white font-bold text-xs py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5"
                       >
                         <Phone className="w-3.5 h-3.5" />
-                        <span>Call Now</span>
+                        <span>Call</span>
                       </a>
                     ) : (
-                      <button
-                        disabled
-                        className="bg-slate-100 text-slate-400 font-medium text-xs py-2.5 rounded-xl text-center cursor-not-allowed"
-                      >
-                        No Public Phone
-                      </button>
+                      <span className="bg-slate-100 text-slate-400 font-medium text-xs py-2 rounded-xl text-center">
+                        No Phone
+                      </span>
                     )}
 
                     <button
                       type="button"
                       onClick={() => openGoogleMapsDirections(selectedPlace)}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition text-center flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                      className="bg-[#0D5E49] hover:bg-emerald-800 text-white font-bold text-xs py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
                     >
                       <Navigation className="w-3.5 h-3.5" />
-                      <span>Live Directions</span>
+                      <span>Directions</span>
                     </button>
                   </div>
 
                   <button
                     onClick={() => setDetailModalPlace(selectedPlace)}
-                    className="w-full text-center text-xs text-slate-500 hover:text-slate-800 font-semibold py-1 transition"
+                    className="w-full text-center text-xs text-slate-500 hover:text-slate-800 font-semibold py-0.5 transition"
                   >
-                    View Full Audit & Metadata
+                    View Full Metadata
                   </button>
                 </div>
               </div>
             ) : (
-              /* When no place is selected: Display list of items in the selected category! */
+              /* When no place is selected: Display clean compact list */
               <div className="flex flex-col h-full">
-                <div className="pb-3 border-b border-slate-100 mb-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
-                      <Layers className="w-4 h-4 text-[#B8323C]" />
-                      <span>
-                        {selectedCategory === "all"
-                          ? "All Town Places"
-                          : (CATEGORIES.find((c) => c.id === selectedCategory || matchesCategory(c.id, "", selectedCategory))?.name || selectedCategory)}
-                      </span>
+                <div className="pb-2 border-b border-slate-100 mb-2 flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-[#B8323C]" />
+                    <span>
+                      {selectedCategory === "all"
+                        ? "Town Establishments"
+                        : (CATEGORIES.find((c) => c.id === selectedCategory || matchesCategory(c.id, "", selectedCategory))?.name || selectedCategory)}
                     </span>
-                    <span className="text-[11px] font-bold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full">
-                      {places.length} places
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 mt-1">
-                    Click any place below to see full details & GPS directions:
-                  </p>
+                  </span>
+                  <span className="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">
+                    {places.length}
+                  </span>
                 </div>
 
-                <div ref={sideListRef} className="space-y-2 overflow-y-auto max-h-[420px] pr-1 custom-scrollbar flex-1">
+                <div ref={sideListRef} className="space-y-1.5 overflow-y-auto max-h-[380px] lg:max-h-[480px] pr-1 custom-scrollbar flex-1">
                   {places.map((p, idx) => (
                     <div
                       key={`${p._id || p.id || 'place'}-${idx}`}
                       onClick={() => handleSelectPlace(p)}
-                      className="p-3 rounded-2xl border border-slate-100 hover:border-red-300 bg-slate-50/70 hover:bg-white hover:shadow-xs transition cursor-pointer group flex items-start justify-between gap-2"
+                      className="p-2.5 rounded-xl border border-slate-100 hover:border-red-200 bg-slate-50/70 hover:bg-white transition cursor-pointer group flex items-center justify-between gap-2"
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.2 rounded bg-red-100/60 text-[#B8323C]">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[9px] font-bold uppercase px-1.5 py-0.2 rounded bg-red-100/70 text-[#B8323C]">
                             {p.subcategory || p.category}
                           </span>
                           {p.phone && (
                             <span className="text-[9px] text-emerald-700 font-semibold">
-                              📞 Verified
+                              📞 Phone
                             </span>
                           )}
                         </div>
-                        <h4 className="text-sm font-bold text-slate-900 group-hover:text-[#B8323C] transition mt-1 truncate">
+                        <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#B8323C] transition mt-0.5 truncate">
                           {p.name}
                         </h4>
-                        <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5 truncate">
-                          <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                          <span className="truncate">{p.streetOrLandmark || p.addressFull || p.locality}</span>
+                        <p className="text-[11px] text-slate-500 truncate mt-0.2">
+                          {p.streetOrLandmark || p.addressFull || p.locality}
                         </p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#B8323C] shrink-0 self-center transition-transform group-hover:translate-x-0.5" />
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#B8323C] shrink-0" />
                     </div>
                   ))}
                 </div>
@@ -1001,38 +1129,44 @@ export default function Directory({ user }) {
           </div>
         </div>
       ) : (
-        /* List View */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        /* List View (Compact, Consistent Cards) */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {places.map((place, idx) => (
             <div
               key={`${place._id || place.id || 'place'}-${idx}`}
-              className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between"
+              className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs hover:shadow-xs transition flex flex-col justify-between"
             >
               <div>
-                <div className="flex items-center justify-between text-xs mb-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-teal-800">
+                <div className="flex items-center justify-between text-xs mb-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700">
                     {place.category}
                   </span>
-                  <span className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Town Verified
+                  <span className="text-[10px] text-[#0D5E49] font-bold flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-[#0D5E49]" /> Verified
                   </span>
                 </div>
 
-                <h3 className="text-base font-extrabold text-slate-900">{place.name}</h3>
-                {place.subcategory && <p className="text-xs font-semibold text-teal-700 mb-2">{place.subcategory}</p>}
-                <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed mb-3">{place.description}</p>
+                <h3 className="text-sm font-bold text-slate-900 leading-snug">{place.name}</h3>
+                {place.subcategory && (
+                  <p className="text-[11px] font-medium text-slate-500 mt-0.5">{place.subcategory}</p>
+                )}
+                {place.description && (
+                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed mt-1.5">
+                    {place.description}
+                  </p>
+                )}
               </div>
 
-              <div className="pt-3 border-t border-slate-100 space-y-2.5">
-                <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+              <div className="pt-2.5 border-t border-slate-100 mt-3 space-y-2">
+                <div className="text-[11px] text-slate-500 flex items-center gap-1.5 truncate">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   <span className="truncate">{place.streetOrLandmark || place.addressFull}</span>
                 </div>
 
                 {place.openingHours && (
                   <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                    <span>{place.openingHours}</span>
+                    <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate">{place.openingHours}</span>
                   </div>
                 )}
 
@@ -1040,21 +1174,24 @@ export default function Directory({ user }) {
                   {place.phone ? (
                     <a
                       href={`tel:${place.phone.replace(/\s+/g, "")}`}
-                      className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2 rounded-xl transition text-center flex items-center justify-center gap-1"
+                      className="bg-[#18232E] hover:bg-slate-800 text-white font-bold text-xs py-1.5 rounded-xl transition text-center flex items-center justify-center gap-1"
                     >
                       <Phone className="w-3 h-3" />
                       <span>Call</span>
                     </a>
                   ) : (
-                    <span className="text-center text-[10px] text-slate-400 py-2 border border-slate-100 rounded-xl">
-                      In-Person Visit
-                    </span>
+                    <button
+                      onClick={() => setDetailModalPlace(place)}
+                      className="text-center text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 font-semibold py-1.5 rounded-xl transition"
+                    >
+                      Details
+                    </button>
                   )}
 
                   <button
                     type="button"
                     onClick={() => openGoogleMapsDirections(place)}
-                    className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-xs py-2 rounded-xl transition text-center flex items-center justify-center gap-1 shadow-xs cursor-pointer"
+                    className="bg-[#0D5E49] hover:bg-emerald-800 text-white font-bold text-xs py-1.5 rounded-xl transition text-center flex items-center justify-center gap-1 shadow-2xs cursor-pointer"
                   >
                     <Navigation className="w-3 h-3" />
                     <span>Directions</span>
@@ -1066,23 +1203,26 @@ export default function Directory({ user }) {
         </div>
       )}
 
-      {/* Place Detail & Audit Modal (Section 2 & 9) */}
+      {/* Place Detail & Audit Modal */}
       {detailModalPlace && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto animate-fade-in-up sm:animate-modal-pop">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl max-w-lg w-full p-4 sm:p-5 shadow-2xl relative max-h-[85vh] overflow-y-auto animate-fade-in-up sm:animate-modal-pop">
             <button
               onClick={() => setDetailModalPlace(null)}
-              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-slate-400 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 cursor-pointer"
+              className="absolute top-3 right-3 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 cursor-pointer"
+              aria-label="Close modal"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-teal-50 text-teal-800">
-                  {detailModalPlace.category} • {detailModalPlace.subcategory || "Verified Establishment"}
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-50 text-[#B8323C]">
+                  {detailModalPlace.category} • {detailModalPlace.subcategory || "Verified"}
                 </span>
-                <h2 className="text-2xl font-black text-slate-900 mt-2">{detailModalPlace.name}</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900 mt-1.5 leading-snug">
+                  {detailModalPlace.name}
+                </h2>
                 {detailModalPlace.alternateNames?.length > 0 && (
                   <p className="text-xs text-slate-400 mt-0.5">
                     Also known as: {detailModalPlace.alternateNames.join(", ")}
@@ -1090,19 +1230,19 @@ export default function Directory({ user }) {
                 )}
               </div>
 
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2 text-xs">
-                <div className="flex items-start gap-2">
-                  <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-1.5 text-xs">
+                <div className="flex items-start gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-slate-800">Full Address:</span>
+                    <span className="font-bold text-slate-800">Address:</span>
                     <p className="text-slate-600">{detailModalPlace.addressFull}</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200 text-slate-600">
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200 text-slate-600">
                   <div>
                     <span className="font-bold text-slate-800">Locality:</span>
-                    <p>{detailModalPlace.locality}</p>
+                    <p>{detailModalPlace.locality || "Fazilnagar"}</p>
                   </div>
                   <div>
                     <span className="font-bold text-slate-800">Coordinates:</span>
@@ -1115,75 +1255,52 @@ export default function Directory({ user }) {
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <span className="text-xs font-bold text-slate-800">Description & Profile:</span>
-                <p className="text-xs text-slate-600 leading-relaxed">{detailModalPlace.description}</p>
-              </div>
-
-              {detailModalPlace.services?.length > 0 && (
-                <div>
-                  <span className="text-xs font-bold text-slate-800 block mb-1.5">Available Services:</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {detailModalPlace.services.map((srv, idx) => (
-                      <span key={idx} className="text-xs bg-slate-100 text-slate-700 px-3 py-1 rounded-xl">
-                        {srv}
-                      </span>
-                    ))}
-                  </div>
+              {detailModalPlace.description && (
+                <div className="space-y-0.5">
+                  <span className="text-xs font-bold text-slate-800">About:</span>
+                  <p className="text-xs text-slate-600 leading-relaxed">{detailModalPlace.description}</p>
                 </div>
               )}
 
-              {/* Research & Verification Metadata (Section 2) */}
-              <div className="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-100 space-y-1.5 text-xs">
+              {/* Research & Verification Metadata */}
+              <div className="bg-emerald-50/70 p-3 rounded-xl border border-emerald-100 space-y-1 text-xs">
                 <div className="flex items-center gap-1.5 text-emerald-950 font-bold">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Geographical Verification Audit</span>
+                  <ShieldCheck className="w-4 h-4 text-[#0D5E49]" />
+                  <span>Geographical Audit Status</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-[11px] text-emerald-900 pt-1">
+                <div className="grid grid-cols-2 gap-2 text-[11px] text-emerald-900 pt-0.5">
                   <div>
-                    <span className="font-semibold">Town Boundary Status:</span> Confirmed (Inside Town)
+                    <span className="font-semibold">Town Limits:</span> Confirmed Inside Town
                   </div>
                   <div>
                     <span className="font-semibold">Postal PIN:</span> 274401 (Fazilnagar)
                   </div>
-                  <div>
-                    <span className="font-semibold">Last Audited:</span>{" "}
-                    {new Date(detailModalPlace.lastVerifiedAt || Date.now()).toLocaleDateString()}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Confidence Level:</span> High (Corroborated)
-                  </div>
                 </div>
-                {detailModalPlace.sourceUrls?.length > 0 && (
-                  <div className="text-[10px] text-emerald-800/80 pt-1 border-t border-emerald-100">
-                    Sources: {detailModalPlace.sourceUrls.join(" • ")}
-                  </div>
-                )}
               </div>
 
-              {/* CTA Buttons */}
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
                 {detailModalPlace.phone ? (
                   <a
                     href={`tel:${detailModalPlace.phone.replace(/\s+/g, "")}`}
-                    className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-3 rounded-xl transition text-center flex items-center justify-center gap-2"
+                    className="bg-[#18232E] hover:bg-slate-800 text-white font-bold text-xs py-2.5 rounded-xl transition text-center flex items-center justify-center gap-1.5"
                   >
-                    <Phone className="w-4 h-4" />
+                    <Phone className="w-3.5 h-3.5" />
                     <span>Call ({detailModalPlace.phone})</span>
                   </a>
                 ) : (
-                  <button disabled className="bg-slate-100 text-slate-400 font-semibold text-xs py-3 rounded-xl">
-                    No Public Phone
+                  <button disabled className="bg-slate-100 text-slate-400 font-semibold text-xs py-2.5 rounded-xl">
+                    No Phone
                   </button>
                 )}
 
                 <button
                   type="button"
                   onClick={() => openGoogleMapsDirections(detailModalPlace)}
-                  className="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs py-3 rounded-xl transition text-center flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                  className="bg-[#0D5E49] hover:bg-emerald-800 text-white font-bold text-xs py-2.5 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                 >
-                  <Navigation className="w-4 h-4" />
-                  <span>Navigate from My Location</span>
+                  <Navigation className="w-3.5 h-3.5" />
+                  <span>Live Directions</span>
                 </button>
               </div>
             </div>
@@ -1191,30 +1308,31 @@ export default function Directory({ user }) {
         </div>
       )}
 
-      {/* Suggest Place Modal (Section 11) */}
+      {/* Suggest Place Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto animate-fade-in-up sm:animate-modal-pop">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl max-w-lg w-full p-4 sm:p-5 shadow-2xl relative max-h-[88vh] overflow-y-auto animate-fade-in-up sm:animate-modal-pop">
             <button
               onClick={() => setShowAddModal(false)}
-              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-slate-400 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 cursor-pointer"
+              className="absolute top-3 right-3 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 cursor-pointer"
+              aria-label="Close modal"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-[#0D5E49] flex items-center justify-center">
                 <PlusCircle className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900">Suggest Establishment for Directory</h3>
+                <h3 className="text-sm font-bold text-slate-900">Suggest Establishment for Directory</h3>
                 <p className="text-[11px] text-slate-500">
-                  Establishment must be physically located within Fazilnagar town limits.
+                  Must be physically located within Fazilnagar town limits (PIN 274401).
                 </p>
               </div>
             </div>
 
-            <form onSubmit={handleAddSubmit} className="space-y-3.5 text-xs">
+            <form onSubmit={handleAddSubmit} className="space-y-3 text-xs">
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">Establishment Name *</label>
                 <input
@@ -1222,17 +1340,17 @@ export default function Directory({ user }) {
                   name="name"
                   required
                   placeholder="e.g. Mahavir Inter College, Kisan Seva Kendra"
-                  className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600"
+                  className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#0D5E49]"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">Category *</label>
                   <select
                     name="category"
                     required
-                    className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600 bg-white"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#0D5E49] bg-white"
                   >
                     <option value="">Select Category</option>
                     <option value="Schools & Colleges">Schools & Colleges</option>
@@ -1251,7 +1369,7 @@ export default function Directory({ user }) {
                     type="text"
                     name="subcategory"
                     placeholder="e.g. Pharmacy, Inter College"
-                    className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#0D5E49]"
                   />
                 </div>
               </div>
@@ -1263,27 +1381,27 @@ export default function Directory({ user }) {
                   name="addressFull"
                   required
                   placeholder="e.g. College Road, Opp. SBI Branch, Fazilnagar - 274401"
-                  className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600"
+                  className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#0D5E49]"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">Locality / Ward</label>
                   <input
                     type="text"
                     name="locality"
                     placeholder="e.g. College Road, Main Chowk"
-                    className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#0D5E49]"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Public Phone (Optional)</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Phone Number (Optional)</label>
                   <input
                     type="tel"
                     name="phone"
                     placeholder="10-digit phone number"
-                    className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#0D5E49]"
                   />
                 </div>
               </div>
@@ -1293,19 +1411,14 @@ export default function Directory({ user }) {
                 <textarea
                   name="description"
                   rows={2}
-                  placeholder="Describe services, opening hours, or landmarks..."
-                  className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-teal-600"
+                  placeholder="Describe services, opening hours, landmarks…"
+                  className="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:border-[#0D5E49]"
                 ></textarea>
               </div>
 
-              <p className="text-[10px] text-slate-400">
-                Note: Listings are verified by town moderators before publication to ensure no out-of-town entries are
-                included.
-              </p>
-
               <button
                 type="submit"
-                className="w-full bg-slate-900 hover:bg-teal-700 text-white font-bold text-xs py-3 rounded-xl transition"
+                className="w-full bg-[#18232E] hover:bg-[#0D5E49] text-white font-bold text-xs py-2.5 rounded-xl transition"
               >
                 Submit Establishment for Verification
               </button>
@@ -1316,8 +1429,8 @@ export default function Directory({ user }) {
 
       {/* Toast Feedback */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs border border-slate-800 transition-all duration-300">
-          <CheckCircle2 className="w-4 h-4 text-teal-400" />
+        <div className="fixed bottom-20 right-4 z-50 bg-[#18232E] text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2.5 text-xs border border-slate-800 transition-all duration-300">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{toastMessage}</span>
         </div>
       )}
