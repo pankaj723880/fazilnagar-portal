@@ -184,6 +184,24 @@ export default function Directory({ user }) {
     return filterPlaces(allMasterPlaces, selectedCategory, selectedLocality, searchQuery, sortBy);
   }, [allMasterPlaces, selectedCategory, selectedLocality, searchQuery, sortBy]);
 
+  const placesRef = useRef(places);
+  useEffect(() => {
+    placesRef.current = places;
+  }, [places]);
+
+  const selectedPlaceRef = useRef(selectedPlace);
+  useEffect(() => {
+    selectedPlaceRef.current = selectedPlace;
+  }, [selectedPlace]);
+
+  const isSamePlace = useCallback((a, b) => {
+    if (!a || !b) return false;
+    const aId = a._id || a.id || a.slug;
+    const bId = b._id || b.id || b.slug;
+    if (aId && bId) return String(aId) === String(bId);
+    return Boolean(a.name && b.name && a.name === b.name);
+  }, []);
+
   // Scroll side list back to top whenever category or filter changes
   useEffect(() => {
     if (sideListRef.current) {
@@ -348,7 +366,7 @@ export default function Directory({ user }) {
       // On zoom, re-render markers to handle clustering dynamically
       map.on("zoomend", () => {
         if (mapInstanceRef.current) {
-          renderMapMarkers(places);
+          renderMapMarkers(placesRef.current || places);
         }
       });
     }
@@ -412,7 +430,7 @@ export default function Directory({ user }) {
     });
     markersRef.current = [];
 
-    const itemsWithCoords = items.filter(
+    const itemsWithCoords = (items || []).filter(
       (p) =>
         p.isPublished !== false &&
         p.latitude !== null &&
@@ -422,9 +440,14 @@ export default function Directory({ user }) {
     );
 
     const currentZoom = map.getZoom();
+    const currSelected = selectedPlaceRef.current;
 
-    // Group close coordinates when zoomed out (< 16) to prevent pin overlap
-    if (currentZoom < 16 && itemsWithCoords.length > 8) {
+    // When an entity is selected or map is zoomed in (>= 16), render all individual pins
+    if (currentZoom >= 16 || currSelected || itemsWithCoords.length <= 8) {
+      itemsWithCoords.forEach((place) => {
+        createSinglePlaceMarker(place);
+      });
+    } else {
       const clusters = [];
       const threshold = 0.0018; // approx 150m grouping
 
@@ -466,16 +489,11 @@ export default function Directory({ user }) {
           markersRef.current.push(clusterMarker);
         }
       });
-    } else {
-      // Zoomed in: render individual pins
-      itemsWithCoords.forEach((place) => {
-        createSinglePlaceMarker(place);
-      });
     }
 
     if (itemsWithCoords.length > 0) {
-      if (selectedPlace && selectedPlace.latitude && selectedPlace.longitude) {
-        map.panTo([parseFloat(selectedPlace.latitude), parseFloat(selectedPlace.longitude)], { animate: true });
+      if (currSelected && currSelected.latitude && currSelected.longitude) {
+        map.panTo([parseFloat(currSelected.latitude), parseFloat(currSelected.longitude)], { animate: true });
       }
     }
   };
@@ -486,11 +504,13 @@ export default function Directory({ user }) {
 
     const lat = parseFloat(place.latitude);
     const lng = parseFloat(place.longitude);
-    const isSelected = selectedPlace && (selectedPlace._id === place._id || selectedPlace.id === place.id);
+    const currSelected = selectedPlaceRef.current;
+    const isSelected = isSamePlace(currSelected, place);
 
     const marker = L.marker([lat, lng], {
       icon: createMarkerIcon(isSelected),
       title: place.name,
+      zIndexOffset: isSelected ? 1000 : 0,
     }).addTo(map);
 
     const isVerified = place.verificationStatus === "verified";
@@ -514,7 +534,7 @@ export default function Directory({ user }) {
           <button type="button" class="leaflet-popup-directions-btn" style="color: #0D5E49; background: none; border: none; padding: 0; font-weight: 700; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
             <span>🧭 Directions</span>
           </button>
-          ${place.phone ? `<a href="tel:${place.phone.replace(/\s+/g, '')}" style="color: #18232E; text-decoration: none; font-weight: 700; font-size: 11px;">📞 Call</a>` : ''}
+          ${place.phone ? `<a href="tel:${place.phone.replace(/\\s+/g, '')}" style="color: #18232E; text-decoration: none; font-weight: 700; font-size: 11px;">📞 Call</a>` : ''}
         </div>
       </div>
     `);
@@ -534,30 +554,26 @@ export default function Directory({ user }) {
       handleSelectPlace(place);
     });
 
+    if (isSelected) {
+      setTimeout(() => {
+        if (marker.openPopup) marker.openPopup();
+      }, 150);
+    }
+
     markersRef.current.push(marker);
   };
 
   const handleSelectPlace = (place) => {
+    selectedPlaceRef.current = place;
     setSelectedPlace(place);
     if (mapInstanceRef.current && place.latitude && place.longitude) {
       const lat = parseFloat(place.latitude);
       const lng = parseFloat(place.longitude);
-      // Instant little zoom to 17 and focus on pinned location
-      mapInstanceRef.current.setView([lat, lng], 17, { animate: true });
-
-      markersRef.current.forEach((m) => {
-        if (m.getLatLng) {
-          const pos = m.getLatLng();
-          const isMatch = Math.abs(pos.lat - lat) < 0.0001 && Math.abs(pos.lng - lng) < 0.0001;
-          if (m.setIcon) m.setIcon(createMarkerIcon(isMatch));
-          if (isMatch) {
-            if (m.setZIndexOffset) m.setZIndexOffset(1000);
-            if (m.openPopup) m.openPopup();
-          } else {
-            if (m.setZIndexOffset) m.setZIndexOffset(0);
-          }
-        }
-      });
+      if (!isNaN(lat) && !isNaN(lng)) {
+        // Instant little zoom to 17 and focus on pinned location
+        mapInstanceRef.current.setView([lat, lng], 17, { animate: true });
+        renderMapMarkers(placesRef.current || places);
+      }
     }
   };
 
@@ -1014,169 +1030,113 @@ export default function Directory({ user }) {
             )}
           </div>
 
-          {/* Synchronized Place Details Card OR Side List */}
-          <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs flex flex-col justify-between min-h-[320px] sm:min-h-[420px]">
-            {selectedPlace ? (
-              <div className="flex flex-col justify-between h-full space-y-3">
-                <div>
-                  {/* Back to List Navigation Button */}
-                  <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-2.5">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPlace(null)}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-[#B8323C] bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition cursor-pointer"
-                    >
-                      <ArrowLeft className="w-3.5 h-3.5" />
-                      <span>Back to List ({places.length})</span>
-                    </button>
-                    {selectedPlace.verificationStatus === "verified" ? (
-                      <span className="text-[10px] font-bold text-[#0D5E49] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-[#0D5E49]" /> Verified Location
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3 text-amber-700" /> Needs Verification
-                      </span>
-                    )}
-                  </div>
+          {/* Synchronized Places Side List (Persistent List with Active Zoom & Pin Highlight) */}
+          <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs flex flex-col h-full min-h-[320px] sm:min-h-[420px]">
+            <div className="pb-2 border-b border-slate-100 mb-2 flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-[#B8323C]" />
+                <span>
+                  {selectedCategory === "all"
+                    ? "Town Establishments"
+                    : (CATEGORIES.find((c) => c.id === selectedCategory || matchesCategory(c.id, "", selectedCategory))?.name || selectedCategory)}
+                </span>
+              </span>
+              <span className="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">
+                {places.length} places
+              </span>
+            </div>
 
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-50 text-[#B8323C] border border-red-100">
-                        {selectedPlace.category}
-                      </span>
-                      {selectedPlace.subcategory && (
-                        <span className="text-[10px] font-medium text-slate-500">
-                          {selectedPlace.subcategory}
+            <p className="text-[11px] text-slate-500 mb-2">
+              Click any place below to zoom & highlight pin on map:
+            </p>
+
+            <div ref={sideListRef} className="space-y-2 overflow-y-auto max-h-[380px] lg:max-h-[480px] pr-1 custom-scrollbar flex-1">
+              {places.map((place, idx) => {
+                const isSelected = isSamePlace(selectedPlace, place);
+                const isVerified = place.verificationStatus === "verified";
+                return (
+                  <div
+                    key={`${place._id || place.id || 'place'}-${idx}`}
+                    onClick={() => handleSelectPlace(place)}
+                    className={`p-3 rounded-xl border transition cursor-pointer text-left ${
+                      isSelected
+                        ? "border-blue-500 bg-blue-50/70 shadow-sm ring-1 ring-blue-400"
+                        : "border-slate-100 hover:border-slate-200 bg-slate-50/60 hover:bg-slate-50"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded tracking-wide ${
+                          isSelected
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-red-50 text-[#B8323C]"
+                        }`}>
+                          {place.subcategory || place.category}
+                        </span>
+                        {isVerified && (
+                          <span className="text-[9px] font-semibold text-emerald-700 flex items-center gap-0.5">
+                            <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" /> Verified
+                          </span>
+                        )}
+                      </div>
+                      {isSelected && (
+                        <span className="text-[9px] font-bold text-blue-700 bg-blue-100/90 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>
+                          Pinned & Zoomed
                         </span>
                       )}
                     </div>
 
-                    <div>
-                      <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
-                        {selectedPlace.name}
-                      </h3>
-                      <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono mt-0.5">
-                        <span>ID: {selectedPlace.id || selectedPlace._id || selectedPlace.slug}</span>
-                        <span>•</span>
-                        <span>{selectedPlace.latitude}° N, {selectedPlace.longitude}° E</span>
-                      </div>
-                      {selectedPlace.alternateNames?.length > 0 && (
-                        <p className="text-[11px] text-slate-500 mt-0.5">
-                          {selectedPlace.alternateNames.join(", ")}
-                        </p>
-                      )}
-                    </div>
+                    <h4 className={`text-xs font-bold leading-snug ${
+                      isSelected ? "text-blue-950 font-extrabold" : "text-slate-900"
+                    }`}>
+                      {place.name}
+                    </h4>
 
-                    <div className="space-y-1.5 text-xs text-slate-600 py-2 border-y border-slate-100">
-                      <div className="flex items-start gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-                        <span>{selectedPlace.addressFull}</span>
-                      </div>
-                      {selectedPlace.openingHours && (
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span>{selectedPlace.openingHours}</span>
-                        </div>
-                      )}
-                      {selectedPlace.phone && (
-                        <div className="flex items-center gap-1.5">
-                          <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span>{selectedPlace.phone}</span>
-                        </div>
-                      )}
-                    </div>
+                    <p className="text-[11px] text-slate-500 mt-1 line-clamp-1 flex items-center gap-1">
+                      <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                      <span>{place.streetOrLandmark || place.addressFull || place.locality}</span>
+                    </p>
 
-                    {selectedPlace.description && (
-                      <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
-                        {selectedPlace.description}
-                      </p>
+                    {isSelected && (
+                      <div className="mt-2.5 pt-2 border-t border-blue-200/60 flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openGoogleMapsDirections(place);
+                          }}
+                          className="bg-emerald-700 hover:bg-emerald-800 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-2xs transition cursor-pointer"
+                        >
+                          <Navigation className="w-3 h-3" />
+                          <span>Directions</span>
+                        </button>
+                        {place.phone && (
+                          <a
+                            href={`tel:${place.phone.replace(/\s+/g, '')}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 transition"
+                          >
+                            <Phone className="w-3 h-3" />
+                            <span>Call</span>
+                          </a>
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDetailModalPlace(place);
+                          }}
+                          className="text-slate-600 hover:text-slate-900 text-[10px] font-bold underline transition cursor-pointer"
+                        >
+                          Details
+                        </button>
+                      </div>
                     )}
                   </div>
-                </div>
-
-                <div className="pt-3 border-t border-slate-100 space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    {selectedPlace.phone ? (
-                      <a
-                        href={`tel:${selectedPlace.phone.replace(/\s+/g, "")}`}
-                        className="bg-[#18232E] hover:bg-slate-800 text-white font-bold text-xs py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5"
-                      >
-                        <Phone className="w-3.5 h-3.5" />
-                        <span>Call</span>
-                      </a>
-                    ) : (
-                      <span className="bg-slate-100 text-slate-400 font-medium text-xs py-2 rounded-xl text-center">
-                        No Phone
-                      </span>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={() => openGoogleMapsDirections(selectedPlace)}
-                      className="bg-[#0D5E49] hover:bg-emerald-800 text-white font-bold text-xs py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
-                    >
-                      <Navigation className="w-3.5 h-3.5" />
-                      <span>Directions</span>
-                    </button>
-                  </div>
-
-                  <button
-                    onClick={() => setDetailModalPlace(selectedPlace)}
-                    className="w-full text-center text-xs text-slate-500 hover:text-slate-800 font-semibold py-0.5 transition"
-                  >
-                    View Full Metadata
-                  </button>
-                </div>
-              </div>
-            ) : (
-              /* When no place is selected: Display clean compact list */
-              <div className="flex flex-col h-full">
-                <div className="pb-2 border-b border-slate-100 mb-2 flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-[#B8323C]" />
-                    <span>
-                      {selectedCategory === "all"
-                        ? "Town Establishments"
-                        : (CATEGORIES.find((c) => c.id === selectedCategory || matchesCategory(c.id, "", selectedCategory))?.name || selectedCategory)}
-                    </span>
-                  </span>
-                  <span className="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">
-                    {places.length}
-                  </span>
-                </div>
-
-                <div ref={sideListRef} className="space-y-1.5 overflow-y-auto max-h-[380px] lg:max-h-[480px] pr-1 custom-scrollbar flex-1">
-                  {places.map((p, idx) => (
-                    <div
-                      key={`${p._id || p.id || 'place'}-${idx}`}
-                      onClick={() => handleSelectPlace(p)}
-                      className="p-2.5 rounded-xl border border-slate-100 hover:border-red-200 bg-slate-50/70 hover:bg-white transition cursor-pointer group flex items-center justify-between gap-2"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[9px] font-bold uppercase px-1.5 py-0.2 rounded bg-red-100/70 text-[#B8323C]">
-                            {p.subcategory || p.category}
-                          </span>
-                          {p.phone && (
-                            <span className="text-[9px] text-emerald-700 font-semibold">
-                              📞 Phone
-                            </span>
-                          )}
-                        </div>
-                        <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#B8323C] transition mt-0.5 truncate">
-                          {p.name}
-                        </h4>
-                        <p className="text-[11px] text-slate-500 truncate mt-0.2">
-                          {p.streetOrLandmark || p.addressFull || p.locality}
-                        </p>
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#B8323C] shrink-0" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                );
+              })}
+            </div>
           </div>
         </div>
       ) : (
