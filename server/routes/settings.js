@@ -5,38 +5,7 @@ import { logAdminAction } from "../models/AuditLog.js";
 
 const router = express.Router();
 
-const DEFAULT_SLIDES = [
-  {
-    title: "Official Civic & Digital Directory",
-    subtitle: "Fazilnagar Nagar Panchayat, Kushinagar",
-    caption: "Find verified schools, colleges, healthcare centres, public services, and live community news in Fazilnagar.",
-    imageUrl: "https://images.unsplash.com/photo-1541888946425-d0fbb18f15f7?auto=format&fit=crop&w=1600&q=80",
-    linkUrl: "/directory",
-    buttonText: "Browse Town Directory",
-    isActive: true,
-    displayOrder: 1,
-  },
-  {
-    title: "Healthcare & 24/7 Emergency Medical Aid",
-    subtitle: "Community Health Centre & Verified Clinics",
-    caption: "Access Community Health Centre (CHC) Fazilnagar, 24x7 ambulance contacts, and verified medical stores.",
-    imageUrl: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1600&q=80",
-    linkUrl: "/emergency",
-    buttonText: "Emergency Healthcare Hub",
-    isActive: true,
-    displayOrder: 2,
-  },
-  {
-    title: "Sacred Twin Heritage of Fazilnagar & Kushinagar",
-    subtitle: "Historic Pawapuri Dham & Ancient Pilgrimage Trail",
-    caption: "Explore the sacred historical convergence of Bhagwan Mahavira's nirvana land and Buddha's Mahaparinirvana trail.",
-    imageUrl: "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1600&q=80",
-    linkUrl: "/tourism",
-    buttonText: "Explore Twin Heritage",
-    isActive: true,
-    displayOrder: 3,
-  },
-];
+const DEFAULT_SLIDES = [];
 
 const DEFAULT_STATS = [
   { id: "stat-schools", label: "Schools & Colleges", value: "9+", subtext: "Verified Institutions", icon: "GraduationCap", isActive: true, displayOrder: 1 },
@@ -56,15 +25,46 @@ async function getOrCreateSettings() {
       heroSettings: {
         animationSpeed: 5000,
         animationDirection: "left",
-        enableAutoplay: true,
-        slides: DEFAULT_SLIDES,
+        enableAutoplay: false,
+        slides: [],
       },
       stats: DEFAULT_STATS,
     });
-  } else if (!settings.heroSettings?.slides || settings.heroSettings.slides.length === 0) {
-    settings.heroSettings.slides = DEFAULT_SLIDES;
-    if (!settings.stats || settings.stats.length === 0) settings.stats = DEFAULT_STATS;
-    await settings.save();
+  } else {
+    let changed = false;
+    if (!settings.heroSettings) {
+      settings.heroSettings = {
+        animationSpeed: 5000,
+        animationDirection: "left",
+        enableAutoplay: false,
+        slides: [],
+      };
+      changed = true;
+    }
+    // Clean up any old default slides or invalid blob URLs from heroSettings
+    if (Array.isArray(settings.heroSettings.slides) && settings.heroSettings.slides.length > 0) {
+      const initialCount = settings.heroSettings.slides.length;
+      settings.heroSettings.slides = settings.heroSettings.slides.filter(
+        (s) =>
+          s &&
+          s.isActive !== false &&
+          s.imageUrl &&
+          !s.imageUrl.startsWith("blob:") &&
+          !s.imageUrl.includes("unsplash.com/photo-1541888946425") &&
+          !s.imageUrl.includes("unsplash.com/photo-1519494026892") &&
+          !s.imageUrl.includes("unsplash.com/photo-1548013146-72479768bada")
+      );
+      if (settings.heroSettings.slides.length !== initialCount) {
+        changed = true;
+      }
+    }
+    if (!settings.stats || settings.stats.length === 0) {
+      settings.stats = DEFAULT_STATS;
+      changed = true;
+    }
+    if (changed) {
+      await settings.save();
+    }
   }
   return settings;
 }
@@ -74,6 +74,9 @@ async function getOrCreateSettings() {
 // @access  Public
 router.get("/", async (req, res) => {
   try {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
     const settings = await getOrCreateSettings();
     res.status(200).json({
       success: true,

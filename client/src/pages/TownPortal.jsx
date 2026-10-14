@@ -163,145 +163,8 @@ const VERIFIED_TOWN_PLACES = [
   },
 ];
 
-// 17 Verified Landmark & Heritage Images of Kushinagar and Fazilnagar for Hero Carousel
-const KUSHINAGAR_FAZILNAGAR_HERO_IMAGES = [
-  {
-    id: 1,
-    src: "/images/hero/mahaparinirvana-temple-1.webp",
-    fallback: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=75&w=900&auto=format&fit=crop",
-    title: "Mahaparinirvana Temple & Stupa",
-    location: "Kushinagar",
-    caption: "Sacred historical site of Lord Buddha's Parinirvana with 5th-century reclining Buddha",
-  },
-  {
-    id: 2,
-    src: "/images/hero/stupa-ruins-kushinagar.webp",
-    fallback: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?q=75&w=900&auto=format&fit=crop",
-    title: "Ramabhar Stupa (Mukutbandhana)",
-    location: "Kushinagar",
-    caption: "Ancient 15-meter monumental brick stupa where last rites were performed",
-  },
-  {
-    id: 3,
-    src: "/images/fazilnagar_pawanagar.webp",
-    fallback: "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?q=75&w=900&auto=format&fit=crop",
-    title: "Pawanagar Mahavir Jain Tirth",
-    location: "Fazilnagar (Ancient Pawa)",
-    caption: "Nirvana Bhoomi of 24th Tirthankara Lord Mahavira and historic Manasthambha",
-  },
-  {
-    id: 4,
-    src: "https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?q=75&w=900&auto=format&fit=crop",
-    fallback: "/images/hero/mahaparinirvana-temple-1.webp",
-    title: "Wat Thai Buddhist Monastery & Gardens",
-    location: "Kushinagar",
-    caption: "Siamese-style grand temple complex and serene meditation grounds",
-  },
-  {
-    id: 5,
-    src: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?q=75&w=900&auto=format&fit=crop",
-    fallback: "/images/hero/stupa-ruins-kushinagar.webp",
-    title: "Indo-Japan Buddhist Lotus Stupa",
-    location: "Kushinagar",
-    caption: "Circular architectural marvel erected by Indo-Japanese cultural society",
-  },
-  {
-    id: 6,
-    src: "/images/fazilnagar_kakodha.webp",
-    fallback: "https://images.unsplash.com/photo-1564507592333-c60657eea523?q=75&w=900&auto=format&fit=crop",
-    title: "Pawanagar Tirth Marg Gateway",
-    location: "Fazilnagar",
-    caption: "Heritage corridor connecting NH-27 to ancient Pawanagar temple complexes",
-  },
-  {
-    id: 7,
-    src: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?q=75&w=900&auto=format&fit=crop",
-    fallback: "/images/hero/mahaparinirvana-temple-1.webp",
-    title: "Chinese Buddhist Temple & Pagoda",
-    location: "Kushinagar",
-    caption: "Authentic East Asian Buddhist temple housing sacred marble statue",
-  },
-  {
-    id: 8,
-    src: "https://images.unsplash.com/photo-1590766940554-634a7ed41450?q=75&w=900&auto=format&fit=crop",
-    fallback: "/images/hero/stupa-ruins-kushinagar.webp",
-    title: "Matha Kuar Shrine & Ancient Sal Grove",
-    location: "Kushinagar",
-    caption: "Colossal blue stone image of Lord Buddha in Bhumisparsha Mudra",
-  },
-  {
-    id: 9,
-    src: "/images/kushinagar_ramabhar.webp",
-    fallback: "https://images.unsplash.com/photo-1548013146-72479768bada?q=75&w=900&auto=format&fit=crop",
-    title: "Ancient Pawa Excavations & Monastic Viharas",
-    location: "Fazilnagar & Kushinagar",
-    caption: "ASI protected archaeological brick foundations and stupa ruins",
-  },
-  {
-    id: 10,
-    src: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?q=75&w=900&auto=format&fit=crop",
-    fallback: "/images/hero/mahaparinirvana-temple-1.webp",
-    title: "Tibetan Buddhist Temple & Prayer Wheels",
-    location: "Kushinagar",
-    caption: "Spiritual sanctuary decorated with traditional Tibetan thangka frescoes",
-  },
-  {
-    id: 11,
-    src: "https://images.unsplash.com/photo-1587474260584-136574528ed5?q=75&w=900&auto=format&fit=crop",
-    fallback: "/images/hero/stupa-ruins-kushinagar.webp",
-    title: "Linh-Son Monastery & Meditation Hall",
-    location: "Kushinagar",
-    caption: "Vietnamese-style multi-tiered sanctum for peace and spiritual retreat",
-  },
-  {
-    id: 12,
-    src: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=75&w=900&auto=format&fit=crop",
-    fallback: "/images/hero/mahaparinirvana-temple-1.webp",
-    title: "Parinirvana Stupa Sunset Panorama",
-    location: "Kushinagar",
-    caption: "Golden evening hour over the world-renowned Buddhist pilgrimage hub",
-  },
-  {
-    id: 13,
-    src: "/images/fazilnagar_pawanagar.webp",
-    fallback: "https://images.unsplash.com/photo-1616046229478-9901c5536a45?q=75&w=900&auto=format&fit=crop",
-    title: "Pawanagar Spiritual Heritage Grounds",
-    location: "Fazilnagar",
-    caption: "Peaceful sacred town center preserving historic Jain pilgrimage values",
-  },
-  {
-    id: 14,
-    src: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=75&w=900&auto=format&fit=crop",
-    fallback: "/images/hero/mahaparinirvana-temple-1.webp",
-    title: "Kushinagar - Fazilnagar Pilgrimage Corridor",
-    location: "NH-27 Heritage Axis",
-    caption: "Historic transit corridor traversed by pilgrims from across the globe",
-  },
-  {
-    id: 15,
-    src: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=75&w=900&auto=format&fit=crop",
-    fallback: "/images/hero/stupa-ruins-kushinagar.webp",
-    title: "Archaeological Garden & Sal Tree Canopy",
-    location: "Kushinagar & Pawa",
-    caption: "Ancient Sal groves where historical events of 5th century BCE unfolded",
-  },
-  {
-    id: 16,
-    src: "/images/hero/mahaparinirvana-temple-1.webp",
-    fallback: "/images/hero/mahaparinirvana-temple-1.jpg",
-    title: "Mahaparinirvana Temple Sanctum",
-    location: "Kushinagar",
-    caption: "ASI preserved sacred monolith housing the Nirvana Buddha statue",
-  },
-  {
-    id: 17,
-    src: "/images/hero/stupa-ruins-kushinagar.webp",
-    fallback: "/images/hero/stupa-ruins-kushinagar.jpg",
-    title: "Ancient Stupa Foundations & Relics",
-    location: "Kushinagar & Fazilnagar",
-    caption: "Timeless brick masonry depicting 2,500 years of civilization",
-  }
-];
+// Verified Landmark & Heritage Images for Hero Carousel (Empty by default per configuration)
+const KUSHINAGAR_FAZILNAGAR_HERO_IMAGES = [];
 
 function matchesCategory(placeCat, placeSubcat, targetCat) {
   if (!targetCat || targetCat === "all" || targetCat === "All") return true;
@@ -474,29 +337,29 @@ export default function TownPortal() {
     return evt.category === selectedEventCategory;
   });
 
-  // Compute dynamic hero slides (custom admin slides if any, else verified default heritage images)
-  const configuredSlides = siteSettings?.heroSettings?.slides?.filter((s) => s.isActive !== false) || [];
-  const dynamicHeroSlides = configuredSlides.length > 0
-    ? configuredSlides.map((s, idx) => ({
-        id: s._id || idx,
-        src: s.imageUrl,
-        fallback: "/images/hero/mahaparinirvana-temple-1.webp",
-        title: s.title,
-        location: s.subtitle || "Fazilnagar",
-        caption: s.caption || "",
-        linkUrl: s.linkUrl || "/directory",
-        buttonText: s.buttonText || "Browse Town Directory",
-      }))
-    : KUSHINAGAR_FAZILNAGAR_HERO_IMAGES;
+  // Compute dynamic hero slides (custom admin slides if any with valid URLs)
+  const configuredSlides = (siteSettings?.heroSettings?.slides || []).filter(
+    (s) => s && s.isActive !== false && s.imageUrl && !s.imageUrl.startsWith("blob:")
+  );
+  const dynamicHeroSlides = configuredSlides.map((s, idx) => ({
+    id: s._id || idx,
+    src: s.imageUrl,
+    title: s.title,
+    location: s.subtitle || "Fazilnagar",
+    caption: s.caption || "",
+    linkUrl: s.linkUrl || "/directory",
+    buttonText: s.buttonText || "Browse Town Directory",
+  }));
 
   // Hero Background Carousel States
   const [heroSlideIndex, setHeroSlideIndex] = useState(0);
   const [isHeroHovered, setIsHeroHovered] = useState(false);
 
-  // Auto-advance Carousel based on admin speed and autoplay settings
+  // Auto-advance Carousel only if more than 1 slide exists
   const carouselInterval = siteSettings?.heroSettings?.animationSpeed || 6000;
   useEffect(() => {
     if (isHeroHovered) return;
+    if (dynamicHeroSlides.length <= 1) return;
     if (siteSettings?.heroSettings?.enableAutoplay === false) return;
     const carouselTimer = setInterval(() => {
       setHeroSlideIndex((prev) => (prev + 1) % dynamicHeroSlides.length);
@@ -739,68 +602,55 @@ export default function TownPortal() {
           id="hero-section"
           onMouseEnter={() => setIsHeroHovered(true)}
           onMouseLeave={() => setIsHeroHovered(false)}
-          className="relative text-white py-10 sm:py-20 lg:py-24 overflow-hidden border-b border-slate-800"
+          className="relative text-white py-12 sm:py-20 lg:py-24 overflow-hidden border-b border-slate-800 bg-[#0B131E]"
         >
-          {/* Dynamic Multi-Image Carousel of Kushinagar & Fazilnagar */}
+          {/* Civic Hero Background & Dynamic Carousel (if slides configured) */}
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-            {dynamicHeroSlides.map((img, idx) => {
-              const isCurrent = idx === (heroSlideIndex % dynamicHeroSlides.length);
-              if (!isCurrent) return null;
+            {/* Deep rich civic gradient base */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#0B131E] via-[#0F1B2B] to-[#070D14]" />
+            {/* Subtle civic ambient lighting accents */}
+            <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 right-1/4 w-[500px] h-[250px] bg-red-600/5 rounded-full blur-3xl pointer-events-none" />
+            {/* Subtle civic grid pattern */}
+            <div
+              className="absolute inset-0 opacity-[0.035]"
+              style={{
+                backgroundImage: `radial-gradient(circle at 1px 1px, #ffffff 1px, transparent 0)`,
+                backgroundSize: "28px 28px",
+              }}
+            />
 
-              return (
-                <div
-                  key={img.id || idx}
-                  className="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-100 z-10"
-                >
-                  {idx === 0 ? (
-                    <picture>
-                      <source media="(max-width: 640px)" srcSet="/images/hero/mahaparinirvana-temple-mobile.webp" type="image/webp" />
-                      <img
-                        src={img.src}
-                        alt={img.title}
-                        fetchPriority="high"
-                        loading="eager"
-                        decoding="sync"
-                        width="719"
-                        height="916"
-                        referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          if (img.fallback && e.currentTarget.src !== img.fallback) {
-                            e.currentTarget.src = img.fallback;
-                          }
-                        }}
-                        className="w-full h-full object-cover object-center animate-ken-burns scale-105 transition-transform duration-1000 ease-out"
-                      />
-                    </picture>
-                  ) : (
+            {/* If slides exist, render carousel image transitions */}
+            {dynamicHeroSlides.length > 0 &&
+              dynamicHeroSlides.map((img, idx) => {
+                const isCurrent = idx === (heroSlideIndex % dynamicHeroSlides.length);
+                if (!isCurrent) return null;
+
+                return (
+                  <div
+                    key={img.id || idx}
+                    className="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-100 z-10"
+                  >
                     <img
                       src={img.src}
-                      alt={img.title}
-                      fetchPriority="auto"
-                      loading="lazy"
-                      decoding="async"
+                      alt={img.title || "Fazilnagar"}
+                      fetchPriority={idx === 0 ? "high" : "auto"}
+                      loading={idx === 0 ? "eager" : "lazy"}
+                      decoding={idx === 0 ? "sync" : "async"}
                       width="1200"
                       height="600"
                       referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        if (img.fallback && e.currentTarget.src !== img.fallback) {
-                          e.currentTarget.src = img.fallback;
-                        }
-                      }}
                       className="w-full h-full object-cover object-center animate-ken-burns scale-105 transition-transform duration-1000 ease-out"
                     />
-                  )}
-                </div>
-              );
-            })}
-
-            {/* Minimal soft transparent gradient */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/65 z-20"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/35 to-black/75 z-20"></div>
+                  </div>
+                );
+              })}
           </div>
 
           <div className="relative z-30 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            {/* Active Landmark Pill Badge */}
-            {dynamicHeroSlides.length > 0 && (
+            {/* Civic / Active Landmark Pill Badge */}
+            {dynamicHeroSlides.length > 0 ? (
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/30 text-xs text-slate-100 font-medium mb-5 shadow-2xl animate-fade-in-up">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span className="text-amber-300 font-bold">
@@ -809,6 +659,17 @@ export default function TownPortal() {
                 <span className="text-slate-300">•</span>
                 <span className="font-semibold text-white">
                   {dynamicHeroSlides[heroSlideIndex % dynamicHeroSlides.length]?.title || "Official Civic Portal"}
+                </span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-slate-100 font-medium mb-5 shadow-xl animate-fade-in-up">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="text-emerald-300 font-bold">
+                  📍 Official Civic Portal
+                </span>
+                <span className="text-slate-400">•</span>
+                <span className="font-semibold text-slate-200">
+                  Nagar Panchayat Fazilnagar • Kushinagar (PIN 274401)
                 </span>
               </div>
             )}

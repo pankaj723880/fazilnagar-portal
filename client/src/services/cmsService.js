@@ -48,39 +48,8 @@ export const DEFAULT_SITE_SETTINGS = {
   heroSettings: {
     animationSpeed: 5000,
     animationDirection: "left",
-    enableAutoplay: true,
-    slides: [
-      {
-        _id: "default-slide-1",
-        title: "Official Civic & Digital Directory",
-        subtitle: "Fazilnagar Nagar Panchayat, Kushinagar",
-        caption: "Find verified schools, colleges, healthcare centres, public services, and live community news in Fazilnagar.",
-        imageUrl: "https://images.unsplash.com/photo-1541888946425-d0fbb18f15f7?auto=format&fit=crop&w=1600&q=80",
-        linkUrl: "/directory",
-        buttonText: "Browse Town Directory",
-        isActive: true,
-      },
-      {
-        _id: "default-slide-2",
-        title: "Healthcare & 24/7 Emergency Medical Aid",
-        subtitle: "Community Health Centre & Verified Clinics",
-        caption: "Access Community Health Centre (CHC) Fazilnagar, 24x7 ambulance contacts, and verified medical stores.",
-        imageUrl: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1600&q=80",
-        linkUrl: "/emergency",
-        buttonText: "Emergency Healthcare Hub",
-        isActive: true,
-      },
-      {
-        _id: "default-slide-3",
-        title: "Sacred Twin Heritage of Fazilnagar & Kushinagar",
-        subtitle: "Historic Pawapuri Dham & Ancient Pilgrimage Trail",
-        caption: "Explore the sacred historical convergence of Bhagwan Mahavira's nirvana land and Buddha's Mahaparinirvana trail.",
-        imageUrl: "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1600&q=80",
-        linkUrl: "/tourism",
-        buttonText: "Explore Twin Heritage",
-        isActive: true,
-      },
-    ],
+    enableAutoplay: false,
+    slides: [],
   },
   stats: [
     { id: "stat-schools", label: "Schools & Colleges", value: "9+", subtext: "Verified Institutions", icon: "GraduationCap", isActive: true },
@@ -118,7 +87,11 @@ export async function getSiteSettings(forceFresh = false) {
   }
 
   try {
-    const res = await API.get("/settings", { timeout: 8000 });
+    const res = await API.get("/settings", {
+      params: { _t: now },
+      headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+      timeout: 8000,
+    });
     if (res.data?.success && res.data?.settings) {
       const merged = { ...DEFAULT_SITE_SETTINGS, ...res.data.settings };
       memoryCache.settings = { data: merged, timestamp: now };

@@ -1,23 +1,7 @@
 import { useState, useEffect } from "react";
 
 // Carousel Banner Images
-const CAROUSEL_SLIDES = [
-  {
-    image: "https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=1200&auto=format&fit=crop",
-    title: "Welcome to Fazilnagar (Pawa Nagar)",
-    subtitle: "Sacred land where Bhagwan Mahavira attained Nirvana",
-  },
-  {
-    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
-    title: "Heritage & Culture of Kushinagar District",
-    subtitle: "Explore ancient temples, stupas, and peaceful gardens",
-  },
-  {
-    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1200&auto=format&fit=crop",
-    title: "Flavors of Fazilnagar",
-    subtitle: "Discover authentic local dhabas, sweets, and street food",
-  },
-];
+const CAROUSEL_SLIDES = [];
 
 // Tourist Spots Data (Instagram Post Style)
 const TOURIST_POSTS = [

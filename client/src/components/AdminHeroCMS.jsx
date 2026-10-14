@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import API from "../api";
 import { getAuthToken } from "../utils/authStorage";
+import { clearCMSCache } from "../services/cmsService";
 import PageHeader from "./admin/PageHeader";
 import FormSection from "./admin/FormSection";
 import ImageUploader from "./admin/ImageUploader";
@@ -102,6 +103,7 @@ export default function AdminHeroCMS() {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      clearCMSCache();
       showToast("Hero carousel playback and animation controls saved!");
     } catch (err) {
       console.error("Save hero controls error:", err);
@@ -141,6 +143,10 @@ export default function AdminHeroCMS() {
       showToast("Image URL is required for hero slide.", "error");
       return;
     }
+    if (formImageUrl.startsWith("blob:")) {
+      showToast("Local blob URLs cannot be saved. Please provide a web image URL or select from Media Library.", "error");
+      return;
+    }
 
     setFormSubmitting(true);
     const token = getAuthToken();
@@ -160,6 +166,7 @@ export default function AdminHeroCMS() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (res.data?.slides) setSlides(res.data.slides);
+        clearCMSCache();
         showToast("Hero slide updated successfully!");
       } else {
         const res = await API.post(
@@ -176,6 +183,7 @@ export default function AdminHeroCMS() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (res.data?.slides) setSlides(res.data.slides);
+        clearCMSCache();
         showToast("New hero slide added to carousel!");
       }
       setModalOpen(false);
@@ -195,6 +203,7 @@ export default function AdminHeroCMS() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data?.slides) setSlides(res.data.slides);
+      clearCMSCache();
       showToast("Hero slide deleted.");
       setDeleteSlideId(null);
     } catch (err) {
@@ -212,6 +221,7 @@ export default function AdminHeroCMS() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data?.slides) setSlides(res.data.slides);
+      clearCMSCache();
       showToast(`Slide ${nextActive ? "activated" : "deactivated"}.`);
     } catch (err) {
       showToast("Failed to toggle status: " + err.message, "error");
@@ -236,6 +246,7 @@ export default function AdminHeroCMS() {
         { heroSettings: { ...heroSettings, slides: newSlides } },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      clearCMSCache();
       showToast("Slide order updated.");
     } catch (err) {
       console.error("Reorder error:", err);
