@@ -261,6 +261,7 @@ export default function TownPortal() {
   const [currentUser, setCurrentUser] = useState(null);
   const [liveNews, setLiveNews] = useState([]);
   const [aboutTab, setAboutTab] = useState("fazilnagar"); // "fazilnagar" | "kushinagar" | "connection"
+  const [isHeritageExpanded, setIsHeritageExpanded] = useState(false);
   const [isDirectoryExpanded, setIsDirectoryExpanded] = useState(false);
   const [isBelowFoldReady, setIsBelowFoldReady] = useState(() => Boolean(window.location.hash));
 
@@ -382,7 +383,16 @@ export default function TownPortal() {
 
   // Compute dynamic hero slides (custom admin slides if any with valid URLs)
   const configuredSlides = (siteSettings?.heroSettings?.slides || []).filter(
-    (s) => s && s.isActive !== false && s.imageUrl && !s.imageUrl.startsWith("blob:")
+    (s) => {
+      const title = String(s?.title || "").toLowerCase();
+      return (
+        s &&
+        s.isActive !== false &&
+        s.imageUrl &&
+        !s.imageUrl.startsWith("blob:") &&
+        !title.includes("buddha temple")
+      );
+    }
   );
   const dynamicHeroSlides = configuredSlides.map((s, idx) => ({
     id: s._id || idx,
@@ -536,7 +546,7 @@ export default function TownPortal() {
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [isBelowFoldReady]);
 
   // Search autocomplete matches
   const searchMatches = searchQuery.trim()
@@ -702,7 +712,7 @@ export default function TownPortal() {
           <div className="relative z-30 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             {/* Civic / Active Landmark Pill Badge */}
             {dynamicHeroSlides.length > 0 ? (
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/30 text-xs text-slate-100 font-medium mb-5 shadow-2xl animate-fade-in-up">
+              <div className="hero-location-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/30 text-xs text-slate-100 font-medium mb-5 shadow-2xl animate-fade-in-up">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span className="text-amber-300 font-bold">
                   📍 {dynamicHeroSlides[heroSlideIndex % dynamicHeroSlides.length]?.location || "Fazilnagar"}
@@ -713,7 +723,7 @@ export default function TownPortal() {
                 </span>
               </div>
             ) : (
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-slate-100 font-medium mb-5 shadow-xl animate-fade-in-up">
+              <div className="hero-location-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-slate-100 font-medium mb-5 shadow-xl animate-fade-in-up">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span className="text-emerald-300 font-bold">
                   📍 {siteSettings.heroContent?.badgeLocation || "Official Civic Portal"}
@@ -726,14 +736,24 @@ export default function TownPortal() {
             )}
 
             {/* Master Headline */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-8 leading-tight font-heading drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
+            <h1 className="hero-title text-[32px] sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 leading-[1.12] font-heading drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
               {siteSettings.heroContent?.heading || siteSettings.siteName || "Fazilnagar Town Civic & Local Directory"}
             </h1>
 
+            {siteSettings.heroContent?.subheadingHindi && (
+              <p className="hero-tagline text-[23px] sm:text-3xl font-bold leading-tight text-[#FF4D5A] font-hindi mb-3">
+                {siteSettings.heroContent.subheadingHindi}
+              </p>
+            )}
+
+            <p className="hero-description max-w-2xl mx-auto text-[15px] sm:text-base text-slate-100 leading-relaxed line-clamp-3 mb-5">
+              {siteSettings.heroContent?.description || "Official digital civic portal for Fazilnagar town. Verified schools, colleges, hospitals, emergency aid, local news, and community directory in Kushinagar, UP."}
+            </p>
+
           {/* Smart Search Bar */}
           <div className="max-w-2xl mx-auto relative text-left">
-            <div className="bg-white rounded-2xl p-2 shadow-2xl flex flex-col sm:flex-row items-center gap-2 border border-[#E1E6EA]">
-              <div className="flex items-center gap-3 w-full px-3 py-2 text-[#18232E]">
+            <div className="hero-search bg-white rounded-2xl p-1.5 shadow-2xl flex flex-row items-center gap-1.5 border border-[#E1E6EA]">
+              <div className="flex items-center gap-2 w-full min-w-0 px-2.5 py-2 text-[#18232E]">
                 <Search className="w-5 h-5 text-[#647180] flex-shrink-0" />
                 <input
                   type="text"
@@ -746,7 +766,7 @@ export default function TownPortal() {
                   onFocus={() => {
                     if (searchQuery.trim()) setDropdownOpen(true);
                   }}
-                  className="w-full text-xs sm:text-sm outline-none bg-transparent placeholder-slate-400 text-[#18232E] font-medium"
+                  className="w-full min-w-0 text-sm outline-none bg-transparent placeholder-slate-400 text-[#18232E] font-medium"
                 />
                 {searchQuery && (
                   <button
@@ -768,7 +788,7 @@ export default function TownPortal() {
                   }
                   navigate(`/directory?search=${encodeURIComponent(searchQuery)}`);
                 }}
-                className="w-full sm:w-auto bg-[#18232E] hover:bg-[#B8323C] text-white px-6 py-2.5 rounded-xl font-bold text-xs tracking-wide transition shadow-sm whitespace-nowrap flex items-center justify-center gap-2 cursor-pointer"
+                className="shrink-0 bg-[#18232E] hover:bg-[#B8323C] text-white px-4 sm:px-6 py-2.5 rounded-xl font-bold text-xs tracking-wide transition shadow-sm whitespace-nowrap flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>{siteSettings.heroContent?.searchButtonText || "Search"}</span>
                 <ArrowRight className="w-3.5 h-3.5 text-slate-300" />
@@ -814,6 +834,22 @@ export default function TownPortal() {
               </div>
             )}
           </div>
+
+          {Array.isArray(siteSettings.heroContent?.actionButtons) && siteSettings.heroContent.actionButtons.some((button) => button.isActive !== false) && (
+            <div className="hero-actions grid grid-cols-2 sm:flex items-stretch justify-center gap-2 sm:gap-3 mt-4 sm:mt-6">
+              {siteSettings.heroContent.actionButtons
+                .filter((button) => button.isActive !== false)
+                .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+                .map((button) => {
+                  const Icon = HERO_ICON_MAP[button.icon] || Compass;
+                  const className = `min-h-[50px] px-3 sm:px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition cursor-pointer ${HERO_BUTTON_VARIANTS[button.variant] || HERO_BUTTON_VARIANTS.primary}`;
+                  if (button.isLink) {
+                    return <Link key={button.id || button.label} to={button.target || "/directory"} className={className}><Icon className="w-4 h-4 shrink-0" /><span>{button.label}</span></Link>;
+                  }
+                  return <button key={button.id || button.label} type="button" onClick={(event) => handleSmoothScroll(event, button.target)} className={className}><Icon className="w-4 h-4 shrink-0" /><span>{button.label}</span></button>;
+                })}
+            </div>
+          )}
         </div>
       </section>
       )}
@@ -893,7 +929,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 4: ESSENTIAL SERVICES (High-Priority Civic Hub)
           ======================================================== */}
-      <section className="bg-white py-16 border-y border-[#E1E6EA] content-visibility-auto">
+      <section className="mobile-density-section bg-white py-16 border-y border-[#E1E6EA] content-visibility-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-10">
             <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0D5E49] uppercase tracking-wider mb-1">
@@ -1194,7 +1230,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 6: DISCOVER LOCAL BUSINESSES (Verified Shops)
           ======================================================== */}
-      <section className="bg-white py-16 border-b border-[#E1E6EA] content-visibility-auto">
+      <section className="mobile-density-section bg-white py-16 border-b border-[#E1E6EA] content-visibility-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
@@ -1321,7 +1357,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 7: SCHOOLS & COLLEGES (Education Preview)
           ======================================================== */}
-      <section className="py-16 content-visibility-auto">
+      <section className="mobile-density-section py-16 content-visibility-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
@@ -1438,7 +1474,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION: UPCOMING EVENTS & TOWN MELAS (Religious Melas & Civic Festivals)
           ======================================================== */}
-      <section id="events-melas-section" className="bg-white py-16 border-t border-[#E1E6EA]">
+      <section id="events-melas-section" className="mobile-density-section bg-white py-16 border-t border-[#E1E6EA]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-8 gap-4">
@@ -1661,7 +1697,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 8: LOCAL NEWS & CIVIC BULLETINS (Dated & Credible)
           ======================================================== */}
-      <section id="local-updates-section" className="bg-[#18232E] text-white py-16 content-visibility-auto">
+      <section id="local-updates-section" className="mobile-density-section bg-[#18232E] text-white py-16 content-visibility-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-8 gap-4">
             <div>
@@ -1815,7 +1851,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 9: ABOUT FAZILNAGAR & KUSHINAGAR (History & Culture)
           ======================================================== */}
-      <section id="about-fazilnagar-section" className="py-16 bg-white border-t border-[#E1E6EA]">
+      <section id="about-fazilnagar-section" className="mobile-density-section py-16 bg-white border-t border-[#E1E6EA]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center max-w-3xl mx-auto mb-10">
@@ -1959,12 +1995,20 @@ export default function TownPortal() {
                       illuminated their homes and streets with rows of clay lamps—establishing the sacred origin of the festival of{" "}
                       <strong>Deepavali (Diwali)</strong>.
                     </p>
-                    <p>
+                    {isHeritageExpanded && <p>
                       In Buddhist chronicles (Maha-parinibbana Sutta), Pawa holds equal reverence. Before his Parinirvana,{" "}
                       <strong>Gautam Buddha</strong> visited Pawa, stayed in the mango grove of Cunda the metalsmith, accepted his final meal,
                       and then walked past the tranquil <strong>Kakuttha (Kakodha) River</strong>, resting beneath trees on his path to Kushinagar.
-                    </p>
+                    </p>}
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsHeritageExpanded((expanded) => !expanded)}
+                    className="text-xs font-bold text-[#B8323C] hover:underline"
+                  >
+                    {isHeritageExpanded ? "Read Less" : "Read More"}
+                  </button>
 
                   <div className="pt-4 border-t border-[#E1E6EA] grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                     <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
@@ -2117,12 +2161,20 @@ export default function TownPortal() {
                       his last discourse to his disciples, gave his final admonition:{" "}
                       <em>"Appamadena sampadetha" (Strive diligently for your liberation)</em>, and attained ultimate Parinirvana.
                     </p>
-                    <p>
+                    {isHeritageExpanded && <p>
                       In 1876, British archaeologist <strong>A.C.L. Carlleyle</strong> and Sir Alexander Cunningham excavated the site,
                       unearthing the celebrated <strong>6.1-meter-long monolith red sandstone reclining Buddha statue</strong>,
                       sculpted during the 5th-century Gupta era with the inscription of craftsman Dinna of Mathura.
-                    </p>
+                    </p>}
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsHeritageExpanded((expanded) => !expanded)}
+                    className="text-xs font-bold text-[#B8323C] hover:underline"
+                  >
+                    {isHeritageExpanded ? "Read Less" : "Read More"}
+                  </button>
 
                   <div className="pt-4 border-t border-[#E1E6EA] grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                     <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
@@ -2259,7 +2311,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 10: CITIZEN CORNER (Actionable Forms)
           ======================================================== */}
-      <section id="citizen-corner-section" className="bg-white py-16 border-t border-[#E1E6EA] content-visibility-auto">
+      <section id="citizen-corner-section" className="mobile-density-section bg-white py-16 border-t border-[#E1E6EA] content-visibility-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
             <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0D5E49] uppercase tracking-wider mb-1">

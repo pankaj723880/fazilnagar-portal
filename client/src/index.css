@@ -226,3 +226,152 @@
   content-visibility: auto;
   contain-intrinsic-size: auto 600px;
 }
+
+/* Mobile density is scoped to the portal homepage; desktop spacing remains unchanged. */
+@media (max-width: 640px) {
+  html,
+  body {
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
+  }
+
+  #hero-section {
+    padding-block: 28px;
+  }
+
+  #hero-section .hero-location-badge {
+    max-width: 100%;
+    margin-bottom: 12px;
+    padding: 5px 10px;
+    font-size: 11px;
+    line-height: 1.25;
+  }
+
+  #hero-section .hero-location-badge span:nth-child(4) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #hero-section .hero-title {
+    margin-bottom: 10px;
+  }
+
+  #hero-section .hero-tagline {
+    margin-bottom: 10px;
+  }
+
+  #hero-section .hero-description {
+    margin-bottom: 16px;
+  }
+
+  #hero-section .hero-search button {
+    min-height: 44px;
+  }
+
+  #hero-section .hero-actions a,
+  #hero-section .hero-actions button {
+    min-height: 50px;
+  }
+
+  #explore-categories,
+  #town-map-section,
+  .mobile-density-section {
+    padding-block: 40px;
+  }
+
+  #explore-categories > div:first-child,
+  #town-map-section > div > div:first-child,
+  .mobile-density-section > div > div:first-child {
+    margin-bottom: 24px;
+  }
+
+  #explore-categories .grid {
+    gap: 10px;
+  }
+
+  #explore-categories .grid > a {
+    min-height: 128px;
+    padding: 16px;
+  }
+
+  #explore-categories .grid > a > div:first-child {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 10px;
+  }
+
+  #explore-categories .grid > a > div:first-child svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  #explore-categories .grid h3 {
+    font-size: 15px;
+  }
+
+  #explore-categories .grid span {
+    font-size: 13px;
+  }
+
+  .mobile-density-section > div > .grid > div,
+  .mobile-density-section > div > .grid > article {
+    border-radius: 16px;
+  }
+
+  .mobile-density-section > div > .grid > div > .p-5,
+  .mobile-density-section > div > .grid > article > .p-5 {
+    padding: 16px;
+  }
+
+  .mobile-density-section .grid h3 {
+    font-size: 17px;
+    line-height: 1.3;
+  }
+
+  .mobile-density-section .grid p {
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  #events-melas-section .overflow-x-auto {
+    flex-wrap: nowrap;
+    margin-inline: -4px;
+    padding-inline: 4px;
+    margin-bottom: 24px;
+  }
+
+  #events-melas-section .grid {
+    gap: 16px;
+  }
+
+  #events-melas-section .grid > article .h-48 {
+    height: 168px;
+  }
+
+  #events-melas-section .grid > article > div.p-5,
+  #local-updates-section .grid > div > div.p-5 {
+    padding: 16px;
+  }
+
+  #about-fazilnagar-section .flex-wrap.items-center.justify-center {
+    gap: 6px;
+    margin-top: 20px;
+    padding: 6px;
+  }
+
+  #about-fazilnagar-section .flex-wrap.items-center.justify-center button {
+    min-width: 0;
+    flex-basis: calc(50% - 3px);
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+
+  #citizen-corner-section .grid {
+    gap: 16px;
+  }
+}

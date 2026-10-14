@@ -95,10 +95,6 @@
     }
     </script>
 
-    <!-- Preload Critical Hero LCP Image (Responsive: 37 KB for mobile, high-res for desktop) -->
-    <link rel="preload" as="image" href="/images/hero/mahaparinirvana-temple-mobile.webp" type="image/webp" media="(max-width: 640px)" fetchpriority="high" />
-    <link rel="preload" as="image" href="/images/hero/mahaparinirvana-temple-1.webp" type="image/webp" media="(min-width: 641px)" fetchpriority="high" />
-
     <!-- Google Fonts: Manrope, Inter, Noto Sans Devanagari (Zero font-swap repaint with font-display: optional) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -174,19 +170,6 @@
             >
               <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
                 <div class="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-100 z-10">
-                  <picture>
-                    <source media="(max-width: 640px)" srcset="/images/hero/mahaparinirvana-temple-mobile.webp" type="image/webp">
-                    <img
-                      src="/images/hero/mahaparinirvana-temple-1.webp"
-                      alt="Mahaparinirvana Temple &amp; Stupa"
-                      fetchpriority="high"
-                      loading="eager"
-                      decoding="sync"
-                      width="719"
-                      height="916"
-                      class="w-full h-full object-cover object-center scale-105"
-                    />
-                  </picture>
                 </div>
                 <div class="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/65 z-20"></div>
               </div>
