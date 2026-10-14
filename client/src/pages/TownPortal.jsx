@@ -8,7 +8,14 @@ import AdvertisementSlot from "../components/AdvertisementSlot";
 import { usePageSEO } from "../utils/seo";
 import CommunityPlaceModal from "../components/CommunityPlaceModal";
 import { getAuthUser, clearAuthSession } from "../utils/authStorage";
-import { getSiteSettings, DEFAULT_SITE_SETTINGS } from "../services/cmsService";
+import {
+  getSiteSettings,
+  DEFAULT_SITE_SETTINGS,
+  getHeritageSites,
+  DEFAULT_HERITAGE_SITES,
+  getEvents,
+  DEFAULT_EVENTS,
+} from "../services/cmsService";
 
 // Lazy-load Leaflet Map to eliminate render-blocking JS and main-thread freeze
 const TownInteractiveMap = lazy(() => import("../components/TownInteractiveMap"));
@@ -66,6 +73,7 @@ import {
   Briefcase,
   AlertCircle,
   Fuel,
+  Share2,
 } from "lucide-react";
 
 // Filtered Categories strictly for Schools & Colleges, Hospitals, and Petrol Pumps
@@ -384,14 +392,56 @@ export default function TownPortal() {
     ? EXPLORE_21_CATEGORIES
     : EXPLORE_21_CATEGORIES.slice(0, 4);
 
-  // Dynamic Site Settings from CMS
+  // Dynamic Site Settings, Heritage Sites & Events from CMS
   const [siteSettings, setSiteSettings] = useState(DEFAULT_SITE_SETTINGS);
+  const [heritageSites, setHeritageSites] = useState(DEFAULT_HERITAGE_SITES);
+  const [events, setEvents] = useState(DEFAULT_EVENTS);
+  const [selectedEventCategory, setSelectedEventCategory] = useState("All");
 
   useEffect(() => {
     getSiteSettings().then((s) => {
       if (s) setSiteSettings(s);
     });
+
+    getHeritageSites(true).then((sites) => {
+      if (Array.isArray(sites) && sites.length > 0) {
+        setHeritageSites(sites);
+      }
+    });
+
+    getEvents({}, true).then((evts) => {
+      if (Array.isArray(evts) && evts.length > 0) {
+        setEvents(evts);
+      }
+    });
   }, []);
+
+  // Filter dynamic heritage sites for tabs
+  const fazilnagarSites = (heritageSites || []).filter((s) => {
+    if (s.isPublished === false) return false;
+    const name = (s.name || "").toLowerCase();
+    const cat = s.category || "";
+    const dist = (s.distanceFromFazilnagarCenter || "").toLowerCase();
+    if (cat === "Buddhist Heritage") return false;
+    if (name.includes("kushinagar") || dist.includes("18 km")) return false;
+    return true;
+  });
+
+  const kushinagarSites = (heritageSites || []).filter((s) => {
+    if (s.isPublished === false) return false;
+    const name = (s.name || "").toLowerCase();
+    const cat = s.category || "";
+    const dist = (s.distanceFromFazilnagarCenter || "").toLowerCase();
+    return cat === "Buddhist Heritage" || name.includes("kushinagar") || dist.includes("18 km");
+  });
+
+  // Filter dynamic community events
+  const eventCategories = ["All", "Mela & Fair", "Aarti & Puja", "Religious Festival", "Civic & Cultural"];
+  const filteredEvents = (events || []).filter((evt) => {
+    if (evt.isPublished === false || evt.status === "draft" || evt.status === "archived") return false;
+    if (selectedEventCategory === "All") return true;
+    return evt.category === selectedEventCategory;
+  });
 
   // Compute dynamic hero slides (custom admin slides if any, else verified default heritage images)
   const configuredSlides = siteSettings?.heroSettings?.slides?.filter((s) => s.isActive !== false) || [];
@@ -1544,7 +1594,230 @@ export default function TownPortal() {
       </section>
 
       {/* ========================================================
-          SECTION 8: LOCAL NEWS & EVENTS (Dated & Credible)
+          SECTION: UPCOMING EVENTS & TOWN MELAS (Religious Melas & Civic Festivals)
+          ======================================================== */}
+      <section id="events-melas-section" className="bg-white py-16 border-t border-[#E1E6EA] content-visibility-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-8 gap-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 uppercase tracking-wider mb-2 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+                <Calendar className="w-3.5 h-3.5 text-amber-600" />
+                <span>Town Fairs, Melas & Cultural Celebrations</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#18232E] tracking-tight font-heading">
+                Upcoming Events & Town Melas
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
+                Experience the vibrant community life of Fazilnagar — from the sacred Pawapuri Nirvana Mela to civic festivals, devotional aartis, and annual town gatherings.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setModalType("event");
+                  setCommunityModalOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 bg-[#0D5E49] hover:bg-[#0a4838] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-xs cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Submit Event / Mela</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Category Filter Pills */}
+          <div className="flex flex-wrap items-center gap-2 mb-8 overflow-x-auto pb-2 scrollbar-none">
+            {eventCategories.map((cat) => {
+              const count = cat === "All"
+                ? events.filter((e) => e.isPublished !== false && e.status !== "draft").length
+                : events.filter((e) => (e.isPublished !== false && e.status !== "draft") && e.category === cat).length;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedEventCategory(cat)}
+                  className={`text-xs font-bold px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
+                    selectedEventCategory === cat
+                      ? "bg-[#18232E] text-white shadow-xs"
+                      : "bg-[#F5F7F8] hover:bg-slate-200 text-slate-700 border border-[#E1E6EA]"
+                  }`}
+                >
+                  <span>{cat}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-extrabold ${
+                    selectedEventCategory === cat ? "bg-white/20 text-white" : "bg-slate-200 text-slate-600"
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Events Grid */}
+          {filteredEvents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredEvents.map((evt) => {
+                const eventDate = evt.startDate ? new Date(evt.startDate) : null;
+                const monthStr = eventDate && !isNaN(eventDate.getTime())
+                  ? eventDate.toLocaleDateString("en-IN", { month: "short" }).toUpperCase()
+                  : "TBD";
+                const dayStr = eventDate && !isNaN(eventDate.getTime()) ? eventDate.getDate() : "—";
+                const yearStr = eventDate && !isNaN(eventDate.getTime()) ? eventDate.getFullYear() : "";
+
+                return (
+                  <article
+                    key={evt._id || evt.id}
+                    className="group bg-white rounded-2xl border border-[#E1E6EA] hover:border-amber-300 shadow-xs hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col justify-between"
+                  >
+                    <div>
+                      {/* Banner Image with Badges */}
+                      <div className="relative h-48 w-full bg-slate-900 overflow-hidden">
+                        {evt.bannerImage ? (
+                          <img
+                            src={evt.bannerImage}
+                            alt={evt.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-amber-900/60 via-slate-900 to-[#18232E] flex items-center justify-center">
+                            <Calendar className="w-12 h-12 text-amber-300/40" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                        {/* Top Badges */}
+                        <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-50/95 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-amber-200/80 shadow-2xs">
+                            {evt.category || "Event"}
+                          </span>
+                          {evt.isFeatured && (
+                            <span className="text-[10px] font-bold text-amber-900 bg-gradient-to-r from-amber-300 to-amber-400 px-2.5 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                              ★ Featured Mela
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Date Ribbon Badge */}
+                        <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-xl p-2 text-center shadow-md border border-white/60 min-w-[50px]">
+                          <span className="block text-[9px] font-extrabold text-red-600 leading-none">
+                            {monthStr}
+                          </span>
+                          <span className="block text-base font-black text-slate-900 leading-tight">
+                            {dayStr}
+                          </span>
+                          {yearStr && (
+                            <span className="block text-[8px] font-semibold text-slate-500 leading-none">
+                              {yearStr}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Content Area */}
+                      <div className="p-5 space-y-3">
+                        <div>
+                          <h3 className="text-base font-bold text-[#18232E] group-hover:text-amber-800 transition-colors line-clamp-2">
+                            {evt.title}
+                          </h3>
+                          {evt.titleHindi && (
+                            <p className="text-xs text-amber-900/80 font-hindi font-medium mt-0.5 line-clamp-1">
+                              {evt.titleHindi}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Timing & Venue */}
+                        <div className="space-y-1.5 text-xs text-slate-600 pt-1 border-t border-slate-100">
+                          {evt.timeString && (
+                            <div className="flex items-center gap-2 text-[11px]">
+                              <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                              <span className="font-medium text-slate-700">{evt.timeString}</span>
+                            </div>
+                          )}
+                          <div className="flex items-start gap-2 text-[11px]">
+                            <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" />
+                            <span className="line-clamp-1 text-slate-700 font-medium">
+                              {evt.venue}{evt.address ? ` • ${evt.address}` : ""}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Description */}
+                        <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
+                          {evt.summary || evt.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Footer Actions */}
+                    <div className="p-4 bg-[#F5F7F8]/70 border-t border-[#E1E6EA] flex items-center justify-between text-xs gap-2">
+                      <span className="text-[11px] text-slate-500 truncate max-w-[140px]" title={evt.organizer}>
+                        {evt.organizer ? `Org: ${evt.organizer}` : "Civic Committee"}
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (navigator.share) {
+                              navigator.share({
+                                title: evt.title,
+                                text: `${evt.title} at ${evt.venue}, Fazilnagar`,
+                                url: window.location.href,
+                              }).catch(() => {});
+                            } else {
+                              navigator.clipboard?.writeText(`${evt.title} - ${evt.venue}, Fazilnagar. Details: ${window.location.href}`);
+                              showToast("Event details copied to clipboard!");
+                            }
+                          }}
+                          className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-white transition cursor-pointer"
+                          title="Share event"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openGoogleMapsDirections({
+                            name: evt.venue,
+                            lat: evt.latitude || 26.6827,
+                            lng: evt.longitude || 84.0498,
+                            landmark: evt.address || "Fazilnagar",
+                          })}
+                          className="font-bold text-[#0D5E49] hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/60 px-2.5 py-1 rounded-lg text-[11px] transition inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <Navigation className="w-3 h-3" />
+                          <span>Directions</span>
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="bg-[#F5F7F8] rounded-2xl border border-[#E1E6EA] p-10 text-center space-y-3">
+              <Calendar className="w-10 h-10 text-slate-400 mx-auto" />
+              <h3 className="text-base font-bold text-slate-800">No scheduled events in this category</h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                No festivals or melas are currently listed for "{selectedEventCategory}". Check other categories or submit an announcement to town administration.
+              </p>
+              <button
+                type="button"
+                onClick={() => setSelectedEventCategory("All")}
+                className="text-xs font-bold text-blue-600 hover:underline cursor-pointer"
+              >
+                View All Town Events
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ========================================================
+          SECTION 8: LOCAL NEWS & CIVIC BULLETINS (Dated & Credible)
           ======================================================== */}
       <section id="local-updates-section" className="bg-[#18232E] text-white py-16 content-visibility-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1555,7 +1828,7 @@ export default function TownPortal() {
                 <span>Dated Community Bulletins</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-heading">
-                Local News & Events
+                Local News & Civic Bulletins
               </h2>
               <p className="text-xs sm:text-sm text-slate-400 mt-1">
                 Official notices and community happenings verified from local organizers.
@@ -1757,53 +2030,69 @@ export default function TownPortal() {
           {/* TAB 1: FAZILNAGAR (PAWANAGAR) */}
           {aboutTab === "fazilnagar" && (
             <div className="space-y-8 animate-fadeIn">
-              {/* Image Gallery Grid */}
+              {/* Dynamic Image Gallery Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="group relative rounded-2xl overflow-hidden shadow-lg border border-[#E1E6EA] bg-slate-900 aspect-16/10">
-                  <img
-                    src="/images/fazilnagar_pawanagar.webp"
-                    alt="Pawanagar Jain Mandir, Fazilnagar"
-                    width="800"
-                    height="500"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-5">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/80 border border-amber-600/50 px-2 py-0.5 rounded-full w-fit mb-1.5">
-                      Jain Tirth & Nirvana Sthal
-                    </span>
-                    <h3 className="text-white font-bold text-base sm:text-lg">
-                      Pawa Nagar Jain Temple & Shwetambar / Digambar Tirth
-                    </h3>
-                    <p className="text-slate-300 text-xs mt-1 line-clamp-2">
-                      Sacred site where the 24th Tirthankara, Lord Mahavira, delivered his concluding sermons and attained Nirvana in 527 BCE.
-                    </p>
+                {fazilnagarSites.map((site) => (
+                  <div
+                    key={site._id || site.slug || site.name}
+                    className="group relative rounded-2xl overflow-hidden shadow-lg border border-[#E1E6EA] bg-slate-900 aspect-16/10 flex flex-col justify-end"
+                  >
+                    <img
+                      src={site.primaryImage || "/images/fazilnagar_pawanagar.webp"}
+                      alt={site.name}
+                      width="800"
+                      height="500"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-5 flex flex-col justify-end space-y-1.5">
+                      <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/85 border border-amber-600/50 px-2 py-0.5 rounded-full w-fit">
+                          {site.category || "Jain Heritage"}
+                        </span>
+                        {site.distanceFromFazilnagarCenter && (
+                          <span className="text-[10px] font-semibold text-slate-300 bg-black/50 px-2 py-0.5 rounded-full border border-white/20">
+                            📍 {site.distanceFromFazilnagarCenter}
+                          </span>
+                        )}
+                        {site.isTwinHeritageHighlight && (
+                          <span className="text-[10px] font-semibold text-amber-300 bg-amber-900/60 px-2 py-0.5 rounded-full border border-amber-500/40">
+                            ★ Twin Axis
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-white font-bold text-base sm:text-lg leading-snug">
+                        {site.name}
+                      </h3>
+                      {site.nameHindi && (
+                        <p className="text-amber-200/90 text-xs font-hindi">
+                          {site.nameHindi}
+                        </p>
+                      )}
+                      <p className="text-slate-200 text-xs line-clamp-2 leading-relaxed">
+                        {site.historicalSignificance || site.narrative}
+                      </p>
+                      <div className="pt-2 flex items-center justify-between text-[11px] text-slate-300 border-t border-white/20 mt-1">
+                        <span className="truncate max-w-[200px]">
+                          🕒 {site.visitingHours || "06:00 AM – 07:00 PM"} • {site.entryFee || "Free Entry"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => openGoogleMapsDirections({
+                            name: site.name,
+                            lat: site.latitude || 26.6827,
+                            lng: site.longitude || 84.0498,
+                            landmark: site.locationAddress || "Fazilnagar",
+                          })}
+                          className="font-bold text-amber-300 hover:text-white underline cursor-pointer shrink-0 ml-2"
+                        >
+                          Directions →
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-
-                <div className="group relative rounded-2xl overflow-hidden shadow-lg border border-[#E1E6EA] bg-slate-900 aspect-16/10">
-                  <img
-                    src="/images/fazilnagar_kakodha.webp"
-                    alt="Kakodha Ghat and Kukuttha River, Fazilnagar"
-                    width="800"
-                    height="500"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-5">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-600/50 px-2 py-0.5 rounded-full w-fit mb-1.5">
-                      Ancient Kukuttha River
-                    </span>
-                    <h3 className="text-white font-bold text-base sm:text-lg">
-                      Historic Kakodha Ghat & Brick Archaeological Remains
-                    </h3>
-                    <p className="text-slate-300 text-xs mt-1 line-clamp-2">
-                      The revered river where Lord Buddha bathed and drank water on his holy journey from Pawa towards Kushinagar.
-                    </p>
-                  </div>
-                </div>
+                ))}
               </div>
 
               {/* History & Importance Deep Dive */}
@@ -1899,53 +2188,69 @@ export default function TownPortal() {
           {/* TAB 2: KUSHINAGAR (MAHAPARINIRVANA) */}
           {aboutTab === "kushinagar" && (
             <div className="space-y-8 animate-fadeIn">
-              {/* Image Gallery Grid */}
+              {/* Dynamic Image Gallery Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="group relative rounded-2xl overflow-hidden shadow-lg border border-[#E1E6EA] bg-slate-900 aspect-16/10">
-                  <img
-                    src="/images/kushinagar_mahaparinirvana.webp"
-                    alt="Mahaparinirvana Stupa and Temple, Kushinagar"
-                    width="800"
-                    height="500"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-5">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 bg-rose-950/80 border border-rose-600/50 px-2 py-0.5 rounded-full w-fit mb-1.5">
-                      World Buddhist Pilgrimage
-                    </span>
-                    <h3 className="text-white font-bold text-base sm:text-lg">
-                      Mahaparinirvana Stupa & Temple with 6.1m Reclining Buddha
-                    </h3>
-                    <p className="text-slate-300 text-xs mt-1 line-clamp-2">
-                      The sacred sanctuary commemorating where Lord Gautam Buddha attained Mahaparinirvana in 483 BCE under the twin Sal trees.
-                    </p>
+                {kushinagarSites.map((site) => (
+                  <div
+                    key={site._id || site.slug || site.name}
+                    className="group relative rounded-2xl overflow-hidden shadow-lg border border-[#E1E6EA] bg-slate-900 aspect-16/10 flex flex-col justify-end"
+                  >
+                    <img
+                      src={site.primaryImage || "/images/kushinagar_mahaparinirvana.webp"}
+                      alt={site.name}
+                      width="800"
+                      height="500"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-5 flex flex-col justify-end space-y-1.5">
+                      <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 bg-rose-950/85 border border-rose-600/50 px-2 py-0.5 rounded-full w-fit">
+                          {site.category || "Buddhist Heritage"}
+                        </span>
+                        {site.distanceFromFazilnagarCenter && (
+                          <span className="text-[10px] font-semibold text-slate-300 bg-black/50 px-2 py-0.5 rounded-full border border-white/20">
+                            📍 {site.distanceFromFazilnagarCenter}
+                          </span>
+                        )}
+                        {site.isTwinHeritageHighlight && (
+                          <span className="text-[10px] font-semibold text-amber-300 bg-amber-900/60 px-2 py-0.5 rounded-full border border-amber-500/40">
+                            ★ Twin Axis
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-white font-bold text-base sm:text-lg leading-snug">
+                        {site.name}
+                      </h3>
+                      {site.nameHindi && (
+                        <p className="text-amber-200/90 text-xs font-hindi">
+                          {site.nameHindi}
+                        </p>
+                      )}
+                      <p className="text-slate-200 text-xs line-clamp-2 leading-relaxed">
+                        {site.historicalSignificance || site.narrative}
+                      </p>
+                      <div className="pt-2 flex items-center justify-between text-[11px] text-slate-300 border-t border-white/20 mt-1">
+                        <span className="truncate max-w-[200px]">
+                          🕒 {site.visitingHours || "06:00 AM – 06:00 PM"} • {site.entryFee || "Free Entry"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => openGoogleMapsDirections({
+                            name: site.name,
+                            lat: site.latitude || 26.7402,
+                            lng: site.longitude || 83.8887,
+                            landmark: site.locationAddress || "Kushinagar",
+                          })}
+                          className="font-bold text-amber-300 hover:text-white underline cursor-pointer shrink-0 ml-2"
+                        >
+                          Directions →
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-
-                <div className="group relative rounded-2xl overflow-hidden shadow-lg border border-[#E1E6EA] bg-slate-900 aspect-16/10">
-                  <img
-                    src="/images/kushinagar_ramabhar.webp"
-                    alt="Ramabhar Stupa, Kushinagar"
-                    width="800"
-                    height="500"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-5">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/80 border border-amber-600/50 px-2 py-0.5 rounded-full w-fit mb-1.5">
-                      Mukutbandhana Chaitya
-                    </span>
-                    <h3 className="text-white font-bold text-base sm:text-lg">
-                      Ancient Ramabhar Stupa — Holy Cremation Mound
-                    </h3>
-                    <p className="text-slate-300 text-xs mt-1 line-clamp-2">
-                      A majestic 49-foot brick dome marking the exact site where the mortal remains of Buddha were cremated with supreme reverence by the Mallas.
-                    </p>
-                  </div>
-                </div>
+                ))}
               </div>
 
               {/* History & Importance Deep Dive */}

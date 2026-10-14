@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { usePageSEO } from "../utils/seo";
+import { getHeritageSites, DEFAULT_HERITAGE_SITES } from "../services/cmsService";
+import { openGoogleMapsDirections } from "../utils/directions";
 import {
   BookOpen,
   Landmark,
@@ -22,6 +24,33 @@ export default function About() {
     canonicalPath: "/about",
   });
   const [activeTab, setActiveTab] = useState("fazilnagar"); // "fazilnagar" | "kushinagar" | "connection"
+  const [heritageSites, setHeritageSites] = useState(DEFAULT_HERITAGE_SITES);
+
+  useEffect(() => {
+    getHeritageSites(true).then((sites) => {
+      if (Array.isArray(sites) && sites.length > 0) {
+        setHeritageSites(sites);
+      }
+    });
+  }, []);
+
+  const fazilnagarSites = (heritageSites || []).filter((s) => {
+    if (s.isPublished === false) return false;
+    const name = (s.name || "").toLowerCase();
+    const cat = s.category || "";
+    const dist = (s.distanceFromFazilnagarCenter || "").toLowerCase();
+    if (cat === "Buddhist Heritage") return false;
+    if (name.includes("kushinagar") || dist.includes("18 km")) return false;
+    return true;
+  });
+
+  const kushinagarSites = (heritageSites || []).filter((s) => {
+    if (s.isPublished === false) return false;
+    const name = (s.name || "").toLowerCase();
+    const cat = s.category || "";
+    const dist = (s.distanceFromFazilnagarCenter || "").toLowerCase();
+    return cat === "Buddhist Heritage" || name.includes("kushinagar") || dist.includes("18 km");
+  });
 
   return (
     <div className="space-y-10 pb-16">
@@ -102,53 +131,64 @@ export default function About() {
         {/* SECTION 1: FAZILNAGAR */}
         {activeTab === "fazilnagar" && (
           <div className="space-y-8">
-            {/* 2 Distinct Images */}
+            {/* Dynamic Heritage Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="group relative rounded-3xl overflow-hidden shadow-xl border border-slate-200 bg-slate-900 aspect-16/10">
-                <img
-                  src="/images/fazilnagar_pawanagar.webp"
-                  alt="Pawanagar Jain Temple, Fazilnagar"
-                  width="800"
-                  height="500"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent flex flex-col justify-end p-6">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/80 border border-amber-600/50 px-2.5 py-0.5 rounded-full w-fit mb-2">
-                    Shri Pawanagar Jain Tirth
-                  </span>
-                  <h3 className="text-white font-bold text-lg sm:text-xl">
-                    Pawanagar Jain Temple & Lord Mahavira Nirvana Sthal
-                  </h3>
-                  <p className="text-slate-300 text-xs mt-1">
-                    White marble sanctum celebrating Lord Mahavira's final sermons and attainment of Nirvana in 527 BCE.
-                  </p>
+              {fazilnagarSites.map((site) => (
+                <div
+                  key={site._id || site.slug || site.name}
+                  className="group relative rounded-3xl overflow-hidden shadow-xl border border-slate-200 bg-slate-900 aspect-16/10 flex flex-col justify-end"
+                >
+                  <img
+                    src={site.primaryImage || "/images/fazilnagar_pawanagar.webp"}
+                    alt={site.name}
+                    width="800"
+                    height="500"
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/35 to-transparent p-6 flex flex-col justify-end space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/85 border border-amber-600/50 px-2.5 py-0.5 rounded-full w-fit">
+                        {site.category || "Jain Heritage"}
+                      </span>
+                      {site.distanceFromFazilnagarCenter && (
+                        <span className="text-[10px] font-semibold text-slate-300 bg-black/50 px-2 py-0.5 rounded-full border border-white/20">
+                          📍 {site.distanceFromFazilnagarCenter}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-white font-bold text-lg sm:text-xl">
+                      {site.name}
+                    </h3>
+                    {site.nameHindi && (
+                      <p className="text-amber-200/90 text-xs font-hindi">
+                        {site.nameHindi}
+                      </p>
+                    )}
+                    <p className="text-slate-300 text-xs line-clamp-2 leading-relaxed">
+                      {site.historicalSignificance || site.narrative}
+                    </p>
+                    <div className="pt-2 flex items-center justify-between text-xs text-slate-300 border-t border-white/20 mt-1">
+                      <span className="truncate max-w-[200px]">
+                        🕒 {site.visitingHours || "06:00 AM – 07:00 PM"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => openGoogleMapsDirections({
+                          name: site.name,
+                          lat: site.latitude || 26.6827,
+                          lng: site.longitude || 84.0498,
+                          landmark: site.locationAddress || "Fazilnagar",
+                        })}
+                        className="font-bold text-amber-300 hover:text-white underline cursor-pointer shrink-0 ml-2"
+                      >
+                        Directions →
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              <div className="group relative rounded-3xl overflow-hidden shadow-xl border border-slate-200 bg-slate-900 aspect-16/10">
-                <img
-                  src="/images/fazilnagar_kakodha.webp"
-                  alt="Historic Kakodha Ghat, Fazilnagar"
-                  width="800"
-                  height="500"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent flex flex-col justify-end p-6">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-600/50 px-2.5 py-0.5 rounded-full w-fit mb-2">
-                    Historic Kukuttha River
-                  </span>
-                  <h3 className="text-white font-bold text-lg sm:text-xl">
-                    Kakodha Ghat & Ancient Archaeological Remains
-                  </h3>
-                  <p className="text-slate-300 text-xs mt-1">
-                    Sacred river where Gautam Buddha drank water and bathed on his walking journey towards Kushinagar.
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
 
             {/* Deep History Narrative */}
@@ -244,45 +284,64 @@ export default function About() {
         {/* SECTION 2: KUSHINAGAR */}
         {activeTab === "kushinagar" && (
           <div className="space-y-8">
-            {/* 2 Distinct Images */}
+            {/* Dynamic CMS Heritage Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="group relative rounded-3xl overflow-hidden shadow-xl border border-slate-200 bg-slate-900 aspect-16/10">
-                <img
-                  src="/images/kushinagar_mahaparinirvana.jpg"
-                  alt="Mahaparinirvana Stupa and Temple, Kushinagar"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent flex flex-col justify-end p-6">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 bg-rose-950/80 border border-rose-600/50 px-2.5 py-0.5 rounded-full w-fit mb-2">
-                    Universal Buddhist Sanctuary
-                  </span>
-                  <h3 className="text-white font-bold text-lg sm:text-xl">
-                    Mahaparinirvana Stupa & Reclining Buddha Sanctuary
-                  </h3>
-                  <p className="text-slate-300 text-xs mt-1">
-                    Houses the world-renowned 6.1m monolith red sandstone statue of the Reclining Buddha, dating to the 5th-century Gupta era.
-                  </p>
+              {kushinagarSites.map((site) => (
+                <div
+                  key={site._id || site.slug || site.name}
+                  className="group relative rounded-3xl overflow-hidden shadow-xl border border-slate-200 bg-slate-900 aspect-16/10 flex flex-col justify-end"
+                >
+                  <img
+                    src={site.primaryImage || "/images/kushinagar_mahaparinirvana.jpg"}
+                    alt={site.name}
+                    width="800"
+                    height="500"
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/35 to-transparent p-6 flex flex-col justify-end space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-300 bg-rose-950/85 border border-rose-600/50 px-2.5 py-0.5 rounded-full w-fit">
+                        {site.category || "Buddhist Heritage"}
+                      </span>
+                      {site.distanceFromFazilnagarCenter && (
+                        <span className="text-[10px] font-semibold text-slate-300 bg-black/50 px-2 py-0.5 rounded-full border border-white/20">
+                          📍 {site.distanceFromFazilnagarCenter}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-white font-bold text-lg sm:text-xl">
+                      {site.name}
+                    </h3>
+                    {site.nameHindi && (
+                      <p className="text-amber-200/90 text-xs font-hindi">
+                        {site.nameHindi}
+                      </p>
+                    )}
+                    <p className="text-slate-300 text-xs line-clamp-2 leading-relaxed">
+                      {site.historicalSignificance || site.narrative}
+                    </p>
+                    <div className="pt-2 flex items-center justify-between text-xs text-slate-300 border-t border-white/20 mt-1">
+                      <span className="truncate max-w-[200px]">
+                        🕒 {site.visitingHours || "06:00 AM – 06:00 PM"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => openGoogleMapsDirections({
+                          name: site.name,
+                          lat: site.latitude || 26.7416,
+                          lng: site.longitude || 83.8911,
+                          landmark: site.locationAddress || "Kushinagar",
+                        })}
+                        className="font-bold text-amber-300 hover:text-white underline cursor-pointer shrink-0 ml-2"
+                      >
+                        Directions →
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              <div className="group relative rounded-3xl overflow-hidden shadow-xl border border-slate-200 bg-slate-900 aspect-16/10">
-                <img
-                  src="/images/kushinagar_ramabhar.jpg"
-                  alt="Ramabhar Stupa, Kushinagar"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent flex flex-col justify-end p-6">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/80 border border-amber-600/50 px-2.5 py-0.5 rounded-full w-fit mb-2">
-                    Mukutbandhana Chaitya
-                  </span>
-                  <h3 className="text-white font-bold text-lg sm:text-xl">
-                    Ancient Ramabhar Stupa — Holy Cremation Mound
-                  </h3>
-                  <p className="text-slate-300 text-xs mt-1">
-                    Monumental 49-foot brick stupa built by the Malla kings marking where Buddha's mortal remains were cremated.
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
 
             {/* Deep History Narrative */}

@@ -32,9 +32,10 @@ const MAIN_NAV_ITEMS = [
   { path: "/", label: "Home" },
   { path: "/#explore-categories", label: "Explore", isHash: true },
   { path: "/directory", label: "Directory", count: "37" },
+  { path: "/#events-melas-section", label: "Events & Melas", isHash: true },
   { path: "/#town-map-section", label: "Map", isHash: true },
   { path: "/news", label: "Local Updates" },
-  { path: "/#about-fazilnagar-section", label: "About", isHash: true },
+  { path: "/#about-fazilnagar-section", label: "Twin Heritage", isHash: true },
 ];
 
 const DIRECTORY_SUB_NAV = [

@@ -150,10 +150,165 @@ export async function getPublicServices({ category = "All", search = "" } = {}) 
   return [];
 }
 
+export const DEFAULT_HERITAGE_SITES = [
+  {
+    _id: "default-heritage-1",
+    name: "Pawapuri Jain Tirth Kshetra (पावापुरी तीर्थ)",
+    nameHindi: "श्री दिगंबर एवं श्वेतांबर पावापुरी जैन मंदिर",
+    slug: "pawapuri-jain-tirth-fazilnagar",
+    category: "Jain Heritage",
+    historicalSignificance: "Sacred Nirvana Sthal of 24th Tirthankar Bhagwan Mahavira according to archaeological and Jain scriptural tradition (ancient Pawa).",
+    narrative: "Fazilnagar is historically identified with ancient Pawa (Pawanagar), where Bhagwan Mahavira delivered his final divine discourse (Sarvodaya Upadesh) and attained Moksha (Nirvana) in 527 BCE. The sprawling tirth complex features exquisite marble architectures, peaceful meditation courtyards, dharamshala for pilgrims, and historic idol shrines.",
+    distanceFromFazilnagarCenter: "0 km (Town Center, NH-27 Corridor)",
+    locationAddress: "Pawapuri Mandir Campus, Fazilnagar - 274401",
+    latitude: 26.6827,
+    longitude: 84.0498,
+    visitingHours: "05:30 AM – 08:30 PM",
+    entryFee: "Free Admission for all pilgrims and visitors",
+    primaryImage: "/images/fazilnagar_pawanagar.webp",
+    isTwinHeritageHighlight: true,
+    isPublished: true,
+  },
+  {
+    _id: "default-heritage-2",
+    name: "Historic Kakodha Ghat & Brick Archaeological Remains",
+    nameHindi: "काकोधा घाट एवं प्राचीन कुकुत्था नदी अवशेष",
+    slug: "kakodha-ghat-fazilnagar",
+    category: "Historical Monument",
+    historicalSignificance: "The revered river where Lord Buddha bathed and drank water on his holy journey from Pawa towards Kushinagar.",
+    narrative: "Ancient Kukuttha river ghat where Gautam Buddha stopped to bathe and drink cool water before proceeding on his final journey to Kushinagar. Archaeological excavations unearthed brick structures and terracotta remains.",
+    distanceFromFazilnagarCenter: "2 km (Town Environs)",
+    locationAddress: "Kakodha Ghat, Fazilnagar, Kushinagar",
+    latitude: 26.6912,
+    longitude: 84.0534,
+    visitingHours: "Open Daylight Hours",
+    entryFee: "Free Admission",
+    primaryImage: "/images/fazilnagar_kakodha.webp",
+    isTwinHeritageHighlight: true,
+    isPublished: true,
+  },
+  {
+    _id: "default-heritage-3",
+    name: "Ancient Sathiaon Chetiya Mound & Archaeological Environs",
+    nameHindi: "साथियावँ प्राचीन स्तूप टीला एवं पुरातात्विक क्षेत्र",
+    slug: "sathiaon-ancient-mound",
+    category: "Historical Monument",
+    historicalSignificance: "Ancient Malla era habitation mound with historical terracottas and ring-wells linking early republican history of eastern UP.",
+    narrative: "Located directly in the immediate vicinity of Fazilnagar, Sathiaon possesses ancient archaeological mounds dating back to the NBPW and Kushan periods. Renowned historians associate it with Buddhist and Jain monastic settlements contemporary with Kushinagar's Malla republic.",
+    distanceFromFazilnagarCenter: "2.5 km North-East",
+    locationAddress: "Sathiaon Archaeological Sector, Fazilnagar, Kushinagar",
+    latitude: 26.695,
+    longitude: 84.062,
+    visitingHours: "Open during daylight hours",
+    entryFee: "Free Admission",
+    primaryImage: "https://images.unsplash.com/photo-1590077428593-a55bb07c4665?auto=format&fit=crop&w=1200&q=80",
+    isTwinHeritageHighlight: true,
+    isPublished: true,
+  },
+  {
+    _id: "default-heritage-4",
+    name: "Mahaparinirvana Temple & Nirvana Stupa (Kushinagar Twin Axis)",
+    nameHindi: "महापरिनिर्वाण मंदिर एवं स्तूप (कुशीनगर)",
+    slug: "mahaparinirvana-kushinagar",
+    category: "Buddhist Heritage",
+    historicalSignificance: "The sacred sanctuary commemorating where Lord Gautam Buddha attained Mahaparinirvana in 483 BCE under the twin Sal trees.",
+    narrative: "Fazilnagar and Kushinagar form a sacred twin heritage circuit separated by merely 18 km along the Buddhist corridor. Ancient records state that Lord Buddha partook his last meal at Pawa before walking to the Sal grove of Kushinagar to attain Mahaparinirvana.",
+    distanceFromFazilnagarCenter: "18 km West (Direct Highway Corridor)",
+    locationAddress: "Archaeological Park, Kushinagar - 274403",
+    latitude: 26.7402,
+    longitude: 83.8887,
+    visitingHours: "06:00 AM – 06:00 PM",
+    entryFee: "ASI Prescribed Entry (Rs. 25 Indian / Rs. 300 Foreign)",
+    primaryImage: "/images/kushinagar_mahaparinirvana.webp",
+    isTwinHeritageHighlight: true,
+    isPublished: true,
+  },
+  {
+    _id: "default-heritage-5",
+    name: "Ancient Ramabhar Stupa — Holy Cremation Mound",
+    nameHindi: "रामाभार स्तूप (मुकुटबंधन चैत्य)",
+    slug: "ramabhar-stupa-kushinagar",
+    category: "Buddhist Heritage",
+    historicalSignificance: "A majestic 49-foot brick dome marking the exact site where the mortal remains of Buddha were cremated with supreme reverence by the Mallas.",
+    narrative: "Located 1.5 km east of the Mahaparinirvana temple, Ramabhar marks the site of the holy cremation of Lord Buddha (Mukutbandhana Chaitya).",
+    distanceFromFazilnagarCenter: "19 km West",
+    locationAddress: "Ramabhar, Kushinagar - 274403",
+    latitude: 26.735,
+    longitude: 83.902,
+    visitingHours: "06:00 AM – 06:00 PM",
+    entryFee: "Free Admission",
+    primaryImage: "/images/kushinagar_ramabhar.webp",
+    isTwinHeritageHighlight: true,
+    isPublished: true,
+  },
+];
+
+export const DEFAULT_EVENTS = [
+  {
+    _id: "default-event-1",
+    title: "Pawapuri Mahavira Nirvana Mahotsav & Annual Mela",
+    titleHindi: "पावापुरी महावीर निर्वाण महोत्सव एवं वार्षिक मेला",
+    category: "Mela & Fair",
+    summary: "Annual religious fair and commemorative festival celebrating the sacred Jain tirthankar heritage of ancient Pawa.",
+    description: "Devotees from across India assemble at the sacred Pawapuri Digambar & Shwetambar Jain Mandir complex in Fazilnagar to celebrate Diwali Nirvana Mahotsav with prabhat pheri, laddu offering, and cultural assemblies.",
+    venue: "Pawapuri Jain Tirth Complex, Fazilnagar",
+    address: "Pawapuri Dham, Main Road, Fazilnagar, Kushinagar",
+    latitude: 26.6827,
+    longitude: 84.0498,
+    startDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+    endDate: new Date(Date.now() + 17 * 24 * 60 * 60 * 1000).toISOString(),
+    timeString: "06:00 AM – 10:00 PM Daily",
+    organizer: "Shri Digambar Jain Teerth Kshetra Committee, Pawapuri (Fazilnagar)",
+    organizerContact: "+91 94520 89540",
+    bannerImage: "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1200&q=80",
+    isFeatured: true,
+    status: "published",
+    isPublished: true,
+  },
+  {
+    _id: "default-event-2",
+    title: "Shri Ram Navami Mahotsav & Grand Maha Aarti",
+    titleHindi: "श्री राम जन्मोत्सव एवं नगर महाआरती",
+    category: "Aarti & Puja",
+    summary: "Traditional civic Maha Aarti and procession through the main market corridor of Fazilnagar.",
+    description: "Civic celebration with collective Vedic chanting, deepotsav, and traditional devotional songs at the town square temple followed by prasadam distribution for all residents and visitors.",
+    venue: "Shiv Mandir & Market Square, Fazilnagar",
+    address: "Fazilnagar Crossing, Main Road Corridor",
+    latitude: 26.6815,
+    longitude: 84.0482,
+    startDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    timeString: "06:30 PM Onwards",
+    organizer: "Fazilnagar Dharmik Seva Samiti",
+    organizerContact: "+91 5564 222102",
+    bannerImage: "https://images.unsplash.com/photo-1609710228159-0fa9bd7c0827?auto=format&fit=crop&w=1200&q=80",
+    isFeatured: true,
+    status: "published",
+    isPublished: true,
+  },
+];
+
+/**
+ * Invalidates the in-memory cache for immediate synchronization upon admin edits.
+ */
+export function clearCMSCache(key) {
+  if (key && memoryCache[key]) {
+    memoryCache[key] = { data: null, timestamp: 0 };
+  } else if (!key) {
+    Object.keys(memoryCache).forEach((k) => {
+      memoryCache[k] = { data: null, timestamp: 0 };
+    });
+  }
+}
+
 /**
  * Fetches dynamic community events and religious notices.
  */
-export async function getEvents({ category = "All", search = "", timeFilter = "upcoming" } = {}) {
+export async function getEvents({ category = "All", search = "", timeFilter = "" } = {}, forceFresh = false) {
+  const now = Date.now();
+  if (!forceFresh && memoryCache.events.data && now - memoryCache.events.timestamp < CACHE_TTL_MS) {
+    return memoryCache.events.data;
+  }
+
   try {
     const params = {};
     if (category && category !== "All") params.category = category;
@@ -161,26 +316,33 @@ export async function getEvents({ category = "All", search = "", timeFilter = "u
     if (timeFilter) params.timeFilter = timeFilter;
 
     const res = await API.get("/events", { params, timeout: 8000 });
-    if (res.data?.success && Array.isArray(res.data?.events)) {
+    if (res.data?.success && Array.isArray(res.data?.events) && res.data.events.length > 0) {
+      memoryCache.events = { data: res.data.events, timestamp: now };
       return res.data.events;
     }
   } catch (err) {
-    console.warn("[CMSService] Events fetch error:", err.message);
+    console.warn("[CMSService] Events fetch error, using fallbacks:", err.message);
   }
-  return [];
+  return memoryCache.events.data || DEFAULT_EVENTS;
 }
 
 /**
- * Fetches sacred twin heritage destinations.
+ * Fetches sacred twin heritage destinations with graceful fallback.
  */
-export async function getHeritageSites() {
+export async function getHeritageSites(forceFresh = false) {
+  const now = Date.now();
+  if (!forceFresh && memoryCache.heritage.data && now - memoryCache.heritage.timestamp < CACHE_TTL_MS) {
+    return memoryCache.heritage.data;
+  }
+
   try {
     const res = await API.get("/heritage", { timeout: 8000 });
-    if (res.data?.success && Array.isArray(res.data?.sites)) {
+    if (res.data?.success && Array.isArray(res.data?.sites) && res.data.sites.length > 0) {
+      memoryCache.heritage = { data: res.data.sites, timestamp: now };
       return res.data.sites;
     }
   } catch (err) {
-    console.warn("[CMSService] Heritage fetch error:", err.message);
+    console.warn("[CMSService] Heritage fetch error, using fallbacks:", err.message);
   }
-  return [];
+  return memoryCache.heritage.data || DEFAULT_HERITAGE_SITES;
 }

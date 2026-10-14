@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import API from "../api";
 import { getAuthToken } from "../utils/authStorage";
+import { clearCMSCache } from "../services/cmsService";
 import PageHeader from "./admin/PageHeader";
 import SearchAndFilters from "./admin/SearchAndFilters";
 import DataTable from "./admin/DataTable";
@@ -190,6 +191,7 @@ export default function AdminEventsCMS() {
           setEvents((prev) =>
             prev.map((evt) => (evt._id === editingEvent._id ? res.data.event : evt))
           );
+          clearCMSCache("events");
           showToast("Event updated successfully!");
         }
       } else {
@@ -198,6 +200,7 @@ export default function AdminEventsCMS() {
         });
         if (res.data?.success) {
           setEvents((prev) => [res.data.event, ...prev]);
+          clearCMSCache("events");
           showToast("New community event added!");
         }
       }
@@ -222,6 +225,7 @@ export default function AdminEventsCMS() {
       setEvents((prev) =>
         prev.map((e) => (e._id === evt._id ? { ...e, isPublished: nextPub } : e))
       );
+      clearCMSCache("events");
       showToast(`Event ${nextPub ? "published live" : "unpublished"}.`);
     } catch (err) {
       showToast("Failed to toggle status: " + err.message, "error");
@@ -240,6 +244,7 @@ export default function AdminEventsCMS() {
       setEvents((prev) =>
         prev.map((e) => (e._id === evt._id ? { ...e, isFeatured: nextFeat } : e))
       );
+      clearCMSCache("events");
       showToast(`Event ${nextFeat ? "marked featured" : "unfeatured"}.`);
     } catch (err) {
       showToast("Failed to toggle featured: " + err.message, "error");
@@ -254,6 +259,7 @@ export default function AdminEventsCMS() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setEvents((prev) => prev.filter((e) => e._id !== deleteEventId));
+      clearCMSCache("events");
       showToast("Event deleted.");
       setDeleteEventId(null);
     } catch (err) {

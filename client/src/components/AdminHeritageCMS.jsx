@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import API from "../api";
 import { getAuthToken } from "../utils/authStorage";
+import { clearCMSCache } from "../services/cmsService";
 import {
   Compass,
   Plus,
@@ -211,6 +212,7 @@ export default function AdminHeritageCMS() {
           setSites((prev) =>
             prev.map((s) => (s._id === editingSite._id ? res.data.site : s))
           );
+          clearCMSCache("heritage");
           showToast("success", "Heritage site updated successfully.");
         }
       } else {
@@ -219,6 +221,7 @@ export default function AdminHeritageCMS() {
         });
         if (res.data?.site) {
           setSites((prev) => [res.data.site, ...prev]);
+          clearCMSCache("heritage");
           showToast("success", "New heritage site published.");
         }
       }
@@ -254,6 +257,7 @@ export default function AdminHeritageCMS() {
       setSites((prev) =>
         prev.map((s) => (s._id === site._id ? { ...s, isPublished: nextPublished } : s))
       );
+      clearCMSCache("heritage");
       showToast("success", `Site ${nextPublished ? "published" : "unpublished"} successfully.`);
     } catch (err) {
       showToast("error", "Status update failed: " + (err.response?.data?.message || err.message));
@@ -268,6 +272,7 @@ export default function AdminHeritageCMS() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSites((prev) => prev.filter((s) => s._id !== siteToDelete._id));
+      clearCMSCache("heritage");
       showToast("success", "Heritage site removed successfully.");
     } catch (err) {
       showToast("error", "Delete failed: " + err.message);
