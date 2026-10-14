@@ -8,21 +8,38 @@ import {
   Copy,
   Check,
   Search,
-  RefreshCw,
-  CheckCircle,
-  FileImage,
   ExternalLink,
   Tag,
   Info,
+  LayoutGrid,
+  Table as TableIcon,
+  Plus,
+  FileImage,
+  Calendar,
+  Layers
 } from "lucide-react";
+import PageHeader from "./admin/PageHeader";
+import SearchAndFilters from "./admin/SearchAndFilters";
+import DataTable from "./admin/DataTable";
+import ConfirmDialog from "./admin/ConfirmDialog";
+import ToastNotification from "./admin/ToastNotification";
+import EmptyState from "./admin/EmptyState";
+import LoadingSkeleton from "./admin/LoadingSkeleton";
+import FormSection from "./admin/FormSection";
 
 export default function AdminMediaLibrary() {
   const [mediaList, setMediaList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState("");
-  const [toast, setToast] = useState("");
+  const [viewMode, setViewMode] = useState("grid"); // 'grid' | 'table'
+  const [toast, setToast] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
+  const [showUploadSection, setShowUploadSection] = useState(false);
+
+  // Delete Dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
   // Upload Form State
   const fileInputRef = useRef(null);
@@ -49,14 +66,14 @@ export default function AdminMediaLibrary() {
       }
     } catch (err) {
       console.warn("Failed to load media items:", err);
+      showToast("error", "Failed to load media library items.");
     } finally {
       setLoading(false);
     }
   };
 
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(""), 4000);
+  const showToast = (type, message) => {
+    setToast({ type, message });
   };
 
   const handleFileChange = (e) => {
@@ -64,12 +81,12 @@ export default function AdminMediaLibrary() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      showToast("Only image files (JPEG, PNG, WebP) are allowed.");
+      showToast("warning", "Only image files (JPEG, PNG, WebP) are allowed.");
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      showToast("File size cannot exceed 10MB.");
+      showToast("error", "File size cannot exceed 10MB limit.");
       return;
     }
 
@@ -83,7 +100,7 @@ export default function AdminMediaLibrary() {
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!selectedFile) {
-      showToast("Please choose an image file to upload.");
+      showToast("warning", "Please choose an image file to upload.");
       return;
     }
 
@@ -106,17 +123,18 @@ export default function AdminMediaLibrary() {
 
       if (res.data?.success && res.data?.media) {
         setMediaList((prev) => [res.data.media, ...prev]);
-        showToast("Image uploaded to media library!");
+        showToast("success", "Image uploaded successfully to Media Library!");
         // Reset form
         setSelectedFile(null);
         setPreviewUrl("");
         setMediaTitle("");
         setMediaAlt("");
         setMediaCaption("");
+        setShowUploadSection(false);
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
     } catch (err) {
-      showToast("Upload failed: " + (err.response?.data?.message || err.message));
+      showToast("error", "Upload failed: " + (err.response?.data?.message || err.message));
     } finally {
       setUploading(false);
     }
@@ -125,21 +143,24 @@ export default function AdminMediaLibrary() {
   const handleCopyUrl = (url, id) => {
     navigator.clipboard.writeText(url);
     setCopiedId(id);
-    showToast("URL copied to clipboard!");
+    showToast("success", "Image URL copied to clipboard!");
     setTimeout(() => setCopiedId(null), 2500);
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this media item?")) return;
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
     const token = getAuthToken();
     try {
-      await API.delete(`/media/${id}`, {
+      await API.delete(`/media/${itemToDelete._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setMediaList((prev) => prev.filter((m) => m._id !== id));
-      showToast("Media item removed.");
+      setMediaList((prev) => prev.filter((m) => m._id !== itemToDelete._id));
+      showToast("success", "Media item removed from library.");
     } catch (err) {
-      showToast("Delete failed: " + err.message);
+      showToast("error", "Delete failed: " + err.message);
+    } finally {
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
     }
   };
 
@@ -149,242 +170,422 @@ export default function AdminMediaLibrary() {
     return (
       m.title?.toLowerCase().includes(q) ||
       m.altText?.toLowerCase().includes(q) ||
-      m.tags?.some((t) => t.toLowerCase().includes(q))
+      (Array.isArray(m.tags) && m.tags.some((t) => t.toLowerCase().includes(q)))
     );
   });
 
+  const tableColumns = [
+    {
+      key: "preview",
+      label: "Preview",
+      render: (m) => (
+        <div className="w-14 h-14 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
+          <img src={m.url} alt={m.altText || m.title} className="w-full h-full object-cover" />
+        </div>
+      ),
+    },
+    {
+      key: "title",
+      label: "Media Details",
+      sortable: true,
+      render: (m) => (
+        <div>
+          <div className="font-semibold text-slate-900 text-sm">{m.title || "Untitled Image"}</div>
+          {m.altText && <div className="text-xs text-slate-500 mt-0.5 truncate max-w-xs">{m.altText}</div>}
+          <div className="flex items-center gap-1.5 mt-1">
+            {Array.isArray(m.tags) &&
+              m.tags.slice(0, 3).map((tag, idx) => (
+                <span
+                  key={idx}
+                  className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-mono"
+                >
+                  #{tag}
+                </span>
+              ))}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "format",
+      label: "Format & Size",
+      render: (m) => (
+        <div className="text-xs text-slate-600">
+          <div className="font-medium text-slate-800 uppercase">{m.format || "IMAGE"}</div>
+          <div className="text-slate-400 mt-0.5">
+            {m.size ? `${(m.size / 1024).toFixed(0)} KB` : "—"}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "createdAt",
+      label: "Uploaded",
+      sortable: true,
+      render: (m) => (
+        <div className="text-xs text-slate-500">
+          {m.createdAt ? new Date(m.createdAt).toLocaleDateString() : "—"}
+        </div>
+      ),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      align: "right",
+      render: (m) => (
+        <div className="flex items-center justify-end gap-1.5">
+          <button
+            onClick={() => handleCopyUrl(m.url, m._id)}
+            title="Copy URL"
+            className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          >
+            {copiedId === m._id ? (
+              <Check className="w-4 h-4 text-emerald-600" />
+            ) : (
+              <Copy className="w-4 h-4" />
+            )}
+          </button>
+          <a
+            href={m.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="View Full Resolution"
+            className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </a>
+          <button
+            onClick={() => {
+              setItemToDelete(m);
+              setDeleteDialogOpen(true);
+            }}
+            title="Delete from Library"
+            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Toast */}
       {toast && (
-        <div className="fixed top-5 right-5 z-50 bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 animate-in slide-in-from-top-4">
-          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span className="text-xs font-bold">{toast}</span>
-        </div>
+        <ToastNotification
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
       )}
 
-      {/* Header Bar */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold mb-1">
-            <ImageIcon className="w-3.5 h-3.5" />
-            <span>Digital Media Assets</span>
-          </div>
-          <h2 className="text-lg sm:text-xl font-extrabold text-[#18232E]">
-            Town Media Library & Asset Storage
-          </h2>
-          <p className="text-xs text-slate-500">
-            Upload images for hero slides, directory listings, public notices, and twin heritage stories. Copy URLs with one click.
-          </p>
-        </div>
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        icon={ImageIcon}
+        title="Media Library"
+        subtitle="Manage town portal assets, hero banners, site logos, and historical photography"
+        badgeText={`${mediaList.length} Files`}
+        primaryAction={{
+          label: showUploadSection ? "Close Uploader" : "Upload Image",
+          icon: showUploadSection ? FileImage : Plus,
+          onClick: () => setShowUploadSection(!showUploadSection),
+        }}
+        breadcrumbs={[
+          { label: "Overview", to: "/admin/review?tab=dashboard" },
+          { label: "Media Library" },
+        ]}
+      />
 
-      {/* Upload Zone */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
-        <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-3 flex items-center gap-2">
-          <UploadCloud className="w-4 h-4 text-blue-600" />
-          <span>Upload New Image</span>
-        </h3>
-
-        <form onSubmit={handleUpload} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* File drop area */}
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition bg-slate-50 hover:bg-blue-50/50 min-h-[140px]"
+      {/* Upload Drawer / Section */}
+      {showUploadSection && (
+        <div className="bg-white p-6 rounded-xl border border-blue-200 bg-blue-50/20 shadow-xs animate-in slide-in-from-top-3 duration-200">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-5">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                <UploadCloud className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Upload Media Asset</h3>
+                <p className="text-xs text-slate-500">Supports JPEG, PNG, and WebP up to 10MB</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowUploadSection(false)}
+              className="text-slate-400 hover:text-slate-600 text-xs font-semibold px-2 py-1"
             >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-              {previewUrl ? (
-                <div className="relative w-full h-28">
-                  <img
-                    src={previewUrl}
-                    alt="Preview"
-                    className="w-full h-full object-contain rounded-lg"
+              Cancel
+            </button>
+          </div>
+
+          <form onSubmit={handleUpload} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {/* Drop / Select zone */}
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-blue-300 hover:border-blue-500 rounded-xl p-5 flex flex-col items-center justify-center text-center cursor-pointer transition bg-white hover:bg-blue-50/40 min-h-[160px]"
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                {previewUrl ? (
+                  <div className="relative w-full h-36 flex flex-col items-center justify-center">
+                    <img
+                      src={previewUrl}
+                      alt="Upload Preview"
+                      className="max-h-28 max-w-full object-contain rounded-lg shadow-xs"
+                    />
+                    <span className="text-xs text-blue-600 font-semibold mt-2">
+                      Click to choose another file
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <FileImage className="w-10 h-10 text-blue-400 mb-2" />
+                    <p className="text-xs font-bold text-slate-800">Choose or drag image file</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">JPEG, PNG, WebP up to 10MB</p>
+                  </>
+                )}
+              </div>
+
+              {/* Metadata Inputs */}
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Image Title / Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={mediaTitle}
+                    onChange={(e) => setMediaTitle(e.target.value)}
+                    placeholder="e.g. Mahavira Nirvana Sthal Main Shikhar"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500"
                   />
-                  <span className="text-[10px] text-blue-600 font-bold block mt-1">
-                    Click to change
-                  </span>
                 </div>
-              ) : (
-                <>
-                  <FileImage className="w-8 h-8 text-slate-400 mb-1" />
-                  <p className="text-xs font-bold text-slate-700">Choose or drop image file</p>
-                  <p className="text-[10px] text-slate-400">JPEG, PNG, WebP up to 10MB</p>
-                </>
-              )}
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Alt Text (Accessibility & SEO)
+                  </label>
+                  <input
+                    type="text"
+                    value={mediaAlt}
+                    onChange={(e) => setMediaAlt(e.target.value)}
+                    placeholder="Concise description for screen readers"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Caption or Credit
+                  </label>
+                  <input
+                    type="text"
+                    value={mediaCaption}
+                    onChange={(e) => setMediaCaption(e.target.value)}
+                    placeholder="Photo credits or town archive reference"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Tags (Comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={mediaTags}
+                    onChange={(e) => setMediaTags(e.target.value)}
+                    placeholder="heritage, hero, temple, event"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* Title & Alt */}
-            <div className="space-y-3">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  Title / Name
-                </label>
-                <input
-                  type="text"
-                  value={mediaTitle}
-                  onChange={(e) => setMediaTitle(e.target.value)}
-                  placeholder="e.g. Pawapuri Mandir Front View"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  Alt Text (SEO & Accessibility)
-                </label>
-                <input
-                  type="text"
-                  value={mediaAlt}
-                  onChange={(e) => setMediaAlt(e.target.value)}
-                  placeholder="Descriptive text for visually impaired"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            {/* Caption & Tags & Submit */}
-            <div className="space-y-3 flex flex-col justify-between">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  Caption / Credit
-                </label>
-                <input
-                  type="text"
-                  value={mediaCaption}
-                  onChange={(e) => setMediaCaption(e.target.value)}
-                  placeholder="e.g. Photo by Nagar Panchayat"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  Tags (Comma separated)
-                </label>
-                <input
-                  type="text"
-                  value={mediaTags}
-                  onChange={(e) => setMediaTags(e.target.value)}
-                  placeholder="heritage, hero, temple"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
+            <div className="pt-2 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowUploadSection(false);
+                  setSelectedFile(null);
+                  setPreviewUrl("");
+                }}
+                className="px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
               <button
                 type="submit"
                 disabled={uploading || !selectedFile}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-bold py-2.5 rounded-xl transition text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-xs disabled:opacity-50 flex items-center gap-2"
               >
                 {uploading ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <>
+                    <UploadCloud className="w-4 h-4 animate-bounce" />
+                    <span>Uploading to Storage...</span>
+                  </>
                 ) : (
-                  <UploadCloud className="w-4 h-4" />
+                  <>
+                    <UploadCloud className="w-4 h-4" />
+                    <span>Confirm & Upload Asset</span>
+                  </>
                 )}
-                <span>{uploading ? "Uploading to Cloud..." : "Upload & Save to Library"}</span>
               </button>
             </div>
-          </div>
-        </form>
-      </div>
+          </form>
+        </div>
+      )}
 
-      {/* Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs flex items-center gap-3">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search media by title, alt text or tag..."
-            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500"
+      {/* Filter and View Switcher */}
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex-1">
+          <SearchAndFilters
+            searchPlaceholder="Search media by title, alt text, or tag..."
+            searchValue={search}
+            onSearchChange={setSearch}
+            onReset={() => setSearch("")}
+            totalResults={filtered.length}
           />
+        </div>
+
+        {/* View Mode Toggle */}
+        <div className="flex items-center gap-1 border border-slate-200 rounded-lg p-1 bg-slate-50 shrink-0 self-end md:self-center">
+          <button
+            type="button"
+            onClick={() => setViewMode("grid")}
+            className={`p-1.5 rounded-md flex items-center gap-1.5 text-xs font-medium transition-colors ${
+              viewMode === "grid"
+                ? "bg-white text-slate-900 shadow-2xs font-semibold"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+            title="Grid View"
+          >
+            <LayoutGrid className="w-4 h-4" />
+            <span className="hidden sm:inline">Grid</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("table")}
+            className={`p-1.5 rounded-md flex items-center gap-1.5 text-xs font-medium transition-colors ${
+              viewMode === "table"
+                ? "bg-white text-slate-900 shadow-2xs font-semibold"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+            title="Table View"
+          >
+            <TableIcon className="w-4 h-4" />
+            <span className="hidden sm:inline">Table</span>
+          </button>
         </div>
       </div>
 
-      {/* Media Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {loading ? (
-          <div className="col-span-full py-16 text-center text-slate-400 flex flex-col items-center">
-            <RefreshCw className="w-8 h-8 animate-spin text-blue-500 mb-2" />
-            <p className="text-xs font-semibold">Loading media library...</p>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="col-span-full p-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
-            <p className="text-xs font-semibold">No media items found.</p>
-          </div>
-        ) : (
-          filtered.map((item) => (
+      {/* Content */}
+      {loading ? (
+        <LoadingSkeleton type={viewMode === "table" ? "table" : "cards"} rows={5} count={6} />
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon={ImageIcon}
+          title="No Media Assets Found"
+          description={
+            search
+              ? "No images match your search query. Try searching with different keywords."
+              : "No media assets stored yet. Upload your first image to populate the library."
+          }
+          actionLabel="Upload Media"
+          onAction={() => setShowUploadSection(true)}
+        />
+      ) : viewMode === "table" ? (
+        <DataTable
+          columns={tableColumns}
+          data={filtered}
+          keyField="_id"
+          defaultSortKey="createdAt"
+          defaultSortDirection="desc"
+        />
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {filtered.map((item) => (
             <div
               key={item._id}
-              className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden flex flex-col justify-between group hover:border-blue-400 transition"
+              className="group relative bg-white rounded-xl border border-slate-200 shadow-2xs hover:shadow-md transition-all overflow-hidden flex flex-col"
             >
-              <div className="relative h-36 bg-slate-100 overflow-hidden">
+              {/* Image Container */}
+              <div className="relative aspect-square bg-slate-100 overflow-hidden">
                 <img
                   src={item.url}
                   alt={item.altText || item.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
                 />
-                <div className="absolute top-2 right-2 flex gap-1">
+
+                {/* Hover overlay with actions */}
+                <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2">
                   <button
                     onClick={() => handleCopyUrl(item.url, item._id)}
-                    className="p-1.5 rounded-lg bg-black/60 hover:bg-black/80 text-white backdrop-blur-xs transition cursor-pointer"
                     title="Copy URL"
+                    className="p-2 bg-white/90 hover:bg-white text-slate-800 rounded-lg shadow-sm hover:scale-110 transition-transform"
                   >
                     {copiedId === item._id ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      <Check className="w-4 h-4 text-emerald-600" />
                     ) : (
-                      <Copy className="w-3.5 h-3.5" />
+                      <Copy className="w-4 h-4" />
                     )}
                   </button>
-
-                  <button
-                    onClick={() => handleDelete(item._id)}
-                    className="p-1.5 rounded-lg bg-red-600/80 hover:bg-red-700 text-white backdrop-blur-xs transition cursor-pointer"
-                    title="Delete Media"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-3 space-y-1">
-                <h4 className="text-xs font-extrabold text-[#18232E] truncate" title={item.title}>
-                  {item.title}
-                </h4>
-                {item.altText && (
-                  <p className="text-[10px] text-slate-500 truncate" title={item.altText}>
-                    Alt: {item.altText}
-                  </p>
-                )}
-                <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1">
-                  <span>
-                    {item.fileSizeBytes
-                      ? `${(item.fileSizeBytes / 1024).toFixed(0)} KB`
-                      : "Cloud"}
-                  </span>
                   <a
                     href={item.url}
                     target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-600 hover:underline flex items-center gap-0.5"
+                    rel="noopener noreferrer"
+                    title="Open Full Resolution"
+                    className="p-2 bg-white/90 hover:bg-white text-slate-800 rounded-lg shadow-sm hover:scale-110 transition-transform"
                   >
-                    <span>View</span>
-                    <ExternalLink className="w-2.5 h-2.5" />
+                    <ExternalLink className="w-4 h-4" />
                   </a>
+                  <button
+                    onClick={() => {
+                      setItemToDelete(item);
+                      setDeleteDialogOpen(true);
+                    }}
+                    title="Delete Image"
+                    className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm hover:scale-110 transition-transform"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Footer info */}
+              <div className="p-2.5">
+                <div className="font-semibold text-slate-900 text-xs truncate" title={item.title}>
+                  {item.title || "Untitled Image"}
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1">
+                  <span>{item.format ? item.format.toUpperCase() : "IMG"}</span>
+                  <span>{item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ""}</span>
                 </div>
               </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Media Asset?"
+        message={`Are you sure you want to delete "${itemToDelete?.title || "this image"}" from storage? Modules relying on this URL might display broken links.`}
+        confirmLabel="Delete Asset"
+        variant="danger"
+      />
     </div>
   );
 }

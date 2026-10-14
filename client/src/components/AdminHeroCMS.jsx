@@ -1,21 +1,32 @@
 import { useState, useEffect } from "react";
 import API from "../api";
 import { getAuthToken } from "../utils/authStorage";
+import PageHeader from "./admin/PageHeader";
+import FormSection from "./admin/FormSection";
+import ImageUploader from "./admin/ImageUploader";
+import MediaPicker from "./admin/MediaPicker";
+import StatusBadge from "./admin/StatusBadge";
+import ConfirmDialog from "./admin/ConfirmDialog";
+import ToastNotification from "./admin/ToastNotification";
+import EmptyState from "./admin/EmptyState";
 import {
-  Sparkles,
+  Layers,
   Plus,
   Trash2,
   Edit,
   ArrowUp,
   ArrowDown,
   RefreshCw,
-  CheckCircle,
+  CheckCircle2,
   Eye,
   EyeOff,
   ExternalLink,
   Upload,
   X,
   Save,
+  Play,
+  Sliders,
+  Image as ImageIcon,
 } from "lucide-react";
 
 export default function AdminHeroCMS() {
@@ -27,9 +38,9 @@ export default function AdminHeroCMS() {
   });
   const [loading, setLoading] = useState(true);
   const [savingSettings, setSavingSettings] = useState(false);
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState({ message: "", type: "success" });
 
-  // Slide Edit Modal State
+  // Modal State
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSlide, setEditingSlide] = useState(null);
   const [formTitle, setFormTitle] = useState("");
@@ -39,8 +50,13 @@ export default function AdminHeroCMS() {
   const [formLinkUrl, setFormLinkUrl] = useState("/directory");
   const [formButtonText, setFormButtonText] = useState("Explore Now");
   const [formIsActive, setFormIsActive] = useState(true);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [formSubmitting, setFormSubmitting] = useState(false);
+
+  // Media Picker state
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+
+  // Delete dialog
+  const [deleteSlideId, setDeleteSlideId] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -61,14 +77,14 @@ export default function AdminHeroCMS() {
       }
     } catch (err) {
       console.warn("Failed to fetch hero settings:", err);
+      showToast("Could not load hero carousel settings.", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(""), 4000);
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
   };
 
   const handleSaveHeroControls = async (e) => {
@@ -86,10 +102,10 @@ export default function AdminHeroCMS() {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      showToast("Hero carousel animation controls saved!");
+      showToast("Hero carousel playback and animation controls saved!");
     } catch (err) {
       console.error("Save hero controls error:", err);
-      showToast("Failed to save controls: " + err.message);
+      showToast("Failed to save controls: " + err.message, "error");
     } finally {
       setSavingSettings(false);
     }
@@ -119,39 +135,10 @@ export default function AdminHeroCMS() {
     setModalOpen(true);
   };
 
-  const handleImageFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploadingImage(true);
-    const token = getAuthToken();
-    const formData = new FormData();
-    formData.append("image", file);
-    formData.append("title", "Hero Slide - " + file.originalname);
-
-    try {
-      const res = await API.post("/media/upload", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      if (res.data?.media?.url) {
-        setFormImageUrl(res.data.media.url);
-        showToast("Image uploaded to library successfully!");
-      }
-    } catch (err) {
-      console.error("Upload error:", err);
-      showToast("Upload failed: " + (err.response?.data?.message || err.message));
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
   const handleSaveSlide = async (e) => {
     e.preventDefault();
     if (!formImageUrl.trim()) {
-      showToast("Image URL is required for hero slide.");
+      showToast("Image URL is required for hero slide.", "error");
       return;
     }
 
@@ -159,7 +146,6 @@ export default function AdminHeroCMS() {
     const token = getAuthToken();
     try {
       if (editingSlide && editingSlide._id) {
-        // Update existing slide
         const res = await API.put(
           `/settings/hero-slides/${editingSlide._id}`,
           {
@@ -176,7 +162,6 @@ export default function AdminHeroCMS() {
         if (res.data?.slides) setSlides(res.data.slides);
         showToast("Hero slide updated successfully!");
       } else {
-        // Create new slide
         const res = await API.post(
           "/settings/hero-slides",
           {
@@ -191,58 +176,59 @@ export default function AdminHeroCMS() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (res.data?.slides) setSlides(res.data.slides);
-        showToast("New hero slide added!");
+        showToast("New hero slide added to carousel!");
       }
       setModalOpen(false);
     } catch (err) {
       console.error("Save slide error:", err);
-      showToast("Error: " + (err.response?.data?.message || err.message));
+      showToast("Error: " + (err.response?.data?.message || err.message), "error");
     } finally {
       setFormSubmitting(false);
     }
   };
 
-  const handleDeleteSlide = async (id) => {
-    if (!confirm("Are you sure you want to delete this hero slide?")) return;
+  const handleDeleteSlide = async () => {
+    if (!deleteSlideId) return;
     const token = getAuthToken();
     try {
-      const res = await API.delete(`/settings/hero-slides/${id}`, {
+      const res = await API.delete(`/settings/hero-slides/${deleteSlideId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data?.slides) setSlides(res.data.slides);
       showToast("Hero slide deleted.");
+      setDeleteSlideId(null);
     } catch (err) {
-      showToast("Failed to delete slide: " + err.message);
+      showToast("Failed to delete slide: " + err.message, "error");
     }
   };
 
   const handleToggleActive = async (slide) => {
     const token = getAuthToken();
     try {
+      const nextActive = !slide.isActive;
       const res = await API.put(
         `/settings/hero-slides/${slide._id}`,
-        { isActive: !slide.isActive },
+        { ...slide, isActive: nextActive },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data?.slides) setSlides(res.data.slides);
-      showToast(`Slide ${!slide.isActive ? "enabled" : "hidden"}.`);
+      showToast(`Slide ${nextActive ? "activated" : "deactivated"}.`);
     } catch (err) {
-      showToast("Error toggling slide: " + err.message);
+      showToast("Failed to toggle status: " + err.message, "error");
     }
   };
 
-  const moveSlide = async (index, direction) => {
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= slides.length) return;
-
+  const handleMoveSlide = async (index, direction) => {
     const newSlides = [...slides];
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newSlides.length) return;
+
     const temp = newSlides[index];
     newSlides[index] = newSlides[targetIndex];
     newSlides[targetIndex] = temp;
-
     setSlides(newSlides);
 
-    // Save ordering to backend
+    // Save order
     const token = getAuthToken();
     try {
       await API.put(
@@ -252,377 +238,440 @@ export default function AdminHeroCMS() {
       );
       showToast("Slide order updated.");
     } catch (err) {
-      console.warn("Failed to save reordering:", err);
+      console.error("Reorder error:", err);
     }
   };
 
   if (loading) {
     return (
-      <div className="py-16 text-center text-slate-400 flex flex-col items-center justify-center">
-        <RefreshCw className="w-8 h-8 animate-spin text-blue-500 mb-2" />
-        <p className="text-xs font-semibold">Loading hero carousel CMS...</p>
+      <div className="py-20 text-center flex flex-col items-center justify-center space-y-3">
+        <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
+        <p className="text-xs font-semibold text-slate-500">Loading hero carousel slides...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Toast */}
-      {toast && (
-        <div className="fixed top-5 right-5 z-50 bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 animate-in slide-in-from-top-4">
-          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span className="text-xs font-bold">{toast}</span>
-        </div>
-      )}
+      <PageHeader
+        title="Hero Carousel Management"
+        description="Curate top animated banner slides showcasing town landmarks, municipal initiatives, and historical highlights."
+        icon={Layers}
+        badge={
+          <StatusBadge
+            status="active"
+            label={`${slides.filter((s) => s.isActive !== false).length} Active Slides`}
+          />
+        }
+        actions={
+          <button
+            onClick={openCreateModal}
+            className="bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>+ Add Slide</span>
+          </button>
+        }
+      />
 
-      {/* Header Bar */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 text-[11px] font-bold mb-1">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Homepage Hero Banners & Slider</span>
-          </div>
-          <h2 className="text-lg sm:text-xl font-extrabold text-[#18232E]">
-            Hero Carousel & Banner CMS
-          </h2>
-          <p className="text-xs text-slate-500">
-            Upload photos, configure moving background speed, transition directions, and reorder homepage slides.
-          </p>
-        </div>
-
-        <button
-          onClick={openCreateModal}
-          className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>+ Add Hero Slide</span>
-        </button>
-      </div>
-
-      {/* Animation & Speed Control Card */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
-        <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-          Animation & Transition Controls
-        </h3>
-
+      {/* Animation & Autoplay Controls FormSection */}
+      <FormSection
+        title="Carousel Playback & Animation Settings"
+        description="Configure automated slide rotation interval, direction, and autoplay behaviors."
+        icon={Sliders}
+        actions={
+          <button
+            onClick={handleSaveHeroControls}
+            disabled={savingSettings}
+            className="bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl transition shadow-xs flex items-center gap-1 cursor-pointer disabled:opacity-50"
+          >
+            {savingSettings ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+            <span>Save Playback Controls</span>
+          </button>
+        }
+      >
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Slide Interval / Speed
+            <label className="block text-xs font-bold text-slate-800 mb-1">
+              Slide Duration (ms)
             </label>
-            <select
+            <input
+              type="number"
+              step="500"
+              min="2000"
+              max="15000"
               value={heroSettings.animationSpeed}
               onChange={(e) =>
-                setHeroSettings((prev) => ({ ...prev, animationSpeed: parseInt(e.target.value) }))
+                setHeroSettings({ ...heroSettings, animationSpeed: Number(e.target.value) })
               }
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={3000}>3 Seconds (Fast)</option>
-              <option value={5000}>5 Seconds (Recommended)</option>
-              <option value={8000}>8 Seconds (Relaxed)</option>
-              <option value={12000}>12 Seconds (Slow)</option>
-            </select>
+              className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:bg-white focus:border-blue-500 outline-none"
+            />
+            <span className="text-[10px] text-slate-400 mt-0.5 block">
+              {(heroSettings.animationSpeed / 1000).toFixed(1)} seconds per slide
+            </span>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
+            <label className="block text-xs font-bold text-slate-800 mb-1">
               Transition Direction
             </label>
             <select
               value={heroSettings.animationDirection}
               onChange={(e) =>
-                setHeroSettings((prev) => ({ ...prev, animationDirection: e.target.value }))
+                setHeroSettings({ ...heroSettings, animationDirection: e.target.value })
               }
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold focus:bg-white focus:border-blue-500 outline-none"
             >
-              <option value="left">Left-to-Right Carousel</option>
-              <option value="right">Right-to-Left Carousel</option>
-              <option value="fade">Smooth Fade Crossfade</option>
+              <option value="left">Slide Left &larr;</option>
+              <option value="right">Slide Right &rarr;</option>
+              <option value="fade">Smooth Crossfade</option>
             </select>
+            <span className="text-[10px] text-slate-400 mt-0.5 block">
+              Animation transition effect
+            </span>
           </div>
 
-          <div className="flex items-end">
-            <button
-              onClick={handleSaveHeroControls}
-              disabled={savingSettings}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              {savingSettings ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              <span>Save Animation Settings</span>
-            </button>
+          <div>
+            <label className="block text-xs font-bold text-slate-800 mb-1">
+              Autoplay Behavior
+            </label>
+            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200 mt-0.5">
+              <span className="text-xs font-semibold text-slate-700">Auto-rotate</span>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={heroSettings.enableAutoplay}
+                  onChange={(e) =>
+                    setHeroSettings({ ...heroSettings, enableAutoplay: e.target.checked })
+                  }
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2563EB]"></div>
+              </label>
+            </div>
           </div>
         </div>
-      </div>
+      </FormSection>
 
-      {/* Slide Items Grid / List */}
+      {/* Slide Workspace List */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-            Current Hero Slides ({slides.length})
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">
+            Current Slide Deck ({slides.length})
           </h3>
-          <span className="text-[11px] text-slate-400">Drag or use arrows to change display order</span>
+          <span className="text-[11px] text-slate-400">
+            Use arrows to reorder slides sequentially
+          </span>
         </div>
 
         {slides.length === 0 ? (
-          <div className="bg-white p-8 rounded-2xl border border-dashed border-slate-300 text-center text-slate-400">
-            <p className="text-xs font-semibold">No custom hero slides configured.</p>
-            <button onClick={openCreateModal} className="text-blue-600 text-xs font-bold mt-2 hover:underline">
-              + Add your first hero slide
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3">
-            {slides.map((slide, idx) => (
-              <div
-                key={slide._id || idx}
-                className={`bg-white p-4 rounded-2xl border transition shadow-2xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
-                  slide.isActive === false ? "opacity-60 bg-slate-50 border-slate-200" : "border-slate-200"
-                }`}
+          <EmptyState
+            icon={Layers}
+            title="No Slides in Carousel"
+            description="Add your first hero banner slide to welcome visitors on the homepage."
+            action={
+              <button
+                onClick={openCreateModal}
+                className="bg-[#2563EB] text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-blue-700 transition"
               >
-                {/* Slide Preview & Info */}
-                <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <div className="w-24 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200 relative group">
-                    <img
-                      src={slide.imageUrl}
-                      alt={slide.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.src = "https://images.unsplash.com/photo-1541888946425-d0fbb18f15f7?auto=format&fit=crop&w=300&q=80";
-                      }}
-                    />
-                    <span className="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] font-bold px-1 rounded">
-                      #{idx + 1}
-                    </span>
-                  </div>
+                + Add First Slide
+              </button>
+            }
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {slides.map((slide, index) => {
+              const isActive = slide.isActive !== false;
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-xs sm:text-sm font-extrabold text-[#18232E] truncate">
-                        {slide.title || "Untitled Slide"}
-                      </h4>
-                      {slide.isActive === false && (
-                        <span className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 text-[10px] font-bold">
-                          Hidden
-                        </span>
-                      )}
+              return (
+                <div
+                  key={slide._id || index}
+                  className={`bg-white rounded-2xl border transition-all duration-200 p-4 sm:p-5 flex flex-col justify-between space-y-4 shadow-2xs ${
+                    isActive ? "border-slate-200/90" : "border-slate-200 bg-slate-50/50 opacity-80"
+                  }`}
+                >
+                  <div className="space-y-3">
+                    {/* Visual Banner Preview */}
+                    <div className="relative h-44 w-full rounded-xl overflow-hidden bg-slate-900 border border-slate-200 group">
+                      <img
+                        src={slide.imageUrl}
+                        alt={slide.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                        onError={(e) => {
+                          e.target.src = "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1200&q=80";
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent p-4 flex flex-col justify-end text-white">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="bg-white/20 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            #{index + 1}
+                          </span>
+                          <StatusBadge
+                            status={isActive ? "active" : "inactive"}
+                            label={isActive ? "Active Slide" : "Disabled"}
+                            size="sm"
+                          />
+                        </div>
+                        <h4 className="text-base font-extrabold leading-snug line-clamp-1">
+                          {slide.title || "Untitled Slide"}
+                        </h4>
+                        {slide.subtitle && (
+                          <p className="text-xs text-slate-300 line-clamp-1">{slide.subtitle}</p>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-xs text-blue-600 font-semibold truncate">{slide.subtitle}</p>
-                    <p className="text-[11px] text-slate-400 truncate mt-0.5">{slide.caption}</p>
+
+                    {/* Meta info */}
+                    <div className="text-xs space-y-1">
+                      {slide.caption && (
+                        <p className="text-slate-600 line-clamp-2 leading-relaxed">
+                          {slide.caption}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 text-[11px] text-slate-400 pt-1">
+                        <span>Button: <strong className="text-slate-700">{slide.buttonText || "Explore"}</strong></span>
+                        <span>•</span>
+                        <span className="truncate">Link: <strong className="text-blue-600 font-mono">{slide.linkUrl || "/directory"}</strong></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions Bar */}
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                    {/* Reordering Controls */}
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleMoveSlide(index, "up")}
+                        disabled={index === 0}
+                        className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition disabled:opacity-30 cursor-pointer"
+                        title="Move slide up"
+                      >
+                        <ArrowUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMoveSlide(index, "down")}
+                        disabled={index === slides.length - 1}
+                        className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition disabled:opacity-30 cursor-pointer"
+                        title="Move slide down"
+                      >
+                        <ArrowDown className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Edit, Status, Delete */}
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleActive(slide)}
+                        className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                          isActive
+                            ? "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                            : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                        }`}
+                      >
+                        {isActive ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                        <span>{isActive ? "Hide" : "Enable"}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(slide)}
+                        className="p-1.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition cursor-pointer"
+                        title="Edit Slide Details"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setDeleteSlideId(slide._id)}
+                        className="p-1.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 transition cursor-pointer"
+                        title="Delete Slide"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-1.5 self-end md:self-auto shrink-0">
-                  {/* Reorder Arrows */}
-                  <button
-                    onClick={() => moveSlide(idx, -1)}
-                    disabled={idx === 0}
-                    className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 disabled:opacity-30 cursor-pointer"
-                    title="Move Up"
-                  >
-                    <ArrowUp className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => moveSlide(idx, 1)}
-                    disabled={idx === slides.length - 1}
-                    className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 disabled:opacity-30 cursor-pointer"
-                    title="Move Down"
-                  >
-                    <ArrowDown className="w-3.5 h-3.5" />
-                  </button>
-
-                  {/* Toggle Active */}
-                  <button
-                    onClick={() => handleToggleActive(slide)}
-                    className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition cursor-pointer ${
-                      slide.isActive !== false
-                        ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                        : "bg-slate-200 text-slate-600 hover:bg-slate-300"
-                    }`}
-                    title={slide.isActive !== false ? "Hide Slide" : "Show Slide"}
-                  >
-                    {slide.isActive !== false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                  </button>
-
-                  {/* Edit */}
-                  <button
-                    onClick={() => openEditModal(slide)}
-                    className="p-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition cursor-pointer"
-                    title="Edit Slide Details"
-                  >
-                    <Edit className="w-3.5 h-3.5" />
-                  </button>
-
-                  {/* Delete */}
-                  <button
-                    onClick={() => handleDeleteSlide(slide._id)}
-                    className="p-1.5 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition cursor-pointer"
-                    title="Delete Slide"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* CREATE / EDIT SLIDE MODAL */}
+      {/* Add / Edit Slide Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="bg-[#18232E] text-white px-5 py-4 flex items-center justify-between border-b border-slate-800">
-              <h3 className="text-sm font-bold">
-                {editingSlide ? "Edit Hero Slide" : "Add New Hero Slide"}
-              </h3>
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-150"
+          >
+            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center">
+                  <ImageIcon className="w-4 h-4" />
+                </div>
+                <h3 className="text-base font-extrabold text-[#18232E]">
+                  {editingSlide ? "Edit Hero Slide" : "Create New Hero Slide"}
+                </h3>
+              </div>
               <button
                 onClick={() => setModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveSlide} className="p-5 overflow-y-auto space-y-4 text-xs">
+            <form onSubmit={handleSaveSlide} className="p-5 space-y-4 overflow-y-auto flex-1">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Slide Main Headline (शीर्षक)
+                <label className="block text-xs font-bold text-slate-800 mb-1">
+                  Slide Title *
                 </label>
                 <input
                   type="text"
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="e.g. Official Civic & Digital Directory"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500"
+                  placeholder="जैसे: पवित्र पावापुरी तीर्थधाम — भगवान महावीर की निर्वाण भूमि"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:bg-white focus:border-blue-500 outline-none"
+                  required
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Sub-heading / Category Highlight
+                <label className="block text-xs font-bold text-slate-800 mb-1">
+                  Location / Subtitle
                 </label>
                 <input
                   type="text"
                   value={formSubtitle}
                   onChange={(e) => setFormSubtitle(e.target.value)}
-                  placeholder="e.g. Fazilnagar Nagar Panchayat, Kushinagar"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500"
+                  placeholder="Fazilnagar, Kushinagar (PIN 274401)"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:bg-white focus:border-blue-500 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Descriptive Caption
+                <label className="block text-xs font-bold text-slate-800 mb-1">
+                  Short Description / Caption
                 </label>
                 <textarea
                   rows={2}
                   value={formCaption}
                   onChange={(e) => setFormCaption(e.target.value)}
-                  placeholder="Brief 1-2 sentence description..."
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ancient historical heritage connecting Jain and Buddhist circuits in eastern Uttar Pradesh."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:bg-white focus:border-blue-500 outline-none"
                 />
               </div>
 
-              {/* Photo Upload & URL */}
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Hero Background Image <span className="text-red-500">*</span>
-                </label>
-                <div className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    value={formImageUrl}
-                    onChange={(e) => setFormImageUrl(e.target.value)}
-                    placeholder="Enter image URL or upload below..."
-                    className="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono"
-                    required
-                  />
-                  <label className="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-xl font-bold transition flex items-center gap-1 cursor-pointer shrink-0">
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>{uploadingImage ? "Uploading..." : "Upload File"}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageFileUpload}
-                      className="hidden"
-                      disabled={uploadingImage}
-                    />
-                  </label>
-                </div>
+              {/* Cover Image Uploader */}
+              <ImageUploader
+                value={formImageUrl}
+                onChange={setFormImageUrl}
+                onOpenMediaPicker={() => setMediaPickerOpen(true)}
+                label="Slide Background Photo *"
+                helpText="High-res town photos (1920x800 recommended)"
+                aspectRatio="banner"
+              />
 
-                {formImageUrl && (
-                  <div className="h-32 rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
-                    <img
-                      src={formImageUrl}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Call To Action Button Text
+                  <label className="block text-xs font-bold text-slate-800 mb-1">
+                    Button Label
                   </label>
                   <input
                     type="text"
                     value={formButtonText}
                     onChange={(e) => setFormButtonText(e.target.value)}
                     placeholder="Explore Now"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:bg-white focus:border-blue-500 outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Target Destination URL
+                  <label className="block text-xs font-bold text-slate-800 mb-1">
+                    Button Link
                   </label>
                   <input
                     type="text"
                     value={formLinkUrl}
                     onChange={(e) => setFormLinkUrl(e.target.value)}
-                    placeholder="/directory or /emergency"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300"
+                    placeholder="/directory or /tourism"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono focus:bg-white focus:border-blue-500 outline-none"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="slideActive"
-                  checked={formIsActive}
-                  onChange={(e) => setFormIsActive(e.target.checked)}
-                  className="rounded text-blue-600"
-                />
-                <label htmlFor="slideActive" className="font-bold text-slate-700 cursor-pointer">
-                  Display this slide in active carousel
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span className="text-xs font-bold text-slate-800">Publish Immediately</span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formIsActive}
+                    onChange={(e) => setFormIsActive(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2563EB]"></div>
                 </label>
               </div>
 
-              <div className="pt-3 border-t flex justify-end gap-2">
+              <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={formSubmitting}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-xs"
+                  className="bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
-                  {formSubmitting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                  {formSubmitting && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                   <span>{editingSlide ? "Update Slide" : "Add Slide"}</span>
                 </button>
               </div>
             </form>
           </div>
         </div>
+      )}
+
+      {/* Media Picker Modal */}
+      <MediaPicker
+        isOpen={mediaPickerOpen}
+        onClose={() => setMediaPickerOpen(false)}
+        onSelect={(url) => {
+          setFormImageUrl(url);
+          setMediaPickerOpen(false);
+        }}
+        title="Select Image for Hero Slide"
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={Boolean(deleteSlideId)}
+        title="Delete Hero Slide?"
+        message="Are you sure you want to permanently delete this slide from the homepage hero carousel?"
+        confirmText="Delete Slide"
+        confirmVariant="danger"
+        onConfirm={handleDeleteSlide}
+        onCancel={() => setDeleteSlideId(null)}
+      />
+
+      {/* Floating Toast Notification */}
+      {toast.message && (
+        <ToastNotification
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ message: "", type: "success" })}
+        />
       )}
     </div>
   );

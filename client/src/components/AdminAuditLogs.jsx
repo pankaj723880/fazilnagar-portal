@@ -3,19 +3,31 @@ import API from "../api";
 import { getAuthToken } from "../utils/authStorage";
 import {
   ShieldAlert,
-  Search,
-  Filter,
-  RefreshCw,
   Clock,
   User,
-  Activity,
+  RefreshCw,
+  Eye,
+  FileText,
+  Filter,
+  CheckCircle,
+  AlertTriangle
 } from "lucide-react";
+import PageHeader from "./admin/PageHeader";
+import SearchAndFilters from "./admin/SearchAndFilters";
+import DataTable from "./admin/DataTable";
+import Pagination from "./admin/Pagination";
+import EmptyState from "./admin/EmptyState";
+import LoadingSkeleton from "./admin/LoadingSkeleton";
 
 export default function AdminAuditLogs() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [actionFilter, setActionFilter] = useState("All");
   const [entityFilter, setEntityFilter] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+  const [selectedLog, setSelectedLog] = useState(null);
 
   const actions = [
     "All",
@@ -25,7 +37,10 @@ export default function AdminAuditLogs() {
     "PUBLISH",
     "UNPUBLISH",
     "ARCHIVE",
+    "RESTORE",
     "SETTINGS_UPDATE",
+    "REVIEW_APPROVE",
+    "REVIEW_REJECT",
   ];
 
   const entityTypes = [
@@ -82,129 +97,301 @@ export default function AdminAuditLogs() {
         return "bg-amber-50 text-amber-700 border-amber-200";
       case "SETTINGS_UPDATE":
         return "bg-purple-50 text-purple-700 border-purple-200";
+      case "REVIEW_APPROVE":
+        return "bg-teal-50 text-teal-700 border-teal-200";
+      case "REVIEW_REJECT":
+        return "bg-rose-50 text-rose-700 border-rose-200";
       default:
         return "bg-slate-100 text-slate-700 border-slate-200";
     }
   };
 
+  const filteredLogs = logs.filter((log) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    const adminStr = (log.adminEmail || log.adminUser?.email || "").toLowerCase();
+    const titleStr = (log.entityTitle || log.entityId || "").toLowerCase();
+    const detailStr = (log.changesSummary || "").toLowerCase();
+    return adminStr.includes(q) || titleStr.includes(q) || detailStr.includes(q);
+  });
+
+  const totalPages = Math.ceil(filteredLogs.length / pageSize) || 1;
+  const paginatedLogs = filteredLogs.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  const columns = [
+    {
+      key: "createdAt",
+      label: "Timestamp",
+      sortable: true,
+      render: (log) => (
+        <div className="flex items-center gap-1.5 text-xs text-slate-600 whitespace-nowrap">
+          <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <span>{new Date(log.createdAt).toLocaleString("en-IN")}</span>
+        </div>
+      ),
+    },
+    {
+      key: "admin",
+      label: "Administrator",
+      render: (log) => (
+        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-800">
+          <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <span className="truncate max-w-[160px]">
+            {log.adminEmail || log.adminUser?.email || "Town Admin"}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "action",
+      label: "Action",
+      sortable: true,
+      render: (log) => (
+        <span
+          className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold border ${getActionBadge(
+            log.action
+          )}`}
+        >
+          {log.action}
+        </span>
+      ),
+    },
+    {
+      key: "entityType",
+      label: "Entity Type",
+      sortable: true,
+      render: (log) => (
+        <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
+          {log.entityType}
+        </span>
+      ),
+    },
+    {
+      key: "entityTitle",
+      label: "Target Record",
+      render: (log) => (
+        <div className="text-xs font-semibold text-slate-900 max-w-[180px] truncate" title={log.entityTitle || log.entityId}>
+          {log.entityTitle || log.entityId || "—"}
+        </div>
+      ),
+    },
+    {
+      key: "changesSummary",
+      label: "Audit Details",
+      render: (log) => (
+        <div className="text-xs text-slate-600 max-w-[260px] truncate" title={log.changesSummary}>
+          {log.changesSummary || "—"}
+        </div>
+      ),
+    },
+    {
+      key: "view",
+      label: "",
+      align: "right",
+      render: (log) => (
+        <button
+          onClick={() => setSelectedLog(log)}
+          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title="Inspect log details"
+        >
+          <Eye className="w-4 h-4" />
+        </button>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Header Bar */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 text-[11px] font-bold mb-1">
-            <ShieldAlert className="w-3.5 h-3.5 text-slate-600" />
-            <span>Governance & Security Auditing</span>
-          </div>
-          <h2 className="text-lg sm:text-xl font-extrabold text-[#18232E]">
-            Admin Audit Logs & Activity Trail
-          </h2>
-          <p className="text-xs text-slate-500">
-            Immutable tracking of every administrative create, update, delete, and settings revision.
-          </p>
-        </div>
+      {/* Header */}
+      <PageHeader
+        icon={ShieldAlert}
+        title="Audit Logs & Activity Trail"
+        subtitle="Immutable chronological ledger of administrative operations, updates, approvals, and configuration changes"
+        badgeText={`${logs.length} Log Entries`}
+        primaryAction={{
+          label: "Refresh Logs",
+          icon: RefreshCw,
+          onClick: fetchLogs,
+        }}
+        breadcrumbs={[
+          { label: "Overview", to: "/admin/review?tab=dashboard" },
+          { label: "Audit Logs" },
+        ]}
+      />
 
-        <button
-          onClick={fetchLogs}
-          className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-          <span>Refresh Logs</span>
-        </button>
+      {/* Filters */}
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <SearchAndFilters
+          searchPlaceholder="Search by admin email, target record, or summary..."
+          searchValue={search}
+          onSearchChange={(v) => {
+            setSearch(v);
+            setCurrentPage(1);
+          }}
+          filters={[
+            {
+              id: "action",
+              label: "Action",
+              value: actionFilter,
+              options: actions.map((a) => ({ label: a, value: a })),
+              onChange: (v) => {
+                setActionFilter(v);
+                setCurrentPage(1);
+              },
+            },
+            {
+              id: "entity",
+              label: "Entity Type",
+              value: entityFilter,
+              options: entityTypes.map((e) => ({ label: e, value: e })),
+              onChange: (v) => {
+                setEntityFilter(v);
+                setCurrentPage(1);
+              },
+            },
+          ]}
+          onReset={() => {
+            setSearch("");
+            setActionFilter("All");
+            setEntityFilter("All");
+            setCurrentPage(1);
+          }}
+          totalResults={filteredLogs.length}
+        />
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-400" />
-          <span className="text-xs font-bold text-slate-600">Action:</span>
-          <select
-            value={actionFilter}
-            onChange={(e) => setActionFilter(e.target.value)}
-            className="px-3 py-1.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-slate-500"
-          >
-            {actions.map((a) => (
-              <option key={a} value={a}>{a}</option>
-            ))}
-          </select>
-        </div>
+      {/* Data Table */}
+      {loading ? (
+        <LoadingSkeleton type="table" rows={6} />
+      ) : filteredLogs.length === 0 ? (
+        <EmptyState
+          icon={ShieldAlert}
+          title="No Audit Records Found"
+          description="No activity logs match your current filter criteria or none have been logged yet."
+          actionLabel="Reset Filters"
+          onAction={() => {
+            setSearch("");
+            setActionFilter("All");
+            setEntityFilter("All");
+          }}
+        />
+      ) : (
+        <div className="space-y-4">
+          <DataTable
+            columns={columns}
+            data={paginatedLogs}
+            keyField="_id"
+          />
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-slate-600">Entity:</span>
-          <select
-            value={entityFilter}
-            onChange={(e) => setEntityFilter(e.target.value)}
-            className="px-3 py-1.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-slate-500"
-          >
-            {entityTypes.map((et) => (
-              <option key={et} value={et}>{et}</option>
-            ))}
-          </select>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredLogs.length}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+          />
         </div>
-      </div>
+      )}
 
-      {/* Audit Log Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
-        {loading ? (
-          <div className="py-16 text-center text-slate-400 flex flex-col items-center">
-            <RefreshCw className="w-8 h-8 animate-spin text-slate-600 mb-2" />
-            <p className="text-xs font-semibold">Loading activity logs...</p>
+      {/* Detail Drawer Modal */}
+      {selectedLog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-xl overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">Audit Log Record Details</h3>
+                  <p className="text-xs text-slate-500 font-mono">ID: {selectedLog._id}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedLog(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-4 pb-4 border-b border-slate-100">
+                <div>
+                  <span className="font-semibold text-slate-500 block mb-1">Timestamp</span>
+                  <span className="text-slate-800 font-medium">
+                    {new Date(selectedLog.createdAt).toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-500 block mb-1">Administrator</span>
+                  <span className="text-slate-800 font-medium">
+                    {selectedLog.adminEmail || selectedLog.adminUser?.email || "Town Admin"}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-500 block mb-1">Action</span>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold border ${getActionBadge(
+                      selectedLog.action
+                    )}`}
+                  >
+                    {selectedLog.action}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-500 block mb-1">Entity Type</span>
+                  <span className="font-bold text-slate-800">{selectedLog.entityType}</span>
+                </div>
+              </div>
+
+              <div>
+                <span className="font-semibold text-slate-500 block mb-1">Target Record Reference</span>
+                <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 font-mono text-slate-800 break-all">
+                  {selectedLog.entityTitle ? (
+                    <div>
+                      <div className="font-semibold font-sans mb-0.5">{selectedLog.entityTitle}</div>
+                      <div className="text-[11px] text-slate-400">ID: {selectedLog.entityId}</div>
+                    </div>
+                  ) : (
+                    selectedLog.entityId || "N/A"
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <span className="font-semibold text-slate-500 block mb-1">Changes Summary</span>
+                <p className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-slate-700 leading-relaxed">
+                  {selectedLog.changesSummary || "No detailed summary recorded."}
+                </p>
+              </div>
+
+              {selectedLog.metadata && (
+                <div>
+                  <span className="font-semibold text-slate-500 block mb-1">Metadata Snapshot</span>
+                  <pre className="p-3 bg-slate-900 text-slate-100 rounded-lg text-[11px] font-mono overflow-x-auto max-h-40">
+                    {JSON.stringify(selectedLog.metadata, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 py-3 border-t border-slate-200 bg-slate-50 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedLog(null)}
+                className="px-4 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50"
+              >
+                Close
+              </button>
+            </div>
           </div>
-        ) : logs.length === 0 ? (
-          <div className="p-12 text-center text-slate-400">
-            <p className="text-xs font-semibold">No audit logs found for the selected filter.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px]">
-                <tr>
-                  <th className="py-3 px-4">Timestamp</th>
-                  <th className="py-3 px-4">Admin</th>
-                  <th className="py-3 px-4">Action</th>
-                  <th className="py-3 px-4">Entity Type</th>
-                  <th className="py-3 px-4">Record Title / ID</th>
-                  <th className="py-3 px-4">Details / Summary</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {logs.map((log) => (
-                  <tr key={log._id} className="hover:bg-slate-50/80 transition">
-                    <td className="py-3 px-4 whitespace-nowrap text-slate-500 flex items-center gap-1.5">
-                      <Clock className="w-3 h-3 text-slate-400 shrink-0" />
-                      <span>{new Date(log.createdAt).toLocaleString("en-IN")}</span>
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap font-medium text-slate-700">
-                      <span className="flex items-center gap-1">
-                        <User className="w-3 h-3 text-slate-400" />
-                        {log.adminEmail || log.adminUser?.email || "Admin"}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${getActionBadge(
-                          log.action
-                        )}`}
-                      >
-                        {log.action}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap font-bold text-slate-700">
-                      {log.entityType}
-                    </td>
-                    <td className="py-3 px-4 text-slate-800 font-semibold max-w-[200px] truncate" title={log.entityTitle || log.entityId}>
-                      {log.entityTitle || log.entityId || "—"}
-                    </td>
-                    <td className="py-3 px-4 text-slate-600 max-w-[320px] truncate" title={log.changesSummary}>
-                      {log.changesSummary || "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

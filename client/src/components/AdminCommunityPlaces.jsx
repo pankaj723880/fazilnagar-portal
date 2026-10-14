@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import API from "../api";
+import { getAuthToken } from "../utils/authStorage";
 import {
   FAZILNAGAR_AREAS,
   COMMUNITY_ALLOWED_CATEGORIES,
@@ -16,7 +17,7 @@ import {
   AlertTriangle,
   Clock,
   Eye,
-  Edit,
+  Edit3,
   Trash2,
   Archive,
   RotateCcw,
@@ -28,15 +29,25 @@ import {
   Check,
   X,
   ShieldAlert,
+  Calendar,
+  Layers
 } from "lucide-react";
+import PageHeader from "./admin/PageHeader";
+import SearchAndFilters from "./admin/SearchAndFilters";
+import StatusBadge from "./admin/StatusBadge";
+import ConfirmDialog from "./admin/ConfirmDialog";
+import ToastNotification from "./admin/ToastNotification";
+import EmptyState from "./admin/EmptyState";
+import LoadingSkeleton from "./admin/LoadingSkeleton";
 
-export default function AdminCommunityPlaces({ token, onStatsChange }) {
+export default function AdminCommunityPlaces({ token: propToken, onStatsChange }) {
+  const token = propToken || getAuthToken();
   const [subTab, setSubTab] = useState("pending"); // "pending" | "approved" | "rejected" | "archived"
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchFilter, setSearchFilter] = useState("");
   const [actionLoadingId, setActionLoadingId] = useState(null);
-  const [toastMessage, setToastMessage] = useState("");
+  const [toast, setToast] = useState(null);
 
   // Edit location / fields modal
   const [editingItem, setEditingItem] = useState(null);
@@ -53,9 +64,8 @@ export default function AdminCommunityPlaces({ token, onStatsChange }) {
   // Image lightbox
   const [previewImage, setPreviewImage] = useState(null);
 
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(""), 4000);
+  const showToast = (type, message) => {
+    setToast({ type, message });
   };
 
   const fetchCommunitySubmissions = async () => {
@@ -67,7 +77,7 @@ export default function AdminCommunityPlaces({ token, onStatsChange }) {
       setSubmissions(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Fetch community submissions error:", err);
-      showToast("Failed to fetch community submissions.");
+      showToast("error", "Failed to fetch community submissions.");
     } finally {
       setLoading(false);
     }
@@ -86,14 +96,14 @@ export default function AdminCommunityPlaces({ token, onStatsChange }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      showToast(res.data?.message || `Submission marked as ${action}.`);
+      showToast("success", res.data?.message || `Submission marked as ${action}.`);
       setRejectingItem(null);
       setEditingItem(null);
       fetchCommunitySubmissions();
       if (onStatsChange) onStatsChange();
     } catch (err) {
       console.error("Action error:", err);
-      showToast(err.response?.data?.message || "Failed to execute review action.");
+      showToast("error", err.response?.data?.message || "Failed to execute review action.");
     } finally {
       setActionLoadingId(null);
     }
@@ -127,21 +137,35 @@ export default function AdminCommunityPlaces({ token, onStatsChange }) {
   });
 
   return (
-    <div className="space-y-4">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#18232E] text-white px-4 py-2.5 rounded-xl shadow-xl text-xs font-bold border border-slate-700 animate-in fade-in">
-          {toastMessage}
-        </div>
+    <div className="space-y-6">
+      {toast && (
+        <ToastNotification
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
       )}
 
-      {/* Sub-tabs header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs">
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+      {/* Page Header */}
+      <PageHeader
+        icon={Store}
+        title="Community Submissions Queue"
+        subtitle="Review, verify coordinates, and approve citizen crowd-sourced shops and establishments for public portal"
+        badgeText={`${submissions.length} Records`}
+        breadcrumbs={[
+          { label: "Overview", to: "/admin/review?tab=dashboard" },
+          { label: "Directory Management" },
+          { label: "Community Submissions" },
+        ]}
+      />
+
+      {/* Sub-tabs header & search */}
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
           {[
             { id: "pending", label: "Pending Verification", icon: Clock },
-            { id: "approved", label: "Approved (Public)", icon: CheckCircle },
-            { id: "rejected", label: "Rejected", icon: XCircle },
+            { id: "approved", label: "Approved & Live", icon: CheckCircle },
+            { id: "rejected", label: "Rejected Submissions", icon: XCircle },
             { id: "archived", label: "Archived Places", icon: Archive },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -149,11 +173,12 @@ export default function AdminCommunityPlaces({ token, onStatsChange }) {
             return (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => setSubTab(tab.id)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer ${
+                className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
                   isActive
-                    ? "bg-[#18232E] text-white shadow-xs"
-                    : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"
+                    ? "bg-[#14233B] text-white shadow-xs"
+                    : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200"
                 }`}
               >
                 <Icon className={`w-3.5 h-3.5 ${isActive ? "text-amber-400" : "text-slate-400"}`} />
@@ -163,34 +188,30 @@ export default function AdminCommunityPlaces({ token, onStatsChange }) {
           })}
         </div>
 
-        {/* Search filter */}
-        <div className="relative w-full sm:w-64">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search by name, ref, or phone..."
-            value={searchFilter}
-            onChange={(e) => setSearchFilter(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs outline-none focus:border-[#B8323C] focus:bg-white"
+        <div className="w-full md:w-72">
+          <SearchAndFilters
+            searchPlaceholder="Search by name, reference, phone..."
+            searchValue={searchFilter}
+            onSearchChange={setSearchFilter}
+            onReset={() => setSearchFilter("")}
+            totalResults={filteredItems.length}
           />
         </div>
       </div>
 
-      {/* Loading State */}
+      {/* Submissions List */}
       {loading ? (
-        <div className="bg-white p-12 text-center rounded-2xl border border-slate-200 text-xs font-bold text-slate-500">
-          Loading community submissions...
-        </div>
+        <LoadingSkeleton type="cards" count={3} />
       ) : filteredItems.length === 0 ? (
-        <div className="bg-white p-12 text-center rounded-2xl border border-slate-200 space-y-1">
-          <Store className="w-8 h-8 text-slate-300 mx-auto" />
-          <h4 className="font-bold text-slate-800 text-sm">No {subTab} community submissions</h4>
-          <p className="text-xs text-slate-500">
-            {subTab === "pending"
-              ? "All community-submitted places have been reviewed."
-              : `There are currently no places in the ${subTab} list.`}
-          </p>
-        </div>
+        <EmptyState
+          icon={Store}
+          title={`No ${subTab} Submissions`}
+          description={
+            subTab === "pending"
+              ? "All citizen submissions have been reviewed and resolved. Great job!"
+              : `There are currently no community places under "${subTab}".`
+          }
+        />
       ) : (
         <div className="space-y-4">
           {filteredItems.map((item) => (
@@ -221,26 +242,31 @@ export default function AdminCommunityPlaces({ token, onStatsChange }) {
 
       {/* Reject Reason Modal */}
       {rejectingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs">
-          <div className="bg-white max-w-md w-full rounded-2xl shadow-xl border border-slate-200 p-5 space-y-3">
-            <h3 className="text-sm font-bold text-slate-900">
-              Reject Community Place Submission
-            </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white max-w-md w-full rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center">
+                <XCircle className="w-5 h-5" />
+              </div>
+              <h3 className="text-sm font-bold text-slate-900">
+                Reject Community Place Submission
+              </h3>
+            </div>
             <p className="text-xs text-slate-600">
-              Please specify the reason for rejecting <strong>{rejectingItem.name}</strong>. This reason will be logged in the moderation audit record.
+              Please specify the reason for rejecting <strong>{rejectingItem.name}</strong>. This note will be recorded in the moderation audit trail.
             </p>
             <textarea
               rows={3}
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="e.g. Pin is outside Fazilnagar town boundary; duplicate shop listing; incomplete storefront photo."
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-red-500 font-medium resize-none"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-red-500 font-medium resize-none"
             />
             <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setRejectingItem(null)}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer"
+                className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer"
               >
                 Cancel
               </button>
@@ -251,7 +277,7 @@ export default function AdminCommunityPlaces({ token, onStatsChange }) {
                     rejectionReason: rejectReason,
                   })
                 }
-                className="px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 cursor-pointer"
+                className="px-4 py-2 rounded-lg text-xs font-semibold text-white bg-red-600 hover:bg-red-700 cursor-pointer shadow-xs"
               >
                 Confirm Rejection
               </button>
@@ -262,31 +288,34 @@ export default function AdminCommunityPlaces({ token, onStatsChange }) {
 
       {/* Edit Details & Location Modal */}
       {editingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
           <form
             onSubmit={handleSaveEditLocation}
-            className="bg-white max-w-lg w-full rounded-2xl shadow-xl border border-slate-200 p-5 space-y-3.5 text-xs"
+            className="bg-white max-w-lg w-full rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4 text-xs"
           >
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-900">
-                Edit & Correct Location: {editingItem.name}
-              </h3>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-blue-600" />
+                <h3 className="text-sm font-bold text-slate-900">
+                  Correct Location: {editingItem.name}
+                </h3>
+              </div>
               <button
                 type="button"
                 onClick={() => setEditingItem(null)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-slate-400 hover:text-slate-600 p-1"
               >
-                <X className="w-4 h-4" />
+                ✕
               </button>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Category</label>
+                <label className="block font-semibold text-slate-700 mb-1">Category</label>
                 <select
                   value={editCategory}
                   onChange={(e) => setEditCategory(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-medium"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 font-medium"
                 >
                   {COMMUNITY_ALLOWED_CATEGORIES.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -297,11 +326,11 @@ export default function AdminCommunityPlaces({ token, onStatsChange }) {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Ward / Locality</label>
+                <label className="block font-semibold text-slate-700 mb-1">Ward / Locality</label>
                 <select
                   value={editLocality}
                   onChange={(e) => setEditLocality(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-medium"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 font-medium"
                 >
                   {FAZILNAGAR_AREAS.map((a) => (
                     <option key={a} value={a}>
@@ -312,51 +341,51 @@ export default function AdminCommunityPlaces({ token, onStatsChange }) {
               </div>
 
               <div className="col-span-2">
-                <label className="block font-bold text-slate-700 mb-1">Full Address</label>
+                <label className="block font-semibold text-slate-700 mb-1">Full Address</label>
                 <input
                   type="text"
                   value={editAddress}
                   onChange={(e) => setEditAddress(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-medium"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 font-medium"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Latitude</label>
+                <label className="block font-semibold text-slate-700 mb-1">Latitude</label>
                 <input
                   type="number"
                   step="0.000001"
                   value={editLat}
                   onChange={(e) => setEditLat(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-mono font-medium"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 font-mono font-medium"
                   required
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Longitude</label>
+                <label className="block font-semibold text-slate-700 mb-1">Longitude</label>
                 <input
                   type="number"
                   step="0.000001"
                   value={editLng}
                   onChange={(e) => setEditLng(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-mono font-medium"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 font-mono font-medium"
                   required
                 />
               </div>
             </div>
 
-            <div className="pt-2 flex justify-end gap-2">
+            <div className="pt-2 flex justify-end gap-2 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setEditingItem(null)}
-                className="px-3.5 py-1.5 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer"
+                className="px-4 py-2 rounded-lg font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-1.5 rounded-xl font-bold text-white bg-[#0D5E49] hover:bg-emerald-800 cursor-pointer"
+                className="px-4 py-2 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer shadow-xs"
               >
                 Save Corrections
               </button>
@@ -451,11 +480,11 @@ function SubmissionCard({
   const isInsideBoundary = isWithinTownBoundary(item.latitude, item.longitude);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden text-xs">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden text-xs">
       {/* Top Banner with Reference ID & Badges */}
       <div className="bg-slate-50 px-4 py-2.5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="font-mono font-bold text-[#B8323C] bg-red-50 border border-red-200 px-2 py-0.5 rounded text-[11px]">
+          <span className="font-mono font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded text-[11px]">
             {item.referenceId || "REF-LEGACY"}
           </span>
           <span className="font-bold text-slate-800 bg-slate-200/80 px-2 py-0.5 rounded-md text-[11px]">
@@ -467,26 +496,10 @@ function SubmissionCard({
         </div>
 
         <div className="flex items-center gap-1.5">
-          {item.status === "pending" && (
-            <span className="bg-amber-100 text-amber-900 border border-amber-300 font-bold px-2 py-0.5 rounded-full text-[10px] uppercase">
-              Pending Review
-            </span>
-          )}
-          {item.status === "approved" && (
-            <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-2 py-0.5 rounded-full text-[10px] uppercase">
-              ✓ Approved & Published
-            </span>
-          )}
-          {item.status === "rejected" && (
-            <span className="bg-red-100 text-red-800 border border-red-300 font-bold px-2 py-0.5 rounded-full text-[10px] uppercase">
-              ✕ Rejected
-            </span>
-          )}
-          {item.status === "archived" && (
-            <span className="bg-slate-200 text-slate-800 border border-slate-300 font-bold px-2 py-0.5 rounded-full text-[10px] uppercase">
-              Archived
-            </span>
-          )}
+          {item.status === "pending" && <StatusBadge status="pending" label="Pending Review" />}
+          {item.status === "approved" && <StatusBadge status="approved" label="Approved & Live" />}
+          {item.status === "rejected" && <StatusBadge status="rejected" label="Rejected" />}
+          {item.status === "archived" && <StatusBadge status="archived" label="Archived" />}
         </div>
       </div>
 
@@ -606,7 +619,7 @@ function SubmissionCard({
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="font-bold text-slate-800 text-[11px] flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 text-[#B8323C]" />
+                <MapPin className="w-3.5 h-3.5 text-red-600" />
                 Selected Pin Location
               </span>
               <span className="font-mono text-[10px] text-slate-500">
@@ -640,7 +653,7 @@ function SubmissionCard({
                   type="button"
                   disabled={isLoading}
                   onClick={onApprove}
-                  className="bg-[#0D5E49] hover:bg-emerald-800 text-white font-bold px-3 py-1.5 rounded-xl transition shadow-2xs cursor-pointer flex items-center gap-1"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg transition shadow-2xs cursor-pointer flex items-center gap-1"
                 >
                   <Check className="w-3.5 h-3.5" />
                   <span>Approve & Publish</span>
@@ -650,7 +663,7 @@ function SubmissionCard({
                   type="button"
                   disabled={isLoading}
                   onClick={onReject}
-                  className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold px-3 py-1.5 rounded-xl transition cursor-pointer"
+                  className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold px-3 py-1.5 rounded-lg transition cursor-pointer"
                 >
                   Reject
                 </button>
@@ -658,9 +671,9 @@ function SubmissionCard({
                 <button
                   type="button"
                   onClick={onEdit}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-2.5 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-2.5 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1"
                 >
-                  <Edit className="w-3.5 h-3.5" />
+                  <Edit3 className="w-3.5 h-3.5" />
                   <span>Edit Location</span>
                 </button>
               </>
@@ -671,9 +684,9 @@ function SubmissionCard({
                 <button
                   type="button"
                   onClick={onEdit}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1"
                 >
-                  <Edit className="w-3.5 h-3.5" />
+                  <Edit3 className="w-3.5 h-3.5" />
                   <span>Correct Details</span>
                 </button>
 
@@ -681,7 +694,7 @@ function SubmissionCard({
                   type="button"
                   disabled={isLoading}
                   onClick={onArchive}
-                  className="bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1"
+                  className="bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1"
                 >
                   <Archive className="w-3.5 h-3.5" />
                   <span>Archive Listing</span>
@@ -694,7 +707,7 @@ function SubmissionCard({
                 type="button"
                 disabled={isLoading}
                 onClick={onRestore}
-                className="bg-emerald-50 hover:bg-emerald-100 text-[#0D5E49] border border-emerald-300 font-bold px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1"
+                className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Restore to Pending</span>
