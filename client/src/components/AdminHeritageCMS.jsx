@@ -60,6 +60,7 @@ export default function AdminHeritageCMS() {
   const [formFee, setFormFee] = useState("Free Admission");
   const [formPrimaryImage, setFormPrimaryImage] = useState("");
   const [formGalleryText, setFormGalleryText] = useState("");
+  const [formHeritageZone, setFormHeritageZone] = useState("fazilnagar");
   const [formIsTwinHighlight, setFormIsTwinHighlight] = useState(true);
   const [formIsPublished, setFormIsPublished] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -82,13 +83,22 @@ export default function AdminHeritageCMS() {
     const token = getAuthToken();
     try {
       let res;
+      const headers = {
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
       try {
         res = await API.get("/heritage/admin", {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          params: { _t: Date.now() },
+          headers,
         });
       } catch (adminErr) {
         // Fallback to public endpoint if admin endpoint has issue
-        res = await API.get("/heritage");
+        res = await API.get("/heritage", {
+          params: { _t: Date.now() },
+          headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+        });
       }
       if (res.data?.success && Array.isArray(res.data?.sites)) {
         setSites(res.data.sites);
@@ -113,6 +123,7 @@ export default function AdminHeritageCMS() {
     setFormNameHi("");
     setFormSlug("");
     setFormCategory("Jain Heritage");
+    setFormHeritageZone("fazilnagar");
     setFormSignificance("Sacred site associated with ancient Malla Ganarajya and Mahavira's nirvana tradition.");
     setFormNarrative("");
     setFormDistance("Within Fazilnagar town");
@@ -134,6 +145,7 @@ export default function AdminHeritageCMS() {
     setFormNameHi(site.nameHindi || "");
     setFormSlug(site.slug || "");
     setFormCategory(site.category || "Jain Heritage");
+    setFormHeritageZone(site.heritageZone || (site.category === "Buddhist Heritage" ? "kushinagar" : "fazilnagar"));
     setFormSignificance(site.historicalSignificance || "");
     setFormNarrative(site.narrative || "");
     setFormDistance(site.distanceFromFazilnagarCenter || "Within town area");
@@ -189,6 +201,7 @@ export default function AdminHeritageCMS() {
       nameHindi: formNameHi,
       slug: formSlug || formName.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
       category: formCategory,
+      heritageZone: formHeritageZone,
       historicalSignificance: formSignificance,
       narrative: formNarrative,
       distanceFromFazilnagarCenter: formDistance,
@@ -683,7 +696,15 @@ export default function AdminHeritageCMS() {
                     </label>
                     <select
                       value={formCategory}
-                      onChange={(e) => setFormCategory(e.target.value)}
+                      onChange={(e) => {
+                        const newCat = e.target.value;
+                        setFormCategory(newCat);
+                        if (newCat === "Buddhist Heritage") {
+                          setFormHeritageZone("kushinagar");
+                        } else if (newCat === "Jain Heritage") {
+                          setFormHeritageZone("fazilnagar");
+                        }
+                      }}
                       className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
                     >
                       {categories.filter((c) => c !== "All").map((cat) => (
@@ -691,6 +712,20 @@ export default function AdminHeritageCMS() {
                           {cat}
                         </option>
                       ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Website Tab / Heritage Axis <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formHeritageZone}
+                      onChange={(e) => setFormHeritageZone(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
+                    >
+                      <option value="fazilnagar">Fazilnagar (Pawanagar Tab)</option>
+                      <option value="kushinagar">Kushinagar (Mahaparinirvana Tab)</option>
+                      <option value="both">Both Tabs (Twin Sacred Bond)</option>
                     </select>
                   </div>
                   <div>

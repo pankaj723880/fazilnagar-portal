@@ -30,6 +30,12 @@ const heritageSiteSchema = new mongoose.Schema(
       default: "Jain Heritage",
       index: true,
     },
+    heritageZone: {
+      type: String,
+      enum: ["fazilnagar", "kushinagar", "both"],
+      default: "fazilnagar",
+      index: true,
+    },
     historicalSignificance: {
       type: String,
       required: true,

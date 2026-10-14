@@ -157,6 +157,7 @@ export const DEFAULT_HERITAGE_SITES = [
     nameHindi: "श्री दिगंबर एवं श्वेतांबर पावापुरी जैन मंदिर",
     slug: "pawapuri-jain-tirth-fazilnagar",
     category: "Jain Heritage",
+    heritageZone: "fazilnagar",
     historicalSignificance: "Sacred Nirvana Sthal of 24th Tirthankar Bhagwan Mahavira according to archaeological and Jain scriptural tradition (ancient Pawa).",
     narrative: "Fazilnagar is historically identified with ancient Pawa (Pawanagar), where Bhagwan Mahavira delivered his final divine discourse (Sarvodaya Upadesh) and attained Moksha (Nirvana) in 527 BCE. The sprawling tirth complex features exquisite marble architectures, peaceful meditation courtyards, dharamshala for pilgrims, and historic idol shrines.",
     distanceFromFazilnagarCenter: "0 km (Town Center, NH-27 Corridor)",
@@ -175,6 +176,7 @@ export const DEFAULT_HERITAGE_SITES = [
     nameHindi: "काकोधा घाट एवं प्राचीन कुकुत्था नदी अवशेष",
     slug: "kakodha-ghat-fazilnagar",
     category: "Historical Monument",
+    heritageZone: "fazilnagar",
     historicalSignificance: "The revered river where Lord Buddha bathed and drank water on his holy journey from Pawa towards Kushinagar.",
     narrative: "Ancient Kukuttha river ghat where Gautam Buddha stopped to bathe and drink cool water before proceeding on his final journey to Kushinagar. Archaeological excavations unearthed brick structures and terracotta remains.",
     distanceFromFazilnagarCenter: "2 km (Town Environs)",
@@ -193,6 +195,7 @@ export const DEFAULT_HERITAGE_SITES = [
     nameHindi: "साथियावँ प्राचीन स्तूप टीला एवं पुरातात्विक क्षेत्र",
     slug: "sathiaon-ancient-mound",
     category: "Historical Monument",
+    heritageZone: "fazilnagar",
     historicalSignificance: "Ancient Malla era habitation mound with historical terracottas and ring-wells linking early republican history of eastern UP.",
     narrative: "Located directly in the immediate vicinity of Fazilnagar, Sathiaon possesses ancient archaeological mounds dating back to the NBPW and Kushan periods. Renowned historians associate it with Buddhist and Jain monastic settlements contemporary with Kushinagar's Malla republic.",
     distanceFromFazilnagarCenter: "2.5 km North-East",
@@ -211,6 +214,7 @@ export const DEFAULT_HERITAGE_SITES = [
     nameHindi: "महापरिनिर्वाण मंदिर एवं स्तूप (कुशीनगर)",
     slug: "mahaparinirvana-kushinagar",
     category: "Buddhist Heritage",
+    heritageZone: "kushinagar",
     historicalSignificance: "The sacred sanctuary commemorating where Lord Gautam Buddha attained Mahaparinirvana in 483 BCE under the twin Sal trees.",
     narrative: "Fazilnagar and Kushinagar form a sacred twin heritage circuit separated by merely 18 km along the Buddhist corridor. Ancient records state that Lord Buddha partook his last meal at Pawa before walking to the Sal grove of Kushinagar to attain Mahaparinirvana.",
     distanceFromFazilnagarCenter: "18 km West (Direct Highway Corridor)",
@@ -229,6 +233,7 @@ export const DEFAULT_HERITAGE_SITES = [
     nameHindi: "रामाभार स्तूप (मुकुटबंधन चैत्य)",
     slug: "ramabhar-stupa-kushinagar",
     category: "Buddhist Heritage",
+    heritageZone: "kushinagar",
     historicalSignificance: "A majestic 49-foot brick dome marking the exact site where the mortal remains of Buddha were cremated with supreme reverence by the Mallas.",
     narrative: "Located 1.5 km east of the Mahaparinirvana temple, Ramabhar marks the site of the holy cremation of Lord Buddha (Mukutbandhana Chaitya).",
     distanceFromFazilnagarCenter: "19 km West",
@@ -288,7 +293,7 @@ export const DEFAULT_EVENTS = [
 ];
 
 /**
- * Invalidates the in-memory cache for immediate synchronization upon admin edits.
+ * Invalidates the in-memory cache and broadcasts an immediate update event.
  */
 export function clearCMSCache(key) {
   if (key && memoryCache[key]) {
@@ -298,10 +303,16 @@ export function clearCMSCache(key) {
       memoryCache[k] = { data: null, timestamp: 0 };
     });
   }
+
+  try {
+    const stamp = Date.now().toString();
+    localStorage.setItem("fazilnagar_cms_cache_bust", stamp);
+    window.dispatchEvent(new CustomEvent("cms-cache-cleared", { detail: { key, stamp } }));
+  } catch (_) {}
 }
 
 /**
- * Fetches dynamic community events and religious notices.
+ * Fetches dynamic community events and religious notices with cache-busting.
  */
 export async function getEvents({ category = "All", search = "", timeFilter = "" } = {}, forceFresh = false) {
   const now = Date.now();
@@ -310,12 +321,16 @@ export async function getEvents({ category = "All", search = "", timeFilter = ""
   }
 
   try {
-    const params = {};
+    const params = { _t: now };
     if (category && category !== "All") params.category = category;
     if (search) params.search = search;
     if (timeFilter) params.timeFilter = timeFilter;
 
-    const res = await API.get("/events", { params, timeout: 8000 });
+    const res = await API.get("/events", {
+      params,
+      headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+      timeout: 8000,
+    });
     if (res.data?.success && Array.isArray(res.data?.events) && res.data.events.length > 0) {
       memoryCache.events = { data: res.data.events, timestamp: now };
       return res.data.events;
@@ -327,7 +342,7 @@ export async function getEvents({ category = "All", search = "", timeFilter = ""
 }
 
 /**
- * Fetches sacred twin heritage destinations with graceful fallback.
+ * Fetches sacred twin heritage destinations with cache-busting and graceful fallback.
  */
 export async function getHeritageSites(forceFresh = false) {
   const now = Date.now();
@@ -336,7 +351,11 @@ export async function getHeritageSites(forceFresh = false) {
   }
 
   try {
-    const res = await API.get("/heritage", { timeout: 8000 });
+    const res = await API.get("/heritage", {
+      params: { _t: now },
+      headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+      timeout: 8000,
+    });
     if (res.data?.success && Array.isArray(res.data?.sites) && res.data.sites.length > 0) {
       memoryCache.heritage = { data: res.data.sites, timestamp: now };
       return res.data.sites;

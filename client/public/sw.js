@@ -23,6 +23,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Always fetch fresh HTML documents directly from network without caching
+  if (url.pathname === '/' || url.pathname === '/index.html' || url.pathname.endsWith('.html')) {
+    event.respondWith(fetch(event.request, { cache: 'no-store' }));
+    return;
+  }
+
   // Pass through fetch requests with fallback
   event.respondWith(
     fetch(event.request)

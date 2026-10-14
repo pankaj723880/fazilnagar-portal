@@ -26,16 +26,34 @@ export default function About() {
   const [activeTab, setActiveTab] = useState("fazilnagar"); // "fazilnagar" | "kushinagar" | "connection"
   const [heritageSites, setHeritageSites] = useState(DEFAULT_HERITAGE_SITES);
 
-  useEffect(() => {
+  const loadSites = () => {
     getHeritageSites(true).then((sites) => {
       if (Array.isArray(sites) && sites.length > 0) {
         setHeritageSites(sites);
       }
     });
+  };
+
+  useEffect(() => {
+    loadSites();
+
+    const handleUpdate = () => loadSites();
+    window.addEventListener("cms-cache-cleared", handleUpdate);
+    const handleStorage = (e) => {
+      if (e.key === "fazilnagar_cms_cache_bust") loadSites();
+    };
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("cms-cache-cleared", handleUpdate);
+      window.removeEventListener("storage", handleStorage);
+    };
   }, []);
 
-  const fazilnagarSites = (heritageSites || []).filter((s) => {
+  const fazilnagarCandidates = (heritageSites || []).filter((s) => {
     if (s.isPublished === false) return false;
+    if (s.heritageZone === "fazilnagar" || s.heritageZone === "both") return true;
+    if (s.heritageZone === "kushinagar") return false;
     const name = (s.name || "").toLowerCase();
     const cat = s.category || "";
     const dist = (s.distanceFromFazilnagarCenter || "").toLowerCase();
@@ -43,14 +61,22 @@ export default function About() {
     if (name.includes("kushinagar") || dist.includes("18 km")) return false;
     return true;
   });
+  const fazilnagarSites = fazilnagarCandidates.length > 0
+    ? fazilnagarCandidates
+    : DEFAULT_HERITAGE_SITES.filter((s) => s.heritageZone === "fazilnagar");
 
-  const kushinagarSites = (heritageSites || []).filter((s) => {
+  const kushinagarCandidates = (heritageSites || []).filter((s) => {
     if (s.isPublished === false) return false;
+    if (s.heritageZone === "kushinagar" || s.heritageZone === "both") return true;
+    if (s.heritageZone === "fazilnagar") return false;
     const name = (s.name || "").toLowerCase();
     const cat = s.category || "";
     const dist = (s.distanceFromFazilnagarCenter || "").toLowerCase();
     return cat === "Buddhist Heritage" || name.includes("kushinagar") || dist.includes("18 km");
   });
+  const kushinagarSites = kushinagarCandidates.length > 0
+    ? kushinagarCandidates
+    : DEFAULT_HERITAGE_SITES.filter((s) => s.heritageZone === "kushinagar");
 
   return (
     <div className="space-y-10 pb-16">

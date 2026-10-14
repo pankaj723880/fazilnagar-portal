@@ -75,6 +75,7 @@ router.get("/", async (req, res) => {
       filter.startDate = { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) };
     }
 
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     const events = await Event.find(filter).sort({ startDate: 1, createdAt: -1 });
     res.status(200).json({ success: true, count: events.length, events });
   } catch (err) {
@@ -89,6 +90,7 @@ router.get("/", async (req, res) => {
 router.get("/admin", verifyToken, requireAdmin, async (req, res) => {
   try {
     await seedDefaultEventsIfEmpty();
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     const events = await Event.find().sort({ startDate: -1, createdAt: -1 });
     res.status(200).json({ success: true, count: events.length, events });
   } catch (err) {

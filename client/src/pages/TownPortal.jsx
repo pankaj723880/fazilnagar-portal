@@ -398,7 +398,7 @@ export default function TownPortal() {
   const [events, setEvents] = useState(DEFAULT_EVENTS);
   const [selectedEventCategory, setSelectedEventCategory] = useState("All");
 
-  useEffect(() => {
+  const loadCMSData = () => {
     getSiteSettings().then((s) => {
       if (s) setSiteSettings(s);
     });
@@ -414,11 +414,34 @@ export default function TownPortal() {
         setEvents(evts);
       }
     });
+  };
+
+  useEffect(() => {
+    loadCMSData();
+
+    const handleCMSUpdate = () => {
+      loadCMSData();
+    };
+
+    window.addEventListener("cms-cache-cleared", handleCMSUpdate);
+    const handleStorage = (e) => {
+      if (e.key === "fazilnagar_cms_cache_bust") {
+        loadCMSData();
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("cms-cache-cleared", handleCMSUpdate);
+      window.removeEventListener("storage", handleStorage);
+    };
   }, []);
 
-  // Filter dynamic heritage sites for tabs
-  const fazilnagarSites = (heritageSites || []).filter((s) => {
+  // Filter dynamic heritage sites for tabs with smart zone and category matching + fallback
+  const fazilnagarCandidates = (heritageSites || []).filter((s) => {
     if (s.isPublished === false) return false;
+    if (s.heritageZone === "fazilnagar" || s.heritageZone === "both") return true;
+    if (s.heritageZone === "kushinagar") return false;
     const name = (s.name || "").toLowerCase();
     const cat = s.category || "";
     const dist = (s.distanceFromFazilnagarCenter || "").toLowerCase();
@@ -426,14 +449,22 @@ export default function TownPortal() {
     if (name.includes("kushinagar") || dist.includes("18 km")) return false;
     return true;
   });
+  const fazilnagarSites = fazilnagarCandidates.length > 0
+    ? fazilnagarCandidates
+    : DEFAULT_HERITAGE_SITES.filter((s) => s.heritageZone === "fazilnagar");
 
-  const kushinagarSites = (heritageSites || []).filter((s) => {
+  const kushinagarCandidates = (heritageSites || []).filter((s) => {
     if (s.isPublished === false) return false;
+    if (s.heritageZone === "kushinagar" || s.heritageZone === "both") return true;
+    if (s.heritageZone === "fazilnagar") return false;
     const name = (s.name || "").toLowerCase();
     const cat = s.category || "";
     const dist = (s.distanceFromFazilnagarCenter || "").toLowerCase();
     return cat === "Buddhist Heritage" || name.includes("kushinagar") || dist.includes("18 km");
   });
+  const kushinagarSites = kushinagarCandidates.length > 0
+    ? kushinagarCandidates
+    : DEFAULT_HERITAGE_SITES.filter((s) => s.heritageZone === "kushinagar");
 
   // Filter dynamic community events
   const eventCategories = ["All", "Mela & Fair", "Aarti & Puja", "Religious Festival", "Civic & Cultural"];
@@ -885,21 +916,35 @@ export default function TownPortal() {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={(e) => handleSmoothScroll(e, "explore-categories")}
-              className="inline-flex items-center gap-2 bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs sm:text-sm font-bold px-6 py-3 rounded-xl shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200"
+              className="inline-flex items-center gap-2 bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs sm:text-sm font-bold px-5 py-2.5 rounded-xl shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200"
             >
               <Compass className="w-4 h-4" />
               <span>Explore Town</span>
             </button>
             <button
+              onClick={(e) => handleSmoothScroll(e, "events-melas-section")}
+              className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-bold px-5 py-2.5 rounded-xl shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200"
+            >
+              <Calendar className="w-4 h-4 text-amber-200" />
+              <span>Events & Melas</span>
+            </button>
+            <button
+              onClick={(e) => handleSmoothScroll(e, "about-fazilnagar-section")}
+              className="inline-flex items-center gap-2 bg-slate-800/80 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold px-5 py-2.5 rounded-xl border border-white/20 backdrop-blur-md shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200"
+            >
+              <Landmark className="w-4 h-4 text-amber-300" />
+              <span>Twin Heritage</span>
+            </button>
+            <button
               onClick={(e) => handleSmoothScroll(e, "town-map-section")}
-              className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 text-white text-xs sm:text-sm font-semibold px-6 py-3 rounded-xl border border-white/25 backdrop-blur-md shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200"
+              className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 text-white text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-xl border border-white/25 backdrop-blur-md shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200"
             >
               <Map className="w-4 h-4 text-emerald-400" />
-              <span>View Map</span>
+              <span>Map</span>
             </button>
             <Link
               to="/directory?add=true"
-              className="inline-flex items-center gap-2 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold px-6 py-3 rounded-xl shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200"
+              className="inline-flex items-center gap-2 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold px-5 py-2.5 rounded-xl shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200"
             >
               <PlusCircle className="w-4 h-4" />
               <span>+ Add Place</span>
@@ -1596,7 +1641,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION: UPCOMING EVENTS & TOWN MELAS (Religious Melas & Civic Festivals)
           ======================================================== */}
-      <section id="events-melas-section" className="bg-white py-16 border-t border-[#E1E6EA] content-visibility-auto">
+      <section id="events-melas-section" className="bg-white py-16 border-t border-[#E1E6EA]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-8 gap-4">
@@ -1973,7 +2018,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 9: ABOUT FAZILNAGAR & KUSHINAGAR (History & Culture)
           ======================================================== */}
-      <section id="about-fazilnagar-section" className="py-16 bg-white border-t border-[#E1E6EA] content-visibility-auto">
+      <section id="about-fazilnagar-section" className="py-16 bg-white border-t border-[#E1E6EA]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center max-w-3xl mx-auto mb-10">

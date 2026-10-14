@@ -12,14 +12,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>
 )
 
-// Register PWA service worker for device installation
-if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+// Register PWA service worker with auto-update
+if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
-      console.log('SW registration failed: ', err);
-    });
+    navigator.serviceWorker.register('/sw.js').then((reg) => {
+      reg.update().catch(() => {});
+    }).catch(() => {});
   });
-} else if ('serviceWorker' in navigator) {
-  // Also register in dev mode if available
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
