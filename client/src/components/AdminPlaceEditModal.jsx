@@ -50,6 +50,20 @@ const PRESETS = [
   { name: "NH-27 Highway East (HP / Bankata)", lat: 26.6820, lng: 84.0555 },
 ];
 
+const DEFAULT_MAP_CENTER = { lat: 26.6827, lng: 84.0498 };
+
+function parseCoordinate(value) {
+  if (value === "" || value === null || value === undefined) return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function isValidTownCoordinatePair(latitude, longitude) {
+  return Number.isFinite(latitude) && Number.isFinite(longitude) &&
+    latitude >= 26.65 && latitude <= 26.72 &&
+    longitude >= 84.02 && longitude <= 84.08;
+}
+
 export default function AdminPlaceEditModal({ isOpen, onClose, place, onSave, onDelete }) {
   const isEditMode = Boolean(place && (place.id || place._id));
 
@@ -62,8 +76,8 @@ export default function AdminPlaceEditModal({ isOpen, onClose, place, onSave, on
   const [phone, setPhone] = useState("");
   const [openingHours, setOpeningHours] = useState("");
   const [description, setDescription] = useState("");
-  const [latitude, setLatitude] = useState(26.6827);
-  const [longitude, setLongitude] = useState(84.0498);
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
@@ -90,8 +104,8 @@ export default function AdminPlaceEditModal({ isOpen, onClose, place, onSave, on
         setPhone(place.phone || "");
         setOpeningHours(place.openingHours || "");
         setDescription(place.description || "");
-        setLatitude(place.latitude ? Number(place.latitude) : 26.6827);
-        setLongitude(place.longitude ? Number(place.longitude) : 84.0498);
+        setLatitude(parseCoordinate(place.latitude) ?? "");
+        setLongitude(parseCoordinate(place.longitude) ?? "");
         setImageUrl(place.imageUrl || "");
         setImagePreview(place.imageUrl || "");
       } else {
@@ -104,8 +118,8 @@ export default function AdminPlaceEditModal({ isOpen, onClose, place, onSave, on
         setPhone("");
         setOpeningHours("");
         setDescription("");
-        setLatitude(26.6827);
-        setLongitude(84.0498);
+        setLatitude("");
+        setLongitude("");
         setImageUrl("");
         setImagePreview("");
       }
@@ -119,8 +133,8 @@ export default function AdminPlaceEditModal({ isOpen, onClose, place, onSave, on
     const timer = setTimeout(() => {
       if (!mapContainerRef.current) return;
 
-      const initLat = latitude && !isNaN(latitude) ? Number(latitude) : 26.6827;
-      const initLng = longitude && !isNaN(longitude) ? Number(longitude) : 84.0498;
+      const initLat = parseCoordinate(latitude) ?? DEFAULT_MAP_CENTER.lat;
+      const initLng = parseCoordinate(longitude) ?? DEFAULT_MAP_CENTER.lng;
 
       if (!mapInstanceRef.current) {
         const map = L.map(mapContainerRef.current, {
@@ -176,9 +190,11 @@ export default function AdminPlaceEditModal({ isOpen, onClose, place, onSave, on
   const handleCoordChange = (newLat, newLng) => {
     setLatitude(newLat);
     setLongitude(newLng);
-    if (mapInstanceRef.current && markerRef.current && !isNaN(newLat) && !isNaN(newLng)) {
-      markerRef.current.setLatLng([newLat, newLng]);
-      mapInstanceRef.current.panTo([newLat, newLng]);
+    const parsedLat = parseCoordinate(newLat);
+    const parsedLng = parseCoordinate(newLng);
+    if (mapInstanceRef.current && markerRef.current && parsedLat !== null && parsedLng !== null) {
+      markerRef.current.setLatLng([parsedLat, parsedLng]);
+      mapInstanceRef.current.panTo([parsedLat, parsedLng]);
     }
   };
 
@@ -201,6 +217,13 @@ export default function AdminPlaceEditModal({ isOpen, onClose, place, onSave, on
     }
     if (!addressFull.trim()) {
       setErrorMsg("Please enter the full address.");
+      return;
+    }
+
+    const normalizedLatitude = parseCoordinate(latitude);
+    const normalizedLongitude = parseCoordinate(longitude);
+    if (!isValidTownCoordinatePair(normalizedLatitude, normalizedLongitude)) {
+      setErrorMsg("Enter valid latitude and longitude inside the Fazilnagar town boundary before saving.");
       return;
     }
 
@@ -238,8 +261,8 @@ export default function AdminPlaceEditModal({ isOpen, onClose, place, onSave, on
         phone: phone.trim(),
         openingHours: openingHours.trim(),
         description: description.trim(),
-        latitude: Number(latitude),
-        longitude: Number(longitude),
+        latitude: normalizedLatitude,
+        longitude: normalizedLongitude,
         imageUrl: finalImageUrl,
         isPublished: true,
         verificationStatus: "verified",
@@ -249,10 +272,14 @@ export default function AdminPlaceEditModal({ isOpen, onClose, place, onSave, on
       let resultPlace = null;
       if (isEditMode) {
         const placeId = place.id || place._id || place.slug;
-        const res = await API.put(`/places/${placeId}`, payload);
+        const res = await API.put(`/places/${placeId}`, payload, {
+          headers: { Authorization: `Bearer ${getAuthToken()}` },
+        });
         resultPlace = res.data?.place || { ...place, ...payload };
       } else {
-        const res = await API.post("/places", payload);
+        const res = await API.post("/places", payload, {
+          headers: { Authorization: `Bearer ${getAuthToken()}` },
+        });
         resultPlace = res.data?.place || payload;
       }
 
@@ -275,7 +302,9 @@ export default function AdminPlaceEditModal({ isOpen, onClose, place, onSave, on
     try {
       setSaving(true);
       const placeId = place.id || place._id || place.slug;
-      await API.delete(`/places/${placeId}`);
+      await API.delete(`/places/${placeId}`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
       if (onDelete) onDelete(placeId);
       onClose();
     } catch (err) {
@@ -488,7 +517,7 @@ export default function AdminPlaceEditModal({ isOpen, onClose, place, onSave, on
                       step="any"
                       required
                       value={latitude}
-                      onChange={(e) => handleCoordChange(parseFloat(e.target.value) || 0, longitude)}
+                      onChange={(e) => handleCoordChange(e.target.value, longitude)}
                       className="w-full px-2 py-1.5 text-xs rounded-lg border border-slate-300 font-mono bg-white"
                     />
                   </div>
@@ -499,7 +528,7 @@ export default function AdminPlaceEditModal({ isOpen, onClose, place, onSave, on
                       step="any"
                       required
                       value={longitude}
-                      onChange={(e) => handleCoordChange(latitude, parseFloat(e.target.value) || 0)}
+                      onChange={(e) => handleCoordChange(latitude, e.target.value)}
                       className="w-full px-2 py-1.5 text-xs rounded-lg border border-slate-300 font-mono bg-white"
                     />
                   </div>

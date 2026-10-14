@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { buildMapsUrl, normalizeCoordinates } from "../utils/coordinates.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -172,4 +173,22 @@ test("7. MapsUrl correctly points to the updated coordinates", () => {
     const expected = `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`;
     assert.equal(place.mapsUrl, expected, `mapsUrl mismatch for ${place.slug}`);
   }
+});
+
+test("8. Coordinate validation rejects partial, invalid, and out-of-town values", () => {
+  assert.deepEqual(normalizeCoordinates("26.6808", "84.0472", { enforceTownBounds: true }), {
+    latitude: 26.6808,
+    longitude: 84.0472,
+  });
+  assert.throws(() => normalizeCoordinates("26.6808", "", { allowNull: false }), /provided together/);
+  assert.throws(() => normalizeCoordinates("not-a-coordinate", "84.0472"), /valid numbers/);
+  assert.throws(() => normalizeCoordinates("27.1", "84.0472", { enforceTownBounds: true }), /town boundary/);
+});
+
+test("9. Maps URL is generated from the same normalized destination coordinates", () => {
+  assert.equal(
+    buildMapsUrl("26.6842928", "84.0454479"),
+    "https://www.google.com/maps/search/?api=1&query=26.6842928,84.0454479"
+  );
+  assert.equal(buildMapsUrl(null, null), "");
 });

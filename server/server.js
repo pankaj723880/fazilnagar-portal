@@ -109,23 +109,21 @@ async function seedAdminUser() {
 
 async function autoSeedPlaces() {
   try {
+    const existingCount = await Place.countDocuments();
+    if (existingCount > 0) {
+      console.log(`[AutoSeed] Preserving ${existingCount} existing place records; startup seed skipped.`);
+      return;
+    }
+
     const raw = fs.readFileSync(path.join(__dirname, "data/places.json"), "utf8");
     const places = JSON.parse(raw);
-    console.log(`[AutoSeed] Synchronizing ${places.length} places into MongoDB...`);
+    console.log(`[AutoSeed] Database is empty; seeding ${places.length} canonical places into MongoDB...`);
     for (const p of places) {
       await Place.findOneAndUpdate(
         { slug: p.slug },
         { ...p },
         { upsert: true, new: true, setDefaultsOnInsert: true }
       );
-    }
-    const canonicalSlugs = places.map((p) => p.slug);
-    const cleanupResult = await Place.deleteMany({
-      submissionSource: { $ne: "community" },
-      slug: { $nin: canonicalSlugs },
-    });
-    if (cleanupResult.deletedCount > 0) {
-      console.log(`[AutoSeed] Purged ${cleanupResult.deletedCount} deprecated non-canonical records.`);
     }
     console.log(`[AutoSeed] Database successfully synchronized with ${places.length} places.`);
   } catch (e) {

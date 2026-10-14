@@ -53,14 +53,14 @@ export default function AdminReview({ user: propUser }) {
 
   // Live real data metric counters for sidebar badges
   const [pendingCount, setPendingCount] = useState(0);
-  const [entitiesCount, setEntitiesCount] = useState(19);
+  const [entitiesCount, setEntitiesCount] = useState(0);
   const [liveAdsCount, setLiveAdsCount] = useState(0);
   const [newsCount, setNewsCount] = useState(0);
   const [usersCount, setUsersCount] = useState(0);
 
   // Authentication State
-  const [adminEmail, setAdminEmail] = useState("admin@fazilnagar.com");
-  const [adminPassword, setAdminPassword] = useState("Admin@Fazilnagar2026");
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loginSubmitting, setLoginSubmitting] = useState(false);
 
@@ -117,7 +117,9 @@ export default function AdminReview({ user: propUser }) {
       }
 
       // 2. Entities count
-      const placesRes = await API.get("/places/admin?archived=all").catch(() => null);
+      const placesRes = await API.get("/places/admin?archived=all", {
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => null);
       if (Array.isArray(placesRes?.data)) {
         setEntitiesCount(placesRes.data.length);
       }

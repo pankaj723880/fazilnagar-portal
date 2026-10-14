@@ -121,9 +121,9 @@ export default function TownInteractiveMap({
     }
 
     filtered.forEach((place) => {
-      const lat = place.lat || place.latitude;
-      const lng = place.lng || place.longitude;
-      if (!lat || !lng) return;
+      const lat = Number(place.lat ?? place.latitude);
+      const lng = Number(place.lng ?? place.longitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return;
 
       const isSelected = selectedPlace && (
         (selectedPlace.id && selectedPlace.id === (place.id || place._id)) ||

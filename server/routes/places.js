@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
+import { buildMapsUrl, normalizeCoordinates } from "../utils/coordinates.js";
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -95,7 +96,7 @@ router.get("/", async (req, res) => {
 // @route   POST /api/places/sync (also GET /api/places/sync for browser trigger)
 // @desc    Synchronize MongoDB places with canonical server/data/places.json
 // @access  Public / Admin
-router.all("/sync", async (req, res) => {
+router.all("/sync", verifyToken, requireAdmin, async (req, res) => {
   try {
     const raw = fs.readFileSync(path.join(__dirname, "../data/places.json"), "utf8");
     const places = JSON.parse(raw);
@@ -162,7 +163,7 @@ router.get("/stats/summary", async (req, res) => {
 // @route   GET /api/places/admin
 // @desc    Get review queue & all moderation records
 // @access  Admin
-router.get("/admin", async (req, res) => {
+router.get("/admin", verifyToken, requireAdmin, async (req, res) => {
   try {
     const { status, boundary, archived } = req.query;
     const filter = {};
@@ -350,6 +351,16 @@ router.post("/", async (req, res) => {
 
     const customId = `fz-${category.slice(0, 3).toLowerCase()}-${Date.now().toString().slice(-4)}`;
 
+    let coordinates;
+    try {
+      coordinates = normalizeCoordinates(latitude, longitude, {
+        allowNull: !isPublished,
+        enforceTownBounds: Boolean(isPublished),
+      });
+    } catch (coordinateError) {
+      return res.status(400).json({ message: coordinateError.message });
+    }
+
     const placeData = {
       id: customId,
       name,
@@ -361,8 +372,9 @@ router.post("/", async (req, res) => {
       addressFull,
       locality: locality || "Fazilnagar Town",
       streetOrLandmark: streetOrLandmark || "",
-      latitude: latitude ? Number(latitude) : null,
-      longitude: longitude ? Number(longitude) : null,
+      latitude: coordinates.latitude,
+      longitude: coordinates.longitude,
+      mapsUrl: coordinates.latitude === null ? "" : buildMapsUrl(coordinates.latitude, coordinates.longitude),
       phone: phone || "",
       website: website || "",
       openingHours: openingHours || "",
@@ -410,10 +422,26 @@ router.post("/", async (req, res) => {
 // @route   PUT /api/places/:id
 // @desc    Moderator update: verify, edit place details, coordinates, photos
 // @access  Public / Admin
-router.put("/:id", async (req, res) => {
+router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = { ...req.body, lastVerifiedAt: new Date() };
+
+    if (Object.prototype.hasOwnProperty.call(updateData, "latitude") || Object.prototype.hasOwnProperty.call(updateData, "longitude")) {
+      try {
+        const coordinates = normalizeCoordinates(updateData.latitude, updateData.longitude, {
+          allowNull: true,
+          enforceTownBounds: updateData.isPublished === true,
+        });
+        updateData.latitude = coordinates.latitude;
+        updateData.longitude = coordinates.longitude;
+        updateData.mapsUrl = coordinates.latitude === null ? "" : buildMapsUrl(coordinates.latitude, coordinates.longitude);
+      } catch (coordinateError) {
+        return res.status(400).json({ message: coordinateError.message });
+      }
+    } else if (Object.prototype.hasOwnProperty.call(updateData, "mapsUrl")) {
+      delete updateData.mapsUrl;
+    }
 
     if (updateData.isPublished === true) {
       updateData.townBoundaryStatus = updateData.townBoundaryStatus || "confirmed";
@@ -468,7 +496,7 @@ router.put("/:id", async (req, res) => {
 // @route   DELETE /api/places/:id
 // @desc    Delete place from directory
 // @access  Public / Admin
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", verifyToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     try {

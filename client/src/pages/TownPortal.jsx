@@ -88,85 +88,6 @@ const EXPLORE_21_CATEGORIES = [
   { id: "all-places", name: "All Verified Places", query: "all", icon: Layers, count: 22 },
 ];
 
-// Curated Real Town Establishments (Schools, Hospitals, Petrol Pumps)
-const VERIFIED_TOWN_PLACES = [
-  {
-    id: "sch-01",
-    name: "The Hermitage School",
-    nameHindi: "द हर्मिटेज स्कूल फाजिलनगर",
-    category: "Schools & Colleges",
-    subcategory: "Senior Secondary School",
-    address: "Hospital Road, Fazilnagar - 274401",
-    landmark: "Hospital Road Corridor, Near CHC, Fazilnagar",
-    lat: 26.6804068,
-    lng: 84.046655,
-    hours: "08:00 AM – 02:00 PM",
-    phone: "+91 94520 89540",
-    desc: "Renowned English-medium institution providing quality education with comprehensive campus facilities.",
-    badge: "CBSE / English Medium",
-  },
-  {
-    id: "hosp-01",
-    name: "Community Health Centre (CHC) Fazilnagar",
-    nameHindi: "सामुदायिक स्वास्थ्य केंद्र (सीएचसी) फाजिलनगर",
-    category: "Hospitals & Clinics",
-    subcategory: "Public Hospital",
-    address: "Hospital Road, Fazilnagar - 274401",
-    landmark: "Hospital Road Campus, Near The Hermitage School, Fazilnagar",
-    lat: 26.6807500,
-    lng: 84.0471500,
-    hours: "24x7 Emergency Services",
-    phone: "+91 5564 222102",
-    desc: "30-bed public healthcare institution providing primary medical, emergency ambulance, and maternal health services.",
-    badge: "Government",
-  },
-  {
-    id: "fuel-01",
-    name: "Indian Oil (IOCL) Kisan Sewa Kendra Petrol Pump",
-    nameHindi: "इंडियन ऑयल किसान सेवा केंद्र पेट्रोल पंप",
-    category: "Petrol Pumps",
-    subcategory: "Fuel Station",
-    address: "NH-27 Highway Corridor (Amawa Link), Fazilnagar - 274401",
-    landmark: "NH-27 Highway West Axis, Fazilnagar",
-    lat: 26.6826000,
-    lng: 84.0442000,
-    hours: "06:00 AM – 11:00 PM",
-    phone: "+91 94520 12345",
-    desc: "Authorized IOCL fueling station offering petrol, high-speed diesel, lubricants, automated air, and clean restrooms.",
-    badge: "Indian Oil",
-  },
-  {
-    id: "sch-02",
-    name: "Pawanagar Mahavir Inter College",
-    nameHindi: "पावानगर महावीर इंटर कॉलेज",
-    category: "Schools & Colleges",
-    subcategory: "Intermediate College",
-    address: "College Road, Fazilnagar - 274401",
-    landmark: "College Road Landmark Corridor, Fazilnagar",
-    lat: 26.6894086,
-    lng: 84.0519967,
-    hours: "08:30 AM – 03:00 PM",
-    phone: "+91 5564 222115",
-    desc: "Historic educational anchor institution of Fazilnagar town providing secondary and senior secondary education.",
-    badge: "UP Board",
-  },
-  {
-    id: "fuel-02",
-    name: "HP Petrol Pump - Fazilnagar Highway Filling Station",
-    nameHindi: "एचपी पेट्रोल पंप - फाजिलनगर हाईवे",
-    category: "Petrol Pumps",
-    subcategory: "Fuel Station",
-    address: "NH-27 Highway East (Bankata Crossing), Fazilnagar - 274401",
-    landmark: "NH-27 Highway East, Near Bankata Turn, Fazilnagar",
-    lat: 26.6821000,
-    lng: 84.0556000,
-    hours: "24x7 Fueling Services",
-    phone: "+91 94520 23456",
-    desc: "Hindustan Petroleum retail outlet serving highway transit vehicles, local farm machinery, and commuters.",
-    badge: "Hindustan Petroleum",
-  },
-];
-
 // Dynamic Icon Map for CMS-managed buttons, cards, and badges
 const HERO_ICON_MAP = {
   Compass,
@@ -234,11 +155,7 @@ const INITIAL_PLACES = activeSeedPlaces.length > 0
       townBoundaryStatus: p.townBoundaryStatus || "confirmed",
       submissionSource: p.submissionSource || "official",
     }))
-  : VERIFIED_TOWN_PLACES.filter((p) => [
-      "Hospitals & Clinics",
-      "Schools & Colleges",
-      "Medical Stores & Pharmacies"
-    ].includes(p.category));
+  : [];
 
 export default function TownPortal() {
   const navigate = useNavigate();

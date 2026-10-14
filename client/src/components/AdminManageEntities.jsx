@@ -57,7 +57,9 @@ export default function AdminManageEntities({ token: propToken, onStatsChange })
   const fetchPlaces = async () => {
     setLoading(true);
     try {
-      const res = await API.get("/places/admin?archived=all");
+      const res = await API.get("/places/admin?archived=all", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setPlaces(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Fetch Places Admin Error:", err);

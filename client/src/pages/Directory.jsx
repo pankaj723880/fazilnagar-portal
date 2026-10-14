@@ -301,7 +301,9 @@ export default function Directory({ user }) {
 
   const fetchAdminQueue = async () => {
     try {
-      const res = await API.get("/places/admin");
+      const res = await API.get("/places/admin", {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
       let data = Array.isArray(res.data) ? res.data : Array.isArray(res.data?.data) ? res.data.data : [];
       if (data.length === 0) {
         data = seedPlaces.filter((p) => p.isPublished === false);
@@ -653,6 +655,8 @@ export default function Directory({ user }) {
         isPublished: true,
         townBoundaryStatus: "confirmed",
         verificationStatus: "verified",
+      }, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
       });
       showToast("Establishment approved and published!");
       fetchAdminQueue();
@@ -711,7 +715,7 @@ export default function Directory({ user }) {
                 className="inline-flex items-center gap-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold px-3 py-2 rounded-xl border border-amber-300 transition cursor-pointer shadow-xs"
               >
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                <span>Queue ({stats?.inReview || adminQueuePlaces.filter((p) => !p.isPublished).length || 4})</span>
+                <span>Queue ({stats?.inReview || adminQueuePlaces.filter((p) => !p.isPublished).length || 0})</span>
               </button>
             )}
           </div>
