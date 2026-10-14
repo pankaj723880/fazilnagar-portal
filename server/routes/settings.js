@@ -113,10 +113,30 @@ router.get("/", async (req, res) => {
     res.status(200).json({
       success: true,
       settings,
+      updatedAt: settings.updatedAt ? new Date(settings.updatedAt).getTime() : Date.now(),
     });
   } catch (err) {
     console.error("[Settings] Fetch error:", err);
     res.status(500).json({ success: false, message: "Failed to load website settings." });
+  }
+});
+
+// @route   GET /api/settings/live-version
+// @desc    Lightweight endpoint to poll for settings updates without payload
+// @access  Public
+router.get("/live-version", async (req, res) => {
+  try {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    const settings = await SiteSettings.findOne({ key: "primary_settings" }, { updatedAt: 1, _id: 1 }).lean();
+    res.status(200).json({
+      success: true,
+      updatedAt: settings?.updatedAt ? new Date(settings.updatedAt).getTime() : 0,
+      timestamp: Date.now(),
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Live version check failed." });
   }
 });
 

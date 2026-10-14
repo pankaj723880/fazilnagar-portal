@@ -4,7 +4,20 @@
  */
 import API from "../api";
 
-const CACHE_TTL_MS = 60 * 1000; // 1 minute in-memory cache
+const CACHE_TTL_MS = 4 * 1000; // 4 seconds in-memory cache to ensure near-instant live updates
+
+let liveBroadcastChannel = null;
+try {
+  if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+    liveBroadcastChannel = new BroadcastChannel("fazilnagar_cms_live_channel");
+    liveBroadcastChannel.onmessage = (event) => {
+      if (event.data?.type === "CMS_UPDATE") {
+        clearCMSCache(event.data.key, false);
+        window.dispatchEvent(new CustomEvent("cms-cache-cleared", { detail: event.data }));
+      }
+    };
+  }
+} catch (_) {}
 
 function getPersistentCache(key) {
   try {
@@ -436,7 +449,7 @@ export const DEFAULT_EVENTS = [
 /**
  * Invalidates the in-memory cache and broadcasts an immediate update event.
  */
-export function clearCMSCache(key) {
+export function clearCMSCache(key, broadcast = true) {
   if (key && memoryCache[key]) {
     memoryCache[key] = { data: null, timestamp: 0 };
     try {
@@ -455,7 +468,91 @@ export function clearCMSCache(key) {
     const stamp = Date.now().toString();
     localStorage.setItem("fazilnagar_cms_cache_bust", stamp);
     window.dispatchEvent(new CustomEvent("cms-cache-cleared", { detail: { key, stamp } }));
+    if (broadcast && liveBroadcastChannel) {
+      liveBroadcastChannel.postMessage({ type: "CMS_UPDATE", key, stamp });
+    }
   } catch (_) {}
+}
+
+/**
+ * Subscribes to live CMS changes across all devices and tabs without page reload.
+ * Combines BroadcastChannel (instant same-browser), storage event, visibility revalidation,
+ * and background heartbeat polling to /settings/live-version.
+ * Returns an unsubscribe cleanup function.
+ */
+export function subscribeToCMSLiveUpdates(callback) {
+  if (typeof window === "undefined" || typeof callback !== "function") {
+    return () => {};
+  }
+
+  let isSubscribed = true;
+  let lastKnownVersion = null;
+
+  const triggerUpdate = (info) => {
+    if (!isSubscribed) return;
+    clearCMSCache(undefined, false);
+    try {
+      callback(info);
+    } catch (err) {
+      console.warn("[LiveSync] Callback error:", err);
+    }
+  };
+
+  // 1. Cross-tab custom and storage events
+  const handleLocalEvent = (e) => triggerUpdate({ source: "local", detail: e.detail });
+  const handleStorageEvent = (e) => {
+    if (e.key === "fazilnagar_cms_cache_bust") {
+      triggerUpdate({ source: "storage", stamp: e.newValue });
+    }
+  };
+
+  window.addEventListener("cms-cache-cleared", handleLocalEvent);
+  window.addEventListener("storage", handleStorageEvent);
+
+  // 2. Tab focus / visibility revalidation
+  const handleVisibility = () => {
+    if (document.visibilityState === "visible") {
+      checkServerVersion();
+    }
+  };
+  document.addEventListener("visibilitychange", handleVisibility);
+  window.addEventListener("focus", handleVisibility);
+
+  // 3. Ultra-lightweight background heartbeat polling
+  const checkServerVersion = async () => {
+    if (!isSubscribed) return;
+    try {
+      const res = await API.get("/settings/live-version", {
+        params: { _t: Date.now() },
+        headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+        timeout: 8000,
+      });
+      if (res.data?.success && res.data?.updatedAt) {
+        const serverVersion = res.data.updatedAt;
+        if (lastKnownVersion && lastKnownVersion !== serverVersion) {
+          triggerUpdate({ source: "poll", version: serverVersion });
+        }
+        lastKnownVersion = serverVersion;
+      }
+    } catch (_) {
+      // Fallback silently if offline or network error
+    }
+  };
+
+  // Initial check
+  checkServerVersion();
+
+  // Heartbeat every 6 seconds
+  const intervalId = setInterval(checkServerVersion, 6000);
+
+  return () => {
+    isSubscribed = false;
+    clearInterval(intervalId);
+    window.removeEventListener("cms-cache-cleared", handleLocalEvent);
+    window.removeEventListener("storage", handleStorageEvent);
+    document.removeEventListener("visibilitychange", handleVisibility);
+    window.removeEventListener("focus", handleVisibility);
+  };
 }
 
 /**

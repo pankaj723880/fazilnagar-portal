@@ -18,6 +18,7 @@ import {
   getEvents,
   DEFAULT_EVENTS,
   getCachedEvents,
+  subscribeToCMSLiveUpdates,
 } from "../services/cmsService";
 
 // Lazy-load Leaflet Map to eliminate render-blocking JS and main-thread freeze
@@ -309,22 +310,11 @@ export default function TownPortal() {
 
   useEffect(() => {
     loadCMSData();
-
-    const handleCMSUpdate = () => {
+    const unsubscribe = subscribeToCMSLiveUpdates(() => {
       loadCMSData();
-    };
-
-    window.addEventListener("cms-cache-cleared", handleCMSUpdate);
-    const handleStorage = (e) => {
-      if (e.key === "fazilnagar_cms_cache_bust") {
-        loadCMSData();
-      }
-    };
-    window.addEventListener("storage", handleStorage);
-
+    });
     return () => {
-      window.removeEventListener("cms-cache-cleared", handleCMSUpdate);
-      window.removeEventListener("storage", handleStorage);
+      unsubscribe();
     };
   }, []);
 
@@ -711,18 +701,9 @@ export default function TownPortal() {
             )}
 
             {/* Master Headline */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 leading-tight font-heading drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-8 leading-tight font-heading drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
               {siteSettings.heroContent?.heading || siteSettings.siteName || "Fazilnagar Town Civic & Local Directory"}
-              <span className="block text-xl sm:text-3xl lg:text-3.5xl text-[#FF4D5A] font-bold mt-2 drop-shadow-[0_4px_16px_rgba(255,77,90,0.6)]">
-                {siteSettings.heroContent?.subtitleHindi || siteSettings.taglineHindi || siteSettings.tagline || "Apna Fazilnagar, Apni Pehchaan"}
-              </span>
             </h1>
-
-            {/* Subtitle */}
-            <p className="text-sm sm:text-base text-slate-100 max-w-2xl mx-auto mb-9 font-medium leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
-              {siteSettings.heroContent?.description || siteSettings.seo?.metaDescription ||
-                "Fazilnagar Town Official Civic & Local Directory Portal (PIN 274401, Kushinagar, Uttar Pradesh). Discover verified places, healthcare, schools, emergency helplines, shops, and community updates."}
-            </p>
 
           {/* Smart Search Bar */}
           <div className="max-w-2xl mx-auto relative text-left">
@@ -807,74 +788,6 @@ export default function TownPortal() {
                 )}
               </div>
             )}
-          </div>
-
-          {/* Primary CTA Buttons with Smooth Animations & CMS Configuration */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            {((siteSettings.heroContent?.actionButtons && siteSettings.heroContent.actionButtons.length > 0)
-              ? siteSettings.heroContent.actionButtons
-              : DEFAULT_SITE_SETTINGS.heroContent.actionButtons
-            )
-              .filter((btn) => btn && btn.isActive !== false)
-              .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
-              .map((btn) => {
-                const IconComponent = HERO_ICON_MAP[btn.icon] || Compass;
-                const variantClasses = HERO_BUTTON_VARIANTS[btn.variant] || HERO_BUTTON_VARIANTS.primary;
-                const commonClasses = `inline-flex items-center gap-2 ${variantClasses} text-xs sm:text-sm font-bold px-5 py-2.5 rounded-xl shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200`;
-
-                if (btn.isLink) {
-                  if (btn.target && btn.target.startsWith("http")) {
-                    return (
-                      <a
-                        key={btn.id || btn.label}
-                        href={btn.target}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={commonClasses}
-                      >
-                        <IconComponent className="w-4 h-4" />
-                        <span>{btn.label}</span>
-                      </a>
-                    );
-                  }
-                  return (
-                    <Link
-                      key={btn.id || btn.label}
-                      to={btn.target || "/directory"}
-                      className={commonClasses}
-                    >
-                      <IconComponent className="w-4 h-4" />
-                      <span>{btn.label}</span>
-                    </Link>
-                  );
-                }
-
-                return (
-                  <button
-                    key={btn.id || btn.label}
-                    onClick={(e) => handleSmoothScroll(e, btn.target || "explore-categories")}
-                    className={commonClasses}
-                  >
-                    <IconComponent className="w-4 h-4" />
-                    <span>{btn.label}</span>
-                  </button>
-                );
-              })}
-          </div>
-
-          {/* Town Trust Badges */}
-          <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-300">
-            {((siteSettings.heroContent?.trustBadges && siteSettings.heroContent.trustBadges.length > 0)
-              ? siteSettings.heroContent.trustBadges
-              : DEFAULT_SITE_SETTINGS.heroContent.trustBadges
-            ).map((badge, idx) => {
-              const IconComponent = HERO_ICON_MAP[badge.icon] || ShieldCheck;
-              return (
-                <span key={badge.id || idx} className="flex items-center gap-1.5">
-                  <IconComponent className="w-4 h-4 text-emerald-400" /> {badge.text}
-                </span>
-              );
-            })}
           </div>
         </div>
       </section>

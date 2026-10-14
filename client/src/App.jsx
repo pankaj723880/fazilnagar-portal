@@ -3,7 +3,7 @@ import { Routes, Route, NavLink, Link, useNavigate, useLocation } from "react-ro
 
 import TownPortal from "./pages/TownPortal";
 import { getAuthUser, clearAuthSession } from "./utils/authStorage";
-import { getCachedSettings, DEFAULT_SITE_SETTINGS } from "./services/cmsService";
+import { getCachedSettings, getSiteSettings, DEFAULT_SITE_SETTINGS, subscribeToCMSLiveUpdates } from "./services/cmsService";
 
 // Lazy-Loaded Route Components (Code-split to reduce initial unused JS)
 const News = lazy(() => import("./pages/News"));
@@ -138,15 +138,21 @@ export default function App() {
     };
   }, []);
 
-  // Synchronize dynamic site settings for top civic alert bar
+  // Synchronize dynamic site settings for top civic alert bar & live navigation
   const [siteSettings, setSiteSettings] = useState(() => getCachedSettings() || DEFAULT_SITE_SETTINGS);
   useEffect(() => {
-    const handleCMS = () => setSiteSettings(getCachedSettings() || DEFAULT_SITE_SETTINGS);
-    window.addEventListener("cms-cache-cleared", handleCMS);
-    window.addEventListener("storage", handleCMS);
+    getSiteSettings(true).then((s) => {
+      if (s) setSiteSettings(s);
+    });
+
+    const unsubscribe = subscribeToCMSLiveUpdates(() => {
+      getSiteSettings(true).then((s) => {
+        if (s) setSiteSettings(s);
+      });
+    });
+
     return () => {
-      window.removeEventListener("cms-cache-cleared", handleCMS);
-      window.removeEventListener("storage", handleCMS);
+      unsubscribe();
     };
   }, []);
 
