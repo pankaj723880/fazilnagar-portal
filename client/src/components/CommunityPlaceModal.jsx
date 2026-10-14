@@ -8,6 +8,7 @@ import {
   REVIEW_FLAG_AREAS,
   isWithinTownBoundary,
 } from "../constants/areas";
+import { addTrackedSubmission } from "../utils/notificationService";
 import {
   X,
   MapPin,
@@ -454,6 +455,8 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
 
       if (res.data?.success || res.data?.referenceId || res.data?.submission) {
         const subData = res.data.submission || { ...payload, referenceId: res.data.referenceId };
+        const refId = res.data.referenceId || subData?.referenceId;
+        addTrackedSubmission(refId, payload.phone);
         setSubmittedData(subData);
         if (onSuccess) onSuccess(subData);
       } else {

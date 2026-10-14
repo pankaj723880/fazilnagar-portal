@@ -32,3 +32,47 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+
+// Handle incoming Web Push notifications (desktop laptop popups and mobile notifications)
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (_) {
+    data = { title: 'Fazilnagar Portal', message: event.data ? event.data.text() : 'New update available' };
+  }
+
+  const title = data.title || 'Fazilnagar Portal Alert';
+  const options = {
+    body: data.message || data.body || 'New post, story or verification update received.',
+    icon: data.icon || '/icon-192.svg',
+    badge: '/icon-192.svg',
+    data: {
+      url: data.link || data.url || '/',
+    },
+    vibrate: [200, 100, 200],
+    requireInteraction: false,
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Handle click on desktop popup or mobile notification bar
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const urlToOpen = (event.notification.data && event.notification.data.url) || '/';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.navigate(urlToOpen);
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});

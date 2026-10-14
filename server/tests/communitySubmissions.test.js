@@ -15,17 +15,16 @@ const clientPlacesPath = path.join(__dirname, "../../client/src/data/places.json
 const serverPlaces = JSON.parse(fs.readFileSync(serverPlacesPath, "utf8"));
 const clientPlaces = JSON.parse(fs.readFileSync(clientPlacesPath, "utf8"));
 
-test("1. Archival Integrity: Exactly 22 official places preserved", () => {
+test("1. Archival Integrity: Exactly 19 official places preserved (Schools, Colleges, Hospitals)", () => {
   const publishedPlaces = serverPlaces.filter((p) => p.isArchived !== true && p.isPublished !== false);
   const archivedPlaces = serverPlaces.filter((p) => p.isArchived === true);
 
-  assert.equal(publishedPlaces.length, 22, "Exactly 22 official listings must remain published and unarchived");
+  assert.equal(publishedPlaces.length, 19, "Exactly 19 official listings must remain published and unarchived");
 
-  // Every published place must belong to official allowed categories: Schools, Hospitals, Petrol Pumps
+  // Every published place must belong to official allowed categories: Schools & Colleges, Hospitals & Clinics
   const allowedOfficialCategories = [
     "Hospitals & Clinics",
     "Schools & Colleges",
-    "Petrol Pumps",
   ];
 
   for (const place of publishedPlaces) {

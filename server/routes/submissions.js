@@ -11,6 +11,7 @@ import verifyToken, { requireAdmin } from "../middleware/auth.js";
 import { FAZILNAGAR_AREAS, isWithinTownBoundary } from "../config/areas.js";
 import { detectDuplicates, determineBoundaryStatus, normalizePhone } from "../utils/submissionUtils.js";
 import { uploadMediaToDrive } from "./googleDrive.js";
+import { createBroadcastNotification, createSubmissionNotification } from "../utils/notify.js";
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -248,6 +249,17 @@ router.post("/place", async (req, res) => {
       },
     });
 
+    // Notify submitter of receipt
+    createSubmissionNotification({
+      recipientPhone: phone.trim(),
+      referenceId: submission.referenceId,
+      type: "submission_received",
+      title: "Place Submission Received 📝",
+      message: `Your establishment "${name.trim()}" has been received and queued for review. Reference ID: ${submission.referenceId}`,
+      link: "/directory",
+      data: { submissionId: submission._id, referenceId: submission.referenceId },
+    }).catch(() => {});
+
     res.status(201).json({
       success: true,
       message: "Your place has been submitted for verification. It will appear publicly on the map and directory once approved by town administration.",
@@ -424,6 +436,37 @@ const handlePlaceReview = async (req, res) => {
     }
 
     await submission.save();
+
+    // Trigger user notification and optional town broadcast
+    if (action === "approve") {
+      createSubmissionNotification({
+        recipientPhone: submission.phone,
+        referenceId: submission.referenceId,
+        type: "submission_approved",
+        title: "Place Approved! 🎉",
+        message: `Great news! "${submission.title}" has been approved and is now live on the town directory.`,
+        link: "/directory",
+        data: { submissionId: submission._id, placeId: placeResult?._id },
+      }).catch(() => {});
+
+      createBroadcastNotification({
+        type: "broadcast_place",
+        title: `📍 New Place: ${submission.title}`,
+        message: `${submission.title} (${submission.category}) has been added to Fazilnagar Directory.`,
+        link: "/directory",
+        data: { placeId: placeResult?._id },
+      }).catch(() => {});
+    } else if (action === "reject") {
+      createSubmissionNotification({
+        recipientPhone: submission.phone,
+        referenceId: submission.referenceId,
+        type: "submission_rejected",
+        title: "Place Verification Update",
+        message: `Your place submission "${submission.title}" was rejected: ${submission.rejectionReason || "Verification criteria not met."}`,
+        link: "/directory",
+        data: { submissionId: submission._id },
+      }).catch(() => {});
+    }
 
     res.status(200).json({
       message: `Submission marked as ${submission.status}.`,
@@ -603,6 +646,39 @@ const handleStatusUpdate = async (req, res) => {
     }
 
     await submission.save();
+
+    // Trigger submitter notification and broadcast if approved
+    if (nextStatus === "approved") {
+      createSubmissionNotification({
+        recipientPhone: submission.phone,
+        referenceId: submission.referenceId,
+        type: "submission_approved",
+        title: "Submission Approved! 🎉",
+        message: `Your submission "${submission.title}" (${submission.type}) has been approved by town administration!`,
+        link: submission.type === "business" || submission.type === "community_place" ? "/directory" : "/news",
+        data: { submissionId: submission._id, placeId: placeResult?._id },
+      }).catch(() => {});
+
+      if (submission.type === "business" || submission.type === "community_place") {
+        createBroadcastNotification({
+          type: "broadcast_place",
+          title: `📍 New Place: ${submission.title}`,
+          message: `${submission.title} (${submission.category}) has been added to Fazilnagar Directory.`,
+          link: "/directory",
+          data: { placeId: placeResult?._id },
+        }).catch(() => {});
+      }
+    } else if (nextStatus === "rejected") {
+      createSubmissionNotification({
+        recipientPhone: submission.phone,
+        referenceId: submission.referenceId,
+        type: "submission_rejected",
+        title: "Submission Status Update",
+        message: `Your submission "${submission.title}" was rejected: ${submission.rejectionReason || "Verification criteria not met."}`,
+        link: "/directory",
+        data: { submissionId: submission._id },
+      }).catch(() => {});
+    }
 
     res.status(200).json({
       message: `Submission marked as ${nextStatus}.`,

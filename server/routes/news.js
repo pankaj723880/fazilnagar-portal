@@ -9,6 +9,7 @@ import Like from "../models/Like.js";
 import Comment from "../models/Comment.js";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
 import { uploadMediaToDrive } from "./googleDrive.js";
+import { createBroadcastNotification, createSubmissionNotification } from "../utils/notify.js";
 
 const router = express.Router();
 
@@ -967,6 +968,16 @@ router.post(
         publishedAt: new Date(),
       });
 
+      if (initialPublished) {
+        createBroadcastNotification({
+          type: "broadcast_news",
+          title: `📰 ${news.title}`,
+          message: news.summary || "New story published in Fazilnagar.",
+          link: `/news?storyId=${news._id}`,
+          data: { newsId: news._id },
+        }).catch(() => {});
+      }
+
       res.status(201).json({
         ...news.toObject(),
         moderationMessage: initialPublished
@@ -1185,6 +1196,37 @@ router.patch("/:id/status", verifyToken, requireAdmin, async (req, res) => {
 
     if (!article) {
       return res.status(404).json({ message: "News article not found." });
+    }
+
+    if (status === "approved") {
+      if (article.author) {
+        createSubmissionNotification({
+          recipient: article.author,
+          type: "submission_approved",
+          title: "Story Approved! 🎉",
+          message: `Your story "${article.title}" has been approved and published to the news feed!`,
+          link: `/news?storyId=${article._id}`,
+          data: { newsId: article._id },
+        }).catch(() => {});
+      }
+      createBroadcastNotification({
+        type: "broadcast_news",
+        title: `📰 ${article.title}`,
+        message: article.summary || "New breaking story published in Fazilnagar.",
+        link: `/news?storyId=${article._id}`,
+        data: { newsId: article._id },
+      }).catch(() => {});
+    } else if (status === "rejected") {
+      if (article.author) {
+        createSubmissionNotification({
+          recipient: article.author,
+          type: "submission_rejected",
+          title: "Story Moderation Update",
+          message: `Your story "${article.title}" was not approved for publication.`,
+          link: "/news",
+          data: { newsId: article._id },
+        }).catch(() => {});
+      }
     }
 
     res.status(200).json({ message: `News status updated to ${status}.`, article });

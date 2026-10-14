@@ -23,7 +23,6 @@ import {
   Filter,
   ArrowUpDown,
   ArrowLeft,
-  Download,
   PlusCircle,
   AlertTriangle,
   Building,
@@ -702,28 +701,6 @@ export default function Directory({ user }) {
               <span>+ Add Place</span>
             </button>
 
-            {isAdmin && (
-              <button
-                onClick={() => {
-                  setEditModalPlace(null);
-                  setShowEditModal(true);
-                }}
-                className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow-xs cursor-pointer active:scale-95"
-                title="Create official civic place (Admin direct)"
-              >
-                <PlusCircle className="w-4 h-4" />
-                <span>+ Official Place</span>
-              </button>
-            )}
-
-            <a
-              href={`${API.defaults.baseURL || "https://fazilnagar-portal.onrender.com/api"}/places/export/csv`}
-              className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-700 transition"
-              title="Download CSV directory"
-            >
-              <Download className="w-3.5 h-3.5 text-emerald-400" />
-              <span>CSV</span>
-            </a>
 
             {isAdmin && (
               <button

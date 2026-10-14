@@ -24,6 +24,7 @@ const About = lazy(() => import("./pages/About"));
 const AdminReview = lazy(() => import("./pages/AdminReview"));
 import InstallButton from "./components/InstallButton";
 import DirectionsModal from "./components/DirectionsModal";
+import NotificationCenter from "./components/NotificationCenter";
 import { GlobalFloatingAndStickyAds } from "./components/AdvertisementSlot";
 import { Home, Compass, PhoneCall, Newspaper, Menu, X, ShieldAlert } from "lucide-react";
 
@@ -249,6 +250,8 @@ export default function App() {
 
             {/* Auth & Post Actions Bar */}
             <div className="hidden sm:flex items-center gap-2.5 shrink-0">
+              <NotificationCenter />
+
               {/* Add Story Button - Always visible to all users (Normal users, citizens, & visitors) */}
               <Link
                 to="/create-news"
@@ -297,8 +300,9 @@ export default function App() {
               )}
             </div>
 
-            {/* Mobile Actions: Only +Story button (Upper hamburger and upper install button removed) */}
-            <div className="flex sm:hidden items-center gap-2">
+            {/* Mobile Actions: Notification Bell + Add Story */}
+            <div className="flex sm:hidden items-center gap-1.5">
+              <NotificationCenter />
               <Link
                 to="/create-news"
                 className="bg-[#B8323C] hover:bg-red-700 text-white text-[11px] font-black px-2.5 py-1.5 rounded-xl flex items-center gap-1 shadow-xs"
