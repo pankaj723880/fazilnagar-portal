@@ -16,6 +16,25 @@ describe("CMS Models & Dynamic Schemas Verification", () => {
     assert.ok(settings.contact.officialPhone);
     assert.ok(settings.sections.interactiveMap);
     assert.ok(settings.sections.heroCarousel);
+
+    // Verify Homepage CMS Schemas
+    assert.ok(settings.topAlertBar.enabled);
+    assert.equal(settings.topAlertBar.badgeText, "LIVE CIVIC");
+    assert.equal(settings.navigation.brandFirst, "FAZIL");
+    assert.equal(settings.navigation.brandSecond, "NAGAR");
+    assert.ok(Array.isArray(settings.navigation.navItems));
+    assert.ok(settings.navigation.navItems.length >= 7);
+    assert.ok(Array.isArray(settings.heroContent.trustBadges));
+    assert.ok(settings.heroContent.trustBadges.length >= 3);
+    assert.ok(Array.isArray(settings.heroContent.actionButtons));
+    assert.ok(settings.heroContent.actionButtons.length >= 5);
+    assert.equal(settings.homepageSections.explore.title, "Explore Fazilnagar");
+    assert.ok(Array.isArray(settings.homepageSections.publicServices.cards));
+    assert.ok(settings.homepageSections.publicServices.cards.length >= 4);
+    assert.equal(settings.homepageSections.map.title, "Explore Fazilnagar on Map");
+    assert.equal(settings.homepageSections.events.title, "Upcoming Events & Town Melas");
+    assert.ok(settings.homepageSections.heritage.title.includes("Twin Heritage"));
+    assert.ok(settings.footer.copyrightText.includes("Fazilnagar"));
   });
 
   it("PublicService validates category and required fields", () => {

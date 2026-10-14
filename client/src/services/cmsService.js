@@ -102,7 +102,147 @@ export const DEFAULT_SITE_SETTINGS = {
     copyrightText: "© 2026 Fazilnagar Town Portal. Dedicated to the residents and visitors of Fazilnagar, Kushinagar, UP.",
     disclaimer: "All institutional locations verified by municipal mapping coordinates. Independent civic public resource.",
   },
+  topAlertBar: {
+    enabled: true,
+    badgeText: "LIVE CIVIC",
+    text: "Fazilnagar Town Official Civic & Local Directory Portal (PIN 274401)",
+    helplineLabel: "📞 Helpline",
+    helplineNumber: "112",
+  },
+  navigation: {
+    brandFirst: "FAZIL",
+    brandSecond: "NAGAR",
+    tagline: "Your Town. Your Community.",
+    actionButtonText: "+ Add Story",
+    actionButtonLink: "/create-news",
+    navItems: [
+      { id: "home", label: "Home", path: "/", badge: "", isExternal: false, isActive: true, displayOrder: 1 },
+      { id: "explore", label: "Explore", path: "/#explore-categories", badge: "", isExternal: false, isActive: true, displayOrder: 2 },
+      { id: "directory", label: "Directory", path: "/directory", badge: "37", isExternal: false, isActive: true, displayOrder: 3 },
+      { id: "events", label: "Events & Melas", path: "/#events-melas-section", badge: "", isExternal: false, isActive: true, displayOrder: 4 },
+      { id: "map", label: "Map", path: "/#town-map-section", badge: "", isExternal: false, isActive: true, displayOrder: 5 },
+      { id: "news", label: "Local Updates", path: "/news", badge: "", isExternal: false, isActive: true, displayOrder: 6 },
+      { id: "heritage", label: "Twin Heritage", path: "/#about-fazilnagar-section", badge: "", isExternal: false, isActive: true, displayOrder: 7 },
+    ],
+  },
+  heroContent: {
+    badgeLocation: "Kushinagar",
+    badgeText: "Official Civic Portal",
+    badgeSubtext: "Nagar Panchayat Fazilnagar • Kushinagar (PIN 274401)",
+    heading: "",
+    subheadingHindi: "",
+    description: "Official digital civic portal for Fazilnagar town. Verified schools, colleges, hospitals, emergency aid, local news, and community directory in Kushinagar, UP.",
+    searchPlaceholder: "Search schools, hospitals, medical stores, sweet shops…",
+    searchButtonText: "Search",
+    trustBadges: [
+      { id: "tb-1", label: "Strictly Inside Town Limits", icon: "ShieldCheck", isActive: true },
+      { id: "tb-2", label: "Exact Ground Coordinates", icon: "Navigation", isActive: true },
+      { id: "tb-3", label: "Ancient Pawanagar Heritage", icon: "Landmark", isActive: true },
+    ],
+    actionButtons: [
+      { id: "btn-explore", label: "Explore Town", icon: "Compass", target: "explore-categories", isLink: false, variant: "primary", isActive: true, displayOrder: 1 },
+      { id: "btn-events", label: "Events & Melas", icon: "Calendar", target: "events-melas-section", isLink: false, variant: "secondary", isActive: true, displayOrder: 2 },
+      { id: "btn-heritage", label: "Twin Heritage", icon: "Landmark", target: "about-fazilnagar-section", isLink: false, variant: "accent", isActive: true, displayOrder: 3 },
+      { id: "btn-map", label: "Map", icon: "Map", target: "town-map-section", isLink: false, variant: "ghost", isActive: true, displayOrder: 4 },
+      { id: "btn-add", label: "+ Add Place", icon: "PlusCircle", target: "/directory?add=true", isLink: true, variant: "emerald", isActive: true, displayOrder: 5 },
+    ],
+  },
+  homepageSections: {
+    explore: {
+      badge: "Civic Directory Index",
+      title: "Explore Fazilnagar",
+      subtitle: "Verified institutions across schools, colleges, hospitals, and fuel stations.",
+      buttonText: "Open Full Directory",
+      buttonLink: "/directory",
+    },
+    publicServices: {
+      badge: "Public Welfare & Emergency",
+      title: "Essential Public Services",
+      subtitle: "Emergency numbers, primary healthcare, pharmacy points, and administrative offices in Fazilnagar.",
+      cards: [
+        {
+          id: "service-chc",
+          badge: "24/7 Healthcare",
+          title: "Community Health Centre (CHC)",
+          address: "Hospital Road, Fazilnagar - 274401",
+          description: "Emergency ward, routine maternal delivery, vaccination and ambulance hub.",
+          phone: "05564-222102",
+          actionType: "directions",
+          actionLabel: "Directions",
+          isActive: true,
+          displayOrder: 1,
+        },
+        {
+          id: "service-police",
+          badge: "Law & Order",
+          title: "Fazilnagar Police Chowki",
+          address: "NH-27 Highway Chowk, Fazilnagar",
+          description: "Emergency police assistance under Pataherwa PS jurisdiction.",
+          phone: "112",
+          actionType: "directions",
+          actionLabel: "Directions",
+          isActive: true,
+          displayOrder: 2,
+        },
+        {
+          id: "service-post",
+          badge: "Postal Services",
+          title: "Fazilnagar Sub Post Office",
+          address: "Block Road, Fazilnagar (PIN 274401)",
+          description: "Speed Post, postal parcels, savings schemes, and Aadhaar-enabled payments.",
+          phone: "05564-222120",
+          statusLabel: "09:00–17:00",
+          isActive: true,
+          displayOrder: 3,
+        },
+        {
+          id: "service-power",
+          badge: "Power Utility",
+          title: "UPPCL 33/11kV Substation",
+          address: "Block Road Perimeter, Fazilnagar",
+          description: "Electricity distribution control, billing queries, and transformer outages.",
+          phone: "1912",
+          statusLabel: "24x7 Control",
+          isActive: true,
+          displayOrder: 4,
+        },
+      ],
+    },
+    map: {
+      badge: "Geospatial Verification",
+      title: "Explore Fazilnagar on Map",
+      subtitle: "Every pin uses exact decimal coordinates along the NH-27, College Road, and Hospital Road axis.",
+      coordinatesText: "26.6827° N, 84.0498° E",
+    },
+    events: {
+      badge: "Town Fairs, Melas & Cultural Celebrations",
+      title: "Upcoming Events & Town Melas",
+      subtitle: "Experience the vibrant community life of Fazilnagar — from the sacred Pawapuri Nirvana Mela to civic festivals, devotional aartis, and annual town gatherings.",
+      ctaText: "+ Submit Event / Mela",
+    },
+    heritage: {
+      badge: "Town Profile, Antiquity & Sacred Heritage",
+      title: "Fazilnagar & Kushinagar: The Sacred Twin Heritage",
+      subtitle: "Explore the deep 2,600-year-old antiquity, sacred spiritual milestones of Bhagwan Mahavira and Lord Buddha, and modern civic significance of the two historic capitals of the ancient Malla Republic.",
+      tab1Label: "🏛️ Fazilnagar (Pawanagar)",
+      tab2Label: "☸️ Kushinagar (Mahaparinirvana)",
+      tab3Label: "✨ The Twin Sacred Bond",
+    },
+  },
 };
+
+function deepMerge(target, source) {
+  if (!source) return target;
+  const output = { ...target };
+  Object.keys(source).forEach((key) => {
+    if (source[key] !== null && typeof source[key] === "object" && !Array.isArray(source[key])) {
+      output[key] = deepMerge(target[key] || {}, source[key]);
+    } else if (source[key] !== undefined) {
+      output[key] = source[key];
+    }
+  });
+  return output;
+}
 
 /**
  * Fetches centralized site settings with fallback and memory cache.
@@ -120,7 +260,7 @@ export async function getSiteSettings(forceFresh = false) {
       timeout: 30000,
     });
     if (res.data?.success && res.data?.settings) {
-      const merged = { ...DEFAULT_SITE_SETTINGS, ...res.data.settings };
+      const merged = deepMerge(DEFAULT_SITE_SETTINGS, res.data.settings);
       setPersistentCache("settings", merged);
       memoryCache.settings = { data: merged, timestamp: now };
       return merged;

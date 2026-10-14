@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   X,
   ExternalLink,
+  Globe,
 } from "lucide-react";
 
 export default function AdminSidebar({
@@ -47,6 +48,13 @@ export default function AdminSidebar({
     {
       title: "WEBSITE & CONTENT",
       items: [
+        {
+          id: "cms-homepage",
+          label: "Homepage Content",
+          icon: Globe,
+          badge: "New CMS",
+          badgeColor: "bg-emerald-950 text-emerald-300 border border-emerald-800/80 font-bold",
+        },
         {
           id: "cms-settings",
           label: "Site Settings",

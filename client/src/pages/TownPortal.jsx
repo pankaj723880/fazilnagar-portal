@@ -166,8 +166,33 @@ const VERIFIED_TOWN_PLACES = [
   },
 ];
 
-// Verified Landmark & Heritage Images for Hero Carousel (Empty by default per configuration)
-const KUSHINAGAR_FAZILNAGAR_HERO_IMAGES = [];
+// Dynamic Icon Map for CMS-managed buttons, cards, and badges
+const HERO_ICON_MAP = {
+  Compass,
+  Calendar,
+  Landmark,
+  Map,
+  PlusCircle,
+  ShieldCheck,
+  Navigation,
+  Sparkles,
+  PhoneCall,
+  Store,
+  GraduationCap,
+  Stethoscope,
+  Info,
+  Layers,
+  LayoutGrid,
+  Search,
+};
+
+const HERO_BUTTON_VARIANTS = {
+  primary: "bg-[#B8323C] hover:bg-[#991B1B] text-white shadow-lg",
+  amber: "bg-amber-600 hover:bg-amber-700 text-white shadow-lg",
+  dark: "bg-slate-800/80 hover:bg-slate-800 text-white border border-white/20 backdrop-blur-md shadow-lg",
+  glass: "bg-white/15 hover:bg-white/25 text-white border border-white/25 backdrop-blur-md shadow-lg",
+  emerald: "bg-[#0D5E49] hover:bg-emerald-800 text-white shadow-lg",
+};
 
 function matchesCategory(placeCat, placeSubcat, targetCat) {
   if (!targetCat || targetCat === "all" || targetCat === "All") return true;
@@ -648,6 +673,9 @@ export default function TownPortal() {
                       width="1200"
                       height="600"
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
                       className="w-full h-full object-cover object-center animate-ken-burns scale-105 transition-transform duration-1000 ease-out"
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/35 to-black/75 z-20"></div>
@@ -673,26 +701,26 @@ export default function TownPortal() {
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-slate-100 font-medium mb-5 shadow-xl animate-fade-in-up">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span className="text-emerald-300 font-bold">
-                  📍 Official Civic Portal
+                  📍 {siteSettings.heroContent?.badgeLocation || "Official Civic Portal"}
                 </span>
                 <span className="text-slate-400">•</span>
                 <span className="font-semibold text-slate-200">
-                  Nagar Panchayat Fazilnagar • Kushinagar (PIN 274401)
+                  {siteSettings.heroContent?.badgeTitle || "Nagar Panchayat Fazilnagar • Kushinagar (PIN 274401)"}
                 </span>
               </div>
             )}
 
             {/* Master Headline */}
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 leading-tight font-heading drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
-              {siteSettings.siteName || "Fazilnagar Town Civic & Local Directory"}
+              {siteSettings.heroContent?.heading || siteSettings.siteName || "Fazilnagar Town Civic & Local Directory"}
               <span className="block text-xl sm:text-3xl lg:text-3.5xl text-[#FF4D5A] font-bold mt-2 drop-shadow-[0_4px_16px_rgba(255,77,90,0.6)]">
-                {siteSettings.taglineHindi || siteSettings.tagline || "Apna Fazilnagar, Apni Pehchaan"}
+                {siteSettings.heroContent?.subtitleHindi || siteSettings.taglineHindi || siteSettings.tagline || "Apna Fazilnagar, Apni Pehchaan"}
               </span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-sm sm:text-base text-slate-100 max-w-2xl mx-auto mb-9 font-medium leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
-              {siteSettings.seo?.metaDescription ||
+              {siteSettings.heroContent?.description || siteSettings.seo?.metaDescription ||
                 "Fazilnagar Town Official Civic & Local Directory Portal (PIN 274401, Kushinagar, Uttar Pradesh). Discover verified places, healthcare, schools, emergency helplines, shops, and community updates."}
             </p>
 
@@ -703,7 +731,7 @@ export default function TownPortal() {
                 <Search className="w-5 h-5 text-[#647180] flex-shrink-0" />
                 <input
                   type="text"
-                  placeholder="Search schools, hospitals, medical stores, sweet shops…"
+                  placeholder={siteSettings.heroContent?.searchPlaceholder || "Search schools, hospitals, medical stores, sweet shops…"}
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
@@ -736,7 +764,7 @@ export default function TownPortal() {
                 }}
                 className="w-full sm:w-auto bg-[#18232E] hover:bg-[#B8323C] text-white px-6 py-2.5 rounded-xl font-bold text-xs tracking-wide transition shadow-sm whitespace-nowrap flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>Search</span>
+                <span>{siteSettings.heroContent?.searchButtonText || "Search"}</span>
                 <ArrowRight className="w-3.5 h-3.5 text-slate-300" />
               </button>
             </div>
@@ -781,56 +809,72 @@ export default function TownPortal() {
             )}
           </div>
 
-          {/* Primary CTA Buttons with Smooth Animations */}
+          {/* Primary CTA Buttons with Smooth Animations & CMS Configuration */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <button
-              onClick={(e) => handleSmoothScroll(e, "explore-categories")}
-              className="inline-flex items-center gap-2 bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs sm:text-sm font-bold px-5 py-2.5 rounded-xl shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200"
-            >
-              <Compass className="w-4 h-4" />
-              <span>Explore Town</span>
-            </button>
-            <button
-              onClick={(e) => handleSmoothScroll(e, "events-melas-section")}
-              className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-bold px-5 py-2.5 rounded-xl shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200"
-            >
-              <Calendar className="w-4 h-4 text-amber-200" />
-              <span>Events & Melas</span>
-            </button>
-            <button
-              onClick={(e) => handleSmoothScroll(e, "about-fazilnagar-section")}
-              className="inline-flex items-center gap-2 bg-slate-800/80 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold px-5 py-2.5 rounded-xl border border-white/20 backdrop-blur-md shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200"
-            >
-              <Landmark className="w-4 h-4 text-amber-300" />
-              <span>Twin Heritage</span>
-            </button>
-            <button
-              onClick={(e) => handleSmoothScroll(e, "town-map-section")}
-              className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 text-white text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-xl border border-white/25 backdrop-blur-md shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200"
-            >
-              <Map className="w-4 h-4 text-emerald-400" />
-              <span>Map</span>
-            </button>
-            <Link
-              to="/directory?add=true"
-              className="inline-flex items-center gap-2 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold px-5 py-2.5 rounded-xl shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>+ Add Place</span>
-            </Link>
+            {((siteSettings.heroContent?.actionButtons && siteSettings.heroContent.actionButtons.length > 0)
+              ? siteSettings.heroContent.actionButtons
+              : DEFAULT_SITE_SETTINGS.heroContent.actionButtons
+            )
+              .filter((btn) => btn && btn.isActive !== false)
+              .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+              .map((btn) => {
+                const IconComponent = HERO_ICON_MAP[btn.icon] || Compass;
+                const variantClasses = HERO_BUTTON_VARIANTS[btn.variant] || HERO_BUTTON_VARIANTS.primary;
+                const commonClasses = `inline-flex items-center gap-2 ${variantClasses} text-xs sm:text-sm font-bold px-5 py-2.5 rounded-xl shadow-lg transition cursor-pointer hover:scale-105 active:scale-95 duration-200`;
+
+                if (btn.isLink) {
+                  if (btn.target && btn.target.startsWith("http")) {
+                    return (
+                      <a
+                        key={btn.id || btn.label}
+                        href={btn.target}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={commonClasses}
+                      >
+                        <IconComponent className="w-4 h-4" />
+                        <span>{btn.label}</span>
+                      </a>
+                    );
+                  }
+                  return (
+                    <Link
+                      key={btn.id || btn.label}
+                      to={btn.target || "/directory"}
+                      className={commonClasses}
+                    >
+                      <IconComponent className="w-4 h-4" />
+                      <span>{btn.label}</span>
+                    </Link>
+                  );
+                }
+
+                return (
+                  <button
+                    key={btn.id || btn.label}
+                    onClick={(e) => handleSmoothScroll(e, btn.target || "explore-categories")}
+                    className={commonClasses}
+                  >
+                    <IconComponent className="w-4 h-4" />
+                    <span>{btn.label}</span>
+                  </button>
+                );
+              })}
           </div>
 
           {/* Town Trust Badges */}
           <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-300">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" /> Strictly Inside Town Limits
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Navigation className="w-4 h-4 text-emerald-400" /> Exact Ground Coordinates
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Landmark className="w-4 h-4 text-amber-400" /> Ancient Pawanagar Heritage
-            </span>
+            {((siteSettings.heroContent?.trustBadges && siteSettings.heroContent.trustBadges.length > 0)
+              ? siteSettings.heroContent.trustBadges
+              : DEFAULT_SITE_SETTINGS.heroContent.trustBadges
+            ).map((badge, idx) => {
+              const IconComponent = HERO_ICON_MAP[badge.icon] || ShieldCheck;
+              return (
+                <span key={badge.id || idx} className="flex items-center gap-1.5">
+                  <IconComponent className="w-4 h-4 text-emerald-400" /> {badge.text}
+                </span>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -844,20 +888,20 @@ export default function TownPortal() {
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B8323C] uppercase tracking-wider mb-1">
               <LayoutGrid className="w-3.5 h-3.5" />
-              <span>Civic Directory Index</span>
+              <span>{siteSettings?.homepageSections?.explore?.badge || "Civic Directory Index"}</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-extrabold text-[#18232E] tracking-tight font-heading">
-              Explore Fazilnagar
+              {siteSettings?.homepageSections?.explore?.title || "Explore Fazilnagar"}
             </h2>
             <p className="text-xs sm:text-sm text-[#647180] mt-1">
-              Verified institutions across schools, colleges, hospitals, and fuel stations.
+              {siteSettings?.homepageSections?.explore?.subtitle || "Verified institutions across schools, colleges, hospitals, and fuel stations."}
             </p>
           </div>
           <Link
             to="/directory"
             className="text-xs font-bold px-4 py-2.5 rounded-xl bg-[#18232E] hover:bg-[#B8323C] text-white transition self-start md:self-auto cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-95 duration-150"
           >
-            <span>Open Full Directory</span>
+            <span>{siteSettings?.homepageSections?.explore?.viewAllText || "Open Full Directory"}</span>
             <ChevronRight className="w-3.5 h-3.5 text-amber-400" />
           </Link>
         </div>
@@ -914,108 +958,52 @@ export default function TownPortal() {
           <div className="mb-10">
             <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0D5E49] uppercase tracking-wider mb-1">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Public Welfare & Emergency</span>
+              <span>{siteSettings?.homepageSections?.publicServices?.badge || "Public Welfare & Emergency"}</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#18232E] tracking-tight font-heading">
-              Essential Public Services
+              {siteSettings?.homepageSections?.publicServices?.title || "Essential Public Services"}
             </h2>
             <p className="text-xs sm:text-sm text-[#647180] mt-1">
-              Emergency numbers, primary healthcare, pharmacy points, and administrative offices in Fazilnagar.
+              {siteSettings?.homepageSections?.publicServices?.subtitle || "Emergency numbers, primary healthcare, pharmacy points, and administrative offices in Fazilnagar."}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* CHC Government Hospital */}
-            <div className="bg-[#F5F7F8] p-5 rounded-2xl border border-[#E1E6EA] flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-extrabold text-[#B8323C] uppercase tracking-wider block mb-1">
-                  24/7 Healthcare
-                </span>
-                <h3 className="text-sm font-bold text-[#18232E]">Community Health Centre (CHC)</h3>
-                <p className="text-xs text-[#647180] mt-1">Hospital Road, Fazilnagar - 274401</p>
-                <p className="text-[11px] text-slate-600 mt-2">
-                  Emergency ward, routine maternal delivery, vaccination and ambulance hub.
-                </p>
+            {((siteSettings?.homepageSections?.publicServices?.cards && siteSettings.homepageSections.publicServices.cards.length > 0)
+              ? siteSettings.homepageSections.publicServices.cards
+              : DEFAULT_SITE_SETTINGS.homepageSections.publicServices.cards
+            ).map((card, idx) => (
+              <div key={card.id || idx} className="bg-[#F5F7F8] p-5 rounded-2xl border border-[#E1E6EA] flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] font-extrabold text-[#B8323C] uppercase tracking-wider block mb-1">
+                    {card.badge}
+                  </span>
+                  <h3 className="text-sm font-bold text-[#18232E]">{card.title}</h3>
+                  <p className="text-xs text-[#647180] mt-1">{card.address}</p>
+                  <p className="text-[11px] text-slate-600 mt-2">
+                    {card.description}
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-[#E1E6EA] mt-4 flex items-center justify-between">
+                  {card.phone ? (
+                    <a href={`tel:${card.phone.replace(/[^0-9+]/g, "")}`} className="text-xs font-bold text-[#18232E] hover:text-[#B8323C]">
+                      {card.phoneLabel || `📞 ${card.phone}`}
+                    </a>
+                  ) : (
+                    <span className="text-[10px] text-slate-400 font-semibold">{card.hours || "General"}</span>
+                  )}
+                  {card.directions && (
+                    <button
+                      type="button"
+                      onClick={() => openGoogleMapsDirections({ name: card.title, landmark: card.address, lat: 26.6827, lng: 84.0498 })}
+                      className="text-xs font-bold text-[#0D5E49] hover:underline cursor-pointer"
+                    >
+                      Directions
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="pt-4 border-t border-[#E1E6EA] mt-4 flex items-center justify-between">
-                <a href="tel:05564222102" className="text-xs font-bold text-[#18232E] hover:text-[#B8323C]">
-                  📞 05564-222102
-                </a>
-                <button
-                  type="button"
-                  onClick={() => openGoogleMapsDirections({ name: "Community Health Centre (CHC)", lat: 26.6818, lng: 84.0531, landmark: "Hospital Road, Fazilnagar" })}
-                  className="text-xs font-bold text-[#0D5E49] hover:underline cursor-pointer"
-                >
-                  Directions
-                </button>
-              </div>
-            </div>
-
-            {/* Police Chowki */}
-            <div className="bg-[#F5F7F8] p-5 rounded-2xl border border-[#E1E6EA] flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-extrabold text-[#B8323C] uppercase tracking-wider block mb-1">
-                  Law & Order
-                </span>
-                <h3 className="text-sm font-bold text-[#18232E]">Fazilnagar Police Chowki</h3>
-                <p className="text-xs text-[#647180] mt-1">NH-27 Highway Chowk, Fazilnagar</p>
-                <p className="text-[11px] text-slate-600 mt-2">
-                  Emergency police assistance under Pataherwa PS jurisdiction.
-                </p>
-              </div>
-              <div className="pt-4 border-t border-[#E1E6EA] mt-4 flex items-center justify-between">
-                <a href="tel:112" className="text-xs font-bold text-[#18232E] hover:text-[#B8323C]">
-                  🚨 Helpline: 112
-                </a>
-                <button
-                  type="button"
-                  onClick={() => openGoogleMapsDirections({ name: "Fazilnagar Police Chowki", lat: 26.6839, lng: 84.0501, landmark: "NH-27 Highway Chowk, Fazilnagar" })}
-                  className="text-xs font-bold text-[#0D5E49] hover:underline cursor-pointer"
-                >
-                  Directions
-                </button>
-              </div>
-            </div>
-
-            {/* Sub Post Office */}
-            <div className="bg-[#F5F7F8] p-5 rounded-2xl border border-[#E1E6EA] flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-extrabold text-[#0D5E49] uppercase tracking-wider block mb-1">
-                  Postal Services
-                </span>
-                <h3 className="text-sm font-bold text-[#18232E]">Fazilnagar Sub Post Office</h3>
-                <p className="text-xs text-[#647180] mt-1">Block Road, Fazilnagar (PIN 274401)</p>
-                <p className="text-[11px] text-slate-600 mt-2">
-                  Speed Post, postal parcels, savings schemes, and Aadhaar-enabled payments.
-                </p>
-              </div>
-              <div className="pt-4 border-t border-[#E1E6EA] mt-4 flex items-center justify-between">
-                <a href="tel:05564222120" className="text-xs font-bold text-[#18232E] hover:text-[#B8323C]">
-                  📞 05564-222120
-                </a>
-                <span className="text-[10px] text-slate-400 font-semibold">09:00–17:00</span>
-              </div>
-            </div>
-
-            {/* Electricity Substation */}
-            <div className="bg-[#F5F7F8] p-5 rounded-2xl border border-[#E1E6EA] flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-extrabold text-[#647180] uppercase tracking-wider block mb-1">
-                  Power Utility
-                </span>
-                <h3 className="text-sm font-bold text-[#18232E]">UPPCL 33/11kV Substation</h3>
-                <p className="text-xs text-[#647180] mt-1">Block Road Perimeter, Fazilnagar</p>
-                <p className="text-[11px] text-slate-600 mt-2">
-                  Electricity distribution control, billing queries, and transformer outages.
-                </p>
-              </div>
-              <div className="pt-4 border-t border-[#E1E6EA] mt-4 flex items-center justify-between">
-                <a href="tel:1912" className="text-xs font-bold text-[#18232E] hover:text-[#B8323C]">
-                  ⚡ Helpline: 1912
-                </a>
-                <span className="text-[10px] text-emerald-700 font-semibold">24x7 Control</span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -1029,13 +1017,13 @@ export default function TownPortal() {
             <div>
               <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0D5E49] uppercase tracking-wider mb-1">
                 <Map className="w-3.5 h-3.5" />
-                <span>Geospatial Verification</span>
+                <span>{siteSettings?.homepageSections?.map?.badge || "Geospatial Verification"}</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-[#18232E] tracking-tight font-heading">
-                Explore Fazilnagar on Map
+                {siteSettings?.homepageSections?.map?.title || "Explore Fazilnagar on Map"}
               </h2>
               <p className="text-xs sm:text-sm text-[#647180] mt-1">
-                Every pin uses exact decimal coordinates along the NH-27, College Road, and Hospital Road axis.
+                {siteSettings?.homepageSections?.map?.subtitle || "Every pin uses exact decimal coordinates along the NH-27, College Road, and Hospital Road axis."}
               </p>
             </div>
 
@@ -1072,7 +1060,7 @@ export default function TownPortal() {
 
               <div className="text-[11px] text-[#18232E] bg-white px-3 py-1.5 rounded-xl border border-[#E1E6EA] font-semibold hidden sm:flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-[#0D5E49] animate-pulse"></span>
-                <span>26.6827° N, 84.0498° E</span>
+                <span>{siteSettings?.homepageSections?.map?.coordinatesText || "26.6827° N, 84.0498° E"}</span>
               </div>
             </div>
           </div>
@@ -1517,13 +1505,13 @@ export default function TownPortal() {
             <div>
               <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 uppercase tracking-wider mb-2 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
                 <Calendar className="w-3.5 h-3.5 text-amber-600" />
-                <span>Town Fairs, Melas & Cultural Celebrations</span>
+                <span>{siteSettings?.homepageSections?.events?.badge || "Town Fairs, Melas & Cultural Celebrations"}</span>
               </div>
               <h2 className="text-2xl sm:text-4xl font-extrabold text-[#18232E] tracking-tight font-heading">
-                Upcoming Events & Town Melas
+                {siteSettings?.homepageSections?.events?.title || "Upcoming Events & Town Melas"}
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
-                Experience the vibrant community life of Fazilnagar — from the sacred Pawapuri Nirvana Mela to civic festivals, devotional aartis, and annual town gatherings.
+                {siteSettings?.homepageSections?.events?.subtitle || "Experience the vibrant community life of Fazilnagar — from the sacred Pawapuri Nirvana Mela to civic festivals, devotional aartis, and annual town gatherings."}
               </p>
             </div>
 
@@ -1537,7 +1525,7 @@ export default function TownPortal() {
                 className="inline-flex items-center gap-1.5 bg-[#0D5E49] hover:bg-[#0a4838] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-xs cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>+ Submit Event / Mela</span>
+                <span>{siteSettings?.homepageSections?.events?.ctaText || "+ Submit Event / Mela"}</span>
               </button>
             </div>
           </div>
@@ -1893,14 +1881,13 @@ export default function TownPortal() {
           <div className="text-center max-w-3xl mx-auto mb-10">
             <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B8323C] uppercase tracking-wider mb-2 bg-red-50 px-3 py-1 rounded-full border border-red-100">
               <BookOpen className="w-3.5 h-3.5" />
-              <span>Town Profile, Antiquity & Sacred Heritage</span>
+              <span>{siteSettings?.homepageSections?.heritage?.badge || "Town Profile, Antiquity & Sacred Heritage"}</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-extrabold text-[#18232E] tracking-tight mb-3 font-heading">
-              Fazilnagar & Kushinagar: The Sacred Twin Heritage
+              {siteSettings?.homepageSections?.heritage?.title || "Fazilnagar & Kushinagar: The Sacred Twin Heritage"}
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              Explore the deep 2,600-year-old antiquity, sacred spiritual milestones of Bhagwan Mahavira and Lord Buddha,
-              and modern civic significance of the two historic capitals of the ancient Malla Republic.
+              {siteSettings?.homepageSections?.heritage?.subtitle || "Explore the deep 2,600-year-old antiquity, sacred spiritual milestones of Bhagwan Mahavira and Lord Buddha, and modern civic significance of the two historic capitals of the ancient Malla Republic."}
             </p>
 
             {/* Interactive Tab Switcher */}
@@ -1914,7 +1901,7 @@ export default function TownPortal() {
                     : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
                 }`}
               >
-                <span>🏛️ Fazilnagar (Pawanagar)</span>
+                <span>{siteSettings?.homepageSections?.heritage?.tab1Label || "🏛️ Fazilnagar (Pawanagar)"}</span>
               </button>
               <button
                 type="button"
@@ -1925,7 +1912,7 @@ export default function TownPortal() {
                     : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
                 }`}
               >
-                <span>☸️ Kushinagar (Mahaparinirvana)</span>
+                <span>{siteSettings?.homepageSections?.heritage?.tab2Label || "☸️ Kushinagar (Mahaparinirvana)"}</span>
               </button>
               <button
                 type="button"
@@ -1936,7 +1923,7 @@ export default function TownPortal() {
                     : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
                 }`}
               >
-                <span>✨ The Twin Sacred Bond</span>
+                <span>{siteSettings?.homepageSections?.heritage?.tab3Label || "✨ The Twin Sacred Bond"}</span>
               </button>
             </div>
           </div>
@@ -2424,16 +2411,16 @@ export default function TownPortal() {
               </div>
               <div>
                 <span className="text-white font-extrabold text-sm tracking-tight font-heading block">
-                  FAZIL<span className="text-[#B8323C]">NAGAR</span>
+                  {siteSettings?.navigation?.brandFirst || "FAZIL"}<span className="text-[#B8323C]">{siteSettings?.navigation?.brandSecond || "NAGAR"}</span>
                 </span>
-                <span className="text-[10px] text-slate-400">Your Town. Your Community.</span>
+                <span className="text-[10px] text-slate-400">{siteSettings?.navigation?.tagline || "Your Town. Your Community."}</span>
               </div>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed">
-              Fazilnagar Town Local Directory & Civic Information Platform. Ground-verified coordinates and transparent public data for residents and visitors.
+              {siteSettings?.footer?.aboutText || "Fazilnagar Town Local Directory & Civic Information Platform. Ground-verified coordinates and transparent public data for residents and visitors."}
             </p>
             <p className="text-[10px] text-slate-400 italic">
-              Notice: An independent community directory for Fazilnagar town. Not affiliated with any official government ministry without explicit authorization.
+              {siteSettings?.footer?.disclaimerText || "Notice: An independent community directory for Fazilnagar town. Not affiliated with any official government ministry without explicit authorization."}
             </p>
           </div>
 

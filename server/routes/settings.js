@@ -1,5 +1,9 @@
-import express from "express";
-import SiteSettings from "../models/SiteSettings.js";
+import SiteSettings, {
+  DEFAULT_NAV_ITEMS,
+  DEFAULT_TRUST_BADGES,
+  DEFAULT_ACTION_BUTTONS,
+  DEFAULT_SERVICE_CARDS,
+} from "../models/SiteSettings.js";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
 import { logAdminAction } from "../models/AuditLog.js";
 
@@ -57,6 +61,37 @@ async function getOrCreateSettings() {
     }
     if (!settings.stats || settings.stats.length === 0) {
       settings.stats = DEFAULT_STATS;
+      changed = true;
+    }
+    if (!settings.navigation?.navItems || settings.navigation.navItems.length === 0) {
+      settings.navigation = {
+        ...(settings.navigation?.toObject ? settings.navigation.toObject() : settings.navigation || {}),
+        navItems: DEFAULT_NAV_ITEMS,
+      };
+      changed = true;
+    }
+    if (!settings.heroContent?.trustBadges || settings.heroContent.trustBadges.length === 0) {
+      settings.heroContent = {
+        ...(settings.heroContent?.toObject ? settings.heroContent.toObject() : settings.heroContent || {}),
+        trustBadges: DEFAULT_TRUST_BADGES,
+      };
+      changed = true;
+    }
+    if (!settings.heroContent?.actionButtons || settings.heroContent.actionButtons.length === 0) {
+      settings.heroContent = {
+        ...(settings.heroContent?.toObject ? settings.heroContent.toObject() : settings.heroContent || {}),
+        actionButtons: DEFAULT_ACTION_BUTTONS,
+      };
+      changed = true;
+    }
+    if (!settings.homepageSections?.publicServices?.cards || settings.homepageSections.publicServices.cards.length === 0) {
+      settings.homepageSections = {
+        ...(settings.homepageSections?.toObject ? settings.homepageSections.toObject() : settings.homepageSections || {}),
+        publicServices: {
+          ...(settings.homepageSections?.publicServices?.toObject ? settings.homepageSections.publicServices.toObject() : settings.homepageSections?.publicServices || {}),
+          cards: DEFAULT_SERVICE_CARDS,
+        },
+      };
       changed = true;
     }
     if (changed) {
@@ -184,6 +219,69 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
       };
     }
 
+    if (updateData.topAlertBar && typeof updateData.topAlertBar === "object") {
+      settings.topAlertBar = {
+        ...safeObj(settings.topAlertBar),
+        ...updateData.topAlertBar,
+      };
+    }
+
+    if (updateData.navigation && typeof updateData.navigation === "object") {
+      const existingNav = safeObj(settings.navigation);
+      settings.navigation = {
+        ...existingNav,
+        ...updateData.navigation,
+        navItems: Array.isArray(updateData.navigation.navItems)
+          ? updateData.navigation.navItems
+          : (existingNav.navItems || []),
+      };
+    }
+
+    if (updateData.heroContent && typeof updateData.heroContent === "object") {
+      const existingHC = safeObj(settings.heroContent);
+      settings.heroContent = {
+        ...existingHC,
+        ...updateData.heroContent,
+        trustBadges: Array.isArray(updateData.heroContent.trustBadges)
+          ? updateData.heroContent.trustBadges
+          : (existingHC.trustBadges || []),
+        actionButtons: Array.isArray(updateData.heroContent.actionButtons)
+          ? updateData.heroContent.actionButtons
+          : (existingHC.actionButtons || []),
+      };
+    }
+
+    if (updateData.homepageSections && typeof updateData.homepageSections === "object") {
+      const existingSections = safeObj(settings.homepageSections);
+      settings.homepageSections = {
+        ...existingSections,
+        ...updateData.homepageSections,
+        explore: {
+          ...safeObj(existingSections.explore),
+          ...(updateData.homepageSections.explore || {}),
+        },
+        publicServices: {
+          ...safeObj(existingSections.publicServices),
+          ...(updateData.homepageSections.publicServices || {}),
+          cards: Array.isArray(updateData.homepageSections.publicServices?.cards)
+            ? updateData.homepageSections.publicServices.cards
+            : (existingSections.publicServices?.cards || []),
+        },
+        map: {
+          ...safeObj(existingSections.map),
+          ...(updateData.homepageSections.map || {}),
+        },
+        events: {
+          ...safeObj(existingSections.events),
+          ...(updateData.homepageSections.events || {}),
+        },
+        heritage: {
+          ...safeObj(existingSections.heritage),
+          ...(updateData.homepageSections.heritage || {}),
+        },
+      };
+    }
+
     await settings.save();
 
     await logAdminAction({
@@ -260,6 +358,48 @@ router.post("/hero-slides", verifyToken, requireAdmin, async (req, res) => {
   } catch (err) {
     console.error("[Settings] Add slide error:", err);
     res.status(500).json({ success: false, message: "Failed to add hero slide." });
+  }
+});
+
+// @route   PUT /api/settings/hero-slides/reorder
+// @desc    Reorder hero carousel slides atomically
+// @access  Private (Admin)
+router.put("/hero-slides/reorder", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const { slideIds, slides } = req.body;
+    const settings = await getOrCreateSettings();
+
+    if (Array.isArray(slideIds) && slideIds.length > 0) {
+      const slideMap = new Map();
+      settings.heroSettings.slides.forEach((s) => slideMap.set(String(s._id), s));
+      const reordered = [];
+      slideIds.forEach((id, idx) => {
+        const found = slideMap.get(String(id));
+        if (found) {
+          found.displayOrder = idx + 1;
+          reordered.push(found);
+          slideMap.delete(String(id));
+        }
+      });
+      slideMap.forEach((s) => reordered.push(s));
+      settings.heroSettings.slides = reordered;
+    } else if (Array.isArray(slides) && slides.length > 0) {
+      settings.heroSettings.slides = slides.map((s, idx) => ({
+        ...s,
+        displayOrder: idx + 1,
+      }));
+    }
+
+    await settings.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Hero slides reordered successfully.",
+      slides: settings.heroSettings.slides,
+    });
+  } catch (err) {
+    console.error("[Settings] Reorder slides error:", err);
+    res.status(500).json({ success: false, message: "Failed to reorder hero slides." });
   }
 });
 

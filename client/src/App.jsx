@@ -162,29 +162,31 @@ export default function App() {
           ======================================================== */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-[#FFFFFF] shadow-xs">
         {/* Top Alert & User Status Bar - Modern Civic Deep Slate & Crimson (Desktop / Tablet) */}
-        <div className="hidden sm:flex h-8 bg-[#18232E] text-slate-300 text-[11px] font-semibold px-4 justify-between items-center border-b border-slate-800 shadow-xs">
-          <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
-            <span className="bg-[#B8323C] text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-xs">
-              LIVE CIVIC
-            </span>
-            <span className="truncate text-slate-300">
-              {siteSettings?.siteName || "Fazilnagar Town Official Civic & Local Directory Portal (PIN 274401)"}
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <a
-              href={`tel:${siteSettings?.contact?.emergencyPhone ? siteSettings.contact.emergencyPhone.split("/")[0].trim() : "112"}`}
-              className="inline-flex items-center gap-1 text-red-400 hover:text-red-300 font-bold whitespace-nowrap"
-            >
-              <span>📞 Helpline: {siteSettings?.contact?.emergencyPhone || "112"}</span>
-            </a>
-            {user && (
-              <span className="text-[#168568] font-bold hidden md:inline">
-                👤 Logged in as: {user.role === "admin" ? "Admin" : (user.name || user.email)}
+        {siteSettings?.topAlertBar?.enabled !== false && (
+          <div className="hidden sm:flex h-8 bg-[#18232E] text-slate-300 text-[11px] font-semibold px-4 justify-between items-center border-b border-slate-800 shadow-xs">
+            <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
+              <span className="bg-[#B8323C] text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-xs">
+                {siteSettings?.topAlertBar?.badgeText || "LIVE CIVIC"}
               </span>
-            )}
+              <span className="truncate text-slate-300">
+                {siteSettings?.topAlertBar?.text || siteSettings?.siteName || "Fazilnagar Town Official Civic & Local Directory Portal (PIN 274401)"}
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
+              <a
+                href={`tel:${siteSettings?.topAlertBar?.helplineNumber || (siteSettings?.contact?.emergencyPhone ? siteSettings.contact.emergencyPhone.split("/")[0].trim() : "112")}`}
+                className="inline-flex items-center gap-1 text-red-400 hover:text-red-300 font-bold whitespace-nowrap"
+              >
+                <span>{siteSettings?.topAlertBar?.helplineLabel || "📞 Helpline"}: {siteSettings?.topAlertBar?.helplineNumber || siteSettings?.contact?.emergencyPhone || "112"}</span>
+              </a>
+              {user && (
+                <span className="text-[#168568] font-bold hidden md:inline">
+                  👤 Logged in as: {user.role === "admin" ? "Admin" : (user.name || user.email)}
+                </span>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Main Header & Navigation */}
         <div className="bg-[#FFFFFF]/95 backdrop-blur-md border-b border-[#E1E6EA]">
@@ -192,54 +194,58 @@ export default function App() {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
               <div className="w-9 h-9 rounded-xl bg-[#18232E] flex items-center justify-center text-white font-extrabold text-base border border-slate-700 shadow-xs group-hover:scale-105 transition-transform">
-                F
+                {(siteSettings?.navigation?.brandFirst?.[0] || "F").toUpperCase()}
               </div>
               <div>
                 <span className="text-base font-extrabold tracking-tight text-[#18232E] leading-none block font-heading">
-                  FAZIL<span className="text-[#B8323C]">NAGAR</span>
+                  {siteSettings?.navigation?.brandFirst || "FAZIL"}<span className="text-[#B8323C]">{siteSettings?.navigation?.brandSecond || "NAGAR"}</span>
                 </span>
                 <span className="text-[10px] font-medium text-[#647180] tracking-wider block">
-                  Your Town. Your Community.
+                  {siteSettings?.navigation?.tagline || "Your Town. Your Community."}
                 </span>
               </div>
             </Link>
 
             {/* Desktop Navigation Links */}
             <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold text-[#18232E]">
-              <Link
-                to="/"
-                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                className={`transition ${location.pathname === "/" ? "text-[#B8323C] font-bold" : "text-[#647180] hover:text-[#18232E]"}`}
-              >
-                Home
-              </Link>
-              <a
-                href="/#explore-categories"
-                onClick={(e) => handleNavClick(e, "/#explore-categories", true)}
-                className="text-[#647180] hover:text-[#18232E] transition cursor-pointer"
-              >
-                Explore
-              </a>
-              <Link
-                to="/directory"
-                className={`transition flex items-center gap-1 ${location.pathname === "/directory" ? "text-[#B8323C] font-bold" : "text-[#647180] hover:text-[#18232E]"}`}
-              >
-                <span>Directory</span>
-                <span className="text-[9px] bg-[#168568] text-white px-1.5 py-0.2 rounded-full font-bold">37</span>
-              </Link>
-              <a
-                href="/#town-map-section"
-                onClick={(e) => handleNavClick(e, "/#town-map-section", true)}
-                className="text-[#647180] hover:text-[#18232E] transition cursor-pointer"
-              >
-                Map
-              </a>
-              <Link
-                to="/news"
-                className={`transition ${isNewsPage ? "text-[#B8323C] font-bold" : "text-[#647180] hover:text-[#18232E]"}`}
-              >
-                Local Updates
-              </Link>
+              {(siteSettings?.navigation?.navItems && siteSettings.navigation.navItems.length > 0
+                ? siteSettings.navigation.navItems.filter((i) => i.isActive !== false)
+                : MAIN_NAV_ITEMS
+              ).map((item) => {
+                const isHash = item.path.includes("#");
+                const isActiveRoute = location.pathname === item.path || (isHash && location.hash === item.path.substring(item.path.indexOf("#")));
+                if (isHash) {
+                  return (
+                    <a
+                      key={item.id || item.path}
+                      href={item.path}
+                      onClick={(e) => handleNavClick(e, item.path, true)}
+                      className="text-[#647180] hover:text-[#18232E] transition cursor-pointer"
+                    >
+                      {item.label}
+                    </a>
+                  );
+                }
+                return (
+                  <Link
+                    key={item.id || item.path}
+                    to={item.path}
+                    onClick={() => {
+                      if (item.path === "/") window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className={`transition flex items-center gap-1 ${
+                      isActiveRoute ? "text-[#B8323C] font-bold" : "text-[#647180] hover:text-[#18232E]"
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className="text-[9px] bg-[#168568] text-white px-1.5 py-0.2 rounded-full font-bold">
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
               {user?.role === "admin" && (
                 <Link
                   to="/admin/review"
@@ -253,27 +259,20 @@ export default function App() {
                   <span>Review Desk</span>
                 </Link>
               )}
-              <a
-                href="/#about-fazilnagar-section"
-                onClick={(e) => handleNavClick(e, "/#about-fazilnagar-section", true)}
-                className="text-[#647180] hover:text-[#18232E] transition cursor-pointer"
-              >
-                About
-              </a>
             </nav>
 
             {/* Auth & Post Actions Bar */}
             <div className="hidden sm:flex items-center gap-2.5 shrink-0">
               <NotificationCenter />
 
-              {/* Add Story Button - Always visible to all users (Normal users, citizens, & visitors) */}
+              {/* Add Story Button - Dynamic Label & Link */}
               <Link
-                to="/create-news"
+                to={siteSettings?.navigation?.actionButtonLink || "/create-news"}
                 className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-extrabold px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5"
-                title="Post local news story or community report"
+                title={siteSettings?.navigation?.actionButtonText || "Post local news story"}
               >
                 <span>✍️</span>
-                <span>+ Add Story</span>
+                <span>{siteSettings?.navigation?.actionButtonText || "+ Add Story"}</span>
               </Link>
 
               {user ? (

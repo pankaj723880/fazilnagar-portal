@@ -22,6 +22,7 @@ import AdminNewsCMS from "../components/AdminNewsCMS";                 // Module
 import AdminCommunityPlaces from "../components/AdminCommunityPlaces"; // Module 11: Community Submissions
 import AdminManageUsers from "../components/AdminManageUsers";         // User Administration
 import AdminDriveStorage from "../components/AdminDriveStorage";       // Google Drive Cloud Storage
+import AdminHomepageCMS from "../components/AdminHomepageCMS";         // Module 12: Homepage CMS
 
 import {
   ShieldCheck,
@@ -299,6 +300,9 @@ export default function AdminReview({ user: propUser }) {
         );
 
       // B. Website & Content
+      case "cms-homepage":
+        return <AdminHomepageCMS />;
+
       case "cms-settings":
       case "settings":
         return <AdminSettingsCMS />;
