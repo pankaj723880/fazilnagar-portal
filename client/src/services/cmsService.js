@@ -90,7 +90,7 @@ export async function getSiteSettings(forceFresh = false) {
     const res = await API.get("/settings", {
       params: { _t: now },
       headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
-      timeout: 8000,
+      timeout: 30000,
     });
     if (res.data?.success && res.data?.settings) {
       const merged = { ...DEFAULT_SITE_SETTINGS, ...res.data.settings };
@@ -113,7 +113,7 @@ export async function getPublicServices({ category = "All", search = "" } = {}) 
     if (category && category !== "All") params.category = category;
     if (search) params.search = search;
 
-    const res = await API.get("/services", { params, timeout: 8000 });
+    const res = await API.get("/services", { params, timeout: 30000 });
     if (res.data?.success && Array.isArray(res.data?.services)) {
       return res.data.services;
     }
@@ -302,7 +302,7 @@ export async function getEvents({ category = "All", search = "", timeFilter = ""
     const res = await API.get("/events", {
       params,
       headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
-      timeout: 8000,
+      timeout: 30000,
     });
     if (res.data?.success && Array.isArray(res.data?.events) && res.data.events.length > 0) {
       memoryCache.events = { data: res.data.events, timestamp: now };
@@ -327,7 +327,7 @@ export async function getHeritageSites(forceFresh = false) {
     const res = await API.get("/heritage", {
       params: { _t: now },
       headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
-      timeout: 8000,
+      timeout: 30000,
     });
     if (res.data?.success && Array.isArray(res.data?.sites) && res.data.sites.length > 0) {
       memoryCache.heritage = { data: res.data.sites, timestamp: now };

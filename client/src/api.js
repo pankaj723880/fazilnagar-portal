@@ -3,12 +3,20 @@ import { getAuthToken } from "./utils/authStorage";
 
 const RENDER_PROD_API = "https://fazilnagar-portal.onrender.com/api";
 
-let rawUrl = (import.meta.env.VITE_API_URL || RENDER_PROD_API).trim().replace(/\/+$/, "");
+const isLocalhost =
+  typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1");
+
+let rawUrl = isLocalhost
+  ? (import.meta.env.VITE_API_URL || RENDER_PROD_API).trim().replace(/\/+$/, "")
+  : RENDER_PROD_API;
+
 const baseURL = rawUrl.endsWith("/api") ? rawUrl : `${rawUrl}/api`;
 
 const API = axios.create({
   baseURL,
-  timeout: 8000,
+  timeout: 45000, // 45 seconds to accommodate Render wake-up and file uploads
 });
 
 // Attach Authorization token if available (reads per-tab session first)

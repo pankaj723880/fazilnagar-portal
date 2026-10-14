@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import API from "../api";
 import { getAuthToken } from "../utils/authStorage";
+import { clearCMSCache } from "../services/cmsService";
 import PageHeader from "./admin/PageHeader";
 import FormSection from "./admin/FormSection";
 import MediaPicker from "./admin/MediaPicker";
@@ -83,6 +84,8 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
         setSettings(res.data.settings);
         setInitialSettings(JSON.parse(JSON.stringify(res.data.settings)));
         setIsDirty(false);
+        clearCMSCache("settings");
+        clearCMSCache();
         showToast("Website settings and layout saved successfully!", "success");
         if (onSaveSuccess) onSaveSuccess(res.data.settings);
       }

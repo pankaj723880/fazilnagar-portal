@@ -32,11 +32,18 @@ const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
-    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/svg+xml"];
+    const allowed = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "image/svg+xml",
+      "image/gif",
+    ];
     if (allowed.includes(file.mimetype.toLowerCase())) {
       cb(null, true);
     } else {
-      cb(new Error("Only JPEG, PNG, WebP, and SVG images under 10MB are allowed."));
+      cb(new Error("Only JPEG, PNG, WebP, GIF, and SVG images under 10MB are allowed."));
     }
   },
 });
@@ -73,10 +80,11 @@ router.get("/", verifyToken, requireAdmin, async (req, res) => {
       page,
       pages: Math.ceil(total / limit),
       items,
+      media: items, // Alias for frontend compatibility
     });
   } catch (err) {
     console.error("[Media] Fetch error:", err);
-    res.status(500).json({ message: "Failed to fetch media library items." });
+    res.status(500).json({ success: false, message: "Failed to fetch media library items." });
   }
 });
 
@@ -88,20 +96,23 @@ router.post(
   verifyToken,
   requireAdmin,
   (req, res, next) => {
-    upload.single("image")(req, res, (err) => {
+    // upload.any() accepts any multipart field name ('image', 'file', 'photo', etc.) without "Unexpected field" errors
+    upload.any()(req, res, (err) => {
       if (err instanceof multer.MulterError) {
-        return res.status(400).json({ message: `Upload error: ${err.message}` });
+        console.error("[Media] Multer error:", err.code, err.field, err.message);
+        return res.status(400).json({ success: false, message: `Upload error: ${err.message}` });
       } else if (err) {
-        return res.status(400).json({ message: err.message || "Failed to process photo upload." });
+        console.error("[Media] Upload filter error:", err.message);
+        return res.status(400).json({ success: false, message: err.message || "Failed to process photo upload." });
       }
       next();
     });
   },
   async (req, res) => {
     try {
-      const file = req.file;
+      const file = req.file || (req.files && req.files[0]);
       if (!file) {
-        return res.status(400).json({ message: "No image file received." });
+        return res.status(400).json({ success: false, message: "No image file received. Please select a valid photo." });
       }
 
       const { title, altText, caption, tags } = req.body;
@@ -126,10 +137,16 @@ router.post(
             finalUrl = driveResult.mediaDoc.deliveryUrl;
             driveFileId = driveResult.mediaDoc.driveFileId || null;
             storageProvider = "google_drive";
+
+            // Clean up local temp file after successful Drive upload (optional, saves disk on Render)
+            try {
+              fs.unlinkSync(file.path);
+            } catch (_) {}
           }
         }
       } catch (driveErr) {
         console.warn("[Media] Drive upload fallback to local:", driveErr.message);
+        // Local storage URL is already set above as fallback
       }
 
       const parsedTags = tags
@@ -169,13 +186,15 @@ router.post(
         success: true,
         message: "Image uploaded and catalogued in Media Library.",
         media: mediaItem,
+        url: mediaItem.url,
       });
     } catch (err) {
       console.error("[Media] Upload error:", err);
-      res.status(500).json({ message: "Failed to process image upload." });
+      res.status(500).json({ success: false, message: "Failed to process image upload." });
     }
   }
 );
+
 
 // @route   PUT /api/media/:id
 // @desc    Update media metadata (title, alt text, caption, tags)

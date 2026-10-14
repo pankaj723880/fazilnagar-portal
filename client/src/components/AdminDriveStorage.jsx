@@ -62,7 +62,7 @@ export default function AdminDriveStorage() {
       await API.post("/google-drive/admin/upload", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
+          // Do NOT set Content-Type for FormData — browser auto-generates multipart boundary
         },
       });
       showToast("success", "Media file uploaded successfully to Google Drive 'Fazilnagar Media'!");

@@ -91,12 +91,11 @@ export default function UploadForm() {
     if (videoFile) formData.append("video", videoFile);
 
     try {
-      const headers = {
-        "Content-Type": "multipart/form-data",
-      };
+      const headers = {};
       if (token) {
         headers.Authorization = `Bearer ${token}`;
       }
+      // Do NOT set Content-Type for FormData — browser auto-generates multipart boundary
 
       const res = await API.post("/news", formData, { headers });
       const msg = res.data?.moderationMessage || "Story published live to Fazilnagar News Feed!";

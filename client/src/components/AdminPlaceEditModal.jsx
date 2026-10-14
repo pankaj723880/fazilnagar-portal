@@ -217,7 +217,7 @@ export default function AdminPlaceEditModal({ isOpen, onClose, place, onSave, on
 
         const uploadRes = await API.post("/submissions/upload-images", formData, {
           headers: {
-            "Content-Type": "multipart/form-data",
+            // Do NOT set Content-Type for FormData — browser auto-generates multipart boundary
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         });

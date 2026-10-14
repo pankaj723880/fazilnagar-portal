@@ -41,18 +41,15 @@ async function getOrCreateSettings() {
       };
       changed = true;
     }
-    // Clean up any old default slides or invalid blob URLs from heroSettings
+    // Clean up any invalid temporary blob/data URLs if any crept into heroSettings
     if (Array.isArray(settings.heroSettings.slides) && settings.heroSettings.slides.length > 0) {
       const initialCount = settings.heroSettings.slides.length;
       settings.heroSettings.slides = settings.heroSettings.slides.filter(
         (s) =>
           s &&
-          s.isActive !== false &&
           s.imageUrl &&
           !s.imageUrl.startsWith("blob:") &&
-          !s.imageUrl.includes("unsplash.com/photo-1541888946425") &&
-          !s.imageUrl.includes("unsplash.com/photo-1519494026892") &&
-          !s.imageUrl.includes("unsplash.com/photo-1548013146-72479768bada")
+          !s.imageUrl.startsWith("data:")
       );
       if (settings.heroSettings.slides.length !== initialCount) {
         changed = true;
@@ -84,7 +81,7 @@ router.get("/", async (req, res) => {
     });
   } catch (err) {
     console.error("[Settings] Fetch error:", err);
-    res.status(500).json({ message: "Failed to load website settings." });
+    res.status(500).json({ success: false, message: "Failed to load website settings." });
   }
 });
 
@@ -96,52 +93,66 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
     const settings = await getOrCreateSettings();
     const updateData = req.body;
 
-    // Apply allowed modifications
-    if (updateData.siteName) settings.siteName = updateData.siteName.trim();
-    if (updateData.shortName) settings.shortName = updateData.shortName.trim();
-    if (updateData.tagline !== undefined) settings.tagline = updateData.tagline.trim();
-    if (updateData.taglineHindi !== undefined) settings.taglineHindi = updateData.taglineHindi.trim();
-    if (updateData.logoUrl !== undefined) settings.logoUrl = updateData.logoUrl.trim();
-    if (updateData.faviconUrl !== undefined) settings.faviconUrl = updateData.faviconUrl.trim();
+    // Apply allowed modifications — use !== undefined to allow falsy values like ""
+    if (updateData.siteName !== undefined) settings.siteName = (updateData.siteName || "").trim();
+    if (updateData.shortName !== undefined) settings.shortName = (updateData.shortName || "").trim();
+    if (updateData.tagline !== undefined) settings.tagline = (updateData.tagline || "").trim();
+    if (updateData.taglineHindi !== undefined) {
+      settings.taglineHindi = (updateData.taglineHindi || "").trim();
+    } else if (updateData.taglineHi !== undefined) {
+      settings.taglineHindi = (updateData.taglineHi || "").trim();
+    }
+    if (updateData.logoUrl !== undefined) settings.logoUrl = (updateData.logoUrl || "").trim();
+    if (updateData.faviconUrl !== undefined) settings.faviconUrl = (updateData.faviconUrl || "").trim();
+
+    const safeObj = (doc) => (doc && typeof doc.toObject === "function" ? doc.toObject() : doc || {});
 
     if (updateData.announcement && typeof updateData.announcement === "object") {
       settings.announcement = {
-        ...settings.announcement.toObject(),
+        ...safeObj(settings.announcement),
         ...updateData.announcement,
       };
     }
 
     if (updateData.contact && typeof updateData.contact === "object") {
       settings.contact = {
-        ...settings.contact.toObject(),
+        ...safeObj(settings.contact),
         ...updateData.contact,
       };
     }
 
     if (updateData.socialLinks && typeof updateData.socialLinks === "object") {
       settings.socialLinks = {
-        ...settings.socialLinks.toObject(),
+        ...safeObj(settings.socialLinks),
         ...updateData.socialLinks,
       };
     }
 
     if (updateData.seo && typeof updateData.seo === "object") {
       settings.seo = {
-        ...settings.seo.toObject(),
+        ...safeObj(settings.seo),
         ...updateData.seo,
+      };
+    }
+    if (updateData.seoSettings && typeof updateData.seoSettings === "object") {
+      settings.seo = {
+        ...safeObj(settings.seo),
+        metaTitle: updateData.seoSettings.metaTitle !== undefined ? updateData.seoSettings.metaTitle : settings.seo?.metaTitle,
+        metaDescription: updateData.seoSettings.metaDescription !== undefined ? updateData.seoSettings.metaDescription : settings.seo?.metaDescription,
+        ogImageUrl: updateData.seoSettings.ogImage !== undefined ? updateData.seoSettings.ogImage : (updateData.seoSettings.ogImageUrl !== undefined ? updateData.seoSettings.ogImageUrl : settings.seo?.ogImageUrl),
       };
     }
 
     if (updateData.sections && typeof updateData.sections === "object") {
       settings.sections = {
-        ...settings.sections.toObject(),
+        ...safeObj(settings.sections),
         ...updateData.sections,
       };
     }
 
     if (updateData.heroSettings && typeof updateData.heroSettings === "object") {
       settings.heroSettings = {
-        ...settings.heroSettings.toObject(),
+        ...safeObj(settings.heroSettings),
         ...updateData.heroSettings,
       };
     }
@@ -152,8 +163,20 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
 
     if (updateData.footer && typeof updateData.footer === "object") {
       settings.footer = {
-        ...settings.footer.toObject(),
+        ...safeObj(settings.footer),
         ...updateData.footer,
+      };
+    }
+    if (updateData.footerText !== undefined) {
+      settings.footer = {
+        ...safeObj(settings.footer),
+        disclaimer: updateData.footerText.trim(),
+      };
+    }
+    if (updateData.copyright !== undefined) {
+      settings.footer = {
+        ...safeObj(settings.footer),
+        copyrightText: updateData.copyright.trim(),
       };
     }
 
@@ -187,8 +210,16 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
 router.post("/hero-slides", verifyToken, requireAdmin, async (req, res) => {
   try {
     const { title, subtitle, caption, imageUrl, linkUrl, buttonText, isActive, displayOrder } = req.body;
-    if (!imageUrl) {
-      return res.status(400).json({ message: "Image URL is required for hero slide." });
+    if (!imageUrl || !imageUrl.trim()) {
+      return res.status(400).json({ success: false, message: "Image URL is required for hero slide." });
+    }
+
+    const cleanUrl = imageUrl.trim();
+    if (cleanUrl.startsWith("blob:") || cleanUrl.startsWith("data:")) {
+      return res.status(400).json({
+        success: false,
+        message: "Local temporary blob or data URLs cannot be saved. Please provide a permanent web image URL.",
+      });
     }
 
     const settings = await getOrCreateSettings();
@@ -196,7 +227,7 @@ router.post("/hero-slides", verifyToken, requireAdmin, async (req, res) => {
       title: title || "",
       subtitle: subtitle || "",
       caption: caption || "",
-      imageUrl: imageUrl.trim(),
+      imageUrl: cleanUrl,
       linkUrl: linkUrl || "/directory",
       buttonText: buttonText || "Explore",
       isActive: isActive !== false,
@@ -213,7 +244,7 @@ router.post("/hero-slides", verifyToken, requireAdmin, async (req, res) => {
       entityType: "SiteSettings",
       entityId: settings._id,
       entityTitle: title || "Hero Slide",
-      changesSummary: `Added hero slide "${title || imageUrl}"`,
+      changesSummary: `Added hero slide "${title || cleanUrl}"`,
       ipAddress: req.ip,
     });
 
@@ -224,7 +255,7 @@ router.post("/hero-slides", verifyToken, requireAdmin, async (req, res) => {
     });
   } catch (err) {
     console.error("[Settings] Add slide error:", err);
-    res.status(500).json({ message: "Failed to add hero slide." });
+    res.status(500).json({ success: false, message: "Failed to add hero slide." });
   }
 });
 
@@ -236,14 +267,23 @@ router.put("/hero-slides/:id", verifyToken, requireAdmin, async (req, res) => {
     const settings = await getOrCreateSettings();
     const slide = settings.heroSettings.slides.id(req.params.id);
     if (!slide) {
-      return res.status(404).json({ message: "Hero slide not found." });
+      return res.status(404).json({ success: false, message: "Hero slide not found." });
     }
 
     const { title, subtitle, caption, imageUrl, linkUrl, buttonText, isActive, displayOrder } = req.body;
     if (title !== undefined) slide.title = title;
     if (subtitle !== undefined) slide.subtitle = subtitle;
     if (caption !== undefined) slide.caption = caption;
-    if (imageUrl) slide.imageUrl = imageUrl.trim();
+    if (imageUrl) {
+      const cleanUrl = imageUrl.trim();
+      if (cleanUrl.startsWith("blob:") || cleanUrl.startsWith("data:")) {
+        return res.status(400).json({
+          success: false,
+          message: "Local temporary blob or data URLs cannot be saved. Please provide a permanent web image URL.",
+        });
+      }
+      slide.imageUrl = cleanUrl;
+    }
     if (linkUrl !== undefined) slide.linkUrl = linkUrl;
     if (buttonText !== undefined) slide.buttonText = buttonText;
     if (isActive !== undefined) slide.isActive = isActive;

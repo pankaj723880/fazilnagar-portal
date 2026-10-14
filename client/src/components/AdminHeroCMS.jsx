@@ -53,6 +53,13 @@ export default function AdminHeroCMS() {
   const [formIsActive, setFormIsActive] = useState(true);
   const [formSubmitting, setFormSubmitting] = useState(false);
 
+  // Upload state handling: "idle" | "uploading" | "success" | "error"
+  const [uploadStatus, setUploadStatus] = useState("idle");
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState("");
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+
   // Media Picker state
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
 
@@ -103,6 +110,7 @@ export default function AdminHeroCMS() {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      clearCMSCache("settings");
       clearCMSCache();
       showToast("Hero carousel playback and animation controls saved!");
     } catch (err) {
@@ -122,6 +130,11 @@ export default function AdminHeroCMS() {
     setFormLinkUrl("/directory");
     setFormButtonText("Explore Now");
     setFormIsActive(true);
+    setPreviewUrl("");
+    setUploadStatus("idle");
+    setUploadProgress(0);
+    setUploadError("");
+    setSelectedFile(null);
     setModalOpen(true);
   };
 
@@ -131,20 +144,96 @@ export default function AdminHeroCMS() {
     setFormSubtitle(slide.subtitle || "");
     setFormCaption(slide.caption || "");
     setFormImageUrl(slide.imageUrl || "");
+    setPreviewUrl(slide.imageUrl || "");
     setFormLinkUrl(slide.linkUrl || "/directory");
     setFormButtonText(slide.buttonText || "Explore Now");
     setFormIsActive(slide.isActive !== false);
+    setUploadStatus(slide.imageUrl ? "success" : "idle");
+    setUploadProgress(0);
+    setUploadError("");
+    setSelectedFile(null);
     setModalOpen(true);
+  };
+
+  const uploadImageFile = async (fileToUpload) => {
+    if (!fileToUpload) return;
+    setUploadStatus("uploading");
+    setUploadProgress(0);
+    setUploadError("");
+    const token = getAuthToken();
+
+    const formData = new FormData();
+    // Use exact field name "image" expected by backend
+    formData.append("image", fileToUpload);
+
+    try {
+      const res = await API.post("/media/upload", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // Let browser generate multipart boundary automatically
+        },
+        timeout: 60000,
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(percent);
+          }
+        },
+      });
+
+      const permanentUrl = res.data?.url || res.data?.media?.url;
+      if (!permanentUrl) {
+        throw new Error("Server succeeded but did not return a permanent image URL.");
+      }
+
+      setFormImageUrl(permanentUrl);
+      setPreviewUrl(permanentUrl);
+      setUploadStatus("success");
+      setUploadProgress(100);
+      showToast("Slide image uploaded to cloud vault successfully!");
+    } catch (err) {
+      console.error("Hero slide upload error:", err);
+      const msg = err.response?.data?.message || err.message || "Upload failed";
+      setUploadStatus("error");
+      setUploadError(msg);
+      // Keep formImageUrl empty so blob is never saved
+      setFormImageUrl("");
+      showToast("Failed to upload image: " + msg, "error");
+    }
+  };
+
+  const handleFileSelect = (file) => {
+    if (!file) return;
+    setSelectedFile(file);
+    // Show temporary local preview
+    const tempBlob = URL.createObjectURL(file);
+    setPreviewUrl(tempBlob);
+    // Never persist blob URL to formImageUrl
+    setFormImageUrl("");
+    uploadImageFile(file);
+  };
+
+  const handleClearImage = () => {
+    setFormImageUrl("");
+    setPreviewUrl("");
+    setUploadStatus("idle");
+    setUploadProgress(0);
+    setUploadError("");
+    setSelectedFile(null);
   };
 
   const handleSaveSlide = async (e) => {
     e.preventDefault();
-    if (!formImageUrl.trim()) {
-      showToast("Image URL is required for hero slide.", "error");
+    if (uploadStatus === "uploading") {
+      showToast("Please wait for the image upload to complete before saving.", "error");
       return;
     }
-    if (formImageUrl.startsWith("blob:")) {
-      showToast("Local blob URLs cannot be saved. Please provide a web image URL or select from Media Library.", "error");
+    if (!formImageUrl.trim()) {
+      showToast("Slide background image is required. Please upload or choose a photo.", "error");
+      return;
+    }
+    if (formImageUrl.startsWith("blob:") || formImageUrl.startsWith("data:")) {
+      showToast("Local temporary blob or data URLs cannot be saved. Please provide a web image URL or select from Media Library.", "error");
       return;
     }
 
@@ -166,6 +255,7 @@ export default function AdminHeroCMS() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (res.data?.slides) setSlides(res.data.slides);
+        clearCMSCache("settings");
         clearCMSCache();
         showToast("Hero slide updated successfully!");
       } else {
@@ -183,6 +273,7 @@ export default function AdminHeroCMS() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (res.data?.slides) setSlides(res.data.slides);
+        clearCMSCache("settings");
         clearCMSCache();
         showToast("New hero slide added to carousel!");
       }
@@ -584,11 +675,24 @@ export default function AdminHeroCMS() {
               {/* Cover Image Uploader */}
               <ImageUploader
                 value={formImageUrl}
-                onChange={setFormImageUrl}
+                previewUrl={previewUrl}
+                uploadStatus={uploadStatus}
+                uploadProgress={uploadProgress}
+                errorMessage={uploadError}
+                onFileSelect={handleFileSelect}
+                onRetry={() => selectedFile && uploadImageFile(selectedFile)}
+                onClear={handleClearImage}
+                onChange={(url) => {
+                  setFormImageUrl(url);
+                  setPreviewUrl(url);
+                  setUploadStatus(url ? "success" : "idle");
+                  setUploadError("");
+                }}
                 onOpenMediaPicker={() => setMediaPickerOpen(true)}
                 label="Slide Background Photo *"
                 helpText="High-res town photos (1920x800 recommended)"
                 aspectRatio="banner"
+                disabled={formSubmitting || uploadStatus === "uploading"}
               />
 
               <div className="grid grid-cols-2 gap-3">
@@ -642,11 +746,21 @@ export default function AdminHeroCMS() {
                 </button>
                 <button
                   type="submit"
-                  disabled={formSubmitting}
+                  disabled={formSubmitting || uploadStatus === "uploading" || !formImageUrl.trim()}
                   className="bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
-                  {formSubmitting && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                  <span>{editingSlide ? "Update Slide" : "Add Slide"}</span>
+                  {(formSubmitting || uploadStatus === "uploading") && (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  )}
+                  <span>
+                    {uploadStatus === "uploading"
+                      ? "Uploading Photo..."
+                      : formSubmitting
+                      ? "Saving..."
+                      : editingSlide
+                      ? "Update Slide"
+                      : "Add Slide"}
+                  </span>
                 </button>
               </div>
             </form>
@@ -660,7 +774,12 @@ export default function AdminHeroCMS() {
         onClose={() => setMediaPickerOpen(false)}
         onSelect={(url) => {
           setFormImageUrl(url);
+          setPreviewUrl(url);
+          setUploadStatus("success");
+          setUploadError("");
+          setSelectedFile(null);
           setMediaPickerOpen(false);
+          showToast("Image selected from media library!");
         }}
         title="Select Image for Hero Slide"
       />

@@ -412,7 +412,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
 
         setUploadProgress(35);
         const uploadRes = await API.post("/submissions/upload-images", uploadFormData, {
-          headers: { "Content-Type": "multipart/form-data" },
+          // Do NOT set Content-Type for FormData — browser auto-generates multipart boundary
           timeout: 30000,
         });
 

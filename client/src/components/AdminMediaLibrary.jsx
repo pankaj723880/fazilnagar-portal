@@ -107,18 +107,19 @@ export default function AdminMediaLibrary() {
     setUploading(true);
     const token = getAuthToken();
     const formData = new FormData();
-    formData.append("file", selectedFile);
-    formData.append("title", mediaTitle);
-    formData.append("altText", mediaAlt);
-    formData.append("caption", mediaCaption);
-    formData.append("tags", mediaTags);
+    formData.append("image", selectedFile);
+    formData.append("title", mediaTitle || selectedFile.name);
+    formData.append("altText", mediaAlt || mediaTitle || selectedFile.name);
+    formData.append("caption", mediaCaption || "");
+    formData.append("tags", mediaTags || "general");
 
     try {
       const res = await API.post("/media/upload", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
+          // Let browser generate boundary
         },
+        timeout: 60000,
       });
 
       if (res.data?.success && res.data?.media) {

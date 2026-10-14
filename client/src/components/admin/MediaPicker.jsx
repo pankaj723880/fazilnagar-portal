@@ -35,8 +35,9 @@ export default function MediaPicker({
       const res = await API.get("/media", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.data?.success && Array.isArray(res.data?.media)) {
-        setMediaList(res.data.media);
+      const items = res.data?.items || res.data?.media || [];
+      if (Array.isArray(items)) {
+        setMediaList(items);
       }
     } catch (err) {
       console.warn("Failed to load media for picker:", err);
@@ -52,19 +53,23 @@ export default function MediaPicker({
     setUploading(true);
     const token = getAuthToken();
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("image", file);
     formData.append("title", file.name.replace(/\.[^/.]+$/, ""));
 
     try {
       const res = await API.post("/media/upload", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
+          // Let the browser generate boundary automatically
         },
+        timeout: 60000,
       });
-      if (res.data?.success && res.data?.media?.url) {
-        onSelect(res.data.media.url);
+      const permanentUrl = res.data?.url || res.data?.media?.url;
+      if (permanentUrl) {
+        onSelect(permanentUrl);
         onClose();
+      } else {
+        throw new Error("No URL returned from upload server.");
       }
     } catch (err) {
       console.error("Quick upload error:", err);
