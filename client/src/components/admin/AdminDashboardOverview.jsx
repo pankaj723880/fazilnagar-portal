@@ -409,27 +409,27 @@ export default function AdminDashboardOverview({
             />
           ) : (
             <div className="space-y-2">
-              {recentLogs.map((log) => (
+              {recentLogs.filter(Boolean).map((log, idx) => (
                 <div
-                  key={log._id || log.id}
+                  key={log._id || log.id || idx}
                   className="p-3 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center justify-between gap-3 text-xs"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-extrabold text-slate-800 truncate">
-                        {log.details || log.entityType || "System Action"}
+                        {log?.details || log?.entityType || "System Action"}
                       </span>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
-                        {log.action}
+                        {log?.action || "LOG"}
                       </span>
                     </div>
                     <div className="text-[10px] text-slate-400 mt-0.5">
-                      By {log.adminEmail || "Admin"} • {timeAgo(log.createdAt || log.timestamp)}
+                      By {log?.adminEmail || log?.adminUser?.email || "Admin"} • {timeAgo(log?.createdAt || log?.timestamp)}
                     </div>
                   </div>
 
                   <span className="text-[10px] font-semibold text-slate-400 uppercase shrink-0">
-                    {log.entityType}
+                    {log?.entityType || "SYSTEM"}
                   </span>
                 </div>
               ))}

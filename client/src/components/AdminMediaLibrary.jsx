@@ -178,94 +178,119 @@ export default function AdminMediaLibrary() {
     {
       key: "preview",
       label: "Preview",
-      render: (m) => (
-        <div className="w-14 h-14 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
-          <img src={m.url} alt={m.altText || m.title} className="w-full h-full object-cover" />
-        </div>
-      ),
+      render: (val, row) => {
+        const m = row || val;
+        return (
+          <div className="w-14 h-14 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
+            {m?.url ? (
+              <img src={m.url} alt={m?.altText || m?.title || "Media"} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-300">
+                <FileImage className="w-5 h-5" />
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: "title",
       label: "Media Details",
       sortable: true,
-      render: (m) => (
-        <div>
-          <div className="font-semibold text-slate-900 text-sm">{m.title || "Untitled Image"}</div>
-          {m.altText && <div className="text-xs text-slate-500 mt-0.5 truncate max-w-xs">{m.altText}</div>}
-          <div className="flex items-center gap-1.5 mt-1">
-            {Array.isArray(m.tags) &&
-              m.tags.slice(0, 3).map((tag, idx) => (
-                <span
-                  key={idx}
-                  className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-mono"
-                >
-                  #{tag}
-                </span>
-              ))}
+      render: (val, row) => {
+        const m = row || val;
+        return (
+          <div>
+            <div className="font-semibold text-slate-900 text-sm">{m?.title || (typeof val === "string" ? val : "Untitled Image")}</div>
+            {m?.altText && <div className="text-xs text-slate-500 mt-0.5 truncate max-w-xs">{m.altText}</div>}
+            <div className="flex items-center gap-1.5 mt-1">
+              {Array.isArray(m?.tags) &&
+                m.tags.slice(0, 3).map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-mono"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: "format",
       label: "Format & Size",
-      render: (m) => (
-        <div className="text-xs text-slate-600">
-          <div className="font-medium text-slate-800 uppercase">{m.format || "IMAGE"}</div>
-          <div className="text-slate-400 mt-0.5">
-            {m.size ? `${(m.size / 1024).toFixed(0)} KB` : "—"}
+      render: (val, row) => {
+        const m = row || val;
+        const fmt = (typeof val === "string" ? val : null) || m?.format || "IMAGE";
+        return (
+          <div className="text-xs text-slate-600">
+            <div className="font-medium text-slate-800 uppercase">{fmt}</div>
+            <div className="text-slate-400 mt-0.5">
+              {m?.size ? `${(m.size / 1024).toFixed(0)} KB` : "—"}
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: "createdAt",
       label: "Uploaded",
       sortable: true,
-      render: (m) => (
-        <div className="text-xs text-slate-500">
-          {m.createdAt ? new Date(m.createdAt).toLocaleDateString() : "—"}
-        </div>
-      ),
+      render: (val, row) => {
+        const m = row || val;
+        const dt = m?.createdAt || val;
+        return (
+          <div className="text-xs text-slate-500">
+            {dt ? new Date(dt).toLocaleDateString() : "—"}
+          </div>
+        );
+      },
     },
     {
       key: "actions",
       label: "Actions",
       align: "right",
-      render: (m) => (
-        <div className="flex items-center justify-end gap-1.5">
-          <button
-            onClick={() => handleCopyUrl(m.url, m._id)}
-            title="Copy URL"
-            className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          >
-            {copiedId === m._id ? (
-              <Check className="w-4 h-4 text-emerald-600" />
-            ) : (
-              <Copy className="w-4 h-4" />
+      render: (val, row) => {
+        const m = row || val;
+        return (
+          <div className="flex items-center justify-end gap-1.5">
+            <button
+              onClick={() => handleCopyUrl(m?.url, m?._id)}
+              title="Copy URL"
+              className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+            >
+              {copiedId === m?._id ? (
+                <Check className="w-4 h-4 text-emerald-600" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
+            </button>
+            {m?.url && (
+              <a
+                href={m.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View Full Resolution"
+                className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
             )}
-          </button>
-          <a
-            href={m.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="View Full Resolution"
-            className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-          >
-            <ExternalLink className="w-4 h-4" />
-          </a>
-          <button
-            onClick={() => {
-              setItemToDelete(m);
-              setDeleteDialogOpen(true);
-            }}
-            title="Delete from Library"
-            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      ),
+            <button
+              onClick={() => {
+                setItemToDelete(m);
+                setDeleteDialogOpen(true);
+              }}
+              title="Delete from Library"
+              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        );
+      },
     },
   ];
 

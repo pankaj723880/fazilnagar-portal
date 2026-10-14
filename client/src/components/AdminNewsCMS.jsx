@@ -321,36 +321,45 @@ export default function AdminNewsCMS({ onStatsChange }) {
       key: "category",
       label: "Category & Source",
       sortable: true,
-      render: (item) => (
-        <div className="text-xs">
-          <span className="font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">
-            {item.category || "General"}
-          </span>
-          <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
-            <span>By: {item.source || "Reporter"}</span>
-            {item.location && <span>• {item.location}</span>}
+      render: (val, row) => {
+        const item = row || val;
+        const cat = (typeof val === "string" ? val : null) || item?.category || "General";
+        return (
+          <div className="text-xs">
+            <span className="font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">
+              {cat}
+            </span>
+            <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
+              <span>By: {item?.source || "Reporter"}</span>
+              {item?.location && <span>• {item.location}</span>}
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: "date",
       label: "Published Date",
       sortable: true,
-      render: (item) => (
-        <div className="text-xs text-slate-600">
-          <div>{item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "—"}</div>
-          <div className="text-[11px] text-slate-400">
-            {item.createdAt ? new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+      render: (val, row) => {
+        const item = row || val;
+        const dt = item?.createdAt || val;
+        return (
+          <div className="text-xs text-slate-600">
+            <div>{dt ? new Date(dt).toLocaleDateString() : "—"}</div>
+            <div className="text-[11px] text-slate-400">
+              {dt ? new Date(dt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: "status",
       label: "Status",
-      render: (item) => {
-        const isLive = item.isPublished || item.status === "approved";
+      render: (val, row) => {
+        const item = row || val;
+        const isLive = item?.isPublished || item?.status === "approved";
         return <StatusBadge status={isLive ? "published" : "draft"} />;
       },
     },
@@ -358,32 +367,33 @@ export default function AdminNewsCMS({ onStatsChange }) {
       key: "actions",
       label: "Actions",
       align: "right",
-      render: (item) => {
-        const isLive = item.isPublished || item.status === "approved";
+      render: (val, row) => {
+        const item = row || val;
+        const isLive = item?.isPublished || item?.status === "approved";
         return (
           <div className="flex items-center justify-end gap-1.5">
             <button
               onClick={() => setPreviewNews(item)}
               title="Preview Reels card"
-              className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+              className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
             >
               <Smartphone className="w-4 h-4" />
             </button>
             <button
               onClick={() => handleToggleNewsFeatured(item)}
-              title={item.isFeatured ? "Unpin story" : "Pin to top"}
-              className="p-1.5 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+              title={item?.isFeatured ? "Unpin story" : "Pin to top"}
+              className="p-1.5 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
             >
               <Star
                 className={`w-4 h-4 ${
-                  item.isFeatured ? "fill-amber-500 text-amber-500" : "text-slate-400"
+                  item?.isFeatured ? "fill-amber-500 text-amber-500" : "text-slate-400"
                 }`}
               />
             </button>
             <button
               onClick={() => handleToggleNewsPublish(item)}
               title={isLive ? "Move to drafts" : "Publish live"}
-              className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
             >
               {isLive ? (
                 <EyeOff className="w-4 h-4 text-amber-600" />
@@ -394,7 +404,7 @@ export default function AdminNewsCMS({ onStatsChange }) {
             <button
               onClick={() => openEditNewsModal(item)}
               title="Edit story"
-              className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
             >
               <Edit3 className="w-4 h-4" />
             </button>
@@ -404,7 +414,7 @@ export default function AdminNewsCMS({ onStatsChange }) {
                 setDeleteDialogOpen(true);
               }}
               title="Delete story"
-              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
             >
               <Trash2 className="w-4 h-4" />
             </button>

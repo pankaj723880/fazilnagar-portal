@@ -180,8 +180,10 @@ export default function AdminManageEntities({ token: propToken, onStatsChange })
       key: "category",
       label: "Category",
       sortable: true,
-      render: (place) => {
-        const isSchool = place.category === "Schools & Colleges";
+      render: (val, row) => {
+        const place = row || val;
+        const cat = (typeof val === "string" ? val : null) || place?.category || "Listing";
+        const isSchool = cat === "Schools & Colleges";
         return (
           <span
             className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md border ${
@@ -191,7 +193,7 @@ export default function AdminManageEntities({ token: propToken, onStatsChange })
             }`}
           >
             {isSchool ? <GraduationCap className="w-3.5 h-3.5" /> : <Stethoscope className="w-3.5 h-3.5" />}
-            <span>{place.category}</span>
+            <span>{cat}</span>
           </span>
         );
       },
@@ -199,29 +201,33 @@ export default function AdminManageEntities({ token: propToken, onStatsChange })
     {
       key: "address",
       label: "Address & Landmark",
-      render: (place) => (
-        <div className="max-w-xs text-xs">
-          <div className="text-slate-800 font-medium truncate" title={place.addressFull}>
-            {place.addressFull}
+      render: (val, row) => {
+        const place = row || val;
+        return (
+          <div className="max-w-xs text-xs">
+            <div className="text-slate-800 font-medium truncate" title={place?.addressFull}>
+              {place?.addressFull || "—"}
+            </div>
+            <span className="text-[11px] text-slate-400 font-semibold block mt-0.5">
+              Locality: {place?.locality || "Town Center"}
+            </span>
           </div>
-          <span className="text-[11px] text-slate-400 font-semibold block mt-0.5">
-            Locality: {place.locality || "Town Center"}
-          </span>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: "coordinates",
       label: "Map Coordinates",
-      render: (place) => {
-        const lat = place.latitude ? Number(place.latitude).toFixed(5) : "—";
-        const lng = place.longitude ? Number(place.longitude).toFixed(5) : "—";
-        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`;
+      render: (val, row) => {
+        const place = row || val;
+        const lat = place?.latitude ? Number(place.latitude).toFixed(5) : "—";
+        const lng = place?.longitude ? Number(place.longitude).toFixed(5) : "—";
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${place?.latitude},${place?.longitude}`;
         return (
           <div className="flex items-center gap-1.5 font-mono text-xs font-semibold text-slate-700 whitespace-nowrap">
             <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0" />
             <span>{lat}, {lng}</span>
-            {place.latitude && place.longitude && (
+            {place?.latitude && place?.longitude && (
               <a
                 href={mapsUrl}
                 target="_blank"
@@ -239,9 +245,10 @@ export default function AdminManageEntities({ token: propToken, onStatsChange })
     {
       key: "status",
       label: "Status",
-      render: (place) => {
-        if (place.isArchived) return <StatusBadge status="archived" />;
-        if (place.isPublished) return <StatusBadge status="published" />;
+      render: (val, row) => {
+        const place = row || val;
+        if (place?.isArchived) return <StatusBadge status="archived" />;
+        if (place?.isPublished) return <StatusBadge status="published" />;
         return <StatusBadge status="pending" label="In Review" />;
       },
     },
@@ -249,41 +256,44 @@ export default function AdminManageEntities({ token: propToken, onStatsChange })
       key: "actions",
       label: "Actions",
       align: "right",
-      render: (place) => (
-        <div className="flex items-center justify-end gap-1.5">
-          <button
-            onClick={() => {
-              setSelectedPlace(place);
-              setEditModalOpen(true);
-            }}
-            className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-            title="Edit details, photos, coordinates"
-          >
-            <Edit3 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleArchiveToggle(place)}
-            className={`p-1.5 rounded-lg transition-colors ${
-              place.isArchived
-                ? "text-emerald-700 hover:bg-emerald-50"
-                : "text-amber-700 hover:bg-amber-50"
-            }`}
-            title={place.isArchived ? "Restore to Directory" : "Archive from Directory"}
-          >
-            {place.isArchived ? <RotateCcw className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
-          </button>
-          <button
-            onClick={() => {
-              setDeleteConfirmPlace(place);
-              setDeleteDialogOpen(true);
-            }}
-            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete establishment"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      ),
+      render: (val, row) => {
+        const place = row || val;
+        return (
+          <div className="flex items-center justify-end gap-1.5">
+            <button
+              onClick={() => {
+                setSelectedPlace(place);
+                setEditModalOpen(true);
+              }}
+              className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+              title="Edit details, photos, coordinates"
+            >
+              <Edit3 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleArchiveToggle(place)}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                place?.isArchived
+                  ? "text-emerald-700 hover:bg-emerald-50"
+                  : "text-amber-700 hover:bg-amber-50"
+              }`}
+              title={place?.isArchived ? "Restore to Directory" : "Archive from Directory"}
+            >
+              {place?.isArchived ? <RotateCcw className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={() => {
+                setDeleteConfirmPlace(place);
+                setDeleteDialogOpen(true);
+              }}
+              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+              title="Delete establishment"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        );
+      },
     },
   ];
 

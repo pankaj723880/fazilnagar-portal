@@ -126,80 +126,105 @@ export default function AdminAuditLogs() {
       key: "createdAt",
       label: "Timestamp",
       sortable: true,
-      render: (log) => (
-        <div className="flex items-center gap-1.5 text-xs text-slate-600 whitespace-nowrap">
-          <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <span>{new Date(log.createdAt).toLocaleString("en-IN")}</span>
-        </div>
-      ),
+      render: (val, row) => {
+        const item = row || val;
+        const dt = (typeof val === "string" || val instanceof Date) ? val : item?.createdAt;
+        return (
+          <div className="flex items-center gap-1.5 text-xs text-slate-600 whitespace-nowrap">
+            <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <span>{dt ? new Date(dt).toLocaleString("en-IN") : "—"}</span>
+          </div>
+        );
+      },
     },
     {
-      key: "admin",
+      key: "adminEmail",
       label: "Administrator",
-      render: (log) => (
-        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-800">
-          <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <span className="truncate max-w-[160px]">
-            {log.adminEmail || log.adminUser?.email || "Town Admin"}
-          </span>
-        </div>
-      ),
+      render: (val, row) => {
+        const item = row || val;
+        const email = (typeof val === "string" ? val : null) || item?.adminEmail || item?.adminUser?.email || "Town Admin";
+        return (
+          <div className="flex items-center gap-1.5 text-xs font-medium text-slate-800">
+            <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <span className="truncate max-w-[160px]">{email}</span>
+          </div>
+        );
+      },
     },
     {
       key: "action",
       label: "Action",
       sortable: true,
-      render: (log) => (
-        <span
-          className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold border ${getActionBadge(
-            log.action
-          )}`}
-        >
-          {log.action}
-        </span>
-      ),
+      render: (val, row) => {
+        const item = row || val;
+        const act = (typeof val === "string" ? val : null) || item?.action || "ACTION";
+        return (
+          <span
+            className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold border ${getActionBadge(
+              act
+            )}`}
+          >
+            {act}
+          </span>
+        );
+      },
     },
     {
       key: "entityType",
       label: "Entity Type",
       sortable: true,
-      render: (log) => (
-        <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
-          {log.entityType}
-        </span>
-      ),
+      render: (val, row) => {
+        const item = row || val;
+        const type = (typeof val === "string" ? val : null) || item?.entityType || "—";
+        return (
+          <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
+            {type}
+          </span>
+        );
+      },
     },
     {
       key: "entityTitle",
       label: "Target Record",
-      render: (log) => (
-        <div className="text-xs font-semibold text-slate-900 max-w-[180px] truncate" title={log.entityTitle || log.entityId}>
-          {log.entityTitle || log.entityId || "—"}
-        </div>
-      ),
+      render: (val, row) => {
+        const item = row || val;
+        const title = (typeof val === "string" ? val : null) || item?.entityTitle || item?.entityId || "—";
+        return (
+          <div className="text-xs font-semibold text-slate-900 max-w-[180px] truncate" title={title}>
+            {title}
+          </div>
+        );
+      },
     },
     {
       key: "changesSummary",
       label: "Audit Details",
-      render: (log) => (
-        <div className="text-xs text-slate-600 max-w-[260px] truncate" title={log.changesSummary}>
-          {log.changesSummary || "—"}
-        </div>
-      ),
+      render: (val, row) => {
+        const item = row || val;
+        const summary = (typeof val === "string" ? val : null) || item?.changesSummary || "—";
+        return (
+          <div className="text-xs text-slate-600 max-w-[260px] truncate" title={summary}>
+            {summary}
+          </div>
+        );
+      },
     },
     {
       key: "view",
       label: "",
       align: "right",
-      render: (log) => (
-        <button
-          onClick={() => setSelectedLog(log)}
-          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title="Inspect log details"
-        >
-          <Eye className="w-4 h-4" />
-        </button>
-      ),
+      render: (val, row) => {
+        const item = row || val;
+        return (
+          <button
+            onClick={() => setSelectedLog(item)}
+            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+            title="Inspect log details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+        );
+      },
     },
   ];
 

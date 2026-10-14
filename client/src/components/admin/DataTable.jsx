@@ -97,20 +97,39 @@ export default function DataTable({
                     onRowClick ? "cursor-pointer hover:bg-slate-50/80" : "hover:bg-slate-50/40"
                   }`}
                 >
-                  {columns.map((col, colIdx) => (
-                    <td
-                      key={col.key || colIdx}
-                      className={`px-4 py-3.5 whitespace-nowrap align-middle ${
-                        col.align === "right"
-                          ? "text-right"
-                          : col.align === "center"
-                          ? "text-center"
-                          : "text-left"
-                      }`}
-                    >
-                      {col.render ? col.render(row[col.key], row, rowIdx) : row[col.key] ?? "—"}
-                    </td>
-                  ))}
+                  {columns.map((col, colIdx) => {
+                    let cellContent = "—";
+                    if (typeof col.render === "function") {
+                      try {
+                        const val = row[col.key];
+                        // If cell value is undefined (e.g. actions, status, admin, coordinates, etc.),
+                        // pass the whole row as the primary argument so single-argument handlers
+                        // like (item) => item.property never crash with "Cannot read properties of undefined".
+                        const primaryArg = val !== undefined ? val : row;
+                        cellContent = col.render(primaryArg, row, rowIdx);
+                      } catch (renderErr) {
+                        console.warn(`[DataTable] Column "${col.key}" render error:`, renderErr);
+                        cellContent = row[col.key] ?? "—";
+                      }
+                    } else {
+                      cellContent = row[col.key] ?? "—";
+                    }
+
+                    return (
+                      <td
+                        key={col.key || colIdx}
+                        className={`px-4 py-3.5 whitespace-nowrap align-middle ${
+                          col.align === "right"
+                            ? "text-right"
+                            : col.align === "center"
+                            ? "text-center"
+                            : "text-left"
+                        }`}
+                      >
+                        {cellContent}
+                      </td>
+                    );
+                  })}
                 </tr>
               );
             })}

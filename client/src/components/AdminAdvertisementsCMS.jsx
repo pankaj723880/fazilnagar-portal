@@ -339,28 +339,33 @@ export default function AdminAdvertisementsCMS({ onStatsChange }) {
       key: "format",
       label: "Format & Placement",
       sortable: true,
-      render: (ad) => (
-        <div className="text-xs">
-          <span className="font-semibold text-slate-800 capitalize bg-slate-100 px-2 py-0.5 rounded">
-            {ad.format || "floating"}
-          </span>
-          <div className="text-[11px] text-slate-400 mt-1">
-            Pos: {ad.placement || "bottom-right"}
+      render: (val, row) => {
+        const ad = row || val;
+        const fmt = (typeof val === "string" ? val : null) || ad?.format || "floating";
+        return (
+          <div className="text-xs">
+            <span className="font-semibold text-slate-800 capitalize bg-slate-100 px-2 py-0.5 rounded">
+              {fmt}
+            </span>
+            <div className="text-[11px] text-slate-400 mt-1">
+              Pos: {ad?.placement || "bottom-right"}
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: "schedule",
       label: "Schedule",
-      render: (ad) => {
-        if (ad.isPermanent) {
+      render: (val, row) => {
+        const ad = row || val;
+        if (ad?.isPermanent) {
           return <span className="text-xs font-semibold text-purple-700">Always Active</span>;
         }
         return (
           <div className="text-[11px] text-slate-600 space-y-0.5">
-            <div>From: {ad.startDate ? new Date(ad.startDate).toLocaleDateString() : "Immediate"}</div>
-            <div>Until: {ad.endDate ? new Date(ad.endDate).toLocaleDateString() : "No expiry"}</div>
+            <div>From: {ad?.startDate ? new Date(ad.startDate).toLocaleDateString() : "Immediate"}</div>
+            <div>Until: {ad?.endDate ? new Date(ad.endDate).toLocaleDateString() : "No expiry"}</div>
           </div>
         );
       },
@@ -368,12 +373,13 @@ export default function AdminAdvertisementsCMS({ onStatsChange }) {
     {
       key: "analytics",
       label: "Real Analytics",
-      render: (ad) => {
-        const ctr = (ad.impressions || 0) > 0 ? (((ad.clicks || 0) / ad.impressions) * 100).toFixed(1) : "0.0";
+      render: (val, row) => {
+        const ad = row || val;
+        const ctr = (ad?.impressions || 0) > 0 ? (((ad?.clicks || 0) / ad.impressions) * 100).toFixed(1) : "0.0";
         return (
           <div className="text-xs space-y-0.5">
-            <div className="font-bold text-slate-800">{ad.impressions || 0} <span className="font-normal text-slate-400 text-[11px]">views</span></div>
-            <div className="text-slate-600">{ad.clicks || 0} <span className="text-slate-400 text-[11px]">clicks ({ctr}%)</span></div>
+            <div className="font-bold text-slate-800">{ad?.impressions || 0} <span className="font-normal text-slate-400 text-[11px]">views</span></div>
+            <div className="text-slate-600">{ad?.clicks || 0} <span className="text-slate-400 text-[11px]">clicks ({ctr}%)</span></div>
           </div>
         );
       },
@@ -381,9 +387,10 @@ export default function AdminAdvertisementsCMS({ onStatsChange }) {
     {
       key: "status",
       label: "Status",
-      render: (ad) => {
-        if (!ad.isPublished) return <StatusBadge status="draft" />;
-        if (!ad.isActive) return <StatusBadge status="archived" label="Paused" />;
+      render: (val, row) => {
+        const ad = row || val;
+        if (!ad?.isPublished) return <StatusBadge status="draft" />;
+        if (!ad?.isActive) return <StatusBadge status="archived" label="Paused" />;
         return <StatusBadge status="live" label="Live" />;
       },
     },
@@ -391,48 +398,51 @@ export default function AdminAdvertisementsCMS({ onStatsChange }) {
       key: "actions",
       label: "Actions",
       align: "right",
-      render: (ad) => (
-        <div className="flex items-center justify-end gap-1.5">
-          <button
-            onClick={() => setPreviewAd(ad)}
-            title="Preview Advertisement"
-            className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleToggleAdActive(ad)}
-            title={ad.isActive ? "Pause Advertisement" : "Enable Advertisement"}
-            className="p-1.5 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-          >
-            {ad.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 text-emerald-600" />}
-          </button>
-          <button
-            onClick={() => handleToggleAdPublish(ad)}
-            title={ad.isPublished ? "Unpublish Ad" : "Publish Ad Live"}
-            className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-          >
-            {ad.isPublished ? <EyeOff className="w-4 h-4 text-amber-600" /> : <Eye className="w-4 h-4 text-emerald-600" />}
-          </button>
-          <button
-            onClick={() => openEditAdModal(ad)}
-            title="Edit Advertisement"
-            className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          >
-            <Edit3 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => {
-              setDeleteConfirmAd(ad);
-              setDeleteDialogOpen(true);
-            }}
-            title="Delete Advertisement"
-            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      ),
+      render: (val, row) => {
+        const ad = row || val;
+        return (
+          <div className="flex items-center justify-end gap-1.5">
+            <button
+              onClick={() => setPreviewAd(ad)}
+              title="Preview Advertisement"
+              className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleToggleAdActive(ad)}
+              title={ad?.isActive ? "Pause Advertisement" : "Enable Advertisement"}
+              className="p-1.5 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
+            >
+              {ad?.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 text-emerald-600" />}
+            </button>
+            <button
+              onClick={() => handleToggleAdPublish(ad)}
+              title={ad?.isPublished ? "Unpublish Ad" : "Publish Ad Live"}
+              className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            >
+              {ad?.isPublished ? <EyeOff className="w-4 h-4 text-amber-600" /> : <Eye className="w-4 h-4 text-emerald-600" />}
+            </button>
+            <button
+              onClick={() => openEditAdModal(ad)}
+              title="Edit Advertisement"
+              className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+            >
+              <Edit3 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => {
+                setDeleteConfirmAd(ad);
+                setDeleteDialogOpen(true);
+              }}
+              title="Delete Advertisement"
+              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        );
+      },
     },
   ];
 

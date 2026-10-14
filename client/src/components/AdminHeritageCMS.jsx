@@ -293,95 +293,111 @@ export default function AdminHeritageCMS() {
       key: "name",
       label: "Site & Heritage Landmark",
       sortable: true,
-      render: (site) => (
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
-            {site.primaryImage ? (
-              <img src={site.primaryImage} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-400">
-                <Compass className="w-5 h-5" />
-              </div>
-            )}
+      render: (val, row) => {
+        const site = row || val;
+        return (
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
+              {site?.primaryImage ? (
+                <img src={site.primaryImage} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-slate-400">
+                  <Compass className="w-5 h-5" />
+                </div>
+              )}
+            </div>
+            <div>
+              <div className="font-semibold text-slate-900 text-sm">{site?.name}</div>
+              {site?.nameHindi && <div className="text-xs text-slate-500 font-hindi">{site.nameHindi}</div>}
+              <div className="text-[11px] text-slate-400 font-mono mt-0.5">/{site?.slug}</div>
+            </div>
           </div>
-          <div>
-            <div className="font-semibold text-slate-900 text-sm">{site.name}</div>
-            {site.nameHindi && <div className="text-xs text-slate-500 font-hindi">{site.nameHindi}</div>}
-            <div className="text-[11px] text-slate-400 font-mono mt-0.5">/{site.slug}</div>
-          </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: "category",
       label: "Category & Tradition",
       sortable: true,
-      render: (site) => (
-        <div>
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-            {site.category}
-          </span>
-          {site.isTwinHeritageHighlight && (
-            <div className="mt-1 flex items-center gap-1 text-[11px] text-amber-700 font-semibold">
-              <Sparkles className="w-3 h-3 text-amber-500" />
-              Twin Highlight
-            </div>
-          )}
-        </div>
-      ),
+      render: (val, row) => {
+        const site = row || val;
+        const cat = (typeof val === "string" ? val : null) || site?.category || "Heritage";
+        return (
+          <div>
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+              {cat}
+            </span>
+            {site?.isTwinHeritageHighlight && (
+              <div className="mt-1 flex items-center gap-1 text-[11px] text-amber-700 font-semibold">
+                <Sparkles className="w-3 h-3 text-amber-500" />
+                Twin Highlight
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: "distance",
       label: "Proximity & Address",
-      render: (site) => (
-        <div className="text-xs text-slate-600 max-w-[200px]">
-          <div className="font-medium text-slate-800 flex items-center gap-1">
-            <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            {site.distanceFromFazilnagarCenter || "Fazilnagar"}
+      render: (val, row) => {
+        const site = row || val;
+        return (
+          <div className="text-xs text-slate-600 max-w-[200px]">
+            <div className="font-medium text-slate-800 flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              {site?.distanceFromFazilnagarCenter || "Fazilnagar"}
+            </div>
+            <div className="text-slate-400 truncate mt-0.5">{site?.locationAddress || "—"}</div>
           </div>
-          <div className="text-slate-400 truncate mt-0.5">{site.locationAddress || "—"}</div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: "status",
       label: "Status",
-      render: (site) => (
-        <StatusBadge status={site.isPublished ? "published" : "draft"} />
-      ),
+      render: (val, row) => {
+        const site = row || val;
+        return (
+          <StatusBadge status={site?.isPublished ? "published" : "draft"} />
+        );
+      },
     },
     {
       key: "actions",
       label: "Actions",
       align: "right",
-      render: (site) => (
-        <div className="flex items-center justify-end gap-1.5">
-          <button
-            onClick={() => handleTogglePublish(site)}
-            title={site.isPublished ? "Unpublish site" : "Publish site"}
-            className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-          >
-            {site.isPublished ? <EyeOff className="w-4 h-4 text-amber-600" /> : <Eye className="w-4 h-4 text-emerald-600" />}
-          </button>
-          <button
-            onClick={() => openEditModal(site)}
-            title="Edit Site Details"
-            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          >
-            <Edit3 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => {
-              setSiteToDelete(site);
-              setDeleteDialogOpen(true);
-            }}
-            title="Delete Site"
-            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      ),
+      render: (val, row) => {
+        const site = row || val;
+        return (
+          <div className="flex items-center justify-end gap-1.5">
+            <button
+              onClick={() => handleTogglePublish(site)}
+              title={site?.isPublished ? "Unpublish site" : "Publish site"}
+              className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            >
+              {site?.isPublished ? <EyeOff className="w-4 h-4 text-amber-600" /> : <Eye className="w-4 h-4 text-emerald-600" />}
+            </button>
+            <button
+              onClick={() => openEditModal(site)}
+              title="Edit Site Details"
+              className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+            >
+              <Edit3 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => {
+                setSiteToDelete(site);
+                setDeleteDialogOpen(true);
+              }}
+              title="Delete Site"
+              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
