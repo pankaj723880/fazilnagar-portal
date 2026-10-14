@@ -11,10 +11,13 @@ import { getAuthUser, clearAuthSession } from "../utils/authStorage";
 import {
   getSiteSettings,
   DEFAULT_SITE_SETTINGS,
+  getCachedSettings,
   getHeritageSites,
   DEFAULT_HERITAGE_SITES,
+  getCachedHeritage,
   getEvents,
   DEFAULT_EVENTS,
+  getCachedEvents,
 } from "../services/cmsService";
 
 // Lazy-load Leaflet Map to eliminate render-blocking JS and main-thread freeze
@@ -256,9 +259,9 @@ export default function TownPortal() {
     : EXPLORE_21_CATEGORIES.slice(0, 4);
 
   // Dynamic Site Settings, Heritage Sites & Events from CMS
-  const [siteSettings, setSiteSettings] = useState(DEFAULT_SITE_SETTINGS);
-  const [heritageSites, setHeritageSites] = useState(DEFAULT_HERITAGE_SITES);
-  const [events, setEvents] = useState(DEFAULT_EVENTS);
+  const [siteSettings, setSiteSettings] = useState(() => getCachedSettings() || DEFAULT_SITE_SETTINGS);
+  const [heritageSites, setHeritageSites] = useState(() => getCachedHeritage() || DEFAULT_HERITAGE_SITES);
+  const [events, setEvents] = useState(() => getCachedEvents() || DEFAULT_EVENTS);
   const [selectedEventCategory, setSelectedEventCategory] = useState("All");
 
   const loadCMSData = () => {
@@ -267,13 +270,13 @@ export default function TownPortal() {
     });
 
     getHeritageSites(true).then((sites) => {
-      if (Array.isArray(sites) && sites.length > 0) {
+      if (Array.isArray(sites)) {
         setHeritageSites(sites);
       }
     });
 
     getEvents({}, true).then((evts) => {
-      if (Array.isArray(evts) && evts.length > 0) {
+      if (Array.isArray(evts)) {
         setEvents(evts);
       }
     });
@@ -312,7 +315,10 @@ export default function TownPortal() {
     if (name.includes("kushinagar") || dist.includes("18 km")) return false;
     return true;
   });
-  const fazilnagarSites = fazilnagarCandidates.length > 0
+  const isCustomHeritage = Array.isArray(heritageSites) && heritageSites !== DEFAULT_HERITAGE_SITES;
+  const fazilnagarSites = isCustomHeritage
+    ? fazilnagarCandidates
+    : fazilnagarCandidates.length > 0
     ? fazilnagarCandidates
     : DEFAULT_HERITAGE_SITES.filter((s) => s.heritageZone === "fazilnagar");
 
@@ -325,7 +331,9 @@ export default function TownPortal() {
     const dist = (s.distanceFromFazilnagarCenter || "").toLowerCase();
     return cat === "Buddhist Heritage" || name.includes("kushinagar") || dist.includes("18 km");
   });
-  const kushinagarSites = kushinagarCandidates.length > 0
+  const kushinagarSites = isCustomHeritage
+    ? kushinagarCandidates
+    : kushinagarCandidates.length > 0
     ? kushinagarCandidates
     : DEFAULT_HERITAGE_SITES.filter((s) => s.heritageZone === "kushinagar");
 

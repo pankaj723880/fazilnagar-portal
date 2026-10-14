@@ -5,11 +5,38 @@
 import API from "../api";
 
 const CACHE_TTL_MS = 60 * 1000; // 1 minute in-memory cache
+
+function getPersistentCache(key) {
+  try {
+    const raw = localStorage.getItem(`fazilnagar_cms_${key}`);
+    if (raw) return JSON.parse(raw);
+  } catch (_) {}
+  return null;
+}
+
+function setPersistentCache(key, data) {
+  try {
+    localStorage.setItem(`fazilnagar_cms_${key}`, JSON.stringify(data));
+  } catch (_) {}
+}
+
+export function getCachedSettings() {
+  return getPersistentCache("settings") || memoryCache.settings.data;
+}
+
+export function getCachedHeritage() {
+  return getPersistentCache("heritage") || memoryCache.heritage.data;
+}
+
+export function getCachedEvents() {
+  return getPersistentCache("events") || memoryCache.events.data;
+}
+
 const memoryCache = {
-  settings: { data: null, timestamp: 0 },
+  settings: { data: getPersistentCache("settings"), timestamp: Date.now() },
   services: { data: null, timestamp: 0 },
-  events: { data: null, timestamp: 0 },
-  heritage: { data: null, timestamp: 0 },
+  events: { data: getPersistentCache("events"), timestamp: Date.now() },
+  heritage: { data: getPersistentCache("heritage"), timestamp: Date.now() },
 };
 
 export const DEFAULT_SITE_SETTINGS = {
@@ -94,6 +121,7 @@ export async function getSiteSettings(forceFresh = false) {
     });
     if (res.data?.success && res.data?.settings) {
       const merged = { ...DEFAULT_SITE_SETTINGS, ...res.data.settings };
+      setPersistentCache("settings", merged);
       memoryCache.settings = { data: merged, timestamp: now };
       return merged;
     }
@@ -101,7 +129,7 @@ export async function getSiteSettings(forceFresh = false) {
     console.warn("[CMSService] Settings fetch fallback:", err.message);
   }
 
-  return memoryCache.settings.data || DEFAULT_SITE_SETTINGS;
+  return memoryCache.settings.data || getPersistentCache("settings") || DEFAULT_SITE_SETTINGS;
 }
 
 /**
@@ -271,9 +299,15 @@ export const DEFAULT_EVENTS = [
 export function clearCMSCache(key) {
   if (key && memoryCache[key]) {
     memoryCache[key] = { data: null, timestamp: 0 };
+    try {
+      localStorage.removeItem(`fazilnagar_cms_${key}`);
+    } catch (_) {}
   } else if (!key) {
     Object.keys(memoryCache).forEach((k) => {
       memoryCache[k] = { data: null, timestamp: 0 };
+      try {
+        localStorage.removeItem(`fazilnagar_cms_${k}`);
+      } catch (_) {}
     });
   }
 
@@ -304,14 +338,15 @@ export async function getEvents({ category = "All", search = "", timeFilter = ""
       headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
       timeout: 30000,
     });
-    if (res.data?.success && Array.isArray(res.data?.events) && res.data.events.length > 0) {
+    if (res.data?.success && Array.isArray(res.data?.events)) {
+      setPersistentCache("events", res.data.events);
       memoryCache.events = { data: res.data.events, timestamp: now };
       return res.data.events;
     }
   } catch (err) {
     console.warn("[CMSService] Events fetch error, using fallbacks:", err.message);
   }
-  return memoryCache.events.data || DEFAULT_EVENTS;
+  return memoryCache.events.data || getPersistentCache("events") || DEFAULT_EVENTS;
 }
 
 /**
@@ -329,12 +364,13 @@ export async function getHeritageSites(forceFresh = false) {
       headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
       timeout: 30000,
     });
-    if (res.data?.success && Array.isArray(res.data?.sites) && res.data.sites.length > 0) {
+    if (res.data?.success && Array.isArray(res.data?.sites)) {
+      setPersistentCache("heritage", res.data.sites);
       memoryCache.heritage = { data: res.data.sites, timestamp: now };
       return res.data.sites;
     }
   } catch (err) {
     console.warn("[CMSService] Heritage fetch error, using fallbacks:", err.message);
   }
-  return memoryCache.heritage.data || DEFAULT_HERITAGE_SITES;
+  return memoryCache.heritage.data || getPersistentCache("heritage") || DEFAULT_HERITAGE_SITES;
 }

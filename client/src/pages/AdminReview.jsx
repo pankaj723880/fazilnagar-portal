@@ -55,6 +55,7 @@ export default function AdminReview({ user: propUser }) {
   const [entitiesCount, setEntitiesCount] = useState(19);
   const [liveAdsCount, setLiveAdsCount] = useState(0);
   const [newsCount, setNewsCount] = useState(0);
+  const [usersCount, setUsersCount] = useState(0);
 
   // Authentication State
   const [adminEmail, setAdminEmail] = useState("admin@fazilnagar.com");
@@ -141,6 +142,17 @@ export default function AdminReview({ user: propUser }) {
       }).catch(() => null);
       if (Array.isArray(newsRes?.data)) {
         setNewsCount(newsRes.data.length);
+      }
+
+      // 5. Registered users count
+      const usersRes = await API.get("/users?limit=1", {
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => null);
+      if (usersRes?.data) {
+        const totalU =
+          usersRes.data.pagination?.total ??
+          (Array.isArray(usersRes.data.users) ? usersRes.data.users.length : 0);
+        setUsersCount(totalU);
       }
     } catch (err) {
       console.warn("Failed to load sidebar badge counts:", err);
@@ -278,7 +290,7 @@ export default function AdminReview({ user: propUser }) {
               totalAdsCount: liveAdsCount,
               publishedNewsCount: newsCount,
               totalNewsCount: newsCount,
-              usersCount: 248,
+              usersCount,
             }}
             onOpenCreateAd={() => setActiveTab("ads")}
             onOpenCreateNews={() => setActiveTab("news-manage")}
@@ -352,7 +364,7 @@ export default function AdminReview({ user: propUser }) {
               totalAdsCount: liveAdsCount,
               publishedNewsCount: newsCount,
               totalNewsCount: newsCount,
-              usersCount: 248,
+              usersCount,
             }}
             onOpenCreateAd={() => setActiveTab("ads")}
             onOpenCreateNews={() => setActiveTab("news-manage")}

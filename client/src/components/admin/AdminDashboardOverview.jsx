@@ -220,7 +220,7 @@ export default function AdminDashboardOverview({
         {/* Metric 5: Registered Users & Citizens */}
         <StatCard
           label="Registered Users"
-          value={stats.usersCount || 248}
+          value={stats.usersCount ?? 0}
           icon={Users}
           color="indigo"
           subtitle="Citizen & Reporter accounts"

@@ -48,7 +48,10 @@ const DEFAULT_EVENTS = [
   },
 ];
 
+let hasCheckedInitialSeed = false;
 async function seedDefaultEventsIfEmpty() {
+  if (hasCheckedInitialSeed) return;
+  hasCheckedInitialSeed = true;
   const count = await Event.countDocuments();
   if (count === 0) {
     await Event.insertMany(DEFAULT_EVENTS);
@@ -107,6 +110,7 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
     const {
       title,
       titleHindi,
+      titleHi,
       category,
       summary,
       description,
@@ -124,22 +128,35 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
       isFeatured,
       isPublished,
       status,
+      location,
     } = req.body;
 
     if (!title || !description || !venue || !startDate) {
       return res.status(400).json({ message: "Title, description, venue, and start date are required." });
     }
 
+    const effectiveTitleHindi = (titleHindi !== undefined ? titleHindi : titleHi || "").trim();
+    const parsedLat = !isNaN(parseFloat(latitude))
+      ? parseFloat(latitude)
+      : location?.coordinates?.[1] !== undefined && !isNaN(parseFloat(location.coordinates[1]))
+      ? parseFloat(location.coordinates[1])
+      : 26.6827;
+    const parsedLng = !isNaN(parseFloat(longitude))
+      ? parseFloat(longitude)
+      : location?.coordinates?.[0] !== undefined && !isNaN(parseFloat(location.coordinates[0]))
+      ? parseFloat(location.coordinates[0])
+      : 84.0498;
+
     const newEvent = await Event.create({
       title: title.trim(),
-      titleHindi: (titleHindi || "").trim(),
+      titleHindi: effectiveTitleHindi,
       category: category || "Religious Festival",
       summary: (summary || description.slice(0, 200)).trim(),
       description: description.trim(),
       venue: venue.trim(),
       address: (address || "Fazilnagar, Kushinagar, UP").trim(),
-      latitude: !isNaN(parseFloat(latitude)) ? parseFloat(latitude) : 26.6827,
-      longitude: !isNaN(parseFloat(longitude)) ? parseFloat(longitude) : 84.0498,
+      latitude: parsedLat,
+      longitude: parsedLng,
       startDate: new Date(startDate),
       endDate: endDate ? new Date(endDate) : null,
       timeString: (timeString || "Morning / Evening").trim(),
@@ -194,6 +211,7 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
     const {
       title,
       titleHindi,
+      titleHi,
       category,
       summary,
       description,
@@ -211,17 +229,23 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
       isFeatured,
       isPublished,
       status,
+      location,
     } = req.body;
 
     if (title) event.title = title.trim();
     if (titleHindi !== undefined) event.titleHindi = titleHindi.trim();
+    else if (titleHi !== undefined) event.titleHindi = titleHi.trim();
     if (category) event.category = category;
     if (summary !== undefined) event.summary = summary.trim();
     if (description) event.description = description.trim();
     if (venue) event.venue = venue.trim();
     if (address !== undefined) event.address = address.trim();
-    if (latitude !== undefined) event.latitude = parseFloat(latitude);
-    if (longitude !== undefined) event.longitude = parseFloat(longitude);
+
+    const putLat = latitude !== undefined ? latitude : location?.coordinates?.[1];
+    const putLng = longitude !== undefined ? longitude : location?.coordinates?.[0];
+    if (putLat !== undefined && !isNaN(parseFloat(putLat))) event.latitude = parseFloat(putLat);
+    if (putLng !== undefined && !isNaN(parseFloat(putLng))) event.longitude = parseFloat(putLng);
+
     if (startDate) event.startDate = new Date(startDate);
     if (endDate !== undefined) event.endDate = endDate ? new Date(endDate) : null;
     if (timeString !== undefined) event.timeString = timeString.trim();

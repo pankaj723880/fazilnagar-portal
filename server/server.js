@@ -25,9 +25,25 @@ app.use(
   cors({
     origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-anon-id", "X-Anon-Id"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-anon-id",
+      "X-Anon-Id",
+      "Cache-Control",
+      "cache-control",
+      "Pragma",
+      "pragma",
+      "Expires",
+      "expires",
+      "X-Requested-With",
+      "Accept",
+      "Origin",
+    ],
+    exposedHeaders: ["Cache-Control", "Content-Length"],
   })
 );
+app.options("*", cors());
 app.use(express.json());
 
 // Serve uploaded media files publicly

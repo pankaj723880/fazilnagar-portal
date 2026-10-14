@@ -113,10 +113,13 @@ const DEFAULT_HERITAGE_SITES = [
   },
 ];
 
+let hasCheckedHeritageSeed = false;
 async function seedDefaultHeritageIfEmpty() {
-  for (const defaultSite of DEFAULT_HERITAGE_SITES) {
-    const exists = await HeritageSite.findOne({ slug: defaultSite.slug });
-    if (!exists) {
+  if (hasCheckedHeritageSeed) return;
+  hasCheckedHeritageSeed = true;
+  const count = await HeritageSite.countDocuments();
+  if (count === 0) {
+    for (const defaultSite of DEFAULT_HERITAGE_SITES) {
       await HeritageSite.create(defaultSite);
     }
   }

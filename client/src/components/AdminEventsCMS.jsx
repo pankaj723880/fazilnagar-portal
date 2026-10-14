@@ -70,6 +70,13 @@ export default function AdminEventsCMS() {
   // Delete dialog
   const [deleteEventId, setDeleteEventId] = useState(null);
 
+  // Image Upload State
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [uploadStatus, setUploadStatus] = useState("idle");
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+
   const categories = [
     "All",
     "Religious Festival",
@@ -108,6 +115,70 @@ export default function AdminEventsCMS() {
     setToast({ message, type });
   };
 
+  const uploadImageFile = async (file) => {
+    if (!file) return;
+    setUploadStatus("uploading");
+    setUploadProgress(10);
+    setUploadError("");
+    const token = getAuthToken();
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      formData.append("title", formTitle || file.name);
+      formData.append("folder", "events");
+
+      const res = await API.post("/media/upload", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        timeout: 60000,
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(percent);
+          }
+        },
+      });
+
+      const permanentUrl = res.data?.url || res.data?.media?.url;
+      if (!permanentUrl) {
+        throw new Error("Server succeeded but did not return a permanent image URL.");
+      }
+
+      setFormBannerImage(permanentUrl);
+      setPreviewUrl(permanentUrl);
+      setUploadStatus("success");
+      setUploadProgress(100);
+      showToast("Event banner uploaded successfully!");
+    } catch (err) {
+      console.error("Event image upload error:", err);
+      const msg = err.response?.data?.message || err.message || "Upload failed";
+      setUploadStatus("error");
+      setUploadError(msg);
+      setFormBannerImage("");
+      showToast("Failed to upload image: " + msg, "error");
+    }
+  };
+
+  const handleFileSelect = (file) => {
+    if (!file) return;
+    setSelectedFile(file);
+    const tempBlob = URL.createObjectURL(file);
+    setPreviewUrl(tempBlob);
+    setFormBannerImage("");
+    uploadImageFile(file);
+  };
+
+  const handleClearImage = () => {
+    setFormBannerImage("");
+    setPreviewUrl("");
+    setUploadStatus("idle");
+    setUploadProgress(0);
+    setUploadError("");
+    setSelectedFile(null);
+  };
+
   const openCreateModal = () => {
     setEditingEvent(null);
     setFormTitle("");
@@ -125,6 +196,11 @@ export default function AdminEventsCMS() {
     setFormOrganizer("Fazilnagar Mela & Utsav Samiti");
     setFormOrganizerContact("+91 5564 222102");
     setFormBannerImage("");
+    setPreviewUrl("");
+    setUploadStatus("idle");
+    setUploadProgress(0);
+    setUploadError("");
+    setSelectedFile(null);
     setFormIsFeatured(false);
     setFormIsPublished(true);
     setModalOpen(true);
@@ -133,20 +209,25 @@ export default function AdminEventsCMS() {
   const openEditModal = (evt) => {
     setEditingEvent(evt);
     setFormTitle(evt.title || "");
-    setFormTitleHi(evt.titleHi || "");
+    setFormTitleHi(evt.titleHi || evt.titleHindi || "");
     setFormCategory(evt.category || "Religious Festival");
     setFormSummary(evt.summary || "");
     setFormDescription(evt.description || "");
     setFormVenue(evt.venue || "");
     setFormAddress(evt.address || "");
-    setFormLat(evt.location?.coordinates?.[1] ? String(evt.location.coordinates[1]) : "26.6827");
-    setFormLng(evt.location?.coordinates?.[0] ? String(evt.location.coordinates[0]) : "84.0498");
+    setFormLat(evt.latitude ? String(evt.latitude) : evt.location?.coordinates?.[1] ? String(evt.location.coordinates[1]) : "26.6827");
+    setFormLng(evt.longitude ? String(evt.longitude) : evt.location?.coordinates?.[0] ? String(evt.location.coordinates[0]) : "84.0498");
     setFormStartDate(evt.startDate ? evt.startDate.split("T")[0] : "");
     setFormEndDate(evt.endDate ? evt.endDate.split("T")[0] : "");
     setFormTimeString(evt.timeString || "All Day");
     setFormOrganizer(evt.organizer || "");
     setFormOrganizerContact(evt.organizerContact || "");
     setFormBannerImage(evt.bannerImage || "");
+    setPreviewUrl(evt.bannerImage || "");
+    setUploadStatus(evt.bannerImage ? "success" : "idle");
+    setUploadProgress(evt.bannerImage ? 100 : 0);
+    setUploadError("");
+    setSelectedFile(null);
     setFormIsFeatured(Boolean(evt.isFeatured));
     setFormIsPublished(evt.isPublished !== false);
     setModalOpen(true);
@@ -154,6 +235,15 @@ export default function AdminEventsCMS() {
 
   const handleSaveEvent = async (e) => {
     e.preventDefault();
+    if (uploadStatus === "uploading") {
+      showToast("Please wait for the image upload to complete before saving.", "error");
+      return;
+    }
+    if (formBannerImage && (formBannerImage.startsWith("blob:") || formBannerImage.startsWith("data:"))) {
+      showToast("Local temporary blob or data URLs cannot be saved. Please upload an image or choose from Media Library.", "error");
+      return;
+    }
+
     setSubmitting(true);
     const token = getAuthToken();
 
@@ -163,6 +253,7 @@ export default function AdminEventsCMS() {
     const payload = {
       title: formTitle.trim(),
       titleHi: formTitleHi.trim(),
+      titleHindi: formTitleHi.trim(),
       category: formCategory,
       summary: formSummary.trim(),
       description: formDescription.trim(),
@@ -176,6 +267,8 @@ export default function AdminEventsCMS() {
       bannerImage: formBannerImage.trim(),
       isFeatured: formIsFeatured,
       isPublished: formIsPublished,
+      latitude: !isNaN(lat) ? lat : 26.6827,
+      longitude: !isNaN(lng) ? lng : 84.0498,
       location: {
         type: "Point",
         coordinates: [!isNaN(lng) ? lng : 84.0498, !isNaN(lat) ? lat : 26.6827],
@@ -931,11 +1024,24 @@ export default function AdminEventsCMS() {
               <div className="pt-2 border-t border-slate-100">
                 <ImageUploader
                   value={formBannerImage}
-                  onChange={setFormBannerImage}
+                  previewUrl={previewUrl}
+                  uploadStatus={uploadStatus}
+                  uploadProgress={uploadProgress}
+                  errorMessage={uploadError}
+                  onFileSelect={handleFileSelect}
+                  onRetry={() => selectedFile && uploadImageFile(selectedFile)}
+                  onClear={handleClearImage}
+                  onChange={(url) => {
+                    setFormBannerImage(url);
+                    setPreviewUrl(url);
+                    setUploadStatus(url ? "success" : "idle");
+                    setUploadError("");
+                  }}
                   onOpenMediaPicker={() => setMediaPickerOpen(true)}
                   label="Event Poster / Banner Image"
                   helpText="Upload event invitation or poster (max 10MB)"
                   aspectRatio="banner"
+                  disabled={submitting || uploadStatus === "uploading"}
                 />
               </div>
 
@@ -997,6 +1103,9 @@ export default function AdminEventsCMS() {
         onClose={() => setMediaPickerOpen(false)}
         onSelect={(url) => {
           setFormBannerImage(url);
+          setPreviewUrl(url);
+          setUploadStatus(url ? "success" : "idle");
+          setUploadError("");
           setMediaPickerOpen(false);
         }}
         title="Select Event Poster / Cover Image"
