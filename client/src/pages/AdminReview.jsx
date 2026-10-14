@@ -6,6 +6,13 @@ import { usePageSEO } from "../utils/seo";
 import AdminCommunityPlaces from "../components/AdminCommunityPlaces";
 import AdminManageEntities from "../components/AdminManageEntities";
 import AdminManageUsers from "../components/AdminManageUsers";
+import AdminSettingsCMS from "../components/AdminSettingsCMS";
+import AdminHeroCMS from "../components/AdminHeroCMS";
+import AdminServicesCMS from "../components/AdminServicesCMS";
+import AdminEventsCMS from "../components/AdminEventsCMS";
+import AdminHeritageCMS from "../components/AdminHeritageCMS";
+import AdminMediaLibrary from "../components/AdminMediaLibrary";
+import AdminAuditLogs from "../components/AdminAuditLogs";
 import {
   ShieldCheck,
   CheckCircle,
@@ -46,6 +53,10 @@ import {
   Copy,
   CheckCheck,
   FolderCheck,
+  Settings,
+  Compass,
+  Image as ImageIcon,
+  ShieldAlert,
 } from "lucide-react";
 
 export default function AdminReview({ user: propUser }) {
@@ -1018,6 +1029,94 @@ export default function AdminReview({ user: propUser }) {
       {/* Tabs Navigation Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-[#E1E6EA] shadow-2xs">
         <div className="flex flex-wrap items-center gap-1.5">
+          {/* CMS Dynamic Management Tabs */}
+          <button
+            onClick={() => setActiveTab("cms-settings")}
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "cms-settings"
+                ? "bg-slate-900 text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <Sliders className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Site Settings</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("cms-hero")}
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "cms-hero"
+                ? "bg-[#0D5E49] text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <ImageIcon className="w-3.5 h-3.5 text-emerald-300" />
+            <span>Hero Carousel</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("cms-services")}
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "cms-services"
+                ? "bg-indigo-700 text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <Landmark className="w-3.5 h-3.5 text-indigo-200" />
+            <span>Public Services</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("cms-events")}
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "cms-events"
+                ? "bg-amber-600 text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <Calendar className="w-3.5 h-3.5 text-amber-200" />
+            <span>Events & Melas</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("cms-heritage")}
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "cms-heritage"
+                ? "bg-emerald-800 text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <Compass className="w-3.5 h-3.5 text-emerald-300" />
+            <span>Twin Heritage</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("cms-media")}
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "cms-media"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <ImageIcon className="w-3.5 h-3.5 text-blue-200" />
+            <span>Media Library</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("cms-audit")}
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "cms-audit"
+                ? "bg-slate-800 text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <ShieldAlert className="w-3.5 h-3.5 text-purple-300" />
+            <span>Audit Logs</span>
+          </button>
+
+          <div className="h-4 w-px bg-slate-300 mx-1 hidden sm:block" />
+
+          {/* Existing Administrative Operations */}
           <button
             onClick={() => setActiveTab("manage-entities")}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
@@ -1027,7 +1126,7 @@ export default function AdminReview({ user: propUser }) {
             }`}
           >
             <Landmark className="w-3.5 h-3.5 text-emerald-300" />
-            <span>Manage Entities (19)</span>
+            <span>Entities (19)</span>
           </button>
 
           <button
@@ -1039,7 +1138,7 @@ export default function AdminReview({ user: propUser }) {
             }`}
           >
             <Users className="w-3.5 h-3.5 text-indigo-300" />
-            <span>Manage Users</span>
+            <span>Users</span>
           </button>
 
           <button
@@ -1051,7 +1150,7 @@ export default function AdminReview({ user: propUser }) {
             }`}
           >
             <Megaphone className="w-3.5 h-3.5" />
-            <span>Advertisements ({adsList.length})</span>
+            <span>Ads ({adsList.length})</span>
           </button>
 
           <button
@@ -1075,7 +1174,7 @@ export default function AdminReview({ user: propUser }) {
             }`}
           >
             <Store className="w-3.5 h-3.5 text-amber-400" />
-            <span>Community Submissions</span>
+            <span>Submissions</span>
           </button>
 
           <button
@@ -1090,62 +1189,31 @@ export default function AdminReview({ user: propUser }) {
             }`}
           >
             <HardDrive className="w-3.5 h-3.5" />
-            <span>Google Drive Media ({driveData?.folder?.filesUploadedCount ?? driveData?.mongo?.totalCount ?? 1})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("all")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-              activeTab === "all" ? "bg-[#18232E] text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            Submissions ({submissions.length})
-          </button>
-
-          <button
-            onClick={() => setActiveTab("business")}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-              activeTab === "business" ? "bg-[#18232E] text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            Places ({pendingBusinessCount})
-          </button>
-
-          <button
-            onClick={() => setActiveTab("correction")}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-              activeTab === "correction" ? "bg-[#18232E] text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            Reports ({pendingCorrectionCount})
-          </button>
-
-          <button
-            onClick={() => setActiveTab("event")}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-              activeTab === "event" ? "bg-[#18232E] text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            Events ({pendingEventCount})
+            <span>Drive</span>
           </button>
         </div>
 
         {/* Status Filter for Citizen Submissions */}
-        {activeTab !== "ads" && activeTab !== "news-manage" && activeTab !== "drive" && activeTab !== "manage-entities" && activeTab !== "manage-users" && (
-          <div className="flex items-center gap-2 self-end sm:self-auto">
-            <span className="text-[11px] font-bold text-slate-500 uppercase">Status:</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="text-xs font-bold bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl px-3 py-1.5 text-[#18232E] outline-none"
-            >
-              <option value="pending">⏳ Pending Review</option>
-              <option value="approved">✅ Approved</option>
-              <option value="rejected">❌ Rejected</option>
-              <option value="all">🔍 Show All</option>
-            </select>
-          </div>
-        )}
+        {activeTab !== "ads" &&
+          activeTab !== "news-manage" &&
+          activeTab !== "drive" &&
+          activeTab !== "manage-entities" &&
+          activeTab !== "manage-users" &&
+          !activeTab.startsWith("cms-") && (
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+              <span className="text-[11px] font-bold text-slate-500 uppercase">Status:</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="text-xs font-bold bg-[#F5F7F8] border border-[#E1E6EA] rounded-xl px-3 py-1.5 text-[#18232E] outline-none"
+              >
+                <option value="pending">⏳ Pending Review</option>
+                <option value="approved">✅ Approved</option>
+                <option value="rejected">❌ Rejected</option>
+                <option value="all">🔍 Show All</option>
+              </select>
+            </div>
+          )}
       </div>
 
       {/* ========================================================
@@ -1188,6 +1256,51 @@ export default function AdminReview({ user: propUser }) {
             </div>
           </div>
           <AdminCommunityPlaces token={getAuthToken()} onStatsChange={fetchData} />
+        </section>
+      )}
+
+      {/* ========================================================
+          CMS DYNAMIC MANAGEMENT PANELS
+          ======================================================== */}
+      {activeTab === "cms-settings" && (
+        <section aria-label="Site Settings CMS" className="space-y-4">
+          <AdminSettingsCMS />
+        </section>
+      )}
+
+      {activeTab === "cms-hero" && (
+        <section aria-label="Hero Carousel CMS" className="space-y-4">
+          <AdminHeroCMS />
+        </section>
+      )}
+
+      {activeTab === "cms-services" && (
+        <section aria-label="Public Services CMS" className="space-y-4">
+          <AdminServicesCMS />
+        </section>
+      )}
+
+      {activeTab === "cms-events" && (
+        <section aria-label="Events and Melas CMS" className="space-y-4">
+          <AdminEventsCMS />
+        </section>
+      )}
+
+      {activeTab === "cms-heritage" && (
+        <section aria-label="Twin Heritage CMS" className="space-y-4">
+          <AdminHeritageCMS />
+        </section>
+      )}
+
+      {activeTab === "cms-media" && (
+        <section aria-label="Media Library" className="space-y-4">
+          <AdminMediaLibrary />
+        </section>
+      )}
+
+      {activeTab === "cms-audit" && (
+        <section aria-label="Admin Audit Logs" className="space-y-4">
+          <AdminAuditLogs />
         </section>
       )}
 

@@ -1,33 +1,67 @@
+import { useState, useEffect } from "react";
 import { usePageSEO } from "../utils/seo";
+import { getPublicServices } from "../services/cmsService";
+import {
+  Landmark,
+  Search,
+  Filter,
+  ExternalLink,
+  FileText,
+  Clock,
+  Phone,
+  CheckCircle,
+  HelpCircle,
+  Building,
+} from "lucide-react";
 
-const GOVT_SERVICES = [
+const FALLBACK_GOVT_SERVICES = [
   {
     title: "Birth & Death Certificate Registration",
-    department: "Municipal Board / Nagar Panchayat",
-    link: "https://crsorgi.gov.in",
-    docs: "Hospital discharge slip, Aadhaar card of parents, applicant ID.",
-    steps: "Apply online at CRS portal within 21 days or visit the municipal desk with hospital record.",
+    titleHindi: "जन्म एवं मृत्यु प्रमाण पत्र पंजीकरण",
+    category: "Certificates & Revenue",
+    officeName: "Nagar Panchayat Office / Municipal Desk",
+    applicationUrl: "https://crsorgi.gov.in",
+    requiredDocuments: ["Hospital discharge slip", "Aadhaar card of parents", "Applicant ID"],
+    instructions: "Apply online at CRS portal within 21 days or visit the municipal desk with hospital record.",
+    feeStructure: "Rs. 0 - 30",
+    processingTimeDays: "7 to 15 days",
+    contactPhone: "+91 5564 222102",
   },
   {
     title: "Property & Land Records (Bhulekh UP)",
-    department: "Revenue Department, Govt of UP",
-    link: "https://upbhulekh.gov.in",
-    docs: "Khata / Gata Number or owner name.",
-    steps: "Enter Tehsil details online to download verified Khasra-Khatauni copy.",
+    titleHindi: "भूलेख एवं खतौनी नकल (उ.प्र.)",
+    category: "Certificates & Revenue",
+    officeName: "Tehsil / Revenue Department, Govt of UP",
+    applicationUrl: "https://upbhulekh.gov.in",
+    requiredDocuments: ["Khata / Gata Number or owner name", "Aadhaar ID"],
+    instructions: "Enter Tehsil details online to download verified Khasra-Khatauni copy.",
+    feeStructure: "Free / Nominal Rs. 15 for certified copy",
+    processingTimeDays: "Instant Online / 3 days",
+    contactPhone: "+91 5564 222102",
   },
   {
     title: "Electricity Connection & Bill Payment",
-    department: "UPPCL (Urban/Rural Power)",
-    link: "https://www.uppclonline.com",
-    docs: "Aadhaar Card, ownership proof / rent deed, passport photograph.",
-    steps: "Submit application on UPPCL portal or visit local Fazilnagar electricity office.",
+    titleHindi: "विद्युत संयोजन एवं बिल भुगतान (UPPCL)",
+    category: "Electricity & Utilities",
+    officeName: "UPPCL (Urban/Rural Substation Fazilnagar)",
+    applicationUrl: "https://www.uppclonline.com",
+    requiredDocuments: ["Aadhaar Card", "Ownership proof / Registry / Rent deed", "Passport photo"],
+    instructions: "Submit application on UPPCL portal or visit local Fazilnagar electricity office.",
+    feeStructure: "As per tariff plan",
+    processingTimeDays: "3 to 7 days",
+    contactPhone: "1912",
   },
   {
     title: "Public Water Supply & Pipeline Desk",
-    department: "Jal Nigam / Municipal Board",
-    link: "https://jn.upsdc.gov.in",
-    docs: "House tax receipt, ID proof.",
-    steps: "Submit official requisition form at Municipal office or raise online grievance.",
+    titleHindi: "पेयजल आपूर्ति एवं नल कनेक्शन",
+    category: "Panchayat & Municipal",
+    officeName: "Jal Nigam / Nagar Panchayat Fazilnagar",
+    applicationUrl: "https://jn.upsdc.gov.in",
+    requiredDocuments: ["House tax receipt", "Aadhaar ID", "Application letter"],
+    instructions: "Submit official requisition form at Municipal office or raise online grievance.",
+    feeStructure: "Municipal connection fees",
+    processingTimeDays: "7 to 14 days",
+    contactPhone: "+91 5564 222102",
   },
 ];
 
@@ -37,42 +71,192 @@ export default function GovtServices() {
     description: "Citizen service portal for Fazilnagar, Kushinagar (PIN 274401). Access links and guidelines for municipal certificates, UP Bhulekh land records, UPPCL power connection, and Jal Nigam.",
     canonicalPath: "/govt",
   });
+
+  const [services, setServices] = useState(FALLBACK_GOVT_SERVICES);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  const categories = [
+    "All",
+    "Certificates & Revenue",
+    "Aadhaar & Ration Card",
+    "Electricity & Utilities",
+    "Panchayat & Municipal",
+    "Welfare Schemes & Pensions",
+    "Police & Administration",
+  ];
+
+  useEffect(() => {
+    getPublicServices()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setServices(data);
+        }
+      })
+      .catch((err) => {
+        console.warn("Using fallback govt services:", err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  const filtered = services.filter((srv) => {
+    const matchesCat = selectedCategory === "All" || srv.category === selectedCategory;
+    const matchesSearch =
+      !search.trim() ||
+      srv.title?.toLowerCase().includes(search.toLowerCase()) ||
+      srv.titleHindi?.toLowerCase().includes(search.toLowerCase()) ||
+      srv.officeName?.toLowerCase().includes(search.toLowerCase()) ||
+      srv.description?.toLowerCase().includes(search.toLowerCase());
+    return matchesCat && matchesSearch;
+  });
+
   return (
-    <div className="space-y-6 pb-12">
-      <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-2">
-        <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-          Public Administrative Portal
-        </span>
-        <h1 className="text-2xl sm:text-4xl font-extrabold">🏛️ Fazilnagar Public &amp; Civic Utilities Guide</h1>
-        <p className="text-slate-300 text-sm">
-          Official guidelines, municipal links, UP Bhulekh land records, electricity, and citizen services in Fazilnagar.
+    <div className="space-y-6 pb-16 max-w-7xl mx-auto px-4 sm:px-6">
+      {/* Header Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-[#18232E] to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-2 border border-slate-800">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600/90 text-white text-xs font-bold uppercase tracking-wider">
+          <Landmark className="w-3.5 h-3.5" />
+          <span>Public Administrative Portal</span>
+        </div>
+        <h1 className="text-2xl sm:text-4xl font-extrabold font-heading text-white">
+          Fazilnagar Public &amp; Civic Utilities Guide
+        </h1>
+        <p className="text-slate-300 text-xs sm:text-sm max-w-3xl leading-relaxed">
+          Official procedures, municipal certificates, UP Bhulekh land records, electricity, e-District links, and citizen welfare schemes in Fazilnagar (PIN 274401, Kushinagar).
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {GOVT_SERVICES.map((srv, idx) => (
-          <div key={idx} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-3 flex flex-col justify-between">
-            <div className="space-y-2">
-              <span className="text-[10px] font-bold uppercase bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded">
-                {srv.department}
-              </span>
-              <h3 className="text-lg font-bold text-slate-900">{srv.title}</h3>
-              <div className="bg-slate-50 p-3 rounded-2xl text-xs space-y-1.5 border border-slate-100 text-slate-700">
-                <p><strong>📄 Required Documents:</strong> {srv.docs}</p>
-                <p><strong>📋 Procedure:</strong> {srv.steps}</p>
-              </div>
-            </div>
+      {/* Search & Category Filter Bar */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-center gap-3">
+        <div className="relative flex-1 w-full">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search citizen services (e.g. Birth certificate, Bhulekh, Electricity, Ration)..."
+            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-indigo-500 font-medium"
+          />
+        </div>
 
-            <a
-              href={srv.link}
-              target="_blank"
-              rel="noreferrer"
-              className="block bg-slate-900 hover:bg-slate-800 text-white text-center font-bold text-xs py-3 rounded-xl transition-colors mt-2"
-            >
-              🌐 Visit Official Portal →
-            </a>
+        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+          <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-indigo-500 bg-white font-medium"
+          >
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Services Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {filtered.length === 0 ? (
+          <div className="col-span-full py-16 text-center text-slate-400 bg-white rounded-3xl border border-slate-200 p-8">
+            <HelpCircle className="w-10 h-10 mx-auto text-slate-300 mb-2" />
+            <p className="text-sm font-bold text-slate-600">No public services matched your search.</p>
+            <p className="text-xs text-slate-400 mt-1">Try selecting another category or resetting the search filter.</p>
           </div>
-        ))}
+        ) : (
+          filtered.map((srv, idx) => (
+            <div
+              key={srv._id || idx}
+              className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between hover:border-slate-300 transition"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-extrabold uppercase bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-200">
+                    {srv.category || "Civic Service"}
+                  </span>
+                  {srv.feeStructure && (
+                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200">
+                      💰 {srv.feeStructure}
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <h3 className="text-base sm:text-lg font-extrabold text-[#18232E] leading-snug">
+                    {srv.title}
+                  </h3>
+                  {srv.titleHindi && (
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">{srv.titleHindi}</p>
+                  )}
+                </div>
+
+                {srv.description && (
+                  <p className="text-xs text-slate-600 leading-relaxed">{srv.description}</p>
+                )}
+
+                <div className="bg-slate-50 p-3.5 rounded-2xl text-xs space-y-2 border border-slate-100 text-slate-700">
+                  {srv.requiredDocuments?.length > 0 && (
+                    <p>
+                      <strong className="text-slate-800">📄 Required Documents:</strong>{" "}
+                      {Array.isArray(srv.requiredDocuments)
+                        ? srv.requiredDocuments.join(", ")
+                        : srv.requiredDocuments}
+                    </p>
+                  )}
+                  {srv.instructions && (
+                    <p>
+                      <strong className="text-slate-800">📋 Procedure:</strong> {srv.instructions}
+                    </p>
+                  )}
+                  {srv.eligibility && (
+                    <p>
+                      <strong className="text-slate-800">🎯 Eligibility:</strong> {srv.eligibility}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 pt-1">
+                  {srv.officeName && (
+                    <span className="flex items-center gap-1">
+                      <Building className="w-3 h-3 text-slate-400" />
+                      <span>{srv.officeName}</span>
+                    </span>
+                  )}
+                  {srv.processingTimeDays && (
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-amber-500" />
+                      <span>{srv.processingTimeDays}</span>
+                    </span>
+                  )}
+                  {srv.contactPhone && (
+                    <a
+                      href={`tel:${srv.contactPhone}`}
+                      className="flex items-center gap-1 text-blue-600 hover:underline font-semibold"
+                    >
+                      <Phone className="w-3 h-3" />
+                      <span>{srv.contactPhone}</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {srv.applicationUrl && (
+                <a
+                  href={srv.applicationUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block bg-slate-900 hover:bg-indigo-700 text-white text-center font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-1.5 mt-2 shadow-xs"
+                >
+                  <span>Visit Official Government Portal</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              )}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

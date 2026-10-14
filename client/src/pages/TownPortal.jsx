@@ -8,6 +8,7 @@ import AdvertisementSlot from "../components/AdvertisementSlot";
 import { usePageSEO } from "../utils/seo";
 import CommunityPlaceModal from "../components/CommunityPlaceModal";
 import { getAuthUser, clearAuthSession } from "../utils/authStorage";
+import { getSiteSettings, DEFAULT_SITE_SETTINGS } from "../services/cmsService";
 
 // Lazy-load Leaflet Map to eliminate render-blocking JS and main-thread freeze
 const TownInteractiveMap = lazy(() => import("../components/TownInteractiveMap"));
@@ -383,18 +384,44 @@ export default function TownPortal() {
     ? EXPLORE_21_CATEGORIES
     : EXPLORE_21_CATEGORIES.slice(0, 4);
 
-  // Hero Background Carousel States (Changes automatically every 3.5 seconds)
+  // Dynamic Site Settings from CMS
+  const [siteSettings, setSiteSettings] = useState(DEFAULT_SITE_SETTINGS);
+
+  useEffect(() => {
+    getSiteSettings().then((s) => {
+      if (s) setSiteSettings(s);
+    });
+  }, []);
+
+  // Compute dynamic hero slides (custom admin slides if any, else verified default heritage images)
+  const configuredSlides = siteSettings?.heroSettings?.slides?.filter((s) => s.isActive !== false) || [];
+  const dynamicHeroSlides = configuredSlides.length > 0
+    ? configuredSlides.map((s, idx) => ({
+        id: s._id || idx,
+        src: s.imageUrl,
+        fallback: "/images/hero/mahaparinirvana-temple-1.webp",
+        title: s.title,
+        location: s.subtitle || "Fazilnagar",
+        caption: s.caption || "",
+        linkUrl: s.linkUrl || "/directory",
+        buttonText: s.buttonText || "Browse Town Directory",
+      }))
+    : KUSHINAGAR_FAZILNAGAR_HERO_IMAGES;
+
+  // Hero Background Carousel States
   const [heroSlideIndex, setHeroSlideIndex] = useState(0);
   const [isHeroHovered, setIsHeroHovered] = useState(false);
 
-  // Auto-advance Carousel every 6 seconds (Allows initial hero LCP to settle cleanly)
+  // Auto-advance Carousel based on admin speed and autoplay settings
+  const carouselInterval = siteSettings?.heroSettings?.animationSpeed || 6000;
   useEffect(() => {
     if (isHeroHovered) return;
+    if (siteSettings?.heroSettings?.enableAutoplay === false) return;
     const carouselTimer = setInterval(() => {
-      setHeroSlideIndex((prev) => (prev + 1) % KUSHINAGAR_FAZILNAGAR_HERO_IMAGES.length);
-    }, 6000);
+      setHeroSlideIndex((prev) => (prev + 1) % dynamicHeroSlides.length);
+    }, carouselInterval);
     return () => clearInterval(carouselTimer);
-  }, [isHeroHovered]);
+  }, [isHeroHovered, dynamicHeroSlides.length, carouselInterval, siteSettings?.heroSettings?.enableAutoplay]);
 
   // Smooth scroll handler with visual landing glow pulse animation (Reflow-free)
   const handleSmoothScroll = (e, targetId) => {
@@ -597,37 +624,82 @@ export default function TownPortal() {
     <div className="w-full max-w-full overflow-x-hidden bg-[#F5F7F8] font-sans text-[#18232E] selection:bg-[#B8323C] selection:text-white">
 
 
+      {/* Dynamic Civic Announcement Ticker Banner */}
+      {siteSettings.sections?.announcementBanner !== false &&
+        siteSettings.announcement?.enabled &&
+        siteSettings.announcement?.text && (
+          <aside
+            aria-label="Civic Announcement Banner"
+            style={{
+              backgroundColor: siteSettings.announcement.bgColor || "#0D5E49",
+              color: siteSettings.announcement.textColor || "#FFFFFF",
+            }}
+            className="w-full px-4 py-2.5 text-center text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition z-30 relative"
+          >
+            <Sparkles className="w-3.5 h-3.5 shrink-0 text-amber-300 animate-pulse" />
+            <span>{siteSettings.announcement.text}</span>
+            {siteSettings.announcement.link && (
+              <Link
+                to={siteSettings.announcement.link}
+                className="underline hover:opacity-80 ml-2 inline-flex items-center gap-0.5 text-amber-200 font-extrabold"
+              >
+                <span>View Details</span>
+                <ChevronRight className="w-3 h-3" />
+              </Link>
+            )}
+          </aside>
+        )}
+
       {/* ========================================================
           SECTION 2: HERO SECTION (Dynamic Kushinagar & Fazilnagar Carousel)
           ======================================================== */}
-      <section
-        id="hero-section"
-        onMouseEnter={() => setIsHeroHovered(true)}
-        onMouseLeave={() => setIsHeroHovered(false)}
-        className="relative text-white py-10 sm:py-20 lg:py-24 overflow-hidden border-b border-slate-800"
-      >
-        {/* Dynamic Multi-Image Carousel of Kushinagar & Fazilnagar (Only renders active slide in DOM to eliminate concurrent image requests & optimize LCP) */}
-        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          {KUSHINAGAR_FAZILNAGAR_HERO_IMAGES.map((img, idx) => {
-            const isCurrent = idx === heroSlideIndex;
-            if (!isCurrent) return null;
+      {siteSettings.sections?.heroCarousel !== false && (
+        <section
+          id="hero-section"
+          onMouseEnter={() => setIsHeroHovered(true)}
+          onMouseLeave={() => setIsHeroHovered(false)}
+          className="relative text-white py-10 sm:py-20 lg:py-24 overflow-hidden border-b border-slate-800"
+        >
+          {/* Dynamic Multi-Image Carousel of Kushinagar & Fazilnagar */}
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            {dynamicHeroSlides.map((img, idx) => {
+              const isCurrent = idx === (heroSlideIndex % dynamicHeroSlides.length);
+              if (!isCurrent) return null;
 
-            return (
-              <div
-                key={img.id || idx}
-                className="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-100 z-10"
-              >
-                {idx === 0 ? (
-                  <picture>
-                    <source media="(max-width: 640px)" srcSet="/images/hero/mahaparinirvana-temple-mobile.webp" type="image/webp" />
+              return (
+                <div
+                  key={img.id || idx}
+                  className="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-100 z-10"
+                >
+                  {idx === 0 ? (
+                    <picture>
+                      <source media="(max-width: 640px)" srcSet="/images/hero/mahaparinirvana-temple-mobile.webp" type="image/webp" />
+                      <img
+                        src={img.src}
+                        alt={img.title}
+                        fetchPriority="high"
+                        loading="eager"
+                        decoding="sync"
+                        width="719"
+                        height="916"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          if (img.fallback && e.currentTarget.src !== img.fallback) {
+                            e.currentTarget.src = img.fallback;
+                          }
+                        }}
+                        className="w-full h-full object-cover object-center animate-ken-burns scale-105 transition-transform duration-1000 ease-out"
+                      />
+                    </picture>
+                  ) : (
                     <img
                       src={img.src}
                       alt={img.title}
-                      fetchPriority="high"
-                      loading="eager"
-                      decoding="sync"
-                      width="719"
-                      height="916"
+                      fetchPriority="auto"
+                      loading="lazy"
+                      decoding="async"
+                      width="1200"
+                      height="600"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         if (img.fallback && e.currentTarget.src !== img.fallback) {
@@ -636,54 +708,43 @@ export default function TownPortal() {
                       }}
                       className="w-full h-full object-cover object-center animate-ken-burns scale-105 transition-transform duration-1000 ease-out"
                     />
-                  </picture>
-                ) : (
-                  <img
-                    src={img.src}
-                    alt={img.title}
-                    fetchPriority="auto"
-                    loading="lazy"
-                    decoding="async"
-                    width="1200"
-                    height="600"
-                    referrerPolicy="no-referrer"
-                    onError={(e) => {
-                      if (img.fallback && e.currentTarget.src !== img.fallback) {
-                        e.currentTarget.src = img.fallback;
-                      }
-                    }}
-                    className="w-full h-full object-cover object-center animate-ken-burns scale-105 transition-transform duration-1000 ease-out"
-                  />
-                )}
-              </div>
-            );
-          })}
+                  )}
+                </div>
+              );
+            })}
 
-          {/* Minimal soft transparent gradient - preserves full photo clarity, natural colors & brightness without any grey fog */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/65 z-20"></div>
-        </div>
-
-        <div className="relative z-30 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* Active Landmark Pill Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/30 text-xs text-slate-100 font-medium mb-5 shadow-2xl animate-fade-in-up">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-amber-300 font-bold">📍 {KUSHINAGAR_FAZILNAGAR_HERO_IMAGES[heroSlideIndex].location}</span>
-            <span className="text-slate-300">•</span>
-            <span className="font-semibold text-white">{KUSHINAGAR_FAZILNAGAR_HERO_IMAGES[heroSlideIndex].title}</span>
+            {/* Minimal soft transparent gradient */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/65 z-20"></div>
           </div>
 
-          {/* Master Headline */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 leading-tight font-heading drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
-            Fazilnagar Town Civic &amp; Local Directory
-            <span className="block text-xl sm:text-3xl lg:text-3.5xl text-[#FF4D5A] font-bold mt-2 drop-shadow-[0_4px_16px_rgba(255,77,90,0.6)]">
-              Apna Fazilnagar, Apni Pehchaan
-            </span>
-          </h1>
+          <div className="relative z-30 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            {/* Active Landmark Pill Badge */}
+            {dynamicHeroSlides.length > 0 && (
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/30 text-xs text-slate-100 font-medium mb-5 shadow-2xl animate-fade-in-up">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="text-amber-300 font-bold">
+                  📍 {dynamicHeroSlides[heroSlideIndex % dynamicHeroSlides.length]?.location || "Fazilnagar"}
+                </span>
+                <span className="text-slate-300">•</span>
+                <span className="font-semibold text-white">
+                  {dynamicHeroSlides[heroSlideIndex % dynamicHeroSlides.length]?.title || "Official Civic Portal"}
+                </span>
+              </div>
+            )}
 
-          {/* Subtitle */}
-          <p className="text-sm sm:text-base text-slate-100 max-w-2xl mx-auto mb-9 font-medium leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
-            Fazilnagar Town Official Civic &amp; Local Directory Portal (PIN 274401, Kushinagar, Uttar Pradesh). Discover verified places, healthcare, schools, emergency helplines, shops, and community updates.
-          </p>
+            {/* Master Headline */}
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 leading-tight font-heading drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
+              {siteSettings.siteName || "Fazilnagar Town Civic & Local Directory"}
+              <span className="block text-xl sm:text-3xl lg:text-3.5xl text-[#FF4D5A] font-bold mt-2 drop-shadow-[0_4px_16px_rgba(255,77,90,0.6)]">
+                {siteSettings.taglineHindi || siteSettings.tagline || "Apna Fazilnagar, Apni Pehchaan"}
+              </span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-sm sm:text-base text-slate-100 max-w-2xl mx-auto mb-9 font-medium leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
+              {siteSettings.seo?.metaDescription ||
+                "Fazilnagar Town Official Civic & Local Directory Portal (PIN 274401, Kushinagar, Uttar Pradesh). Discover verified places, healthcare, schools, emergency helplines, shops, and community updates."}
+            </p>
 
           {/* Smart Search Bar */}
           <div className="max-w-2xl mx-auto relative text-left">
@@ -809,6 +870,7 @@ export default function TownPortal() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ========================================================
           SECTION 3: EXPLORE FAZILNAGAR (21 Clickable Categories)
@@ -2205,7 +2267,8 @@ export default function TownPortal() {
         </div>
 
         <div className="border-t border-slate-800 py-4 text-center text-[11px] text-slate-400">
-          © {new Date().getFullYear()} Fazilnagar Town Portal • Modern Civic & Editorial System. All rights reserved.
+          {siteSettings?.footer?.copyrightText ||
+            `© ${new Date().getFullYear()} Fazilnagar Town Portal • Modern Civic & Editorial System. All rights reserved.`}
         </div>
       </footer>
 

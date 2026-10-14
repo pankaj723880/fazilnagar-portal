@@ -121,6 +121,12 @@ import advertisementsRoutes from "./routes/advertisements.js";
 import googleDriveRoutes from "./routes/googleDrive.js";
 import usersRoutes from "./routes/users.js";
 import notificationsRoutes from "./routes/notifications.js";
+import settingsRoutes from "./routes/settings.js";
+import servicesRoutes from "./routes/services.js";
+import eventsRoutes from "./routes/events.js";
+import heritageRoutes from "./routes/heritage.js";
+import mediaRoutes from "./routes/media.js";
+import auditRoutes from "./routes/audit.js";
 
 // Connect DB & Routes
 connectDB().then(() => {
@@ -136,6 +142,12 @@ app.use("/api/advertisements", advertisementsRoutes);
 app.use("/api/google-drive", googleDriveRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/notifications", notificationsRoutes);
+app.use("/api/settings", settingsRoutes);
+app.use("/api/services", servicesRoutes);
+app.use("/api/events", eventsRoutes);
+app.use("/api/heritage", heritageRoutes);
+app.use("/api/media", mediaRoutes);
+app.use("/api/audit", auditRoutes);
 
 // Fallback mounts in case client calls without /api prefix
 app.use("/auth", authRoutes);
@@ -146,6 +158,12 @@ app.use("/advertisements", advertisementsRoutes);
 app.use("/google-drive", googleDriveRoutes);
 app.use("/users", usersRoutes);
 app.use("/notifications", notificationsRoutes);
+app.use("/settings", settingsRoutes);
+app.use("/services", servicesRoutes);
+app.use("/events", eventsRoutes);
+app.use("/heritage", heritageRoutes);
+app.use("/media", mediaRoutes);
+app.use("/audit", auditRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
