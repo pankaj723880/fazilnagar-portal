@@ -5,8 +5,21 @@ export default function EmptyState({
   title = "No records found",
   description = "There is nothing to display here yet.",
   action,
+  actionLabel,
+  onAction,
   className = "",
 }) {
+  // Support actionLabel + onAction as an alternative to passing a full action JSX node
+  const renderedAction = action || (actionLabel && onAction ? (
+    <button
+      type="button"
+      onClick={onAction}
+      className="inline-flex items-center gap-2 bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-extrabold px-4 py-2.5 rounded-xl transition shadow-xs cursor-pointer active:scale-95 duration-150"
+    >
+      <span>+ {actionLabel}</span>
+    </button>
+  ) : null);
+
   return (
     <div
       className={`p-10 sm:p-14 text-center flex flex-col items-center justify-center space-y-3 ${className}`}
@@ -24,7 +37,7 @@ export default function EmptyState({
         </p>
       </div>
 
-      {action && <div className="pt-2">{action}</div>}
+      {renderedAction && <div className="pt-2">{renderedAction}</div>}
     </div>
   );
 }

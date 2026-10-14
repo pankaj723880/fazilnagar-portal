@@ -252,19 +252,6 @@ export default function App() {
                   </Link>
                 );
               })}
-              {user?.role === "admin" && (
-                <Link
-                  to="/admin/review"
-                  className={`transition font-bold flex items-center gap-1 ${
-                    location.pathname.startsWith("/admin")
-                      ? "text-[#B8323C]"
-                      : "text-amber-600 hover:text-amber-700"
-                  }`}
-                >
-                  <span>🛡️</span>
-                  <span>Review Desk</span>
-                </Link>
-              )}
             </nav>
 
             {/* Auth & Post Actions Bar */}
@@ -283,14 +270,6 @@ export default function App() {
 
               {user ? (
                 <>
-                  {user.role === "admin" && (
-                    <Link
-                      to="/admin/review"
-                      className="bg-amber-100 hover:bg-amber-200 text-amber-900 hover:text-amber-950 border border-amber-300 text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5"
-                    >
-                      <span>🛡️ Review Desk</span>
-                    </Link>
-                  )}
                   <span className="text-xs font-bold text-[#168568] bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
                     {user.role === "admin" ? "Admin" : (user.name || user.email)}
                   </span>

@@ -3,12 +3,37 @@ import Breadcrumbs from "./Breadcrumbs";
 export default function PageHeader({
   title,
   description,
+  subtitle,
   icon: Icon,
   badge,
+  badgeText,
   actions,
+  primaryAction,
   breadcrumbs = [],
   onNavigate,
 }) {
+  // Support subtitle as an alias for description
+  const displayDescription = description || subtitle;
+
+  // Support badgeText as a shorthand badge
+  const displayBadge = badge || (badgeText ? (
+    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+      {badgeText}
+    </span>
+  ) : null);
+
+  // Support primaryAction when no explicit actions JSX is provided
+  const renderedActions = actions || (primaryAction ? (
+    <button
+      type="button"
+      onClick={primaryAction.onClick}
+      className="inline-flex items-center gap-2 bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-extrabold px-4 py-2.5 rounded-xl transition shadow-xs cursor-pointer active:scale-95 duration-150"
+    >
+      {primaryAction.icon && <primaryAction.icon className="w-4 h-4" />}
+      <span>{primaryAction.label}</span>
+    </button>
+  ) : null);
+
   return (
     <div className="space-y-3 mb-6">
       {breadcrumbs && breadcrumbs.length > 0 && (
@@ -28,20 +53,20 @@ export default function PageHeader({
               <h1 className="text-xl sm:text-2xl font-extrabold text-[#18232E] tracking-tight font-heading truncate">
                 {title}
               </h1>
-              {badge}
+              {displayBadge}
             </div>
 
-            {description && (
+            {displayDescription && (
               <p className="text-xs text-slate-500 mt-1 leading-relaxed max-w-3xl">
-                {description}
+                {displayDescription}
               </p>
             )}
           </div>
         </div>
 
-        {actions && (
+        {renderedActions && (
           <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-start sm:self-center">
-            {actions}
+            {renderedActions}
           </div>
         )}
       </div>
