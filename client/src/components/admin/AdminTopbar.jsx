@@ -45,6 +45,12 @@ export default function AdminTopbar({
   const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);
 
+  const handleTabChange = (tabId) => {
+    if (typeof setActiveTab === "function") {
+      setActiveTab(tabId);
+    }
+  };
+
   // Close dropdowns on outside click
   useEffect(() => {
     function handleClickOutside(e) {
@@ -196,7 +202,7 @@ export default function AdminTopbar({
                     <button
                       key={item.tab}
                       onClick={() => {
-                        setActiveTab(item.tab);
+                        handleTabChange(item.tab);
                         setSearchFocused(false);
                         setSearchQuery("");
                       }}
@@ -227,7 +233,9 @@ export default function AdminTopbar({
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {/* Refresh Action Button */}
         <button
-          onClick={onRefresh}
+          onClick={() => {
+            if (typeof onRefresh === "function") onRefresh();
+          }}
           disabled={loading}
           className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
           title="Refresh Data from Server"
@@ -285,7 +293,7 @@ export default function AdminTopbar({
                     <div
                       key={sub._id || sub.id}
                       onClick={() => {
-                        setActiveTab("community-places");
+                        handleTabChange("community-places");
                         setNotifDropdownOpen(false);
                       }}
                       className="p-3 hover:bg-slate-50 transition cursor-pointer flex items-start gap-2.5"
@@ -309,7 +317,7 @@ export default function AdminTopbar({
                 <div className="p-2.5 bg-slate-50 border-t border-slate-100 text-center">
                   <button
                     onClick={() => {
-                      setActiveTab("community-places");
+                      handleTabChange("community-places");
                       setNotifDropdownOpen(false);
                     }}
                     className="text-[11px] font-bold text-blue-600 hover:text-blue-800"
@@ -363,7 +371,7 @@ export default function AdminTopbar({
               <div className="p-1.5 space-y-0.5">
                 <button
                   onClick={() => {
-                    setActiveTab("cms-settings");
+                    handleTabChange("cms-settings");
                     setProfileDropdownOpen(false);
                   }}
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 font-semibold cursor-pointer text-left"
@@ -387,7 +395,7 @@ export default function AdminTopbar({
                 <button
                   onClick={() => {
                     setProfileDropdownOpen(false);
-                    onLogout();
+                    if (typeof onLogout === "function") onLogout();
                   }}
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 font-bold cursor-pointer text-left"
                 >

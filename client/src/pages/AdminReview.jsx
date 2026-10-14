@@ -267,7 +267,24 @@ export default function AdminReview({ user: propUser }) {
   const renderActiveModule = () => {
     switch (activeTab) {
       case "dashboard":
-        return <AdminDashboardOverview onNavigateTab={setActiveTab} />;
+        return (
+          <AdminDashboardOverview
+            setActiveTab={setActiveTab}
+            onNavigateTab={setActiveTab}
+            stats={{
+              entitiesCount,
+              pendingSubmissionsCount: pendingCount,
+              liveAdsCount,
+              totalAdsCount: liveAdsCount,
+              publishedNewsCount: newsCount,
+              totalNewsCount: newsCount,
+              usersCount: 248,
+            }}
+            onOpenCreateAd={() => setActiveTab("ads")}
+            onOpenCreateNews={() => setActiveTab("news-manage")}
+            onRefresh={fetchBadgeCounts}
+          />
+        );
 
       // B. Website & Content
       case "cms-settings":
@@ -324,7 +341,24 @@ export default function AdminReview({ user: propUser }) {
         return <AdminAuditLogs />;
 
       default:
-        return <AdminDashboardOverview onNavigateTab={setActiveTab} />;
+        return (
+          <AdminDashboardOverview
+            setActiveTab={setActiveTab}
+            onNavigateTab={setActiveTab}
+            stats={{
+              entitiesCount,
+              pendingSubmissionsCount: pendingCount,
+              liveAdsCount,
+              totalAdsCount: liveAdsCount,
+              publishedNewsCount: newsCount,
+              totalNewsCount: newsCount,
+              usersCount: 248,
+            }}
+            onOpenCreateAd={() => setActiveTab("ads")}
+            onOpenCreateNews={() => setActiveTab("news-manage")}
+            onRefresh={fetchBadgeCounts}
+          />
+        );
     }
   };
 

@@ -241,6 +241,45 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
   }
 });
 
+// @route   PATCH /api/heritage/:id/publish
+// @desc    Toggle or update publication status of a heritage site
+// @access  Private (Admin)
+const handlePublishToggle = async (req, res) => {
+  try {
+    const site = await HeritageSite.findById(req.params.id);
+    if (!site) {
+      return res.status(404).json({ message: "Heritage site not found." });
+    }
+
+    site.isPublished = req.body.isPublished !== undefined ? req.body.isPublished : !site.isPublished;
+    await site.save();
+
+    await logAdminAction({
+      adminUser: req.user.id,
+      adminEmail: req.user.email,
+      action: "UPDATE",
+      entityType: "HeritageSite",
+      entityId: site._id,
+      entityTitle: site.name,
+      changesSummary: `${site.isPublished ? "Published" : "Unpublished"} heritage site "${site.name}"`,
+      ipAddress: req.ip,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Heritage site ${site.isPublished ? "published" : "unpublished"} successfully.`,
+      isPublished: site.isPublished,
+      site,
+    });
+  } catch (err) {
+    console.error("[Heritage] Publish toggle error:", err);
+    res.status(500).json({ message: "Failed to toggle heritage site publication." });
+  }
+};
+
+router.patch("/:id/publish", verifyToken, requireAdmin, handlePublishToggle);
+router.post("/:id/publish", verifyToken, requireAdmin, handlePublishToggle);
+
 // @route   DELETE /api/heritage/:id
 // @desc    Delete a heritage site entry
 // @access  Private (Admin)

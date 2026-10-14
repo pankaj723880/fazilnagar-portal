@@ -41,9 +41,9 @@ export default function StatCard({
 
   return (
     <div
-      onClick={onClick}
+      onClick={typeof onClick === "function" ? onClick : undefined}
       className={`bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs transition-all duration-200 flex flex-col justify-between ${
-        onClick
+        typeof onClick === "function"
           ? `cursor-pointer hover:shadow-sm ${currentTheme.accent} hover:-translate-y-0.5`
           : ""
       }`}

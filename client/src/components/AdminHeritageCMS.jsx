@@ -80,11 +80,19 @@ export default function AdminHeritageCMS() {
     setLoading(true);
     const token = getAuthToken();
     try {
-      const res = await API.get("/heritage/admin", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      let res;
+      try {
+        res = await API.get("/heritage/admin", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+      } catch (adminErr) {
+        // Fallback to public endpoint if admin endpoint has issue
+        res = await API.get("/heritage");
+      }
       if (res.data?.success && Array.isArray(res.data?.sites)) {
         setSites(res.data.sites);
+      } else if (Array.isArray(res.data)) {
+        setSites(res.data);
       }
     } catch (err) {
       console.warn("Failed to fetch heritage sites:", err);
@@ -224,18 +232,31 @@ export default function AdminHeritageCMS() {
 
   const handleTogglePublish = async (site) => {
     const token = getAuthToken();
+    const nextPublished = !site.isPublished;
     try {
-      await API.patch(
-        `/heritage/${site._id}/publish`,
-        { isPublished: !site.isPublished },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      try {
+        await API.patch(
+          `/heritage/${site._id}/publish`,
+          { isPublished: nextPublished },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch (patchErr) {
+        if (patchErr.response?.status === 404 || patchErr.status === 404) {
+          await API.put(
+            `/heritage/${site._id}`,
+            { isPublished: nextPublished },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        } else {
+          throw patchErr;
+        }
+      }
       setSites((prev) =>
-        prev.map((s) => (s._id === site._id ? { ...s, isPublished: !site.isPublished } : s))
+        prev.map((s) => (s._id === site._id ? { ...s, isPublished: nextPublished } : s))
       );
-      showToast("success", `Site ${!site.isPublished ? "published" : "unpublished"} successfully.`);
+      showToast("success", `Site ${nextPublished ? "published" : "unpublished"} successfully.`);
     } catch (err) {
-      showToast("error", "Status update failed: " + err.message);
+      showToast("error", "Status update failed: " + (err.response?.data?.message || err.message));
     }
   };
 

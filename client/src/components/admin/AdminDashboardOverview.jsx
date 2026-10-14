@@ -33,12 +33,37 @@ import {
 
 export default function AdminDashboardOverview({
   setActiveTab,
+  onNavigateTab,
   stats = {},
-  onOpenCreateAd = () => {},
-  onOpenCreateNews = () => {},
+  onOpenCreateAd,
+  onOpenCreateNews,
   onRefresh = () => {},
   loading = false,
 }) {
+  const navigateTab = (tab) => {
+    if (typeof setActiveTab === "function") {
+      setActiveTab(tab);
+    } else if (typeof onNavigateTab === "function") {
+      onNavigateTab(tab);
+    }
+  };
+
+  const handleOpenCreateAd = () => {
+    if (typeof onOpenCreateAd === "function") {
+      onOpenCreateAd();
+    } else {
+      navigateTab("ads");
+    }
+  };
+
+  const handleOpenCreateNews = () => {
+    if (typeof onOpenCreateNews === "function") {
+      onOpenCreateNews();
+    } else {
+      navigateTab("news-manage");
+    }
+  };
+
   const [recentLogs, setRecentLogs] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [pendingItems, setPendingItems] = useState([]);
@@ -112,7 +137,7 @@ export default function AdminDashboardOverview({
           <>
             <button
               onClick={() => {
-                onRefresh();
+                if (typeof onRefresh === "function") onRefresh();
                 fetchExtras();
               }}
               disabled={loading || loadingExtras}
@@ -124,7 +149,7 @@ export default function AdminDashboardOverview({
             </button>
 
             <button
-              onClick={onOpenCreateAd}
+              onClick={handleOpenCreateAd}
               className="bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
               <Megaphone className="w-3.5 h-3.5" />
@@ -132,7 +157,7 @@ export default function AdminDashboardOverview({
             </button>
 
             <button
-              onClick={onOpenCreateNews}
+              onClick={handleOpenCreateNews}
               className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -151,7 +176,7 @@ export default function AdminDashboardOverview({
           icon={Building2}
           color="emerald"
           subtitle="PIN 274401 Official Registry"
-          onClick={() => setActiveTab("manage-entities")}
+          onClick={() => navigateTab("manage-entities")}
           loading={loading}
         />
 
@@ -166,7 +191,7 @@ export default function AdminDashboardOverview({
               ? "Requires Admin Audit"
               : "Queue is fully clear"
           }
-          onClick={() => setActiveTab("community-places")}
+          onClick={() => navigateTab("community-places")}
           loading={loading}
         />
 
@@ -177,7 +202,7 @@ export default function AdminDashboardOverview({
           icon={Megaphone}
           color="purple"
           subtitle={`${stats.totalAdsCount || 0} total scheduled ads`}
-          onClick={() => setActiveTab("ads")}
+          onClick={() => navigateTab("ads")}
           loading={loading}
         />
 
@@ -188,7 +213,7 @@ export default function AdminDashboardOverview({
           icon={Newspaper}
           color="blue"
           subtitle={`${stats.totalNewsCount || 0} stories in registry`}
-          onClick={() => setActiveTab("news-manage")}
+          onClick={() => navigateTab("news-manage")}
           loading={loading}
         />
 
@@ -199,7 +224,7 @@ export default function AdminDashboardOverview({
           icon={Users}
           color="indigo"
           subtitle="Citizen & Reporter accounts"
-          onClick={() => setActiveTab("manage-users")}
+          onClick={() => navigateTab("manage-users")}
           loading={loading}
         />
       </div>
@@ -218,7 +243,7 @@ export default function AdminDashboardOverview({
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
           <button
-            onClick={onOpenCreateAd}
+            onClick={handleOpenCreateAd}
             className="p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer"
           >
             <Megaphone className="w-4 h-4 text-purple-600 mb-2 group-hover:scale-110 transition" />
@@ -227,7 +252,7 @@ export default function AdminDashboardOverview({
           </button>
 
           <button
-            onClick={onOpenCreateNews}
+            onClick={handleOpenCreateNews}
             className="p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer"
           >
             <Newspaper className="w-4 h-4 text-emerald-600 mb-2 group-hover:scale-110 transition" />
@@ -236,7 +261,7 @@ export default function AdminDashboardOverview({
           </button>
 
           <button
-            onClick={() => setActiveTab("cms-events")}
+            onClick={() => navigateTab("cms-events")}
             className="p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer"
           >
             <Calendar className="w-4 h-4 text-amber-600 mb-2 group-hover:scale-110 transition" />
@@ -245,7 +270,7 @@ export default function AdminDashboardOverview({
           </button>
 
           <button
-            onClick={() => setActiveTab("manage-entities")}
+            onClick={() => navigateTab("manage-entities")}
             className="p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer"
           >
             <Building2 className="w-4 h-4 text-blue-600 mb-2 group-hover:scale-110 transition" />
@@ -254,7 +279,7 @@ export default function AdminDashboardOverview({
           </button>
 
           <button
-            onClick={() => setActiveTab("cms-settings")}
+            onClick={() => navigateTab("cms-settings")}
             className="p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer"
           >
             <Settings className="w-4 h-4 text-indigo-600 mb-2 group-hover:scale-110 transition" />
@@ -263,7 +288,7 @@ export default function AdminDashboardOverview({
           </button>
 
           <button
-            onClick={() => setActiveTab("cms-media")}
+            onClick={() => navigateTab("cms-media")}
             className="p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer"
           >
             <UploadCloud className="w-4 h-4 text-cyan-600 mb-2 group-hover:scale-110 transition" />
@@ -293,7 +318,7 @@ export default function AdminDashboardOverview({
             </div>
 
             <button
-              onClick={() => setActiveTab("community-places")}
+              onClick={() => navigateTab("community-places")}
               className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
             >
               <span>View All</span>
@@ -317,7 +342,7 @@ export default function AdminDashboardOverview({
               {pendingItems.map((item) => (
                 <div
                   key={item._id || item.id}
-                  onClick={() => setActiveTab("community-places")}
+                  onClick={() => navigateTab("community-places")}
                   className="p-3.5 rounded-xl border border-slate-200 hover:border-amber-400 hover:bg-amber-50/30 transition flex items-center justify-between gap-3 cursor-pointer group"
                 >
                   <div className="min-w-0">
@@ -363,7 +388,7 @@ export default function AdminDashboardOverview({
             </div>
 
             <button
-              onClick={() => setActiveTab("cms-audit")}
+              onClick={() => navigateTab("cms-audit")}
               className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
             >
               <span>Full Audit Logs</span>
@@ -432,7 +457,7 @@ export default function AdminDashboardOverview({
             </div>
 
             <button
-              onClick={() => setActiveTab("cms-events")}
+              onClick={() => navigateTab("cms-events")}
               className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
             >
               <span>Manage Events</span>
@@ -444,7 +469,7 @@ export default function AdminDashboardOverview({
             {upcomingEvents.map((evt) => (
               <div
                 key={evt._id}
-                onClick={() => setActiveTab("cms-events")}
+                onClick={() => navigateTab("cms-events")}
                 className="p-3.5 rounded-xl border border-slate-200 hover:border-purple-300 hover:bg-purple-50/20 transition cursor-pointer space-y-2 flex flex-col justify-between"
               >
                 <div>

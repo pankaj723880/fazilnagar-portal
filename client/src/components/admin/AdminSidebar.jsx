@@ -135,8 +135,10 @@ export default function AdminSidebar({
   ];
 
   const handleSelect = (id) => {
-    setActiveTab(id);
-    if (isMobileOpen) {
+    if (typeof setActiveTab === "function") {
+      setActiveTab(id);
+    }
+    if (typeof setIsMobileOpen === "function" && isMobileOpen) {
       setIsMobileOpen(false);
     }
   };
