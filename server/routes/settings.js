@@ -151,9 +151,13 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
     }
 
     if (updateData.heroSettings && typeof updateData.heroSettings === "object") {
+      const existingHero = safeObj(settings.heroSettings);
       settings.heroSettings = {
-        ...safeObj(settings.heroSettings),
+        ...existingHero,
         ...updateData.heroSettings,
+        slides: Array.isArray(updateData.heroSettings.slides)
+          ? updateData.heroSettings.slides
+          : (existingHero.slides || []),
       };
     }
 

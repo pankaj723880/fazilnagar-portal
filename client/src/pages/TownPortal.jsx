@@ -265,7 +265,7 @@ export default function TownPortal() {
   const [selectedEventCategory, setSelectedEventCategory] = useState("All");
 
   const loadCMSData = () => {
-    getSiteSettings().then((s) => {
+    getSiteSettings(true).then((s) => {
       if (s) setSiteSettings(s);
     });
 

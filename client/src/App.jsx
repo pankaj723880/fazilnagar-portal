@@ -3,6 +3,7 @@ import { Routes, Route, NavLink, Link, useNavigate, useLocation } from "react-ro
 
 import TownPortal from "./pages/TownPortal";
 import { getAuthUser, clearAuthSession } from "./utils/authStorage";
+import { getCachedSettings, DEFAULT_SITE_SETTINGS } from "./services/cmsService";
 
 // Lazy-Loaded Route Components (Code-split to reduce initial unused JS)
 const News = lazy(() => import("./pages/News"));
@@ -137,6 +138,18 @@ export default function App() {
     };
   }, []);
 
+  // Synchronize dynamic site settings for top civic alert bar
+  const [siteSettings, setSiteSettings] = useState(() => getCachedSettings() || DEFAULT_SITE_SETTINGS);
+  useEffect(() => {
+    const handleCMS = () => setSiteSettings(getCachedSettings() || DEFAULT_SITE_SETTINGS);
+    window.addEventListener("cms-cache-cleared", handleCMS);
+    window.addEventListener("storage", handleCMS);
+    return () => {
+      window.removeEventListener("cms-cache-cleared", handleCMS);
+      window.removeEventListener("storage", handleCMS);
+    };
+  }, []);
+
   const handleLogout = () => {
     clearAuthSession(true); // logs out current tab session
     setUser(null);
@@ -155,15 +168,15 @@ export default function App() {
               LIVE CIVIC
             </span>
             <span className="truncate text-slate-300">
-              Fazilnagar Town Official Civic & Local Directory Portal (PIN 274401)
+              {siteSettings?.siteName || "Fazilnagar Town Official Civic & Local Directory Portal (PIN 274401)"}
             </span>
           </div>
           <div className="flex items-center gap-4">
             <a
-              href="tel:112"
+              href={`tel:${siteSettings?.contact?.emergencyPhone ? siteSettings.contact.emergencyPhone.split("/")[0].trim() : "112"}`}
               className="inline-flex items-center gap-1 text-red-400 hover:text-red-300 font-bold whitespace-nowrap"
             >
-              <span>📞 Helpline: 112</span>
+              <span>📞 Helpline: {siteSettings?.contact?.emergencyPhone || "112"}</span>
             </a>
             {user && (
               <span className="text-[#168568] font-bold hidden md:inline">
