@@ -112,6 +112,11 @@ export default function App() {
         const el = document.getElementById(hashTarget);
         if (el) {
           el.scrollIntoView({ behavior: "smooth" });
+        } else {
+          window.dispatchEvent(new CustomEvent("townportal-reveal-below-fold"));
+          window.setTimeout(() => {
+            document.getElementById(hashTarget)?.scrollIntoView({ behavior: "smooth" });
+          }, 0);
         }
       } else {
         navigate(path);

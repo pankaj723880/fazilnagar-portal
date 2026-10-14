@@ -262,6 +262,26 @@ export default function TownPortal() {
   const [liveNews, setLiveNews] = useState([]);
   const [aboutTab, setAboutTab] = useState("fazilnagar"); // "fazilnagar" | "kushinagar" | "connection"
   const [isDirectoryExpanded, setIsDirectoryExpanded] = useState(false);
+  const [isBelowFoldReady, setIsBelowFoldReady] = useState(() => Boolean(window.location.hash));
+
+  useEffect(() => {
+    if (isBelowFoldReady) return;
+
+    const revealBelowFold = () => setIsBelowFoldReady(true);
+    if (typeof window.requestIdleCallback === "function") {
+      const idleId = window.requestIdleCallback(revealBelowFold, { timeout: 1200 });
+      return () => window.cancelIdleCallback(idleId);
+    }
+
+    const timeoutId = window.setTimeout(revealBelowFold, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [isBelowFoldReady]);
+
+  useEffect(() => {
+    const revealForNavigation = () => setIsBelowFoldReady(true);
+    window.addEventListener("townportal-reveal-below-fold", revealForNavigation);
+    return () => window.removeEventListener("townportal-reveal-below-fold", revealForNavigation);
+  }, []);
 
   const toggleDirectoryExpanded = () => {
     if (isDirectoryExpanded) {
@@ -406,6 +426,11 @@ export default function TownPortal() {
       setTimeout(() => {
         element.classList.remove("section-highlight-active");
       }, 2200);
+    } else if (targetId !== "hero-section") {
+      setIsBelowFoldReady(true);
+      window.setTimeout(() => {
+        document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 0);
     }
   };
 
@@ -796,6 +821,8 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 3: EXPLORE FAZILNAGAR (21 Clickable Categories)
           ======================================================== */}
+      {isBelowFoldReady && (
+        <>
       <section id="explore-categories" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
@@ -2390,6 +2417,8 @@ export default function TownPortal() {
             `© ${new Date().getFullYear()} Fazilnagar Town Portal • Modern Civic & Editorial System. All rights reserved.`}
         </div>
       </footer>
+        </>
+      )}
 
       {/* ========================================================
           INTERACTIVE MODALS: SUGGESTION, CORRECTION & EVENT
