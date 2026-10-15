@@ -140,7 +140,7 @@ export default function AdminNewsCMS({ onStatsChange }) {
     setNewsFormVideoUrl(item.video || item.videoUrl || "");
     setNewsFormVideoFile(null);
     setNewsFormIsFeatured(item.isFeatured === true);
-    setNewsFormIsPublished(item.isPublished === true || item.status === "approved");
+    setNewsFormIsPublished(Boolean(item.isPublished && item.status === "approved"));
     setNewsModalOpen(true);
   };
 
@@ -231,18 +231,20 @@ export default function AdminNewsCMS({ onStatsChange }) {
 
   const handleToggleNewsPublish = async (story) => {
     const token = getAuthToken();
-    const nextVal = !(story.isPublished || story.status === "approved");
+    const isCurrentlyLive = Boolean(story.isPublished && story.status === "approved");
+    const nextVal = !isCurrentlyLive;
+    const nextStatus = nextVal ? "approved" : "draft";
 
     try {
       await API.patch(
         `/news/${story._id}/publish`,
-        { isPublished: nextVal },
+        { isPublished: nextVal, status: nextStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setNewsList((prev) =>
         prev.map((n) =>
           n._id === story._id
-            ? { ...n, isPublished: nextVal, status: nextVal ? "approved" : "draft" }
+            ? { ...n, isPublished: nextVal, status: nextStatus }
             : n
         )
       );
@@ -274,15 +276,16 @@ export default function AdminNewsCMS({ onStatsChange }) {
   };
 
   // Metrics
-  const publishedCount = newsList.filter((n) => n.isPublished || n.status === "approved").length;
+  const publishedCount = newsList.filter((n) => n.isPublished && n.status === "approved").length;
   const featuredCount = newsList.filter((n) => n.isFeatured).length;
-  const draftCount = newsList.filter((n) => !n.isPublished && n.status !== "approved").length;
+  const draftCount = newsList.filter((n) => !n.isPublished || n.status !== "approved").length;
 
   // Filter
   const filteredNews = newsList.filter((item) => {
+    const isLive = Boolean(item.isPublished && item.status === "approved");
     if (categoryFilter !== "all" && item.category !== categoryFilter) return false;
-    if (statusFilter === "published" && !item.isPublished && item.status !== "approved") return false;
-    if (statusFilter === "draft" && (item.isPublished || item.status === "approved")) return false;
+    if (statusFilter === "published" && !isLive) return false;
+    if (statusFilter === "draft" && isLive) return false;
     if (statusFilter === "featured" && !item.isFeatured) return false;
 
     if (search.trim()) {
@@ -375,7 +378,7 @@ export default function AdminNewsCMS({ onStatsChange }) {
       label: "Status",
       render: (val, row) => {
         const item = row || val;
-        const isLive = item?.isPublished || item?.status === "approved";
+        const isLive = Boolean(item?.isPublished && item?.status === "approved");
         return <StatusBadge status={isLive ? "published" : "draft"} />;
       },
     },
@@ -385,7 +388,7 @@ export default function AdminNewsCMS({ onStatsChange }) {
       align: "right",
       render: (val, row) => {
         const item = row || val;
-        const isLive = item?.isPublished || item?.status === "approved";
+        const isLive = Boolean(item?.isPublished && item?.status === "approved");
         return (
           <div className="flex items-center justify-end gap-1.5">
             <button

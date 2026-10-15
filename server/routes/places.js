@@ -454,9 +454,15 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
     try {
       if (id.match(/^[0-9a-fA-F]{24}$/)) {
         updated = await Place.findByIdAndUpdate(id, updateData, { new: true });
-      } else {
+      }
+      if (!updated) {
+        const queryOr = [{ id }, { slug: id }];
+        if (updateData.name) {
+          queryOr.push({ name: updateData.name });
+          queryOr.push({ name: new RegExp(`^${updateData.name.trim()}$`, "i") });
+        }
         updated = await Place.findOneAndUpdate(
-          { $or: [{ id }, { slug: id }] },
+          { $or: queryOr },
           updateData,
           { new: true }
         );
@@ -469,7 +475,11 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
     let updatedInJson = false;
     syncJsonPlaces((list) => {
       const idx = list.findIndex(
-        (p) => String(p.id) === String(id) || String(p._id) === String(id) || p.slug === id
+        (p) =>
+          String(p.id) === String(id) ||
+          String(p._id) === String(id) ||
+          p.slug === id ||
+          (updated && (String(p.id) === String(updated.id) || String(p._id) === String(updated._id) || p.slug === updated.slug || p.name === updated.name))
       );
       if (idx >= 0) {
         list[idx] = { ...list[idx], ...updateData };

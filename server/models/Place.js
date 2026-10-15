@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const placeSchema = new mongoose.Schema(
   {
+    id: {
+      type: String,
+      trim: true,
+      index: true,
+    },
     name: {
       type: String,
       required: true,

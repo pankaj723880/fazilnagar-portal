@@ -104,10 +104,10 @@ export default function AdminPlaceEditModal({ isOpen, onClose, place, onSave, on
         setPhone(place.phone || "");
         setOpeningHours(place.openingHours || "");
         setDescription(place.description || "");
-        setLatitude(parseCoordinate(place.latitude) ?? "");
-        setLongitude(parseCoordinate(place.longitude) ?? "");
-        setImageUrl(place.imageUrl || "");
-        setImagePreview(place.imageUrl || "");
+        setLatitude(parseCoordinate(place.latitude ?? place.lat) ?? "");
+        setLongitude(parseCoordinate(place.longitude ?? place.lng) ?? "");
+        setImageUrl(place.imageUrl || place.image || "");
+        setImagePreview(place.imageUrl || place.image || "");
       } else {
         setName("");
         setCategory("Schools & Colleges");
@@ -245,8 +245,15 @@ export default function AdminPlaceEditModal({ isOpen, onClose, place, onSave, on
           },
         });
 
-        if (uploadRes.data?.primaryUrl) {
-          finalImageUrl = uploadRes.data.primaryUrl;
+        const uploadedUrl =
+          uploadRes.data?.primaryImageUrl ||
+          uploadRes.data?.primaryImage ||
+          uploadRes.data?.primaryUrl ||
+          uploadRes.data?.url ||
+          (Array.isArray(uploadRes.data?.images) && uploadRes.data.images[0]);
+
+        if (uploadedUrl) {
+          finalImageUrl = uploadedUrl;
           setImageUrl(finalImageUrl);
         }
       }
@@ -271,7 +278,7 @@ export default function AdminPlaceEditModal({ isOpen, onClose, place, onSave, on
 
       let resultPlace = null;
       if (isEditMode) {
-        const placeId = place.id || place._id || place.slug;
+        const placeId = place._id || place.id || place.slug;
         const res = await API.put(`/places/${placeId}`, payload, {
           headers: { Authorization: `Bearer ${getAuthToken()}` },
         });

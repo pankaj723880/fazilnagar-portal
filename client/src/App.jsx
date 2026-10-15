@@ -27,6 +27,7 @@ const AdminReview = lazy(() => import("./pages/AdminReview"));
 import InstallButton from "./components/InstallButton";
 import DirectionsModal from "./components/DirectionsModal";
 import NotificationCenter from "./components/NotificationCenter";
+import SplashScreen from "./components/SplashScreen";
 import { GlobalFloatingAndStickyAds } from "./components/AdvertisementSlot";
 import { Home, Compass, PhoneCall, Newspaper, Menu, X, ShieldAlert } from "lucide-react";
 
@@ -190,6 +191,17 @@ export default function App() {
     };
   }, []);
 
+  const [showSplash, setShowSplash] = useState(() => {
+    if (typeof window !== "undefined") {
+      const hasSeen = sessionStorage.getItem("hasSeenSplash");
+      if (!hasSeen) {
+        sessionStorage.setItem("hasSeenSplash", "true");
+        return true;
+      }
+    }
+    return false;
+  });
+
   const handleLogout = () => {
     performLogout();
     setUser(null);
@@ -197,6 +209,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#F5F7F8] text-[#18232E] flex flex-col font-sans selection:bg-[#B8323C] selection:text-white">
+      {/* Native App-Style Ultra-Premium Mobile Splash Screen */}
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
+
       {/* ========================================================
           PERMANENT FIXED TOP SHELL (Desktop / Non-Portal Pages)
           ======================================================== */}

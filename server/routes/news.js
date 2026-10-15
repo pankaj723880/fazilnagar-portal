@@ -1379,6 +1379,8 @@ router.put(
         article.isPublished = isPublished === "true" || isPublished === true;
         if (article.isPublished && article.status === "draft") {
           article.status = "approved";
+        } else if (!article.isPublished && article.status === "approved") {
+          article.status = "draft";
         }
       }
 
@@ -1423,18 +1425,25 @@ router.patch("/:id/publish", verifyToken, requireAdmin, async (req, res) => {
     }
 
     const nextPublished =
-      req.body.isPublished !== undefined ? req.body.isPublished : !article.isPublished;
+      req.body.isPublished !== undefined
+        ? Boolean(req.body.isPublished)
+        : !(article.isPublished && article.status === "approved");
 
     article.isPublished = nextPublished;
     if (nextPublished) {
       article.status = "approved";
-      article.publishedAt = new Date();
+      if (!article.publishedAt) {
+        article.publishedAt = new Date();
+      }
+    } else {
+      article.status = "draft";
     }
 
     await article.save();
     res.status(200).json({
       message: `News story ${article.isPublished ? "published" : "unpublished"}.`,
       isPublished: article.isPublished,
+      status: article.status,
       article,
     });
   } catch (err) {
