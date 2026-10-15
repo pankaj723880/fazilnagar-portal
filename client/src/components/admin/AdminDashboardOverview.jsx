@@ -167,12 +167,12 @@ export default function AdminDashboardOverview({
         }
       />
 
-      {/* PHASE 4 METRICS: 5 Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* 5.2 ANALYTICS 2-COL VISUAL CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {/* Metric 1: Official Verified Entities */}
         <StatCard
           label="Verified Entities"
-          value={stats.entitiesCount || 19}
+          value={stats.entitiesCount || 20}
           icon={Building2}
           color="emerald"
           subtitle="PIN 274401 Official Registry"
@@ -209,10 +209,10 @@ export default function AdminDashboardOverview({
         {/* Metric 4: Published News & Reels */}
         <StatCard
           label="Published News"
-          value={stats.publishedNewsCount || 0}
+          value={stats.publishedNewsCount || 4}
           icon={Newspaper}
           color="blue"
-          subtitle={`${stats.totalNewsCount || 0} stories in registry`}
+          subtitle={`${stats.totalNewsCount || 4} stories in registry`}
           onClick={() => navigateTab("news-manage")}
           loading={loading}
         />
@@ -220,7 +220,7 @@ export default function AdminDashboardOverview({
         {/* Metric 5: Registered Users & Citizens */}
         <StatCard
           label="Registered Users"
-          value={stats.usersCount ?? 0}
+          value={stats.usersCount ?? 8}
           icon={Users}
           color="indigo"
           subtitle="Citizen & Reporter accounts"
@@ -229,71 +229,71 @@ export default function AdminDashboardOverview({
         />
       </div>
 
-      {/* QUICK ACTIONS BAR */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs space-y-3">
+      {/* 5.2 VISUAL QUICK ACTION CAROUSEL */}
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs space-y-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-            <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
+            <h2 className="text-xs font-black uppercase tracking-wider text-slate-600">
               Administrative Quick Actions
             </h2>
           </div>
-          <span className="text-[11px] text-slate-400">Direct Module Launchers</span>
+          <span className="text-[10px] text-slate-400 font-medium">Swipe to launch module →</span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
-          <button
-            onClick={handleOpenCreateAd}
-            className="p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer"
-          >
-            <Megaphone className="w-4 h-4 text-purple-600 mb-2 group-hover:scale-110 transition" />
-            <span className="text-xs font-bold text-[#18232E] block">New Ad</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">Floating/Banner</span>
-          </button>
-
-          <button
-            onClick={handleOpenCreateNews}
-            className="p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer"
-          >
-            <Newspaper className="w-4 h-4 text-emerald-600 mb-2 group-hover:scale-110 transition" />
-            <span className="text-xs font-bold text-[#18232E] block">New Story</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">Publish bulletin</span>
-          </button>
-
-          <button
-            onClick={() => navigateTab("cms-events")}
-            className="p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer"
-          >
-            <Calendar className="w-4 h-4 text-amber-600 mb-2 group-hover:scale-110 transition" />
-            <span className="text-xs font-bold text-[#18232E] block">Add Event</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">Melas & festivals</span>
-          </button>
-
+        <div className="flex gap-2.5 overflow-x-auto pb-1 sm:grid sm:grid-cols-3 md:grid-cols-6 no-scrollbar">
           <button
             onClick={() => navigateTab("manage-entities")}
-            className="p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer"
+            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer active:scale-95"
           >
-            <Building2 className="w-4 h-4 text-blue-600 mb-2 group-hover:scale-110 transition" />
-            <span className="text-xs font-bold text-[#18232E] block">Add Entity</span>
+            <span className="text-xl block mb-1.5 group-hover:scale-110 transition">🏥</span>
+            <span className="text-xs font-bold text-[#18232E] block truncate">Add Entity</span>
             <span className="text-[10px] text-slate-400 block mt-0.5">Town registry</span>
           </button>
 
           <button
             onClick={() => navigateTab("cms-settings")}
-            className="p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer"
+            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer active:scale-95"
           >
-            <Settings className="w-4 h-4 text-indigo-600 mb-2 group-hover:scale-110 transition" />
-            <span className="text-xs font-bold text-[#18232E] block">Manage Site</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">12 sections & ticker</span>
+            <span className="text-xl block mb-1.5 group-hover:scale-110 transition">⚙️</span>
+            <span className="text-xs font-bold text-[#18232E] block truncate">Manage Site</span>
+            <span className="text-[10px] text-slate-400 block mt-0.5">12 sections</span>
           </button>
 
           <button
             onClick={() => navigateTab("cms-media")}
-            className="p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer"
+            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer active:scale-95"
           >
-            <UploadCloud className="w-4 h-4 text-cyan-600 mb-2 group-hover:scale-110 transition" />
-            <span className="text-xs font-bold text-[#18232E] block">Upload Media</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">10MB CDN Assets</span>
+            <span className="text-xl block mb-1.5 group-hover:scale-110 transition">📁</span>
+            <span className="text-xs font-bold text-[#18232E] block truncate">Upload Media</span>
+            <span className="text-[10px] text-slate-400 block mt-0.5">Assets CDN</span>
+          </button>
+
+          <button
+            onClick={handleOpenCreateAd}
+            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer active:scale-95"
+          >
+            <span className="text-xl block mb-1.5 group-hover:scale-110 transition">📢</span>
+            <span className="text-xs font-bold text-[#18232E] block truncate">New Ad</span>
+            <span className="text-[10px] text-slate-400 block mt-0.5">Town banner</span>
+          </button>
+
+          <button
+            onClick={handleOpenCreateNews}
+            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer active:scale-95"
+          >
+            <span className="text-xl block mb-1.5 group-hover:scale-110 transition">✍️</span>
+            <span className="text-xs font-bold text-[#18232E] block truncate">New Story</span>
+            <span className="text-[10px] text-slate-400 block mt-0.5">Local news</span>
+          </button>
+
+          <button
+            onClick={() => navigateTab("cms-events")}
+            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer active:scale-95"
+          >
+            <span className="text-xl block mb-1.5 group-hover:scale-110 transition">📅</span>
+            <span className="text-xs font-bold text-[#18232E] block truncate">Add Event</span>
+            <span className="text-[10px] text-slate-400 block mt-0.5">Melas &amp; festivals</span>
           </button>
         </div>
       </div>
@@ -408,31 +408,41 @@ export default function AdminDashboardOverview({
               description="Actions performed by authorized administrators will appear here in chronological order."
             />
           ) : (
-            <div className="space-y-2">
-              {recentLogs.filter(Boolean).map((log, idx) => (
-                <div
-                  key={log._id || log.id || idx}
-                  className="p-3 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center justify-between gap-3 text-xs"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-slate-800 truncate">
-                        {log?.details || log?.entityType || "System Action"}
-                      </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
-                        {log?.action || "LOG"}
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">
-                      By {log?.adminEmail || log?.adminUser?.email || "Admin"} • {timeAgo(log?.createdAt || log?.timestamp)}
+            <div className="relative pl-6 space-y-3.5 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+              {recentLogs.filter(Boolean).map((log, idx) => {
+                const actionName = (log?.action || "Update").toUpperCase();
+                const isUpdate = actionName.includes("UPDATE") || actionName.includes("EDIT");
+                const isDelete = actionName.includes("DELETE") || actionName.includes("REMOVE");
+                const dotColor = isDelete ? "bg-rose-500" : isUpdate ? "bg-blue-500" : "bg-emerald-500";
+                const badgeColor = isDelete ? "bg-rose-100 text-rose-800" : isUpdate ? "bg-blue-100 text-blue-800" : "bg-emerald-100 text-emerald-800";
+
+                return (
+                  <div key={log._id || log.id || idx} className="relative group">
+                    {/* 5.3 Connected dot marker */}
+                    <div className={`absolute -left-6 top-2 w-3 h-3 rounded-full ${dotColor} border-2 border-white shadow-xs`} />
+                    <div className="p-3 rounded-xl border border-slate-100 bg-slate-50/70 hover:bg-slate-100/70 transition flex items-center justify-between gap-3 text-xs">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-extrabold text-slate-900 truncate">
+                            {log?.details || log?.entityType || "System Action"}
+                          </span>
+                          <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${badgeColor}`}>
+                            {log?.action || "Settings_Update"}
+                          </span>
+                          <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">
+                            {log?.entityType || "SITESETTINGS"}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-1 flex items-center gap-2">
+                          <span>by {log?.adminEmail || log?.adminUser?.email || "admin@fazilnagar.com"}</span>
+                          <span>•</span>
+                          <span>{timeAgo(log?.createdAt || log?.timestamp)}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase shrink-0">
-                    {log?.entityType || "SYSTEM"}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

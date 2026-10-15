@@ -621,48 +621,54 @@ export default function App() {
           ======================================================== */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end">
-          {/* Backdrop */}
+          {/* Backdrop with full blur */}
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity animate-in fade-in duration-200"
             onClick={() => setMobileMenuOpen(false)}
             aria-hidden="true"
           />
 
           {/* Bottom Sheet Drawer Container */}
-          <div className="relative z-10 w-full max-w-[420px] mx-auto bg-white rounded-t-3xl shadow-2xl border-t border-slate-200 pb-20 animate-in slide-in-from-bottom duration-250 max-h-[82vh] flex flex-col overflow-hidden">
-            {/* Drawer Header */}
-            <div className="p-3.5 px-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+          <div className="relative z-10 w-full max-w-[420px] mx-auto bg-white/95 backdrop-blur-md rounded-t-3xl shadow-2xl border-t border-slate-200 pb-20 animate-in slide-in-from-bottom duration-250 max-h-[85vh] flex flex-col overflow-hidden">
+            {/* Drawer Header: 4.1 */}
+            <div className="p-3.5 px-4 border-b border-slate-100 flex items-center justify-between bg-white/90">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-slate-900 text-white font-black text-sm flex items-center justify-center shadow-xs">
                   F
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 font-heading leading-tight">Fazilnagar Menu</h3>
-                  <p className="text-[10px] text-slate-500 font-medium">Quick Civic & Directory Navigation</p>
+                  <h3 className="text-sm font-bold text-slate-900 font-heading leading-tight">
+                    Fazilnagar Menu
+                  </h3>
+                  <p className="text-[10px] text-slate-500 font-medium">
+                    Quick Civic &amp; Directory Navigation
+                  </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-7 h-7 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-600 flex items-center justify-center transition cursor-pointer active:scale-95"
+                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer active:scale-95 text-xs font-bold"
                 aria-label="Close menu"
               >
-                <X className="w-4 h-4" />
+                ✕
               </button>
             </div>
 
             {/* Drawer Scrollable Content */}
             <div className="overflow-y-auto p-4 space-y-3.5 no-scrollbar">
-              {/* Install PWA Prompt */}
-              <div className="p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200/80 flex items-center justify-between shadow-2xs">
-                <span className="text-xs font-bold text-slate-800">Install on Device</span>
+              {/* 4.1 Action App CTA: Install on Device (Teal Style) */}
+              <div className="p-2.5 rounded-xl bg-teal-50 border border-teal-200/80 flex items-center justify-between shadow-2xs">
+                <span className="text-xs font-bold text-teal-950 flex items-center gap-1.5">
+                  <span>📱</span> Install on Device
+                </span>
                 <InstallButton compact={false} />
               </div>
 
-              {/* Main Directory Links */}
+              {/* 4.2 Grid layout 1: CORE NAVIGATION */}
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
-                  Core Navigation
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1.5">
+                  CORE NAVIGATION
                 </span>
                 <div className="grid grid-cols-2 gap-2">
                   <Link
@@ -671,7 +677,7 @@ export default function App() {
                       setMobileMenuOpen(false);
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
-                    className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60 active:scale-95 transition"
+                    className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-800 hover:bg-slate-100 border border-slate-200/70 active:scale-95 transition"
                   >
                     <span>🏛️</span>
                     <span>Home</span>
@@ -687,7 +693,7 @@ export default function App() {
                   <Link
                     to="/emergency"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60 active:scale-95 transition"
+                    className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-800 hover:bg-slate-100 border border-slate-200/70 active:scale-95 transition"
                   >
                     <span>🚨</span>
                     <span>Helplines</span>
@@ -695,7 +701,7 @@ export default function App() {
                   <Link
                     to="/news"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60 active:scale-95 transition"
+                    className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-800 hover:bg-slate-100 border border-slate-200/70 active:scale-95 transition"
                   >
                     <span>📰</span>
                     <span>Updates</span>
@@ -703,7 +709,7 @@ export default function App() {
                   <Link
                     to="/about"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60 active:scale-95 transition"
+                    className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-800 hover:bg-slate-100 border border-slate-200/70 active:scale-95 transition"
                   >
                     <span>ℹ️</span>
                     <span>About Town</span>
@@ -714,48 +720,111 @@ export default function App() {
                       setMobileMenuOpen(false);
                       handleNavClick(e, "/#town-map-section", true);
                     }}
-                    className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60 active:scale-95 transition"
+                    className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-800 hover:bg-slate-100 border border-slate-200/70 active:scale-95 transition"
                   >
                     <span>📍</span>
                     <span>Town Map</span>
                   </a>
+                </div>
+
+                {/* Highlighted Banner: Admin Dashboard 🛡️ ADMIN DESK */}
+                <Link
+                  to="/admin/review"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="mt-2 w-full p-2.5 rounded-xl text-xs font-bold flex items-center justify-between bg-amber-100/90 hover:bg-amber-200/90 text-amber-950 border border-amber-300 shadow-2xs active:scale-95 transition"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🛡️</span>
+                    <span className="font-extrabold">Admin Dashboard</span>
+                  </div>
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-amber-300 text-amber-950 border border-amber-400/80">
+                    ADMIN DESK
+                  </span>
+                </Link>
+              </div>
+
+              {/* 4.2 Grid layout 2: CIVIC HUBS (9 Colorful Tiles) */}
+              <div className="pt-2 border-t border-slate-100">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1.5">
+                  CIVIC HUBS
+                </span>
+                <div className="grid grid-cols-2 gap-1.5">
                   <Link
-                    to="/admin/review"
+                    to="/education"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="col-span-2 p-2.5 rounded-xl text-xs font-bold flex items-center justify-between bg-amber-50 hover:bg-amber-100/90 text-amber-950 border border-amber-300 shadow-2xs active:scale-95 transition"
+                    className="p-2 rounded-lg text-xs font-semibold bg-blue-50/70 hover:bg-blue-100 text-blue-950 flex items-center gap-1.5 border border-blue-200/60 active:scale-95 transition"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-base">🛡️</span>
-                      <span className="font-bold">Admin dashboard</span>
-                    </div>
-                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-amber-200 text-amber-900">
-                      {isAdmin ? "Admin Desk" : "Login"}
-                    </span>
+                    <span>🎓</span>
+                    <span className="truncate">Education</span>
+                  </Link>
+                  <Link
+                    to="/emergency"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2 rounded-lg text-xs font-semibold bg-rose-50/70 hover:bg-rose-100 text-rose-950 flex items-center gap-1.5 border border-rose-200/60 active:scale-95 transition"
+                  >
+                    <span>🚨</span>
+                    <span className="truncate">Emergency</span>
+                  </Link>
+                  <Link
+                    to="/healthcare"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2 rounded-lg text-xs font-semibold bg-emerald-50/70 hover:bg-emerald-100 text-emerald-950 flex items-center gap-1.5 border border-emerald-200/60 active:scale-95 transition"
+                  >
+                    <span>🏥</span>
+                    <span className="truncate">Healthcare</span>
+                  </Link>
+                  <Link
+                    to="/jobs"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2 rounded-lg text-xs font-semibold bg-indigo-50/70 hover:bg-indigo-100 text-indigo-950 flex items-center gap-1.5 border border-indigo-200/60 active:scale-95 transition"
+                  >
+                    <span>💼</span>
+                    <span className="truncate">Jobs &amp; Directory</span>
+                  </Link>
+                  <Link
+                    to="/tourism"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2 rounded-lg text-xs font-semibold bg-purple-50/70 hover:bg-purple-100 text-purple-950 flex items-center gap-1.5 border border-purple-200/60 active:scale-95 transition"
+                  >
+                    <span>🏨</span>
+                    <span className="truncate">Tourism</span>
+                  </Link>
+                  <Link
+                    to="/food"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2 rounded-lg text-xs font-semibold bg-amber-50/70 hover:bg-amber-100 text-amber-950 flex items-center gap-1.5 border border-amber-200/60 active:scale-95 transition"
+                  >
+                    <span>🍛</span>
+                    <span className="truncate">Food Guide</span>
+                  </Link>
+                  <Link
+                    to="/marketplace"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2 rounded-lg text-xs font-semibold bg-orange-50/70 hover:bg-orange-100 text-orange-950 flex items-center gap-1.5 border border-orange-200/60 active:scale-95 transition"
+                  >
+                    <span>🛍️</span>
+                    <span className="truncate">Marketplace</span>
+                  </Link>
+                  <Link
+                    to="/transport"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2 rounded-lg text-xs font-semibold bg-cyan-50/70 hover:bg-cyan-100 text-cyan-950 flex items-center gap-1.5 border border-cyan-200/60 active:scale-95 transition"
+                  >
+                    <span>🚌</span>
+                    <span className="truncate">Transport</span>
+                  </Link>
+                  <Link
+                    to="/govt"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="col-span-2 p-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-900 flex items-center justify-center gap-1.5 border border-slate-200 active:scale-95 transition"
+                  >
+                    <span>🏛️</span>
+                    <span>Govt Services</span>
                   </Link>
                 </div>
               </div>
 
-              {/* Civic Hubs Shortcuts */}
-              <div className="pt-2 border-t border-slate-100">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
-                  Civic Hubs
-                </span>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {DIRECTORY_SUB_NAV.slice(1).map((hub) => (
-                    <Link
-                      key={hub.path}
-                      to={hub.path}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="p-2 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 border border-slate-100 active:scale-95 transition"
-                    >
-                      <span>{hub.icon}</span>
-                      <span className="truncate">{hub.label}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              {/* Submit Story & User Login/Logout */}
+              {/* Bottom: ✍️ + Add Story & Red Logout Button */}
               <div className="pt-2 border-t border-slate-100 space-y-2">
                 <Link
                   to={user ? "/create-news" : "/login"}
@@ -774,9 +843,9 @@ export default function App() {
                         handleLogout();
                         setMobileMenuOpen(false);
                       }}
-                      className="w-full bg-slate-100 text-slate-700 text-xs font-bold py-2 rounded-xl cursor-pointer hover:bg-slate-200 transition"
+                      className="w-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-black py-2 rounded-xl cursor-pointer hover:bg-rose-100 transition active:scale-95"
                     >
-                      Logout ({user.name || user.email})
+                      Logout ({user.role === "admin" ? "Admin" : user.name || "User"})
                     </button>
                   ) : (
                     <>

@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import NotificationCenter from "./NotificationCenter";
 import { openGoogleMapsDirections } from "../utils/directions";
+import { getAuthUser } from "../utils/authStorage";
 
 // Authoritative verified places for Fazilnagar Mobile Portal
 const VERIFIED_CAROUSEL_PLACES = [
@@ -130,6 +131,18 @@ const VERIFIED_CAROUSEL_PLACES = [
     lat: 26.6815,
     lng: 84.0430,
     image: "https://images.unsplash.com/photo-1527018607616-0526648e861c?w=800&auto=format&fit=crop",
+    verified: true,
+  },
+  {
+    id: "fazilnagar-mandi",
+    title: "Fazilnagar Sabzi Mandi",
+    subtitle: "NH-27 Mandi Chowk",
+    category: "markets",
+    categoryLabel: "🛒 Markets",
+    phone: "05564222140",
+    lat: 26.6828,
+    lng: 84.0485,
+    image: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&auto=format&fit=crop",
     verified: true,
   },
 ];
@@ -285,13 +298,14 @@ const MAP_FILTER_TABS = [
 // 5. Melas & Events Category Tabs
 const EVENT_TABS = ["All (0)", "Mela & Fair", "Aarti & Puja", "Civic & Cultural"];
 
-// Main Category Pills for Section 5 of Header
+// Main Category Pills for Section 1.4 Horizontal Swipe Category Carousel
 const CATEGORY_PILLS = [
-  { id: "all", label: "All" },
-  { id: "healthcare", label: "🏥 Healthcare" },
-  { id: "schools", label: "🏫 Schools" },
-  { id: "sweets", label: "🍬 Sweets & Chaat" },
-  { id: "fuel", label: "⛽ Fuel Stations" },
+  { id: "all", label: "All Places", style: "bg-slate-900 text-white" },
+  { id: "healthcare", label: "🏥 Healthcare", style: "bg-blue-50 text-blue-700 border border-blue-100" },
+  { id: "schools", label: "🏫 Schools", style: "bg-amber-50 text-amber-700 border border-amber-100" },
+  { id: "sweets", label: "🍬 Sweets & Food", style: "bg-rose-50 text-rose-700 border border-rose-100" },
+  { id: "fuel", label: "⛽ Fuel Stations", style: "bg-emerald-50 text-emerald-700 border border-emerald-100" },
+  { id: "markets", label: "🛒 Markets", style: "bg-purple-50 text-purple-700 border border-purple-100" },
 ];
 
 export default function MobileHomePortal({
@@ -300,6 +314,24 @@ export default function MobileHomePortal({
   onOpenEvent,
 }) {
   const navigate = useNavigate();
+
+  // Current logged in user for Top App Bar
+  const [authUser, setAuthUser] = useState(() => getAuthUser());
+
+  useEffect(() => {
+    const syncUser = () => setAuthUser(getAuthUser());
+    window.addEventListener("auth-change", syncUser);
+    window.addEventListener("storage", syncUser);
+    return () => {
+      window.removeEventListener("auth-change", syncUser);
+      window.removeEventListener("storage", syncUser);
+    };
+  }, []);
+
+  const isAdmin =
+    authUser?.role === "admin" ||
+    authUser?.email === "admin@fazilnagar.com" ||
+    authUser?.email === "pankaj723880@gmail.com";
 
   // Search State
   const [searchQuery, setSearchQuery] = useState("");
@@ -408,24 +440,46 @@ export default function MobileHomePortal({
   return (
     <div className="w-full max-w-[420px] mx-auto min-h-screen bg-slate-50 flex flex-col font-sans pb-24 text-slate-800 selection:bg-red-500 selection:text-white relative">
       {/* ========================================================
-          1. TOP APP BAR (Fixed/Sticky)
+          1.1 TOP APP BAR (Sticky, 54px h)
           ======================================================== */}
-      <header className="sticky top-0 z-30 w-full backdrop-blur-md bg-white/95 border-b border-slate-100 px-4 py-2.5 flex items-center justify-between shadow-2xs">
-        <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-slate-900 text-white font-black text-base flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+      <header className="sticky top-0 z-30 w-full h-[54px] backdrop-blur-md bg-white/95 border-b border-slate-100 px-4 flex items-center justify-between shadow-2xs">
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="w-8 h-8 rounded-xl bg-slate-900 text-white font-black text-sm flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
             F
           </div>
           <div>
-            <h1 className="font-extrabold tracking-tight text-slate-900 text-base leading-none font-heading">
+            <h1 className="font-extrabold tracking-tight text-slate-900 text-sm leading-none font-heading">
               FAZILNAGAR
             </h1>
-            <p className="text-[10px] text-slate-500 font-medium tracking-wide mt-0.5">
-              PIN 274401 • Kushinagar
+            <p className="text-[9px] text-slate-500 font-medium tracking-wide mt-0.5">
+              PIN 274401 • Kushinagar, UP
             </p>
           </div>
         </Link>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <NotificationCenter lightMode={true} subtleDot={true} />
+          {authUser ? (
+            <Link
+              to={isAdmin ? "/admin/review" : "/news"}
+              className="flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200/80 transition text-slate-800"
+              title={isAdmin ? "Admin Console" : (authUser.name || authUser.email)}
+            >
+              <div className="w-6 h-6 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center">
+                {isAdmin ? "A" : (authUser.name?.[0] || "U").toUpperCase()}
+              </div>
+              <span className="text-[10px] font-bold text-slate-700 max-w-[60px] truncate">
+                {isAdmin ? "Admin" : (authUser.name?.split(" ")[0] || "Citizen")}
+              </span>
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition border border-slate-200/80"
+              title="Citizen Login"
+            >
+              <span className="text-sm">👤</span>
+            </Link>
+          )}
         </div>
       </header>
 
@@ -439,10 +493,21 @@ export default function MobileHomePortal({
       )}
 
       {/* ========================================================
-          2. SEARCH INPUT BAR
+          1.2 UNIFIED HERO & SEARCH AREA
           ======================================================== */}
-      <section className="px-4 pt-3 pb-1" aria-label="Search Fazilnagar">
-        <div className="relative flex items-center bg-white rounded-2xl border border-slate-200/80 shadow-xs px-3.5 py-2.5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-100 transition">
+      <section className="bg-gradient-to-b from-amber-50/50 via-slate-50/30 to-transparent px-4 pt-3 pb-2" aria-label="Hero & Search Area">
+        {/* Short Heading */}
+        <div className="mb-2">
+          <h2 className="text-[18px] font-black text-slate-900 font-heading tracking-tight leading-tight">
+            Official Fazilnagar Portal
+          </h2>
+          <p className="text-[10px] text-slate-500 font-medium">
+            Verified Town Directory & Public Services
+          </p>
+        </div>
+
+        {/* Search Pill Input */}
+        <div className="relative flex items-center bg-white rounded-2xl border border-slate-200/90 shadow-sm px-3.5 py-2.5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-100 transition">
           <Search className="w-4 h-4 text-slate-400 shrink-0 mr-2" />
           <input
             type="text"
@@ -453,7 +518,7 @@ export default function MobileHomePortal({
                 navigate(`/directory?search=${encodeURIComponent(searchQuery.trim())}`);
               }
             }}
-            placeholder="Search CHC, schools, sweets, directory..."
+            placeholder="Search CHC, schools, markets, or emergency..."
             className="w-full text-xs text-slate-800 placeholder-slate-400 bg-transparent outline-none font-medium"
             aria-label="Search directory"
           />
@@ -479,71 +544,88 @@ export default function MobileHomePortal({
               <Mic className="w-4 h-4" />
             </button>
           )}
+          <a
+            href="tel:112"
+            className="px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-700 text-[10px] font-black border border-rose-200 shrink-0 ml-1.5 hover:bg-rose-200 transition"
+            title="Dial 112 Emergency"
+          >
+            112
+          </a>
+        </div>
+
+        {/* Micro-pills immediately below the search bar */}
+        <div className="flex items-center gap-2 mt-2 px-0.5 overflow-x-auto no-scrollbar">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-[10px] font-bold shrink-0">
+            <span>📍</span> Strictly Inside Town Limits
+          </span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200/80 text-[10px] font-bold shrink-0">
+            <span>🛰️</span> Exact Ground Coordinates
+          </span>
         </div>
       </section>
 
       {/* ========================================================
-          3. 4-COLUMN QUICK SOS & UTILITY ACTION GRID
+          1.3 IMMEDIATE TOUCH 4-COLUMN SOS & UTILITY GRID
           ======================================================== */}
       <section className="px-4 py-2" aria-label="Quick SOS & Utility Actions">
         <div className="grid grid-cols-4 gap-2">
           <a
             href="tel:112"
-            className="flex flex-col items-center justify-center p-2 rounded-2xl bg-rose-50 text-rose-600 border border-rose-100 active:scale-95 transition-all duration-150 touch-manipulation shadow-2xs group"
+            className="flex flex-col items-center justify-center p-2 rounded-2xl bg-rose-50 text-rose-700 border border-rose-200/80 active:scale-95 transition-all duration-150 touch-manipulation shadow-2xs group"
           >
             <span className="text-xl mb-1 group-active:scale-110 transition-transform select-none">
               🚨
             </span>
-            <span className="text-[11px] font-bold text-rose-700 leading-tight">
+            <span className="text-[11px] font-black text-rose-700 leading-tight">
               112 SOS
             </span>
-            <span className="text-[9px] text-rose-500 font-medium leading-none mt-0.5">
-              Emergency
+            <span className="text-[9px] text-rose-600 font-medium leading-none mt-0.5">
+              Police Patrol
             </span>
           </a>
 
           <a
             href="tel:05564222102"
-            className="flex flex-col items-center justify-center p-2 rounded-2xl bg-sky-50 text-sky-700 border border-sky-100 active:scale-95 transition-all duration-150 touch-manipulation shadow-2xs group"
+            className="flex flex-col items-center justify-center p-2 rounded-2xl bg-sky-50 text-sky-800 border border-sky-200/80 active:scale-95 transition-all duration-150 touch-manipulation shadow-2xs group"
           >
             <span className="text-xl mb-1 group-active:scale-110 transition-transform select-none">
               🏥
             </span>
-            <span className="text-[11px] font-bold text-sky-800 leading-tight">
-              CHC Hosp.
+            <span className="text-[11px] font-black text-sky-800 leading-tight">
+              CHC Hosp
             </span>
             <span className="text-[9px] text-sky-600 font-medium leading-none mt-0.5">
-              Hospital
+              24/7 Casualty
             </span>
           </a>
 
           <a
-            href="tel:05564222100"
-            className="flex flex-col items-center justify-center p-2 rounded-2xl bg-indigo-50 text-indigo-700 border border-indigo-100 active:scale-95 transition-all duration-150 touch-manipulation shadow-2xs group"
+            href="tel:112"
+            className="flex flex-col items-center justify-center p-2 rounded-2xl bg-indigo-50 text-indigo-800 border border-indigo-200/80 active:scale-95 transition-all duration-150 touch-manipulation shadow-2xs group"
           >
             <span className="text-xl mb-1 group-active:scale-110 transition-transform select-none">
               👮
             </span>
-            <span className="text-[11px] font-bold text-indigo-800 leading-tight">
-              Police
+            <span className="text-[11px] font-black text-indigo-800 leading-tight">
+              Police Chowki
             </span>
             <span className="text-[9px] text-indigo-600 font-medium leading-none mt-0.5">
-              Chowki
+              Town Help
             </span>
           </a>
 
           <a
             href="tel:1912"
-            className="flex flex-col items-center justify-center p-2 rounded-2xl bg-amber-50 text-amber-700 border border-amber-100 active:scale-95 transition-all duration-150 touch-manipulation shadow-2xs group"
+            className="flex flex-col items-center justify-center p-2 rounded-2xl bg-amber-50 text-amber-800 border border-amber-200/80 active:scale-95 transition-all duration-150 touch-manipulation shadow-2xs group"
           >
             <span className="text-xl mb-1 group-active:scale-110 transition-transform select-none">
               ⚡
             </span>
-            <span className="text-[11px] font-bold text-amber-800 leading-tight">
-              Power
+            <span className="text-[11px] font-black text-amber-800 leading-tight">
+              Power (1912)
             </span>
             <span className="text-[9px] text-amber-600 font-medium leading-none mt-0.5">
-              1912
+              Substation
             </span>
           </a>
         </div>
@@ -574,9 +656,9 @@ export default function MobileHomePortal({
       </section>
 
       {/* ========================================================
-          5. HORIZONTAL CATEGORY FILTER PILLS & VERIFIED CAROUSEL
+          1.4 HORIZONTAL SWIPE CATEGORY CAROUSEL
           ======================================================== */}
-      <section className="px-4 pt-3 pb-1" aria-label="Category Filters">
+      <section className="px-4 pt-2.5 pb-1" aria-label="Category Filters">
         <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 touch-pan-x">
           {CATEGORY_PILLS.map((cat) => {
             const isActive = selectedCategory === cat.id;
@@ -585,10 +667,10 @@ export default function MobileHomePortal({
                 key={cat.id}
                 type="button"
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition active:scale-95 cursor-pointer ${
+                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition active:scale-95 cursor-pointer ${
                   isActive
                     ? "bg-slate-900 text-white shadow-xs"
-                    : "bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50"
+                    : cat.style || "bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50"
                 }`}
               >
                 {cat.label}
@@ -598,11 +680,13 @@ export default function MobileHomePortal({
         </div>
       </section>
 
-      {/* Verified Places Carousel */}
+      {/* ========================================================
+          1.5 HORIZONTAL SNAP CAROUSEL (VERIFIED PLACES)
+          ======================================================== */}
       <section className="px-4 py-2" aria-label="Verified Places Carousel">
         <div className="flex items-center justify-between mb-2 px-0.5">
           <div className="flex items-center gap-1.5">
-            <h2 className="text-sm font-bold text-slate-900">Verified Places</h2>
+            <h2 className="text-sm font-bold text-slate-900">CIVIC DIRECTORY INDEX</h2>
             <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-full">
               {filteredPlaces.length}
             </span>
@@ -634,9 +718,9 @@ export default function MobileHomePortal({
             {filteredPlaces.map((place) => (
               <article
                 key={place.id}
-                className="w-[260px] snap-start shrink-0 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col justify-between"
+                className="w-[270px] snap-start shrink-0 bg-white rounded-2xl border border-slate-200/80 p-3.5 shadow-sm overflow-hidden flex flex-col justify-between"
               >
-                <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
+                <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-slate-100 mb-2.5">
                   <img
                     src={place.image}
                     alt={place.title}
@@ -648,7 +732,7 @@ export default function MobileHomePortal({
                   </span>
                 </div>
 
-                <div className="p-3.5 flex-1 flex flex-col justify-between">
+                <div className="flex-1 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-1.5">
                       <h3 className="text-sm font-bold text-slate-900 truncate">
@@ -659,17 +743,17 @@ export default function MobileHomePortal({
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5 truncate">
-                      {place.subtitle}
+                      📍 {place.subtitle}
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 mt-3.5 pt-3 border-t border-slate-100">
+                  <div className="grid grid-cols-2 gap-2 mt-3 pt-2.5 border-t border-slate-100">
                     <a
                       href={`tel:${place.phone}`}
-                      className="h-10 flex items-center justify-center gap-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-800 text-xs font-bold border border-slate-200 transition"
+                      className="h-10 flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-xs font-bold transition shadow-xs"
                       aria-label={`Call ${place.title}`}
                     >
-                      <Phone className="w-3.5 h-3.5 text-slate-600" />
+                      <Phone className="w-3.5 h-3.5 text-white" />
                       <span>Call</span>
                     </a>
                     <button
@@ -682,10 +766,10 @@ export default function MobileHomePortal({
                           landmark: place.subtitle,
                         })
                       }
-                      className="h-10 flex items-center justify-center gap-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 active:scale-95 text-blue-700 text-xs font-bold border border-blue-200 transition cursor-pointer"
+                      className="h-10 flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs font-bold border border-slate-200 transition cursor-pointer"
                       aria-label={`Directions to ${place.title}`}
                     >
-                      <Navigation className="w-3.5 h-3.5 text-blue-600" />
+                      <Navigation className="w-3.5 h-3.5 text-slate-700" />
                       <span>Directions</span>
                     </button>
                   </div>
@@ -756,131 +840,39 @@ export default function MobileHomePortal({
           - Toggle switch between "Map View" and "List View"
           - Latitude/Longitude badge (26.6827° N, 84.0498° E) micro-pill at top right
           ======================================================== */}
-      <section className="px-4 py-3" aria-label="Geospatial Map Section">
-        <div className="bg-white rounded-2xl p-3.5 border border-slate-200/90 shadow-sm space-y-3">
-          {/* Header with Lat/Lng Badge & Title */}
+      {/* ========================================================
+          1.6 INTERACTIVE MAP FEATURE BLOCK
+          ======================================================== */}
+      <section className="px-4 py-3" aria-label="Interactive Map Feature Block">
+        <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white p-4 shadow-md space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="text-base">🗺️</span>
-              <h2 className="text-sm font-bold text-slate-900">Town Map & Coordinates</h2>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🗺️</span>
+              <div>
+                <h3 className="text-sm font-extrabold text-white">Interactive Map</h3>
+                <span className="text-[10px] text-emerald-400 font-semibold">Verified Ground Coordinates</span>
+              </div>
             </div>
-            <div className="px-2 py-0.5 rounded-full bg-slate-100 text-[10px] font-mono text-slate-600 border border-slate-200 shadow-2xs">
+            <div className="px-2 py-0.5 rounded-full bg-slate-800/80 text-[10px] font-mono text-slate-300 border border-slate-700">
               26.6827° N, 84.0498° E
             </div>
           </div>
 
-          {/* Sticky/Floating Category Filter Pills */}
-          <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5 touch-pan-x">
-            {MAP_FILTER_TABS.map((tab) => {
-              const isActive = mapCategory === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setMapCategory(tab.id)}
-                  className={`shrink-0 px-2.5 py-1 rounded-xl text-[11px] font-semibold transition active:scale-95 cursor-pointer ${
-                    isActive
-                      ? "bg-slate-900 text-white shadow-xs"
-                      : "bg-slate-50 text-slate-700 border border-slate-200/80 hover:bg-slate-100"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
+          <p className="text-xs text-slate-300 leading-relaxed">
+            20+ verified coordinate pins on NH-27, College Rd, & Hospital Rd axis.
+          </p>
 
-          {/* View Mode Toggle: Map View vs List View */}
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-xs font-semibold text-slate-600">
-              {mapPlaces.length} locations plotted
+          <div className="pt-1 flex items-center justify-between border-t border-slate-800/80">
+            <span className="text-[11px] text-slate-400">
+              Pins, clinics, petrol pumps & schools
             </span>
-            <div className="inline-flex rounded-xl bg-slate-100 p-0.5 border border-slate-200 text-xs">
-              <button
-                type="button"
-                onClick={() => setMapViewType("map")}
-                className={`px-3 py-1 rounded-lg font-bold transition ${
-                  mapViewType === "map"
-                    ? "bg-white text-slate-900 shadow-2xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                Map View
-              </button>
-              <button
-                type="button"
-                onClick={() => setMapViewType("list")}
-                className={`px-3 py-1 rounded-lg font-bold transition ${
-                  mapViewType === "list"
-                    ? "bg-white text-slate-900 shadow-2xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                List View
-              </button>
-            </div>
+            <Link
+              to="/directory"
+              className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-900 rounded-xl font-bold text-xs shadow-sm active:scale-95 transition inline-flex items-center gap-1.5"
+            >
+              <span>Open Map View →</span>
+            </Link>
           </div>
-
-          {/* Map View vs List View Content */}
-          {mapViewType === "map" ? (
-            <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-900 text-white aspect-[16/10] flex flex-col justify-between p-3.5 group">
-              <div className="absolute inset-0 opacity-40 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px]"></div>
-              
-              <div className="relative z-10 flex items-start justify-between">
-                <div>
-                  <span className="inline-block px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
-                    GPS Coordinates Active
-                  </span>
-                  <p className="text-xs font-bold text-white mt-1">Fazilnagar Interactive Map</p>
-                </div>
-                <span className="w-8 h-8 rounded-lg bg-slate-800/90 text-white flex items-center justify-center text-sm border border-slate-700">
-                  📍
-                </span>
-              </div>
-
-              <div className="relative z-10 flex items-center justify-between">
-                <p className="text-[11px] text-slate-300">
-                  Tap to launch full GPS navigation & live pin explorer
-                </p>
-                <Link
-                  to="/directory#town-map-section"
-                  className="px-3 py-1.5 rounded-xl bg-white text-slate-900 text-xs font-bold active:scale-95 transition shadow-sm whitespace-nowrap shrink-0 ml-2"
-                >
-                  Open Map →
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-100 max-h-[220px] overflow-y-auto no-scrollbar">
-              {mapPlaces.map((place) => (
-                <div key={place.id} className="py-2.5 flex items-center justify-between gap-2">
-                  <div className="overflow-hidden">
-                    <p className="text-xs font-bold text-slate-900 truncate">
-                      {place.title} <span className="text-emerald-600 text-[11px]">✔</span>
-                    </p>
-                    <p className="text-[10px] text-slate-500 truncate">
-                      {place.subtitle} • {place.lat.toFixed(4)}°N, {place.lng.toFixed(4)}°E
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      openGoogleMapsDirections({
-                        name: place.title,
-                        lat: place.lat,
-                        lng: place.lng,
-                        landmark: place.subtitle,
-                      })
-                    }
-                    className="shrink-0 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-[11px] font-bold border border-blue-200 active:scale-95 transition flex items-center gap-1"
-                  >
-                    <Navigation className="w-3 h-3" />
-                    <span>Route</span>
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </section>
 
@@ -1196,29 +1188,19 @@ export default function MobileHomePortal({
       </section>
 
       {/* ========================================================
-          SPEC 6: SACRED TWIN HERITAGE: PAWANAGAR & KUSHINAGAR
-          - Header Card: Sacred Twin Heritage (2,600+ Years) + twin badges: Fazilnagar (Pawanagar) ⇄ Kushinagar (Nirvana)
-          - 2 Feature Micro-Cards:
-            1. Pawapuri Jain Tirth: Timings, Free Entry, [Directions]
-            2. Historic Kakodha Ghat: Holy River Site, [View Map]
-          - Fast Facts Strip (4-column horizontal chips): [Antiquity: 2600+ Yrs], [Dynasty: Malla], [PIN: 274401], [Corridor: NH-27]
-          - Collapsible toggle: "Read Ancient History of Pawa & Deepavali Origin (Accordion ↓)"
+          1.7 COLLAPSIBLE SACRED HERITAGE ACCORDION
           ======================================================== */}
       <section className="px-4 py-3" aria-label="Sacred Heritage">
         <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white rounded-2xl p-4 shadow-md space-y-3">
           {/* Header & Twin Badges */}
-          <div>
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-amber-400 text-xs font-bold uppercase tracking-wider">
               <span>🏛️</span>
               <span>Sacred Twin Heritage (2,600+ Years)</span>
             </div>
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-1.5">
               <span className="px-2 py-0.5 rounded-lg bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] font-bold">
-                Fazilnagar (Pawanagar)
-              </span>
-              <span className="text-slate-400 text-xs">⇄</span>
-              <span className="px-2 py-0.5 rounded-lg bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-bold">
-                Kushinagar (Nirvana)
+                Pawanagar ⇄ Kushinagar
               </span>
             </div>
           </div>
@@ -1266,7 +1248,7 @@ export default function MobileHomePortal({
                 </p>
               </div>
               <Link
-                to="/directory#town-map-section"
+                to="/directory"
                 className="mt-2.5 py-1 px-2 rounded-lg bg-slate-700 text-white font-bold text-[10px] active:scale-95 transition text-center"
               >
                 View Map →
@@ -1274,34 +1256,14 @@ export default function MobileHomePortal({
             </div>
           </div>
 
-          {/* Fast Facts Strip (4-column horizontal chips) */}
-          <div className="grid grid-cols-4 gap-1 pt-1 text-center text-[9px] font-medium text-slate-300">
-            <div className="bg-slate-800/60 rounded-lg p-1 border border-slate-700/50">
-              <span className="block text-[8px] text-slate-400">Antiquity</span>
-              <strong className="text-white">2,600+ Yrs</strong>
-            </div>
-            <div className="bg-slate-800/60 rounded-lg p-1 border border-slate-700/50">
-              <span className="block text-[8px] text-slate-400">Dynasty</span>
-              <strong className="text-white">Malla Rep.</strong>
-            </div>
-            <div className="bg-slate-800/60 rounded-lg p-1 border border-slate-700/50">
-              <span className="block text-[8px] text-slate-400">Postal</span>
-              <strong className="text-white">PIN 274401</strong>
-            </div>
-            <div className="bg-slate-800/60 rounded-lg p-1 border border-slate-700/50">
-              <span className="block text-[8px] text-slate-400">Corridor</span>
-              <strong className="text-white">NH-27 E-W</strong>
-            </div>
-          </div>
-
-          {/* Collapsible History Accordion */}
+          {/* Collapsible History Accordion with Micro Fact-sheets */}
           <div className="pt-2 border-t border-slate-700/70">
             <button
               type="button"
               onClick={() => setIsHeritageHistoryOpen((prev) => !prev)}
               className="w-full flex items-center justify-between text-[11px] font-bold text-amber-300 hover:text-amber-200 transition cursor-pointer"
             >
-              <span>Read Ancient History of Pawa & Deepavali Origin</span>
+              <span>🏛️ Sacred Twin Heritage (Pawanagar & Kushinagar) [{isHeritageHistoryOpen ? "Collapse ↑" : "Expand ↓"}]</span>
               {isHeritageHistoryOpen ? (
                 <ChevronUp className="w-4 h-4 shrink-0" />
               ) : (
@@ -1310,13 +1272,35 @@ export default function MobileHomePortal({
             </button>
 
             {isHeritageHistoryOpen && (
-              <div className="mt-2 text-[11px] text-slate-300 space-y-2 leading-relaxed bg-slate-800/60 rounded-xl p-3 border border-slate-700 animate-in fade-in duration-200">
-                <p>
-                  Fazilnagar represents the historic site of ancient <strong>Pawanagar (Pawa)</strong> of the Malla Republic. It is revered worldwide where Bhagwan Mahavira attained Nirvana on Kartik Amavasya in 527 BCE, commemorating the very genesis of the <strong>Deepavali (Festival of Lights)</strong> celebration.
-                </p>
-                <p>
-                  Adjacent to Pawanagar lies Kushinagar (just 16 km west), where Bhagwan Buddha attained Mahaparinirvana, binding these twin centers in immortal spiritual harmony.
-                </p>
+              <div className="mt-2.5 space-y-2.5 animate-in fade-in duration-200">
+                {/* 4 Micro Fact-sheets */}
+                <div className="grid grid-cols-4 gap-1 text-center text-[9px] font-medium text-slate-300">
+                  <div className="bg-slate-800/90 rounded-lg p-1.5 border border-slate-700">
+                    <span className="block text-[8px] text-slate-400">Antiquity</span>
+                    <strong className="text-white font-bold">2600+ yrs</strong>
+                  </div>
+                  <div className="bg-slate-800/90 rounded-lg p-1.5 border border-slate-700">
+                    <span className="block text-[8px] text-slate-400">Dynasty</span>
+                    <strong className="text-white font-bold">Malla</strong>
+                  </div>
+                  <div className="bg-slate-800/90 rounded-lg p-1.5 border border-slate-700">
+                    <span className="block text-[8px] text-slate-400">PIN</span>
+                    <strong className="text-white font-bold">274401</strong>
+                  </div>
+                  <div className="bg-slate-800/90 rounded-lg p-1.5 border border-slate-700">
+                    <span className="block text-[8px] text-slate-400">Highway</span>
+                    <strong className="text-white font-bold">NH-27</strong>
+                  </div>
+                </div>
+
+                <div className="text-[11px] text-slate-300 space-y-2 leading-relaxed bg-slate-800/60 rounded-xl p-3 border border-slate-700">
+                  <p>
+                    Fazilnagar represents the historic site of ancient <strong>Pawanagar (Pawa)</strong> of the Malla Republic. It is revered worldwide where Bhagwan Mahavira attained Nirvana on Kartik Amavasya in 527 BCE, commemorating the very genesis of the <strong>Deepavali (Festival of Lights)</strong> celebration.
+                  </p>
+                  <p>
+                    Adjacent to Pawanagar lies Kushinagar (just 16 km west), where Bhagwan Buddha attained Mahaparinirvana, binding these twin centers in immortal spiritual harmony.
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -1324,19 +1308,12 @@ export default function MobileHomePortal({
       </section>
 
       {/* ========================================================
-          SPEC 7: CITIZEN PARTICIPATION & CONTRIBUTION DESK (2-Col Side-by-Side)
-          - Card 1: 🏪 List Business ("Shopkeeper or clinic in town?") -> Button: + Add Listing (min 40px height)
-          - Card 2: ⚠️ Report Error ("Found outdated phone or place?") -> Button: Report Bug (min 40px height)
+          1.8 CITIZEN CORNER CTA SPLIT CARD
           ======================================================== */}
       <section className="px-4 py-3" aria-label="Citizen Contribution Desk">
-        <div className="flex items-center gap-1.5 mb-2.5">
-          <span className="text-base">🤝</span>
-          <h2 className="text-sm font-bold text-slate-900">Citizen Participation Desk</h2>
-        </div>
-
         <div className="grid grid-cols-2 gap-2.5">
-          {/* Card 1: List Business */}
-          <div className="bg-white rounded-2xl p-3 border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+          {/* Card A: List Business */}
+          <div className="bg-white rounded-2xl p-3.5 border border-slate-200/90 shadow-2xs flex flex-col justify-between">
             <div>
               <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm font-bold mb-1.5">
                 🏪
@@ -1345,7 +1322,7 @@ export default function MobileHomePortal({
                 List Business
               </h3>
               <p className="text-[10px] text-slate-500 mt-1 leading-snug">
-                Shopkeeper or clinic in town? Add to verified directory.
+                Shopkeeper or clinic in town limit?
               </p>
             </div>
             <button
@@ -1353,15 +1330,15 @@ export default function MobileHomePortal({
               onClick={() => {
                 if (onOpenAddPlace) onOpenAddPlace();
               }}
-              className="mt-3 h-10 w-full rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold active:scale-95 transition shadow-xs cursor-pointer flex items-center justify-center gap-1"
+              className="mt-3.5 h-12 w-full rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold active:scale-95 transition shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>+ Add Listing</span>
             </button>
           </div>
 
-          {/* Card 2: Report Error */}
-          <div className="bg-white rounded-2xl p-3 border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+          {/* Card B: Report Error */}
+          <div className="bg-white rounded-2xl p-3.5 border border-slate-200/90 shadow-2xs flex flex-col justify-between">
             <div>
               <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center text-sm font-bold mb-1.5">
                 ⚠️
@@ -1370,7 +1347,7 @@ export default function MobileHomePortal({
                 Report Error
               </h3>
               <p className="text-[10px] text-slate-500 mt-1 leading-snug">
-                Found outdated phone, closed place or wrong location?
+                Found outdated phone or place?
               </p>
             </div>
             <button
@@ -1378,7 +1355,7 @@ export default function MobileHomePortal({
               onClick={() => {
                 if (onOpenCorrection) onOpenCorrection();
               }}
-              className="mt-3 h-10 w-full rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs font-bold active:scale-95 transition cursor-pointer flex items-center justify-center gap-1"
+              className="mt-3.5 h-12 w-full rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs font-bold active:scale-95 transition cursor-pointer flex items-center justify-center gap-1.5"
             >
               <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
               <span>Report Bug</span>
@@ -1388,13 +1365,9 @@ export default function MobileHomePortal({
       </section>
 
       {/* ========================================================
-          SPEC 8: COMPREHENSIVE DIRECTORY FOOTER (Collapsible Accordions)
-          - Quick Navigation
-          - Popular Categories
-          - Legal & Independent Notice
-          - Safe bottom padding pb-24
+          SECTION 6: COMPREHENSIVE DIRECTORY FOOTER (Collapsible Accordions)
           ======================================================== */}
-      <footer className="mt-4 px-4 pt-4 border-t border-slate-200 bg-white text-slate-600 text-xs space-y-2">
+      <footer className="mt-4 px-4 pt-4 pb-28 border-t border-slate-200 bg-white text-slate-600 text-xs space-y-2">
         {/* Accordion 1: Quick Navigation */}
         <div className="border border-slate-100 rounded-xl overflow-hidden">
           <button

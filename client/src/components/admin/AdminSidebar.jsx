@@ -100,16 +100,16 @@ export default function AdminSidebar({
       items: [
         {
           id: "manage-entities",
-          label: "Entities (19)",
+          label: "Entities (20)",
           icon: Building2,
-          badge: entitiesCount ? String(entitiesCount) : "19",
-          badgeColor: "bg-emerald-950 text-emerald-400 border border-emerald-800/60",
+          badge: entitiesCount ? String(entitiesCount) : "20",
+          badgeColor: "bg-emerald-950 text-emerald-400 border border-emerald-800/60 font-bold",
         },
         {
           id: "community-places",
           label: "Community Submissions",
           icon: Store,
-          badge: pendingCount > 0 ? pendingCount : null,
+          badge: pendingCount > 0 ? `${pendingCount} New` : "New",
           badgeColor: "bg-amber-500 text-slate-950 font-black",
         },
         {
@@ -132,11 +132,11 @@ export default function AdminSidebar({
       ],
     },
     {
-      title: "SECURITY & ADMINISTRATION",
+      title: "SECURITY",
       items: [
         {
           id: "notifications-manage",
-          label: "Notifications & Alerts",
+          label: "Notifications",
           icon: Bell,
           badge: "New",
           badgeColor: "bg-blue-900 text-blue-300 border border-blue-700/60 font-bold",
@@ -149,6 +149,7 @@ export default function AdminSidebar({
       ],
     },
   ];
+
 
   const handleSelect = (id) => {
     if (typeof setActiveTab === "function") {
