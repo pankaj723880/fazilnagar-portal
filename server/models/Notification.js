@@ -31,8 +31,27 @@ const notificationSchema = new mongoose.Schema(
         "submission_rejected",
         "submission_received",
         "system",
+        "custom_notification",
+        "custom_alert",
       ],
       default: "system",
+      index: true,
+    },
+    severity: {
+      type: String,
+      enum: ["info", "warning", "urgent"],
+      default: "info",
+      index: true,
+    },
+    targetAudience: {
+      type: String,
+      enum: ["all", "registered"],
+      default: "all",
+      index: true,
+    },
+    expiresAt: {
+      type: Date,
+      default: null,
       index: true,
     },
     title: {

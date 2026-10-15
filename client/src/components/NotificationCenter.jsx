@@ -29,7 +29,6 @@ export default function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [activeTab, setActiveTab] = useState("all"); // 'all' | 'news' | 'submissions'
   const [permission, setPermission] = useState("default");
   const [isTesting, setIsTesting] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -179,16 +178,6 @@ export default function NotificationCenter() {
     }
   };
 
-  const filteredNotifications = notifications.filter((item) => {
-    if (activeTab === "news") {
-      return item.type?.startsWith("broadcast_") || item.type === "broadcast_news";
-    }
-    if (activeTab === "submissions") {
-      return item.type?.startsWith("submission_");
-    }
-    return true;
-  });
-
   const formatTimestamp = (dateString) => {
     try {
       const date = new Date(dateString);
@@ -209,8 +198,20 @@ export default function NotificationCenter() {
     }
   };
 
-  const getNotificationIcon = (type) => {
-    switch (type) {
+  const getNotificationIcon = (notif) => {
+    if (notif.type === "custom_alert") {
+      if (notif.severity === "urgent") {
+        return <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 animate-pulse" />;
+      }
+      if (notif.severity === "warning") {
+        return <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />;
+      }
+      return <Radio className="w-4 h-4 text-blue-400 shrink-0" />;
+    }
+    if (notif.type === "custom_notification") {
+      return <Bell className="w-4 h-4 text-indigo-400 shrink-0" />;
+    }
+    switch (notif.type) {
       case "submission_approved":
         return <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />;
       case "submission_rejected":
@@ -302,126 +303,112 @@ export default function NotificationCenter() {
           </div>
 
           {/* Admin-only test controls; regular visitors only receive broadcasts. */}
-          {isAdmin && <div className="p-3 border-b border-slate-800/70 bg-gradient-to-r from-blue-950/40 via-slate-900/50 to-indigo-950/40">
-            {permission === "granted" ? (
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Laptop & Phone popups active</span>
-                </div>
-                <button
-                  onClick={handleTestNotification}
-                  disabled={isTesting}
-                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-medium border border-slate-700 transition cursor-pointer flex items-center gap-1 disabled:opacity-50"
-                  title="Send a sample popup to your laptop or phone"
-                >
-                  <Radio className="w-3 h-3 text-blue-400" />
-                  <span>{isTesting ? "Sending..." : "Test Popup"}</span>
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-1.5">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="text-xs">
-                    <p className="font-semibold text-slate-200">
-                      🔔 Get Laptop & Phone Popups
-                    </p>
-                    <p className="text-[11px] text-slate-400">
-                      Receive live alerts when new stories publish or your submissions are approved.
-                    </p>
+          {isAdmin && (
+            <div className="p-3 border-b border-slate-800/70 bg-gradient-to-r from-blue-950/40 via-slate-900/50 to-indigo-950/40">
+              {permission === "granted" ? (
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Laptop & Phone popups active</span>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 pt-1">
-                  <button
-                    onClick={handleRequestPermission}
-                    className="flex-1 py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <span>Enable Device Popups</span>
-                  </button>
                   <button
                     onClick={handleTestNotification}
                     disabled={isTesting}
-                    className="py-1.5 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition cursor-pointer"
+                    className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-medium border border-slate-700 transition cursor-pointer flex items-center gap-1 disabled:opacity-50"
+                    title="Send a sample popup to your laptop or phone"
                   >
-                    {isTesting ? "Testing..." : "Test"}
+                    <Radio className="w-3 h-3 text-blue-400" />
+                    <span>{isTesting ? "Sending..." : "Test Popup"}</span>
                   </button>
                 </div>
-              </div>
-            )}
-          </div>}
+              ) : (
+                <div className="space-y-1.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="text-xs">
+                      <p className="font-semibold text-slate-200">
+                        🔔 Get Laptop & Phone Popups
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        Receive live alerts when new stories publish or civic announcements occur.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      onClick={handleRequestPermission}
+                      className="flex-1 py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <span>Enable Device Popups</span>
+                    </button>
+                    <button
+                      onClick={handleTestNotification}
+                      disabled={isTesting}
+                      className="py-1.5 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition cursor-pointer"
+                    >
+                      {isTesting ? "Testing..." : "Test"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
-          {/* Filter Tabs */}
-          <div className="px-3 pt-2 pb-1 flex items-center gap-1 border-b border-slate-800/60 bg-slate-950/30 text-xs">
-            <button
-              onClick={() => setActiveTab("all")}
-              className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
-                activeTab === "all"
-                  ? "bg-slate-800 text-white font-semibold"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              All ({notifications.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("news")}
-              className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
-                activeTab === "news"
-                  ? "bg-slate-800 text-white font-semibold"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              Stories & News
-            </button>
-            <button
-              onClick={() => setActiveTab("submissions")}
-              className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
-                activeTab === "submissions"
-                  ? "bg-slate-800 text-white font-semibold"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              My Submissions
-            </button>
-          </div>
-
-          {/* Notification List */}
+          {/* Notification List (No external tabs; Notifications ONLY) */}
           <div className="flex-1 overflow-y-auto divide-y divide-slate-800/40 max-h-[380px] scrollbar-thin">
-            {filteredNotifications.length === 0 ? (
+            {notifications.length === 0 ? (
               <div className="py-10 px-4 text-center">
                 <div className="w-10 h-10 rounded-full bg-slate-800/80 text-slate-400 mx-auto flex items-center justify-center mb-2.5">
                   <Bell className="w-5 h-5 opacity-40" />
                 </div>
                 <p className="text-xs font-semibold text-slate-300">No notifications right now</p>
                 <p className="text-[11px] text-slate-500 mt-1 max-w-xs mx-auto">
-                  {activeTab === "submissions"
-                    ? "When you submit a place, story, or correction, approval and review status will appear here."
-                    : "You'll be alerted whenever breaking news, stories, or posts are published in Fazilnagar."}
+                  You will be alerted here whenever new official updates, stories, or town announcements are published.
                 </p>
               </div>
             ) : (
-              filteredNotifications.map((notif) => {
+              notifications.map((notif) => {
                 const isUnread = !notif.isRead;
+                const isAlert = notif.type === "custom_alert";
                 return (
                   <div
                     key={notif._id}
                     onClick={() => handleNotificationClick(notif)}
                     className={`p-3 transition-colors cursor-pointer flex items-start gap-3 hover:bg-slate-800/60 ${
-                      isUnread ? "bg-blue-950/20" : ""
+                      isAlert && notif.severity === "urgent"
+                        ? isUnread ? "bg-rose-950/30 border-l-2 border-rose-500" : "bg-rose-950/10"
+                        : isUnread ? "bg-blue-950/20" : ""
                     }`}
                   >
-                    <div className="mt-0.5 p-2 rounded-xl bg-slate-800/90 border border-slate-700/60">
-                      {getNotificationIcon(notif.type)}
+                    <div className={`mt-0.5 p-2 rounded-xl border ${
+                      isAlert && notif.severity === "urgent"
+                        ? "bg-rose-950/60 border-rose-700/60"
+                        : "bg-slate-800/90 border-slate-700/60"
+                    }`}>
+                      {getNotificationIcon(notif)}
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline justify-between gap-2">
-                        <h4
-                          className={`text-xs font-bold truncate ${
-                            isUnread ? "text-white font-black" : "text-slate-300"
-                          }`}
-                        >
-                          {notif.title}
-                        </h4>
+                        <div className="flex items-center gap-1.5 truncate">
+                          {isAlert && (
+                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider shrink-0 ${
+                              notif.severity === "urgent"
+                                ? "bg-rose-600/30 text-rose-300 border border-rose-500/40"
+                                : notif.severity === "warning"
+                                ? "bg-amber-600/30 text-amber-300 border border-amber-500/40"
+                                : "bg-blue-600/30 text-blue-300 border border-blue-500/40"
+                            }`}>
+                              {notif.severity === "urgent" ? "Urgent" : notif.severity === "warning" ? "Notice" : "Alert"}
+                            </span>
+                          )}
+                          <h4
+                            className={`text-xs font-bold truncate ${
+                              isUnread ? "text-white font-black" : "text-slate-300"
+                            }`}
+                          >
+                            {notif.title}
+                          </h4>
+                        </div>
                         <span className="text-[10px] text-slate-500 shrink-0 font-medium">
                           {formatTimestamp(notif.createdAt)}
                         </span>
@@ -449,7 +436,11 @@ export default function NotificationCenter() {
                     </div>
 
                     {isUnread && (
-                      <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-1.5 ring-2 ring-blue-500/20" />
+                      <span className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ring-2 ${
+                        isAlert && notif.severity === "urgent"
+                          ? "bg-rose-500 ring-rose-500/20"
+                          : "bg-blue-500 ring-blue-500/20"
+                      }`} />
                     )}
                   </div>
                 );

@@ -30,6 +30,8 @@ app.use(
       "Authorization",
       "x-anon-id",
       "X-Anon-Id",
+      "x-client-id",
+      "X-Client-Id",
       "Cache-Control",
       "cache-control",
       "Pragma",

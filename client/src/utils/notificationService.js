@@ -8,6 +8,61 @@ const SUBMISSIONS_STORAGE_KEY = "fazilnagar_user_submissions";
 const USER_PHONE_STORAGE_KEY = "fazilnagar_user_phone";
 const LAST_NOTIF_ID_KEY = "fazilnagar_last_seen_notif_id";
 const NOTIF_SOUND_KEY = "fazilnagar_notif_sound_enabled";
+const POPUP_SEEN_IDS_KEY = "fazilnagar_seen_popup_ids";
+
+/**
+ * Returns list of notification IDs that have already triggered an OS device popup.
+ */
+export function getSeenPopupIds() {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(POPUP_SEEN_IDS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+/**
+ * Marks a notification ID as having triggered an OS device popup.
+ */
+export function markPopupAsSeen(id) {
+  if (typeof window === "undefined" || !id) return;
+  try {
+    const list = getSeenPopupIds();
+    if (!list.includes(id)) {
+      list.push(id);
+      localStorage.setItem(POPUP_SEEN_IDS_KEY, JSON.stringify(list.slice(-50)));
+    }
+  } catch (_) {}
+}
+
+/**
+ * Marks a single notification as read on the backend server.
+ */
+export async function markNotificationAsRead(id) {
+  if (!id) return;
+  try {
+    const res = await API.patch(`/notifications/${id}/read`);
+    return res.data;
+  } catch (err) {
+    console.warn("[NotificationService] Mark read error:", err);
+    throw err;
+  }
+}
+
+/**
+ * Marks all notifications as read on the backend server.
+ */
+export async function markAllNotificationsAsRead() {
+  try {
+    const res = await API.post("/notifications/mark-all-read");
+    return res.data;
+  } catch (err) {
+    console.warn("[NotificationService] Mark all read error:", err);
+    throw err;
+  }
+}
 
 /**
  * Returns browser notification permission status.
@@ -173,7 +228,7 @@ export function getTrackedPhone() {
 }
 
 /**
- * Fetches notifications from backend and triggers OS popups for any new unread alerts.
+ * Fetches notifications from backend and triggers OS popups ONLY for genuinely new, unread alerts.
  */
 export async function fetchAndCheckNotifications({ triggerPopups = true } = {}) {
   try {
@@ -188,24 +243,31 @@ export async function fetchAndCheckNotifications({ triggerPopups = true } = {}) 
     const data = res.data;
     const notifications = data.notifications || [];
 
+    // Trigger popup ONLY for genuinely new, eligible unread notifications that haven't been popped up yet
     if (triggerPopups && notifications.length > 0 && Notification.permission === "granted") {
-      const lastSeenId = localStorage.getItem(LAST_NOTIF_ID_KEY);
-      const latest = notifications[0];
+      const hasInitialSeeding = localStorage.getItem(POPUP_SEEN_IDS_KEY) !== null;
+      const seenIds = getSeenPopupIds();
 
-      if (lastSeenId && latest && latest._id !== lastSeenId && !latest.isRead) {
-        // Trigger OS notification for the newly arrived alert!
-        showDeviceNotification({
-          title: latest.title,
-          message: latest.message,
-          link: latest.link || "/",
-        });
-      }
+      if (!hasInitialSeeding) {
+        // Cold start on new browser: seed existing notification IDs so historical alerts don't spam popups
+        const seedIds = notifications.map((n) => n._id);
+        localStorage.setItem(POPUP_SEEN_IDS_KEY, JSON.stringify(seedIds.slice(-50)));
+      } else {
+        // Filter for truly unread notifications that have never triggered a popup on this client
+        const newUnread = notifications.filter(
+          (notif) => notif && !notif.isRead && !seenIds.includes(notif._id)
+        );
 
-      if (latest?._id) {
-        localStorage.setItem(LAST_NOTIF_ID_KEY, latest._id);
+        if (newUnread.length > 0) {
+          const alertItem = newUnread[0];
+          markPopupAsSeen(alertItem._id);
+          showDeviceNotification({
+            title: alertItem.title,
+            message: alertItem.message,
+            link: alertItem.link || "/",
+          });
+        }
       }
-    } else if (notifications.length > 0 && !localStorage.getItem(LAST_NOTIF_ID_KEY)) {
-      localStorage.setItem(LAST_NOTIF_ID_KEY, notifications[0]._id);
     }
 
     // Broadcast update event so all listening components re-render unread count

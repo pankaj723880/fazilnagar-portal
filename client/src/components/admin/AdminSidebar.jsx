@@ -15,6 +15,7 @@ import {
   Users,
   HardDrive,
   ShieldAlert,
+  Bell,
   ChevronRight,
   ChevronLeft,
   X,
@@ -133,6 +134,13 @@ export default function AdminSidebar({
     {
       title: "SECURITY & ADMINISTRATION",
       items: [
+        {
+          id: "notifications-manage",
+          label: "Notifications & Alerts",
+          icon: Bell,
+          badge: "New",
+          badgeColor: "bg-blue-900 text-blue-300 border border-blue-700/60 font-bold",
+        },
         {
           id: "cms-audit",
           label: "Audit Logs",

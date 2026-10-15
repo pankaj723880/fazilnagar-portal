@@ -23,6 +23,7 @@ import AdminCommunityPlaces from "../components/AdminCommunityPlaces"; // Module
 import AdminManageUsers from "../components/AdminManageUsers";         // User Administration
 import AdminDriveStorage from "../components/AdminDriveStorage";       // Google Drive Cloud Storage
 import AdminHomepageCMS from "../components/AdminHomepageCMS";         // Module 12: Homepage CMS
+import AdminCustomNotifications from "../components/admin/AdminCustomNotifications"; // Module 13: Notifications & Alerts
 
 import {
   ShieldCheck,
@@ -356,6 +357,11 @@ export default function AdminReview({ user: propUser }) {
         return <AdminDriveStorage />;
 
       // D. Security & Administration
+      case "notifications-manage":
+      case "notifications":
+      case "alerts":
+        return <AdminCustomNotifications token={getAuthToken()} currentAdminUser={currentUser} />;
+
       case "cms-audit":
       case "audit":
         return <AdminAuditLogs />;
