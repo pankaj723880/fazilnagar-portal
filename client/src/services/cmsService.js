@@ -45,11 +45,16 @@ export function getCachedEvents() {
   return getPersistentCache("events") || memoryCache.events.data;
 }
 
+export function getCachedCivicDirectory() {
+  return getPersistentCache("civicDirectory") || memoryCache.civicDirectory?.data || null;
+}
+
 const memoryCache = {
   settings: { data: getPersistentCache("settings"), timestamp: Date.now() },
   services: { data: null, timestamp: 0 },
   events: { data: getPersistentCache("events"), timestamp: Date.now() },
   heritage: { data: getPersistentCache("heritage"), timestamp: Date.now() },
+  civicDirectory: { data: getPersistentCache("civicDirectory"), timestamp: Date.now() },
 };
 
 export const DEFAULT_SITE_SETTINGS = {
@@ -609,3 +614,180 @@ export async function getHeritageSites(forceFresh = false) {
   }
   return [];
 }
+
+export const DEFAULT_CIVIC_DIRECTORY_PLACES = [
+  {
+    id: "chc-fazilnagar",
+    itemId: "chc-fazilnagar",
+    title: "CHC Fazilnagar",
+    subtitle: "Hospital Road",
+    category: "healthcare",
+    categoryLabel: "🏥 Healthcare",
+    phone: "05564222102",
+    lat: 26.6808,
+    lng: 84.0472,
+    image: "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=800&auto=format&fit=crop",
+    verified: true,
+    isActive: true,
+    displayOrder: 1,
+  },
+  {
+    id: "prashant-sweets",
+    itemId: "prashant-sweets",
+    title: "Prashant Sweet House",
+    subtitle: "Main Market, NH-27 Chowk",
+    category: "sweets",
+    categoryLabel: "🍬 Sweets & Chaat",
+    phone: "09839245678",
+    lat: 26.6833,
+    lng: 84.0502,
+    image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&auto=format&fit=crop",
+    verified: true,
+    isActive: true,
+    displayOrder: 2,
+  },
+  {
+    id: "pawanagar-college",
+    itemId: "pawanagar-college",
+    title: "Pawanagar Mahavir Inter College",
+    subtitle: "College Road",
+    category: "schools",
+    categoryLabel: "🏫 Schools",
+    phone: "09450467890",
+    lat: 26.6843,
+    lng: 84.0454,
+    image: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=800&auto=format&fit=crop",
+    verified: true,
+    isActive: true,
+    displayOrder: 3,
+  },
+  {
+    id: "indian-oil-fuel",
+    itemId: "indian-oil-fuel",
+    title: "Indian Oil Petrol Pump",
+    subtitle: "NH-27 Highway",
+    category: "fuel",
+    categoryLabel: "⛽ Fuel Stations",
+    phone: "1800224344",
+    lat: 26.6850,
+    lng: 84.0490,
+    image: "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=800&auto=format&fit=crop",
+    verified: true,
+    isActive: true,
+    displayOrder: 4,
+  },
+  {
+    id: "maa-yashoda-hosp",
+    itemId: "maa-yashoda-hosp",
+    title: "Maa Yashoda Hospital",
+    subtitle: "Garahiya More, NH-28",
+    category: "healthcare",
+    categoryLabel: "🏥 Healthcare",
+    phone: "09450812345",
+    lat: 26.6835,
+    lng: 84.0458,
+    image: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&auto=format&fit=crop",
+    verified: true,
+    isActive: true,
+    displayOrder: 5,
+  },
+  {
+    id: "hermitage-school",
+    itemId: "hermitage-school",
+    title: "The Hermitage School",
+    subtitle: "Hospital Road",
+    category: "schools",
+    categoryLabel: "🏫 Schools",
+    phone: "09919523411",
+    lat: 26.6804,
+    lng: 84.0467,
+    image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop",
+    verified: true,
+    isActive: true,
+    displayOrder: 6,
+  },
+  {
+    id: "kanha-sweets",
+    itemId: "kanha-sweets",
+    title: "Kanha Sweets",
+    subtitle: "College Road Crossing",
+    category: "sweets",
+    categoryLabel: "🍬 Sweets & Chaat",
+    phone: "09450987654",
+    lat: 26.6833,
+    lng: 84.0498,
+    image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800&auto=format&fit=crop",
+    verified: true,
+    isActive: true,
+    displayOrder: 7,
+  },
+  {
+    id: "hp-fuel-pump",
+    itemId: "hp-fuel-pump",
+    title: "Hindustan Petroleum (HP)",
+    subtitle: "Pawanagar Bypass",
+    category: "fuel",
+    categoryLabel: "⛽ Fuel Stations",
+    phone: "18002333555",
+    lat: 26.6815,
+    lng: 84.0430,
+    image: "https://images.unsplash.com/photo-1527018607616-0526648e861c?w=800&auto=format&fit=crop",
+    verified: true,
+    isActive: true,
+    displayOrder: 8,
+  },
+  {
+    id: "fazilnagar-mandi",
+    itemId: "fazilnagar-mandi",
+    title: "Fazilnagar Sabzi Mandi",
+    subtitle: "NH-27 Mandi Chowk",
+    category: "markets",
+    categoryLabel: "🥦 Sabzi & Mandi",
+    phone: "18001801551",
+    lat: 26.6820,
+    lng: 84.0460,
+    image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop",
+    verified: true,
+    isActive: true,
+    displayOrder: 9,
+  },
+];
+
+/**
+ * Fetches dynamic Civic Directory Index listings with cache-busting and graceful fallback.
+ */
+export async function getCivicDirectory(forceFresh = false, includeAll = false) {
+  const now = Date.now();
+  if (!forceFresh && !includeAll && memoryCache.civicDirectory?.data && now - memoryCache.civicDirectory.timestamp < CACHE_TTL_MS) {
+    return memoryCache.civicDirectory.data;
+  }
+
+  try {
+    const params = { _t: now };
+    if (includeAll) params.all = "true";
+
+    const res = await API.get("/civic-directory", {
+      params,
+      headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+      timeout: 30000,
+    });
+
+    const items = res.data?.items || (Array.isArray(res.data) ? res.data : []);
+    if (Array.isArray(items) && items.length > 0) {
+      const normalized = items.map((i) => ({
+        ...i,
+        id: i.id || i._id || i.itemId,
+      }));
+      if (!includeAll) {
+        setPersistentCache("civicDirectory", normalized);
+        memoryCache.civicDirectory = { data: normalized, timestamp: now };
+      }
+      return normalized;
+    }
+  } catch (err) {
+    console.warn("[CMSService] Civic Directory fetch error, using fallbacks:", err.message);
+  }
+
+  return DEFAULT_CIVIC_DIRECTORY_PLACES;
+}
+

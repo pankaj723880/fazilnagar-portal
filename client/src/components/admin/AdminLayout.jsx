@@ -13,6 +13,7 @@ export default function AdminLayout({
   entitiesCount = 19,
   liveAdsCount = 0,
   newsCount = 0,
+  civicCount = 0,
   onRefresh = () => {},
   loading = false,
   toastMessage = "",
@@ -40,6 +41,7 @@ export default function AdminLayout({
         entitiesCount={entitiesCount}
         liveAdsCount={liveAdsCount}
         newsCount={newsCount}
+        civicCount={civicCount}
         isMobileOpen={mobileDrawerOpen}
         setIsMobileOpen={setMobileDrawerOpen}
         isCollapsed={sidebarCollapsed}

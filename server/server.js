@@ -143,6 +143,7 @@ import eventsRoutes from "./routes/events.js";
 import heritageRoutes from "./routes/heritage.js";
 import mediaRoutes from "./routes/media.js";
 import auditRoutes from "./routes/audit.js";
+import civicDirectoryRoutes from "./routes/civicDirectory.js";
 
 // Connect DB & Routes
 connectDB().then(() => {
@@ -164,6 +165,7 @@ app.use("/api/events", eventsRoutes);
 app.use("/api/heritage", heritageRoutes);
 app.use("/api/media", mediaRoutes);
 app.use("/api/audit", auditRoutes);
+app.use("/api/civic-directory", civicDirectoryRoutes);
 
 // Fallback mounts in case client calls without /api prefix
 app.use("/auth", authRoutes);
@@ -180,6 +182,7 @@ app.use("/events", eventsRoutes);
 app.use("/heritage", heritageRoutes);
 app.use("/media", mediaRoutes);
 app.use("/audit", auditRoutes);
+app.use("/civic-directory", civicDirectoryRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -24,6 +24,7 @@ import AdminManageUsers from "../components/AdminManageUsers";         // User A
 import AdminDriveStorage from "../components/AdminDriveStorage";       // Google Drive Cloud Storage
 import AdminHomepageCMS from "../components/AdminHomepageCMS";         // Module 12: Homepage CMS
 import AdminCustomNotifications from "../components/admin/AdminCustomNotifications"; // Module 13: Notifications & Alerts
+import AdminCivicDirectoryCMS from "../components/AdminCivicDirectoryCMS"; // Civic Directory Index CMS
 
 import {
   ShieldCheck,
@@ -57,6 +58,7 @@ export default function AdminReview({ user: propUser }) {
   const [entitiesCount, setEntitiesCount] = useState(0);
   const [liveAdsCount, setLiveAdsCount] = useState(0);
   const [newsCount, setNewsCount] = useState(0);
+  const [civicCount, setCivicCount] = useState(0);
   const [usersCount, setUsersCount] = useState(0);
 
   // Authentication State
@@ -159,6 +161,21 @@ export default function AdminReview({ user: propUser }) {
           usersRes.data.pagination?.total ??
           (Array.isArray(usersRes.data.users) ? usersRes.data.users.length : 0);
         setUsersCount(totalU);
+      }
+
+      // 6. Civic Directory Index listings count
+      const civicRes = await API.get("/civic-directory?all=true", {
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => null);
+      if (civicRes?.data) {
+        const count =
+          civicRes.data.count ??
+          (Array.isArray(civicRes.data.items)
+            ? civicRes.data.items.length
+            : Array.isArray(civicRes.data)
+            ? civicRes.data.length
+            : 0);
+        setCivicCount(count);
       }
     } catch (err) {
       console.warn("Failed to load sidebar badge counts:", err);
@@ -337,6 +354,10 @@ export default function AdminReview({ user: propUser }) {
         return <AdminMediaLibrary />;
 
       // C. Directory Management
+      case "civic-directory":
+      case "directory-index":
+        return <AdminCivicDirectoryCMS onStatsChange={fetchBadgeCounts} />;
+
       case "manage-entities":
       case "entities":
         return <AdminManageEntities token={getAuthToken()} onStatsChange={fetchBadgeCounts} />;
@@ -396,6 +417,7 @@ export default function AdminReview({ user: propUser }) {
       entitiesCount={entitiesCount}
       liveAdsCount={liveAdsCount}
       newsCount={newsCount}
+      civicCount={civicCount}
       currentUser={currentUser}
       onLogout={handleLogout}
       onRefresh={fetchBadgeCounts}

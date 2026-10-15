@@ -34,6 +34,11 @@ import {
 import NotificationCenter from "./NotificationCenter";
 import { openGoogleMapsDirections } from "../utils/directions";
 import { getAuthUser } from "../utils/authStorage";
+import {
+  getCivicDirectory,
+  getCachedCivicDirectory,
+  subscribeToCMSLiveUpdates,
+} from "../services/cmsService";
 
 // Authoritative verified places for Fazilnagar Mobile Portal
 const VERIFIED_CAROUSEL_PLACES = [
@@ -365,9 +370,34 @@ export default function MobileHomePortal({
     setFooterOpen((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  // Dynamic Civic Directory Index listings from database / CMS
+  const [civicPlaces, setCivicPlaces] = useState(() => getCachedCivicDirectory() || VERIFIED_CAROUSEL_PLACES);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadCivic = async () => {
+      try {
+        const list = await getCivicDirectory();
+        if (isMounted && Array.isArray(list) && list.length > 0) {
+          setCivicPlaces(list);
+        }
+      } catch (_) {}
+    };
+
+    loadCivic();
+    const unsubscribe = subscribeToCMSLiveUpdates(() => {
+      loadCivic();
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
+
   // Filter carousel places based on selected category & search query
   const filteredPlaces = useMemo(() => {
-    let list = VERIFIED_CAROUSEL_PLACES;
+    let list = (civicPlaces || VERIFIED_CAROUSEL_PLACES).filter((p) => p.isActive !== false);
     if (selectedCategory !== "all") {
       list = list.filter((p) => p.category === selectedCategory);
     }
@@ -375,19 +405,20 @@ export default function MobileHomePortal({
       const q = searchQuery.toLowerCase().trim();
       list = list.filter(
         (p) =>
-          p.title.toLowerCase().includes(q) ||
-          p.subtitle.toLowerCase().includes(q) ||
-          p.categoryLabel.toLowerCase().includes(q)
+          (p.title || "").toLowerCase().includes(q) ||
+          (p.subtitle || "").toLowerCase().includes(q) ||
+          (p.categoryLabel || "").toLowerCase().includes(q)
       );
     }
     return list;
-  }, [selectedCategory, searchQuery]);
+  }, [civicPlaces, selectedCategory, searchQuery]);
 
   // Places for Section 2 Map/List switcher
   const mapPlaces = useMemo(() => {
-    if (mapCategory === "all") return VERIFIED_CAROUSEL_PLACES;
-    return VERIFIED_CAROUSEL_PLACES.filter((p) => p.category === mapCategory);
-  }, [mapCategory]);
+    const list = (civicPlaces || VERIFIED_CAROUSEL_PLACES).filter((p) => p.isActive !== false);
+    if (mapCategory === "all") return list;
+    return list.filter((p) => p.category === mapCategory);
+  }, [civicPlaces, mapCategory]);
 
   // Voice Search Handler
   const handleVoiceSearch = () => {
@@ -716,9 +747,9 @@ export default function MobileHomePortal({
           </div>
         ) : (
           <div className="overflow-x-auto snap-x snap-mandatory flex gap-3 no-scrollbar pb-2 pt-1 touch-pan-x">
-            {filteredPlaces.map((place) => (
+            {filteredPlaces.map((place, pIdx) => (
               <article
-                key={place.id}
+                key={place._id || place.id || place.itemId || pIdx}
                 className="w-[270px] snap-start shrink-0 bg-white rounded-2xl border border-slate-200/80 p-3.5 shadow-sm overflow-hidden flex flex-col justify-between"
               >
                 <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-slate-100 mb-2.5">
@@ -729,7 +760,7 @@ export default function MobileHomePortal({
                     loading="lazy"
                   />
                   <span className="absolute top-2 left-2 bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-semibold px-2 py-0.5 rounded-md">
-                    {place.categoryLabel}
+                    {place.categoryLabel || place.category}
                   </span>
                 </div>
 
@@ -739,9 +770,11 @@ export default function MobileHomePortal({
                       <h3 className="text-sm font-bold text-slate-900 truncate">
                         {place.title}
                       </h3>
-                      <span className="text-emerald-600 text-xs shrink-0 font-bold" title="Verified">
-                        ✔
-                      </span>
+                      {place.verified !== false && (
+                        <span className="text-emerald-600 text-xs shrink-0 font-bold" title="Verified">
+                          ✔
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5 truncate">
                       📍 {place.subtitle}
@@ -750,8 +783,13 @@ export default function MobileHomePortal({
 
                   <div className="grid grid-cols-2 gap-2 mt-3 pt-2.5 border-t border-slate-100">
                     <a
-                      href={`tel:${place.phone}`}
-                      className="h-10 flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-xs font-bold transition shadow-xs"
+                      href={place.phone ? `tel:${place.phone}` : "#"}
+                      onClick={(e) => {
+                        if (!place.phone) e.preventDefault();
+                      }}
+                      className={`h-10 flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-xs font-bold transition shadow-xs ${
+                        !place.phone ? "opacity-40 cursor-not-allowed" : ""
+                      }`}
                       aria-label={`Call ${place.title}`}
                     >
                       <Phone className="w-3.5 h-3.5 text-white" />
@@ -765,6 +803,7 @@ export default function MobileHomePortal({
                           lat: place.lat,
                           lng: place.lng,
                           landmark: place.subtitle,
+                          directionsUrl: place.directionsUrl,
                         })
                       }
                       className="h-10 flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs font-bold border border-slate-200 transition cursor-pointer"

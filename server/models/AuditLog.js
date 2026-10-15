@@ -29,6 +29,7 @@ const auditLogSchema = new mongoose.Schema(
         "Advertisement",
         "Submission",
         "MediaItem",
+        "CivicDirectoryItem",
         "User",
       ],
     },

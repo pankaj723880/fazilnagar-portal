@@ -30,6 +30,7 @@ export default function AdminSidebar({
   entitiesCount = 19,
   liveAdsCount = 0,
   newsCount = 0,
+  civicCount = 0,
   isMobileOpen = false,
   setIsMobileOpen = () => {},
   isCollapsed = false,
@@ -98,6 +99,13 @@ export default function AdminSidebar({
     {
       title: "DIRECTORY MANAGEMENT",
       items: [
+        {
+          id: "civic-directory",
+          label: "Civic Directory Index",
+          icon: Store,
+          badge: civicCount > 0 ? String(civicCount) : null,
+          badgeColor: "bg-blue-950 text-blue-400 border border-blue-800/60 font-bold",
+        },
         {
           id: "manage-entities",
           label: "Entities (20)",
