@@ -200,11 +200,12 @@ export default function AdminCivicDirectoryCMS({ onStatsChange }) {
   };
 
   const handleSelectMedia = (selectedMedia) => {
-    const url = selectedMedia?.url;
+    const url = typeof selectedMedia === "string" ? selectedMedia : (selectedMedia?.url || selectedMedia?.secure_url);
     if (url) {
       setFormImage(url);
       setPreviewUrl(url);
       setUploadStatus("success");
+      setUploadError("");
       setMediaPickerOpen(false);
       showToast("Selected image from Media Library.");
     }
@@ -748,55 +749,33 @@ export default function AdminCivicDirectoryCMS({ onStatsChange }) {
               </div>
 
               {/* Image Upload / Replacement */}
-              <div className="space-y-2 border-t border-slate-100 pt-4">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700">Card Photo / Image</label>
-                  <button
-                    type="button"
-                    onClick={() => setMediaPickerOpen(true)}
-                    className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                  >
-                    <ImageIcon className="w-3.5 h-3.5" />
-                    <span>Choose from Media Library</span>
-                  </button>
-                </div>
-
-                {/* Image preview & uploader */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
-                  <div className="aspect-video w-full rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden relative group">
-                    {previewUrl || formImage ? (
-                      <img src={previewUrl || formImage} alt="Preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-2 text-center">
-                        <ImageIcon className="w-6 h-6 mb-1 text-slate-300" />
-                        <span className="text-[10px]">No image set</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="sm:col-span-2 space-y-2">
-                    <ImageUploader
-                      onFileSelected={handleUploadImage}
-                      status={uploadStatus}
-                      progress={uploadProgress}
-                      errorMessage={uploadError}
-                    />
-
-                    <div>
-                      <span className="text-[10px] text-slate-500 font-medium">Or enter direct Image URL:</span>
-                      <input
-                        type="url"
-                        value={formImage}
-                        onChange={(e) => {
-                          setFormImage(e.target.value);
-                          setPreviewUrl(e.target.value);
-                        }}
-                        placeholder="https://images.unsplash.com/photo-..."
-                        className="w-full text-xs border border-slate-200 rounded-xl px-3 py-2 mt-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                      />
-                    </div>
-                  </div>
-                </div>
+              <div className="border-t border-slate-100 pt-4">
+                <ImageUploader
+                  value={formImage}
+                  previewUrl={previewUrl || formImage}
+                  uploadStatus={uploadStatus}
+                  uploadProgress={uploadProgress}
+                  errorMessage={uploadError}
+                  onFileSelect={handleUploadImage}
+                  onRetry={() => {}}
+                  onClear={() => {
+                    setFormImage("");
+                    setPreviewUrl("");
+                    setUploadStatus("idle");
+                    setUploadError("");
+                  }}
+                  onChange={(url) => {
+                    setFormImage(url);
+                    setPreviewUrl(url);
+                    setUploadStatus(url ? "success" : "idle");
+                    setUploadError("");
+                  }}
+                  onOpenMediaPicker={() => setMediaPickerOpen(true)}
+                  label="Card Photo / Image"
+                  helpText="Upload a photo (JPG, PNG, WebP max 10MB) or choose from Media Library"
+                  aspectRatio="video"
+                  disabled={submitting || uploadStatus === "uploading"}
+                />
               </div>
 
               {/* Phone & Call Button */}
@@ -955,7 +934,8 @@ export default function AdminCivicDirectoryCMS({ onStatsChange }) {
         <MediaPicker
           isOpen={mediaPickerOpen}
           onClose={() => setMediaPickerOpen(false)}
-          onSelectMedia={handleSelectMedia}
+          onSelect={handleSelectMedia}
+          title="Select Directory Listing Image"
         />
       )}
 

@@ -12,33 +12,27 @@ import { useState, useEffect } from "react";
  * 6. Body scroll locked during mount, pointer-events-none during exit, touch-none.
  */
 export default function SplashScreen({ onComplete, duration = 2000 }) {
-  const [stage, setStage] = useState("enter"); // 'enter' | 'active' | 'exit' | 'done'
+  const [stage, setStage] = useState("active"); // 'active' | 'exit' | 'done'
 
   useEffect(() => {
-    // 6. Lock background scrolling while splash screen is mounted
+    // Lock background scrolling while splash screen is mounted
     const originalOverflow = document.body.style.overflow;
     const originalTouchAction = document.body.style.touchAction;
     document.body.style.overflow = "hidden";
     document.body.style.touchAction = "none";
 
-    // 2. Trigger elastic spring entrance after initial mount frame
-    const enterTimer = setTimeout(() => {
-      setStage("active");
-    }, 40);
-
-    // 5. Trigger exit animation (after ~1.6s to finish by 2.0s over 400ms)
+    // Trigger exit animation (after ~1.6s to finish by 2.0s over 400ms)
     const exitTimer = setTimeout(() => {
       setStage("exit");
     }, Math.max(1200, duration - 400));
 
-    // 5. Fully complete & unmount
+    // Fully complete & unmount
     const doneTimer = setTimeout(() => {
       setStage("done");
       if (onComplete) onComplete();
     }, duration);
 
     return () => {
-      clearTimeout(enterTimer);
       clearTimeout(exitTimer);
       clearTimeout(doneTimer);
       document.body.style.overflow = originalOverflow;
@@ -56,9 +50,9 @@ export default function SplashScreen({ onComplete, duration = 2000 }) {
       role="status"
       aria-label="Loading Fazilnagar Town Portal"
       aria-live="polite"
-      className={`fixed inset-0 z-50 h-[100dvh] w-screen flex flex-col items-center justify-center select-none overflow-hidden touch-none pointer-events-none transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-        isExiting ? "opacity-0 scale-105" : "opacity-100 scale-100"
-      } bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950`}
+      className={`fixed inset-0 z-[999999] h-[100dvh] w-screen flex flex-col items-center justify-center select-none overflow-hidden touch-none ${
+        isExiting ? "pointer-events-none opacity-0 scale-105" : "pointer-events-auto opacity-100 scale-100"
+      } transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950`}
       style={{
         WebkitTapHighlightColor: "transparent",
         willChange: "transform, opacity",

@@ -280,14 +280,6 @@ export default function AdminTopbar({
       {/* Breadcrumb Area (Immediately below header, 32px h) */}
       <div className="h-8 bg-slate-50/90 backdrop-blur-xs border-b border-slate-100 px-3 sm:px-4 flex items-center justify-between text-xs">
         <div className="flex items-center gap-1.5 text-[11px] text-slate-500 truncate">
-          <button
-            type="button"
-            onClick={onToggleSidebar}
-            className="lg:hidden text-blue-600 font-bold hover:text-blue-700 flex items-center gap-1 shrink-0 mr-1 cursor-pointer"
-          >
-            <Menu className="w-3.5 h-3.5" />
-            <span>Modules</span>
-          </button>
           <span className="font-medium text-slate-400 hidden sm:inline">Fazilnagar Portal</span>
           <span className="text-slate-300 hidden sm:inline">/</span>
           <span className="font-semibold text-slate-600 truncate">{breadcrumb.group || "Website"}</span>
@@ -311,9 +303,8 @@ export default function AdminTopbar({
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 text-white flex items-center gap-1 shrink-0 active:scale-95 transition shadow-xs cursor-pointer"
+          className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 text-white flex items-center shrink-0 active:scale-95 transition shadow-xs cursor-pointer"
         >
-          <Menu className="w-3.5 h-3.5" />
           <span>All Modules</span>
         </button>
         {quickJumpModules.map((item) => {
