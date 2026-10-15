@@ -102,8 +102,16 @@ export default function App() {
     location.pathname === "/local-updates" ||
     location.pathname === "/directory/news";
 
+  const isDirectoryPage =
+    location.pathname === "/directory" ||
+    location.pathname === "/local-directory";
+
   const hasSubNav = DIRECTORY_SUB_NAV_PATHS.includes(location.pathname) && !isNewsPage;
   const isAdmin = Boolean(user && (user.role === "admin" || user.email === "pankaj723880@gmail.com")) || isUserAdmin();
+
+  const [mobileFooterNavOpen, setMobileFooterNavOpen] = useState(false);
+  const [mobileFooterActionsOpen, setMobileFooterActionsOpen] = useState(false);
+  const [mobileFooterLegalOpen, setMobileFooterLegalOpen] = useState(false);
 
   // Smooth scroll and route switch effect
   useEffect(() => {
@@ -189,7 +197,7 @@ export default function App() {
       {/* ========================================================
           PERMANENT FIXED TOP SHELL (Desktop / Non-Portal Pages)
           ======================================================== */}
-      <header className={`fixed top-0 left-0 right-0 z-50 bg-[#FFFFFF] shadow-xs ${isPortalPage || isMobilePreview ? "hidden md:block" : ""}`}>
+      <header className={`fixed top-0 left-0 right-0 z-50 bg-[#FFFFFF] shadow-xs ${isPortalPage || isDirectoryPage || isMobilePreview ? "hidden md:block" : ""}`}>
         {/* Top Alert & User Status Bar - Modern Civic Deep Slate & Crimson (Desktop / Tablet) */}
         {siteSettings?.topAlertBar?.enabled !== false && (
           <div className="hidden sm:flex h-8 bg-[#18232E] text-slate-300 text-[11px] font-semibold px-4 justify-between items-center border-b border-slate-800 shadow-xs">
@@ -412,6 +420,8 @@ export default function App() {
             ? "pt-16 sm:pt-[96px] pb-14 sm:pb-0 p-0 m-0 overflow-hidden"
             : isPortalPage
             ? (isMobilePreview ? "pt-0 pb-16" : "pt-0 md:pt-[96px] pb-16 sm:pb-8")
+            : isDirectoryPage
+            ? (isMobilePreview ? "pt-0 pb-16" : "pt-0 md:pt-[144px] pb-16 sm:pb-8")
             : hasSubNav
             ? "pt-[110px] sm:pt-[144px] pb-24 sm:pb-8 max-w-7xl mx-auto px-3 sm:px-6"
             : "pt-[76px] sm:pt-[112px] pb-24 sm:pb-8 max-w-7xl mx-auto px-3 sm:px-6"
@@ -466,8 +476,95 @@ export default function App() {
           (Hidden on /news full-screen reels page and TownPortal homepage which has its own footer)
           ======================================================== */}
       {!isNewsPage && !isPortalPage && (
-        <footer className="bg-[#18232E] text-slate-400 text-xs mt-12 border-t border-slate-800 pb-16 lg:pb-0">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-1 md:grid-cols-4 gap-8">
+        <footer className="bg-[#18232E] text-slate-400 text-xs mt-12 border-t border-slate-800 pb-28 sm:pb-8">
+          {/* Mobile Collapsible Accordions (md:hidden) */}
+          <div className="md:hidden max-w-lg mx-auto px-4 py-6 space-y-2.5">
+            <div className="border-b border-slate-800/80 pb-3">
+              <h3 className="text-white font-extrabold text-sm tracking-tight font-heading">
+                FAZIL<span className="text-[#B8323C]">NAGAR</span> Civic Portal
+              </h3>
+              <p className="text-slate-400 text-[11px] mt-1 leading-relaxed">
+                PIN 274401 • NH-27 Corridor, Kushinagar, UP
+              </p>
+            </div>
+
+            {/* Accordion 1: Civic Navigation */}
+            <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/60">
+              <button
+                type="button"
+                onClick={() => setMobileFooterNavOpen((prev) => !prev)}
+                className="w-full p-3 text-left font-bold text-white text-xs flex items-center justify-between cursor-pointer"
+              >
+                <span>▶ Civic Navigation (Town Directory, News, Emergency)</span>
+                <span className={`transform transition-transform text-slate-400 text-[10px] ${mobileFooterNavOpen ? "rotate-90" : ""}`}>
+                  ▶
+                </span>
+              </button>
+              {mobileFooterNavOpen && (
+                <ul className="px-3 pb-3 pt-1 space-y-2 border-t border-slate-800/60 text-xs bg-slate-900/30">
+                  <li><Link to="/directory" className="hover:text-red-300 font-bold text-[#B8323C] flex items-center gap-1.5"><span>📍</span> Town Directory (Map & List)</Link></li>
+                  <li><Link to="/news" className="hover:text-white flex items-center gap-1.5"><span>📰</span> Town News</Link></li>
+                  <li><Link to="/emergency" className="hover:text-white flex items-center gap-1.5"><span>🚨</span> Emergency Helplines</Link></li>
+                  <li><Link to="/healthcare" className="hover:text-white flex items-center gap-1.5"><span>🏥</span> Hospitals & Clinics</Link></li>
+                  <li><Link to="/jobs" className="hover:text-white flex items-center gap-1.5"><span>💼</span> Local Jobs & Trade</Link></li>
+                  <li><Link to="/govt" className="hover:text-white flex items-center gap-1.5"><span>🏛️</span> Government Services</Link></li>
+                </ul>
+              )}
+            </div>
+
+            {/* Accordion 2: Community Actions */}
+            <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/60">
+              <button
+                type="button"
+                onClick={() => setMobileFooterActionsOpen((prev) => !prev)}
+                className="w-full p-3 text-left font-bold text-white text-xs flex items-center justify-between cursor-pointer"
+              >
+                <span>▶ Community Actions (Submit Local News, Citizen Login)</span>
+                <span className={`transform transition-transform text-slate-400 text-[10px] ${mobileFooterActionsOpen ? "rotate-90" : ""}`}>
+                  ▶
+                </span>
+              </button>
+              {mobileFooterActionsOpen && (
+                <ul className="px-3 pb-3 pt-1 space-y-2 border-t border-slate-800/60 text-xs bg-slate-900/30">
+                  <li><Link to="/create-news" className="hover:text-white flex items-center gap-1.5"><span>✍️</span> Submit Local News</Link></li>
+                  <li><Link to="/login" className="hover:text-white flex items-center gap-1.5"><span>👤</span> Citizen / Reporter Login</Link></li>
+                  <li><Link to="/register" className="hover:text-white flex items-center gap-1.5"><span>📝</span> Register Resident Account</Link></li>
+                  {(isAdmin || user?.role === "admin") && (
+                    <li><Link to="/admin/review" className="hover:text-amber-400 text-amber-300 font-bold flex items-center gap-1"><span>🛡️</span> Admin dashboard</Link></li>
+                  )}
+                </ul>
+              )}
+            </div>
+
+            {/* Accordion 3: Legal & Independent Portal Notice */}
+            <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/60">
+              <button
+                type="button"
+                onClick={() => setMobileFooterLegalOpen((prev) => !prev)}
+                className="w-full p-3 text-left font-bold text-white text-xs flex items-center justify-between cursor-pointer"
+              >
+                <span>▶ Legal & Independent Portal Notice</span>
+                <span className={`transform transition-transform text-slate-400 text-[10px] ${mobileFooterLegalOpen ? "rotate-90" : ""}`}>
+                  ▶
+                </span>
+              </button>
+              {mobileFooterLegalOpen && (
+                <div className="px-3 pb-3 pt-1 space-y-2 border-t border-slate-800/60 text-[11px] text-slate-400 bg-slate-900/30">
+                  <p className="leading-relaxed">
+                    Fazilnagar Town Portal is an independent community and civic directory initiative serving Fazilnagar (PIN 274401, Kushinagar, Uttar Pradesh). Not affiliated directly with any single commercial entity.
+                  </p>
+                  <div className="pt-1 text-slate-300 space-y-1">
+                    <p>Police Emergency: <strong className="text-red-400">112</strong></p>
+                    <p>Ambulance Emergency: <strong className="text-emerald-400">108</strong></p>
+                    <p>Women Helpline: <strong className="text-amber-400">1090</strong></p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Desktop 4-Column Grid (hidden md:grid) */}
+          <div className="hidden md:grid max-w-7xl mx-auto px-4 sm:px-6 py-10 grid-cols-4 gap-8">
             <div className="space-y-3">
               <h3 className="text-white font-extrabold text-base tracking-tight font-heading">
                 FAZIL<span className="text-[#B8323C]">NAGAR</span> Civic Portal

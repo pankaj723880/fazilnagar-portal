@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import API from "../api";
@@ -8,10 +8,12 @@ import { openGoogleMapsDirections } from "../utils/directions";
 import { usePageSEO } from "../utils/seo";
 import CommunityPlaceModal from "../components/CommunityPlaceModal";
 import AdminPlaceEditModal from "../components/AdminPlaceEditModal";
+import NotificationCenter from "../components/NotificationCenter";
 import { isUserAdmin, getAuthToken } from "../utils/authStorage";
 import { FAZILNAGAR_AREAS } from "../constants/areas";
 import {
   Search,
+  Mic,
   MapPin,
   Phone,
   Navigation,
@@ -203,6 +205,59 @@ export default function Directory({ user }) {
   // Mobile Map Scrolling Conflict & Height Controls (Part B)
   const [isMapActive, setIsMapActive] = useState(false);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
+
+  // Voice Search Handler
+  const [voiceToast, setVoiceToast] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+
+  const handleVoiceSearch = () => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setVoiceToast("Voice search not supported in this browser. Please type.");
+      setTimeout(() => setVoiceToast(""), 3000);
+      return;
+    }
+
+    if (isListening) {
+      if (recognitionRef.current) recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-IN";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        setVoiceToast("Listening... Speak now");
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setSearchQuery(transcript);
+        setVoiceToast(`Search: "${transcript}"`);
+        setTimeout(() => setVoiceToast(""), 2500);
+      };
+
+      recognition.onerror = () => {
+        setIsListening(false);
+        setVoiceToast("Could not recognize voice. Please try typing.");
+        setTimeout(() => setVoiceToast(""), 2500);
+      };
+
+      recognition.onend = () => setIsListening(false);
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch {
+      setIsListening(false);
+    }
+  };
 
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -681,319 +736,295 @@ export default function Directory({ user }) {
   const localities = Array.from(new Set(allMasterPlaces.map((p) => p.locality).filter(Boolean)));
 
   return (
-    <div className="space-y-3.5 sm:space-y-5 pb-24 sm:pb-16 font-sans max-w-7xl mx-auto px-2.5 sm:px-4 lg:px-6">
+    <div className="w-full max-w-[420px] mx-auto min-h-screen bg-slate-50 flex flex-col font-sans pb-28 text-slate-800 relative selection:bg-[#B8323C] selection:text-white sm:my-3 sm:rounded-3xl sm:border sm:border-slate-200/90 sm:shadow-lg sm:overflow-hidden">
       {/* ========================================================
-          1. SIMPLIFIED HEADER & HERO (Compact on Mobile)
+          1. HEADER & NAVIGATION HUB (Compact 54px Sticky App Bar)
           ======================================================== */}
-      <div className="bg-[#18232E] text-white p-3.5 sm:p-5 lg:p-6 rounded-2xl shadow-md border border-slate-800">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="bg-[#0D5E49] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-2xs">
-                <ShieldCheck className="w-3 h-3" /> PIN 274401
-              </span>
-              <span className="text-[11px] text-slate-400 font-medium truncate">
-                NH-27 Corridor, Kushinagar
-              </span>
-            </div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white tracking-tight leading-snug">
-              Fazilnagar Town Directory
+      <header className="sticky top-0 z-30 w-full backdrop-blur-md bg-white/95 border-b border-slate-100 px-4 h-[54px] flex items-center justify-between shadow-2xs">
+        <Link to="/" className="flex items-center gap-2.5 group">
+          <div className="w-8 h-8 rounded-xl bg-slate-900 text-white font-black text-sm flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+            F
+          </div>
+          <div>
+            <h1 className="font-extrabold tracking-tight text-slate-900 text-sm leading-none font-heading">
+              Fazilnagar
             </h1>
-            <p className="text-slate-300 text-xs mt-0.5 max-w-xl line-clamp-1 sm:line-clamp-none font-medium">
-              Verified local schools, healthcare, shops, pharmacies, markets, and public services.
+            <p className="text-[10px] text-slate-500 font-medium tracking-wide mt-0.5">
+              PIN 274401 • Town Directory
             </p>
           </div>
+        </Link>
+        <div className="flex items-center gap-1.5">
+          <NotificationCenter lightMode={true} subtleDot={true} />
+          <Link
+            to={user ? (isAdmin ? "/admin/review" : "/account") : "/login"}
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 flex items-center justify-center text-slate-700 transition text-xs font-bold active:scale-95 shadow-2xs"
+            aria-label="User Profile"
+            title={user ? (user.name || user.email) : "Sign In"}
+          >
+            👤
+          </Link>
+        </div>
+      </header>
 
-          {/* Quick Action Buttons */}
-          <div className="flex items-center gap-2 shrink-0 pt-1 sm:pt-0">
-            <button
-              onClick={() => {
-                if (!getAuthToken()) {
-                  navigate("/login", {
-                    state: {
-                      from: "/directory?add=true",
-                      message: "Please log in to add a place to the town directory.",
-                    },
-                  });
-                  return;
-                }
-                setShowAddModal(true);
-              }}
-              className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs cursor-pointer active:scale-95"
-              title="Add place with exact map location and images (4-Step Wizard)"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>+ Add Place</span>
-            </button>
-
-
-            {isAdmin && (
-              <button
-                onClick={() => {
-                  setShowAdminQueue(!showAdminQueue);
-                  if (!showAdminQueue) fetchAdminQueue();
-                }}
-                className="inline-flex items-center gap-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold px-3 py-2 rounded-xl border border-amber-300 transition cursor-pointer shadow-xs"
-              >
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                <span>Queue ({stats?.inReview || adminQueuePlaces.filter((p) => !p.isPublished).length || 0})</span>
-              </button>
-            )}
+      {/* Voice Status Toast */}
+      {voiceToast && (
+        <div className="px-4 pt-2">
+          <div className="py-1 px-3 rounded-lg bg-slate-900 text-white text-[11px] text-center font-medium animate-in fade-in duration-150 shadow-sm">
+            {voiceToast}
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Moderation Queue Drawer (Admin Only) */}
-      {isAdmin && showAdminQueue && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <AlertTriangle className="w-4 h-4 text-amber-600" />
-              <h3 className="text-xs font-bold text-amber-900">
-                Verification Desk & Boundary Moderation (Admin Desk)
-              </h3>
-            </div>
-            <span className="text-[11px] font-semibold text-amber-800">
-              {adminQueuePlaces.filter((p) => !p.isPublished).length || 4} Pending Ground Audit
+      {/* ========================================================
+          2. HEADER META & QUICK STATS BAR
+          ======================================================== */}
+      <div className="px-4 pt-3.5 pb-2 flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold text-slate-900 font-heading leading-tight">
+            Town Directory
+          </h2>
+          <div className="flex items-center gap-1.5 mt-1.5 text-[10px] font-semibold text-slate-500 flex-wrap">
+            <span className="bg-white text-slate-700 px-2 py-0.5 rounded-lg border border-slate-200/80 shadow-2xs">
+              📍 {places.length} Verified Places
+            </span>
+            <span className="bg-white text-slate-700 px-2 py-0.5 rounded-lg border border-slate-200/80 shadow-2xs">
+              🏷️ 3 Civic Categories
+            </span>
+            <span className="bg-white text-slate-700 px-2 py-0.5 rounded-lg border border-slate-200/80 shadow-2xs">
+              🌐 PIN 274401
             </span>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            {(adminQueuePlaces.length > 0 ? adminQueuePlaces : seedPlaces)
-              .filter((p) => !p.isPublished)
-              .map((item) => (
-                <div key={item._id || item.id} className="bg-white p-3.5 rounded-xl border border-amber-200 shadow-2xs space-y-1.5 text-xs">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="font-bold text-slate-900">{item.name}</h4>
-                      <p className="text-[11px] text-slate-500">{item.addressFull || item.locality}</p>
+        {/* Floating Secondary Action Button */}
+        <button
+          type="button"
+          onClick={() => {
+            if (!getAuthToken()) {
+              navigate("/login", {
+                state: {
+                  from: "/directory?add=true",
+                  message: "Please log in to add a place to the town directory.",
+                },
+              });
+              return;
+            }
+            setShowAddModal(true);
+          }}
+          className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl px-2.5 py-1 text-xs font-semibold shrink-0 active:scale-95 transition shadow-2xs flex items-center gap-1 cursor-pointer"
+        >
+          <PlusCircle className="w-3.5 h-3.5 text-emerald-600" />
+          <span>+ Add Place</span>
+        </button>
+      </div>
+
+      {/* Admin Queue Banner if Admin */}
+      {isAdmin && (
+        <div className="px-4 py-1">
+          <button
+            type="button"
+            onClick={() => {
+              setShowAdminQueue(!showAdminQueue);
+              if (!showAdminQueue) fetchAdminQueue();
+            }}
+            className="w-full bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 rounded-xl p-2 flex items-center justify-between text-xs font-bold transition active:scale-[0.99] cursor-pointer"
+          >
+            <div className="flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+              <span>Admin Queue & Moderation</span>
+            </div>
+            <span className="text-[10px] bg-amber-200/80 px-2 py-0.5 rounded-md">
+              {stats?.inReview || adminQueuePlaces.filter((p) => !p.isPublished).length || 0} Pending
+            </span>
+          </button>
+
+          {showAdminQueue && (
+            <div className="mt-2 bg-amber-50/80 border border-amber-200 rounded-xl p-3 space-y-2">
+              <span className="text-[11px] font-bold text-amber-900 block">Pending Ground Audit:</span>
+              {(adminQueuePlaces.length > 0 ? adminQueuePlaces : seedPlaces)
+                .filter((p) => !p.isPublished)
+                .map((item) => (
+                  <div key={item._id || item.id} className="bg-white p-2.5 rounded-lg border border-amber-200 text-xs flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-bold text-slate-900 truncate">{item.name}</p>
+                      <p className="text-[10px] text-slate-500 truncate">{item.locality || item.category}</p>
                     </div>
-                    <span className="text-[10px] uppercase font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
-                      {item.category}
-                    </span>
-                  </div>
-                  <div className="flex justify-end pt-1">
                     <button
                       onClick={() => handleApprovePlace(item._id || item.id)}
-                      className="text-xs font-bold bg-[#0D5E49] hover:bg-emerald-800 text-white px-2.5 py-1.5 rounded-lg transition"
+                      className="bg-[#0D5E49] text-white text-[10px] font-bold px-2.5 py-1 rounded-md shrink-0 cursor-pointer"
                     >
-                      Verify & Publish
+                      Publish
                     </button>
                   </div>
-                </div>
-              ))}
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================
-          2. COMPACT SUMMARY STATS ROW (Replaces 4 oversized cards)
-          ======================================================== */}
-      {stats && (
-        <div className="bg-white px-3.5 py-2.5 rounded-xl border border-slate-200/90 shadow-2xs flex items-center justify-between text-xs overflow-x-auto gap-3 scrollbar-none">
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="font-extrabold text-slate-900 text-sm">{stats.published || places.length}</span>
-            <span className="text-slate-600 font-medium">Verified Town Places</span>
-          </div>
-
-          <div className="h-4 w-px bg-slate-200 shrink-0"></div>
-
-          <div className="flex items-center gap-1.5 shrink-0 text-slate-600">
-            <Layers className="w-3.5 h-3.5 text-slate-400" />
-            <span className="font-bold text-slate-800">{stats.categoryCounts?.length || 9}</span>
-            <span>Civic Categories</span>
-          </div>
-
-          <div className="h-4 w-px bg-slate-200 shrink-0"></div>
-
-          <div className="flex items-center gap-1.5 shrink-0 text-slate-600">
-            <MapPin className="w-3.5 h-3.5 text-red-500" />
-            <span>Fazilnagar Town (PIN 274401)</span>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================
-          3. SEARCH & CATEGORY FILTERS (Primary Action Block)
-          ======================================================== */}
-      <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/90 shadow-2xs space-y-2.5">
-        {/* Search input + View Switcher */}
-        <form onSubmit={handleSearchSubmit} className="flex flex-wrap sm:flex-nowrap items-center gap-2">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search schools, hospitals, shops, pharmacies, landmarks…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50/80 text-slate-900 placeholder-slate-400 text-sm pl-9 pr-8 py-2.5 min-h-[44px] rounded-xl border border-slate-200 outline-none focus:border-[#B8323C] focus:bg-white transition font-medium"
-              aria-label="Search directory"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery("");
-                  fetchPlaces();
-                }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 cursor-pointer"
-                aria-label="Clear search"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              type="submit"
-              className="bg-[#18232E] hover:bg-[#B8323C] text-white text-xs font-bold px-4 py-2.5 min-h-[44px] rounded-xl transition shadow-2xs shrink-0 cursor-pointer flex items-center justify-center"
-            >
-              Search
-            </button>
-
-            {/* View Mode Switcher */}
-            <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 shrink-0">
-              <button
-                type="button"
-                onClick={() => setViewMode("map")}
-                className={`p-2 sm:px-2.5 sm:py-1.5 min-h-[40px] rounded-lg text-xs font-bold flex items-center gap-1 transition cursor-pointer ${
-                  viewMode === "map"
-                    ? "bg-white text-slate-900 shadow-2xs font-black"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
-                title="Map View"
-              >
-                <MapIcon className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Map</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("list")}
-                className={`p-2 sm:px-2.5 sm:py-1.5 min-h-[40px] rounded-lg text-xs font-bold flex items-center gap-1 transition cursor-pointer ${
-                  viewMode === "list"
-                    ? "bg-white text-slate-900 shadow-2xs font-black"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
-                title="List View"
-              >
-                <ListIcon className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">List</span>
-              </button>
-            </div>
-          </div>
-        </form>
-
-        {/* Category Pills (Smooth Horizontal Scrolling Without Clipping) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 -mx-1 px-1">
-          {CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
-            const isSelected =
-              selectedCategory === cat.id ||
-              (cat.id === "all" && (!selectedCategory || selectedCategory === "all")) ||
-              matchesCategory(cat.id, "", selectedCategory);
-
-            return (
-              <button
-                key={cat.id}
-                onClick={() => handleCategorySelect(cat.id)}
-                className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition flex items-center gap-1.5 text-xs font-semibold shrink-0 cursor-pointer ${
-                  isSelected
-                    ? "bg-[#18232E] text-white shadow-xs ring-1 ring-slate-800"
-                    : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/70"
-                }`}
-              >
-                <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-amber-400" : "text-slate-500"}`} />
-                <span>{cat.name}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Secondary Filter & Result Counter */}
-        <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100 gap-2">
-          <div className="flex items-center gap-1.5">
-            <span className="text-slate-400">Showing:</span>
-            <span className="font-extrabold text-slate-900">{places.length} places</span>
-            {selectedCategory !== "all" && (
-              <span className="text-[11px] bg-red-50 text-[#B8323C] font-semibold px-2 py-0.2 rounded-full">
-                {selectedCategory}
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 text-slate-700">
-              <Filter className="w-3 h-3 text-slate-400" />
-              <select
-                value={selectedLocality}
-                onChange={(e) => setSelectedLocality(e.target.value)}
-                className="bg-transparent font-medium outline-none cursor-pointer text-xs"
-              >
-                <option value="all">All Wards / Areas</option>
-                {FAZILNAGAR_AREAS.map((loc) => (
-                  <option key={loc} value={loc}>
-                    {loc}
-                  </option>
                 ))}
-              </select>
             </div>
+          )}
+        </div>
+      )}
 
-            <div className="flex items-center gap-1 text-slate-700">
-              <ArrowUpDown className="w-3 h-3 text-slate-400" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-transparent font-medium outline-none cursor-pointer text-xs"
-              >
-                <option value="name">Sort: A to Z</option>
-                <option value="category">Sort: Category</option>
-              </select>
-            </div>
-          </div>
+      {/* ========================================================
+          3. SMART SEARCH & DUAL VIEW SWITCHER
+          ======================================================== */}
+      <div className="px-4 pt-2 pb-1 space-y-2.5">
+        {/* Full-width pill search input */}
+        <div className="relative flex items-center bg-white rounded-2xl border border-slate-200 px-3.5 py-2.5 shadow-sm focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-100 transition">
+          <Search className="w-4 h-4 text-slate-400 shrink-0 mr-2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search schools, clinics, shops, mandi..."
+            className="w-full text-xs font-medium text-slate-800 placeholder-slate-400 bg-transparent outline-none"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer mr-1"
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleVoiceSearch}
+            className={`p-1 transition-colors cursor-pointer ${
+              isListening ? "text-red-500 animate-pulse" : "text-slate-400 hover:text-slate-600"
+            }`}
+            title="Voice Search"
+            aria-label="Voice Search"
+          >
+            <Mic className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Segmented Toggle Control: [ 🗺️ Map View ] vs [ 📋 List View ] */}
+        <div className="bg-slate-100 p-1 rounded-2xl flex items-center gap-1 shadow-inner">
+          <button
+            type="button"
+            onClick={() => setViewMode("map")}
+            className={`flex-1 py-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer ${
+              viewMode === "map"
+                ? "bg-slate-900 text-white shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <span>🗺️</span>
+            <span>Map View</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("list")}
+            className={`flex-1 py-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer ${
+              viewMode === "list"
+                ? "bg-slate-900 text-white shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <span>📋</span>
+            <span>List View</span>
+          </button>
         </div>
       </div>
 
       {/* ========================================================
-          4. MAIN VIEWPORT (Map View or List View)
+          4. FILTER & SORTING CONTROLS
           ======================================================== */}
-      {places.length === 0 && !loading ? (
-        <div className="bg-white rounded-2xl p-8 sm:p-12 text-center border border-slate-200 shadow-2xs max-w-md mx-auto my-6">
-          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto mb-2.5">
-            <Search className="w-5 h-5 text-slate-400" />
-          </div>
-          <h3 className="text-sm font-bold text-slate-900">No establishments found</h3>
-          <p className="text-xs text-slate-500 mt-1">
-            No verified places matched your filters within Fazilnagar town limits.
-          </p>
-          <button
-            onClick={() => {
-              setSelectedCategory("all");
-              setSelectedLocality("all");
-              setSearchQuery("");
-              setSearchParams({});
-            }}
-            className="mt-3.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#18232E] hover:bg-[#B8323C] text-white text-xs font-bold transition shadow-xs"
+      <div className="px-4 py-1.5 space-y-2">
+        {/* 2-Column Dropdown Row */}
+        <div className="grid grid-cols-2 gap-2">
+          <select
+            value={selectedLocality}
+            onChange={(e) => setSelectedLocality(e.target.value)}
+            className="w-full h-9 bg-white border border-slate-200 text-xs px-3 rounded-xl shadow-sm text-slate-700 font-medium outline-none cursor-pointer"
           >
-            <RotateCcw className="w-3 h-3" />
-            <span>Reset Filters</span>
+            <option value="all">🏛️ All Wards / Areas</option>
+            {FAZILNAGAR_AREAS.map((loc) => (
+              <option key={loc} value={loc}>
+                {loc}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="w-full h-9 bg-white border border-slate-200 text-xs px-3 rounded-xl shadow-sm text-slate-700 font-medium outline-none cursor-pointer"
+          >
+            <option value="name">⇅ Sort: A to Z</option>
+            <option value="category">⇅ Sort: Category</option>
+          </select>
+        </div>
+
+        {/* Horizontal Swipeable Category Chips */}
+        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+          {/* All Places */}
+          <button
+            type="button"
+            onClick={() => handleCategorySelect("all")}
+            className={`px-3 py-1.5 rounded-xl whitespace-nowrap text-xs font-bold shrink-0 transition active:scale-95 cursor-pointer ${
+              selectedCategory === "all" || !selectedCategory
+                ? "bg-slate-900 text-white shadow-xs"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+            }`}
+          >
+            All Places
+          </button>
+
+          {/* Healthcare & Clinics */}
+          <button
+            type="button"
+            onClick={() => handleCategorySelect("Hospitals & Clinics")}
+            className={`px-3 py-1.5 rounded-xl whitespace-nowrap text-xs font-bold shrink-0 transition active:scale-95 cursor-pointer ${
+              matchesCategory("Hospitals & Clinics", "", selectedCategory)
+                ? "bg-blue-600 text-white shadow-xs"
+                : "bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100"
+            }`}
+          >
+            🏥 Healthcare & Clinics
+          </button>
+
+          {/* Schools & Colleges */}
+          <button
+            type="button"
+            onClick={() => handleCategorySelect("Schools & Colleges")}
+            className={`px-3 py-1.5 rounded-xl whitespace-nowrap text-xs font-bold shrink-0 transition active:scale-95 cursor-pointer ${
+              matchesCategory("Schools & Colleges", "", selectedCategory)
+                ? "bg-amber-600 text-white shadow-xs"
+                : "bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100"
+            }`}
+          >
+            🏫 Schools & Colleges
+          </button>
+
+          {/* Petrol Pumps */}
+          <button
+            type="button"
+            onClick={() => handleCategorySelect("Petrol Pumps")}
+            className={`px-3 py-1.5 rounded-xl whitespace-nowrap text-xs font-bold shrink-0 transition active:scale-95 cursor-pointer ${
+              matchesCategory("Petrol Pumps", "", selectedCategory)
+                ? "bg-emerald-600 text-white shadow-xs"
+                : "bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100"
+            }`}
+          >
+            ⛽ Petrol Pumps
           </button>
         </div>
-      ) : viewMode === "map" ? (
-        /* Map View + Synchronized List */
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 sm:gap-5">
-          {/* Leaflet Map with Gesture Control (Part B Fix) */}
+      </div>
+
+      {/* ========================================================
+          5. INTERACTIVE MAP SHEET (Map View Mode)
+          ======================================================== */}
+      {viewMode === "map" && (
+        <div className="px-4 pt-1 pb-2">
           <div
-            className={`lg:col-span-2 bg-slate-50 rounded-2xl overflow-hidden border border-slate-200/90 shadow-sm relative transition-all duration-300 group ${
-              isMapExpanded ? "h-[460px] sm:h-[520px] lg:h-[620px]" : "h-[270px] sm:h-[380px] lg:h-[560px]"
+            className={`rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden transition-all duration-300 ${
+              isMapExpanded ? "h-96" : "h-64"
             }`}
             onClick={() => {
               if (!isMapActive) setIsMapActive(true);
-            }}
-            onMouseLeave={() => {
-              // Disengage scroll wheel when mouse leaves map container to allow page scrolling
-              if (isMapActive) setIsMapActive(false);
             }}
           >
             <div
@@ -1003,53 +1034,53 @@ export default function Directory({ user }) {
               style={{ height: "100%", width: "100%", position: "relative" }}
             />
 
-            {/* Top Info Badge */}
-            <div className="absolute top-2.5 left-2.5 z-20 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-200 text-[10px] sm:text-[11px] font-semibold text-slate-700 shadow-2xs flex items-center gap-1.5 pointer-events-none">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            {/* Floating Coordinates Pill (Top-Left) */}
+            <div className="absolute top-2.5 left-2.5 z-20 bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-slate-200 text-[10px] font-semibold text-slate-700 shadow-2xs flex items-center gap-1.5 pointer-events-none">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               <span>26.6827° N, 84.0498° E (Fazilnagar)</span>
             </div>
 
-            {/* Mobile/Desktop Map Expand/Collapse Toggle */}
+            {/* Floating Button (Top-Right): [ ⤢ Expand Map ] */}
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsMapExpanded((prev) => !prev);
               }}
-              className="absolute top-2.5 right-2.5 z-20 bg-white/95 hover:bg-white text-slate-700 hover:text-slate-900 p-1.5 rounded-lg border border-slate-200 shadow-2xs text-[10px] font-bold flex items-center gap-1 transition cursor-pointer"
-              title={isMapExpanded ? "Compact map" : "Expand map"}
+              className="absolute top-2.5 right-2.5 z-20 bg-white/95 hover:bg-white text-slate-700 p-1.5 rounded-lg border border-slate-200 shadow-2xs text-[10px] font-bold flex items-center gap-1 transition cursor-pointer active:scale-95"
+              title={isMapExpanded ? "Compact Map" : "Expand Map"}
             >
               {isMapExpanded ? (
                 <>
                   <Minimize2 className="w-3.5 h-3.5 text-slate-600" />
-                  <span className="hidden sm:inline">Compact</span>
+                  <span>Compact</span>
                 </>
               ) : (
                 <>
                   <Maximize2 className="w-3.5 h-3.5 text-slate-600" />
-                  <span className="hidden sm:inline">Expand</span>
+                  <span>⤢ Expand Map</span>
                 </>
               )}
             </button>
 
-            {/* Interaction Mode Activator Overlay (Locks scroll until clicked on both mobile & desktop) */}
+            {/* Floating Gesture Hint at Bottom */}
             {!isMapActive && (
-              <div className="absolute inset-x-0 bottom-3 z-20 flex justify-center pointer-events-none">
+              <div className="absolute inset-x-0 bottom-2.5 z-20 flex justify-center pointer-events-none">
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsMapActive(true);
                   }}
-                  className="pointer-events-auto bg-[#18232E]/95 hover:bg-[#18232E] text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-lg border border-slate-700/80 backdrop-blur-md flex items-center gap-1.5 active:scale-95 transition cursor-pointer"
+                  className="pointer-events-auto bg-slate-900/95 text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-lg border border-slate-700 backdrop-blur-md flex items-center gap-1.5 active:scale-95 transition cursor-pointer"
                 >
-                  <Compass className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Click map to interact & zoom</span>
+                  <span>👆</span>
+                  <span>Tap map to interact & zoom</span>
                 </button>
               </div>
             )}
 
-            {/* Active Interaction Badge: Allows User to Lock Map & Resume Page Scrolling */}
+            {/* Active Interaction Badge (Lock Map) */}
             {isMapActive && (
               <div className="absolute top-11 right-2.5 z-20">
                 <button
@@ -1058,321 +1089,148 @@ export default function Directory({ user }) {
                     e.stopPropagation();
                     setIsMapActive(false);
                   }}
-                  className="bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg border border-emerald-400 backdrop-blur-md flex items-center gap-1 active:scale-95 transition cursor-pointer"
+                  className="bg-emerald-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md border border-emerald-400 flex items-center gap-1 active:scale-95 transition cursor-pointer"
                 >
-                  <Lock className="w-3 h-3" />
-                  <span>Lock map to scroll page</span>
+                  <Lock className="w-2.5 h-2.5" />
+                  <span>Lock to scroll</span>
                 </button>
               </div>
             )}
           </div>
-
-          {/* Synchronized Places Side List (Persistent List with Active Zoom & Pin Highlight) */}
-          <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs flex flex-col h-full min-h-[320px] sm:min-h-[420px]">
-            <div className="pb-2 border-b border-slate-100 mb-2 flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-[#B8323C]" />
-                <span>
-                  {selectedCategory === "all"
-                    ? "Town Establishments"
-                    : (CATEGORIES.find((c) => c.id === selectedCategory || matchesCategory(c.id, "", selectedCategory))?.name || selectedCategory)}
-                </span>
-              </span>
-              <span className="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">
-                {places.length} places
-              </span>
-            </div>
-
-            <p className="text-[11px] text-slate-500 mb-2">
-              Click any place below to zoom & highlight pin on map:
-            </p>
-
-            <div ref={sideListRef} className="space-y-2 overflow-y-auto max-h-[380px] lg:max-h-[480px] pr-1 custom-scrollbar flex-1">
-              {places.map((place, idx) => {
-                const isSelected = isSamePlace(selectedPlace, place);
-                const isVerified = place.verificationStatus === "verified";
-                return (
-                  <div
-                    key={`${place._id || place.id || 'place'}-${idx}`}
-                    onClick={() => handleSelectPlace(place)}
-                    className={`p-3 rounded-xl border transition cursor-pointer text-left ${
-                      isSelected
-                        ? "border-blue-500 bg-blue-50/70 shadow-sm ring-1 ring-blue-400"
-                        : "border-slate-100 hover:border-slate-200 bg-slate-50/60 hover:bg-slate-50"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-1 mb-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded tracking-wide ${
-                          isSelected
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-red-50 text-[#B8323C]"
-                        }`}>
-                          {place.subcategory || place.category}
-                        </span>
-                        {isVerified && (
-                          <span className="text-[9px] font-semibold text-emerald-700 flex items-center gap-0.5">
-                            <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" /> Verified
-                          </span>
-                        )}
-                        {isAdmin && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditModalPlace(place);
-                              setShowEditModal(true);
-                            }}
-                            className="bg-amber-500 hover:bg-amber-600 text-white text-[9px] font-bold px-2 py-0.5 rounded flex items-center gap-1 shadow-2xs transition cursor-pointer"
-                            title="Edit place location & details"
-                          >
-                            <Edit3 className="w-2.5 h-2.5" />
-                            <span>Edit</span>
-                          </button>
-                        )}
-                      </div>
-                      {isSelected && (
-                        <span className="text-[9px] font-bold text-blue-700 bg-blue-100/90 px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>
-                          Pinned & Zoomed
-                        </span>
-                      )}
-                    </div>
-
-                    <h4 className={`text-xs font-bold leading-snug ${
-                      isSelected ? "text-blue-950 font-extrabold" : "text-slate-900"
-                    }`}>
-                      {place.name}
-                    </h4>
-
-                    <p className="text-[11px] text-slate-500 mt-1 line-clamp-1 flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                      <span>{place.streetOrLandmark || place.addressFull || place.locality}</span>
-                    </p>
-
-                    {isSelected && (
-                      <div className="mt-2.5 pt-2 border-t border-blue-200/60 flex items-center justify-between gap-2">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openGoogleMapsDirections(place);
-                          }}
-                          className="bg-emerald-700 hover:bg-emerald-800 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-2xs transition cursor-pointer"
-                        >
-                          <Navigation className="w-3 h-3" />
-                          <span>Directions</span>
-                        </button>
-                        {place.phone && (
-                          <a
-                            href={`tel:${place.phone.replace(/\s+/g, '')}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 transition"
-                          >
-                            <Phone className="w-3 h-3" />
-                            <span>Call</span>
-                          </a>
-                        )}
-                        {isAdmin && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditModalPlace(place);
-                              setShowEditModal(true);
-                            }}
-                            className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-2xs transition cursor-pointer"
-                          >
-                            <Edit3 className="w-3 h-3" />
-                            <span>Edit</span>
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDetailModalPlace(place);
-                          }}
-                          className="text-slate-600 hover:text-slate-900 text-[10px] font-bold underline transition cursor-pointer"
-                        >
-                          Details
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* List View (Single-Open Accordion Layout) */
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs divide-y divide-slate-100 overflow-hidden">
-          {places.map((place) => {
-            const entityId = place._id || place.id || place.slug;
-            const isExpanded = expandedEntityId === entityId;
-            const isVerified = place.verificationStatus === "verified" || place.isVerified === true;
-
-            return (
-              <div key={entityId} className="transition-colors">
-                {/* Collapsed State Row - Minimum 48px touch target */}
-                <button
-                  type="button"
-                  onClick={() => handleToggleAccordion(entityId)}
-                  className={`w-full text-left px-3.5 py-3.5 sm:px-4 sm:py-3.5 min-h-[48px] flex items-center justify-between gap-3 transition cursor-pointer select-none group ${
-                    isExpanded ? "bg-slate-50/90" : "bg-white hover:bg-slate-50/60"
-                  }`}
-                  aria-expanded={isExpanded}
-                  aria-controls={`details-${entityId}`}
-                >
-                  <div className="min-w-0 flex-1 flex items-center gap-2">
-                    <span
-                      className={`text-xs sm:text-sm truncate transition ${
-                        isExpanded
-                          ? "text-[#B8323C] font-bold"
-                          : "text-slate-900 font-semibold group-hover:text-[#B8323C]"
-                      }`}
-                    >
-                      {place.name}
-                    </span>
-                    {place.subcategory ? (
-                      <span className="hidden sm:inline-block text-[11px] text-slate-400 font-normal truncate shrink-0">
-                        • {place.subcategory}
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[10px] text-slate-400 font-medium hidden xs:inline-block max-w-[120px] truncate">
-                      {place.category}
-                    </span>
-                    <ChevronDown
-                      className={`w-4 h-4 text-slate-400 group-hover:text-slate-700 transition-transform duration-200 shrink-0 ${
-                        isExpanded ? "rotate-180 text-[#B8323C]" : ""
-                      }`}
-                    />
-                  </div>
-                </button>
-
-                {/* Expanded State Details Panel - Directly underneath row */}
-                {isExpanded && (
-                  <div
-                    id={`details-${entityId}`}
-                    className="bg-slate-50/90 border-t border-slate-100 px-3.5 py-3.5 sm:px-4 sm:py-4 space-y-2.5 transition-all duration-200 animate-fade-in"
-                  >
-                    {/* Category tag & Verified badge */}
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-50 text-[#B8323C] border border-red-100">
-                          {place.category}
-                        </span>
-                        {place.subcategory && (
-                          <span className="text-[10px] font-medium text-slate-600 bg-slate-200/60 px-2 py-0.5 rounded">
-                            {place.subcategory}
-                          </span>
-                        )}
-                      </div>
-
-                      {isVerified ? (
-                        <span className="text-[10px] text-[#0D5E49] font-bold flex items-center gap-1 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                          <CheckCircle2 className="w-3 h-3 text-[#0D5E49]" /> Verified Location
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-amber-800 font-bold flex items-center gap-1 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                          <AlertTriangle className="w-3 h-3 text-amber-700" /> Needs Verification
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Description */}
-                    {place.description && (
-                      <p className="text-xs text-slate-600 leading-relaxed bg-white/80 p-2.5 rounded-xl border border-slate-200/60">
-                        {place.description}
-                      </p>
-                    )}
-
-                    {/* Full Address */}
-                    {(place.addressFull || place.streetOrLandmark) && (
-                      <div className="flex items-start gap-1.5 text-xs text-slate-700">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-                        <span className="leading-snug">
-                          {place.addressFull || place.streetOrLandmark}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Opening Hours & Phone */}
-                    <div className="flex flex-wrap gap-y-1.5 gap-x-4 text-xs text-slate-600">
-                      {place.openingHours && (
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span>{place.openingHours}</span>
-                        </div>
-                      )}
-                      {place.phone && (
-                        <div className="flex items-center gap-1.5">
-                          <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <a
-                            href={`tel:${place.phone.replace(/\s+/g, "")}`}
-                            className="text-[#0D5E49] hover:underline font-bold"
-                          >
-                            {place.phone}
-                          </a>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Actions: Call, Directions, More Info Modal */}
-                    <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200/70">
-                      {place.phone && (
-                        <a
-                          href={`tel:${place.phone.replace(/\s+/g, "")}`}
-                          className="bg-[#18232E] hover:bg-slate-800 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl transition flex items-center gap-1 shadow-2xs"
-                        >
-                          <Phone className="w-3 h-3" />
-                          <span>Call</span>
-                        </a>
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={() => openGoogleMapsDirections(place)}
-                        className="bg-[#0D5E49] hover:bg-emerald-800 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl transition flex items-center gap-1 shadow-2xs cursor-pointer"
-                      >
-                        <Navigation className="w-3 h-3" />
-                        <span>Directions</span>
-                      </button>
-
-                      {isAdmin && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditModalPlace(place);
-                            setShowEditModal(true);
-                          }}
-                          className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow-2xs cursor-pointer"
-                          title="Edit establishment details"
-                        >
-                          <Edit3 className="w-3 h-3" />
-                          <span>Edit Place</span>
-                        </button>
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={() => setDetailModalPlace(place)}
-                        className="text-xs text-slate-500 hover:text-slate-800 font-semibold px-2 py-1 transition cursor-pointer ml-auto"
-                      >
-                        More Info
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
         </div>
       )}
+
+      {/* ========================================================
+          6. DIRECTORY PLACE CARDS (Listings)
+          ======================================================== */}
+      <div className="px-4 py-2 space-y-3">
+        {places.length === 0 && !loading ? (
+          <div className="bg-white rounded-2xl p-6 text-center border border-slate-200 shadow-xs">
+            <p className="text-xs font-bold text-slate-800">No establishments found</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">Try searching with a different name or category.</p>
+            <button
+              onClick={() => {
+                setSelectedCategory("all");
+                setSelectedLocality("all");
+                setSearchQuery("");
+                setSearchParams({});
+              }}
+              className="mt-3 bg-slate-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow-xs cursor-pointer active:scale-95 transition"
+            >
+              Reset Filters
+            </button>
+          </div>
+        ) : (
+          places.map((place, idx) => {
+            const isVerified = place.verificationStatus === "verified" || place.isVerified === true;
+            const isSelected = isSamePlace(selectedPlace, place);
+            const catLabel = (place.subcategory || place.category || "PLACE").toUpperCase();
+            const isClinic = place.category?.toLowerCase().includes("hospital") || place.category?.toLowerCase().includes("clinic") || place.subcategory?.toLowerCase().includes("clinic");
+
+            return (
+              <div
+                key={`${place._id || place.id || 'place'}-${idx}`}
+                onClick={() => {
+                  if (viewMode === "map") handleSelectPlace(place);
+                }}
+                className={`bg-white rounded-2xl border shadow-sm p-3.5 space-y-2.5 transition text-left cursor-pointer ${
+                  isSelected && viewMode === "map"
+                    ? "border-blue-400 bg-blue-50/40 ring-1 ring-blue-300"
+                    : "border-slate-100 hover:border-slate-200"
+                }`}
+              >
+                {/* Top Meta: Category Pill + Green Badge ✔ Verified */}
+                <div className="flex items-center justify-between gap-1 flex-wrap">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md tracking-wider bg-slate-100 text-slate-700 border border-slate-200/80">
+                      {catLabel}
+                    </span>
+                    {isVerified ? (
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        ✔ Verified
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md">
+                        Needs Review
+                      </span>
+                    )}
+                  </div>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditModalPlace(place);
+                        setShowEditModal(true);
+                      }}
+                      className="bg-amber-500 hover:bg-amber-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit3 className="w-2.5 h-2.5" />
+                      <span>Edit</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Title: Bold 14px slate-900 with clear location icon */}
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 leading-snug">
+                    {place.name}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+                    <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                    <span className="truncate">
+                      {place.streetOrLandmark || place.addressFull || place.locality || "Hospital Road / Main Market"}
+                    </span>
+                  </p>
+                  {place.description && (
+                    <p className="text-[11px] text-slate-600 mt-1 line-clamp-1">
+                      {place.description}
+                    </p>
+                  )}
+                </div>
+
+                {/* Action Row (2 equal full-width touch buttons, minimum 42px height) */}
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  {place.phone ? (
+                    <a
+                      href={`tel:${place.phone.replace(/\s+/g, '')}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl active:scale-95 flex items-center justify-center gap-1.5 min-h-[42px] text-xs shadow-xs transition"
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                      <span className="truncate">📞 Call {isClinic ? "Clinic / Hospital" : "Establishment"}</span>
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDetailModalPlace(place);
+                      }}
+                      className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl active:scale-95 flex items-center justify-center gap-1 min-h-[42px] text-xs transition border border-slate-200/60"
+                    >
+                      <Info className="w-3.5 h-3.5 text-slate-500" />
+                      <span>View Details</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openGoogleMapsDirections(place);
+                    }}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold rounded-xl active:scale-95 flex items-center justify-center gap-1.5 min-h-[42px] text-xs transition border border-slate-200/60 cursor-pointer"
+                  >
+                    <Navigation className="w-3.5 h-3.5 text-slate-700" />
+                    <span>📍 Directions / Route</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
 
       {/* Place Detail & Audit Modal */}
       {detailModalPlace && (
