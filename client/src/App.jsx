@@ -2,7 +2,7 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import { Routes, Route, NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 
 import TownPortal from "./pages/TownPortal";
-import { getAuthUser, clearAuthSession } from "./utils/authStorage";
+import { getAuthUser, clearAuthSession, isUserAdmin } from "./utils/authStorage";
 import { getCachedSettings, getSiteSettings, DEFAULT_SITE_SETTINGS, subscribeToCMSLiveUpdates } from "./services/cmsService";
 
 // Lazy-Loaded Route Components (Code-split to reduce initial unused JS)
@@ -86,6 +86,7 @@ export default function App() {
     location.pathname === "/directory/news";
 
   const hasSubNav = DIRECTORY_SUB_NAV_PATHS.includes(location.pathname) && !isNewsPage;
+  const isAdmin = Boolean(user && (user.role === "admin" || user.email === "pankaj723880@gmail.com")) || isUserAdmin();
 
   // Smooth scroll and route switch effect
   useEffect(() => {
@@ -257,11 +258,41 @@ export default function App() {
                   </Link>
                 );
               })}
+              {isAdmin && (
+                <Link
+                  to="/admin/review"
+                  className={`transition flex items-center gap-1 font-bold ${
+                    location.pathname.startsWith("/admin")
+                      ? "text-[#B8323C]"
+                      : "text-amber-700 hover:text-amber-800"
+                  }`}
+                  title="Admin Review Desk"
+                >
+                  <span className="text-xs">🛡️</span>
+                  <span>Review Desk</span>
+                </Link>
+              )}
             </nav>
 
             {/* Auth & Post Actions Bar */}
             <div className="hidden sm:flex items-center gap-2.5 shrink-0">
               <NotificationCenter />
+
+              {/* Admin Review Desk Button */}
+              {isAdmin && (
+                <Link
+                  to="/admin/review"
+                  className={`border text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5 ${
+                    location.pathname.startsWith("/admin")
+                      ? "bg-amber-600 text-white border-amber-600 shadow-amber-900/20"
+                      : "bg-amber-100 hover:bg-amber-200 text-amber-950 border-amber-300"
+                  }`}
+                  title="Open Admin Review Desk"
+                >
+                  <span>🛡️</span>
+                  <span>Review Desk</span>
+                </Link>
+              )}
 
               {/* Add Story Button - Dynamic Label & Link */}
               <Link
@@ -303,9 +334,19 @@ export default function App() {
               )}
             </div>
 
-            {/* Mobile Actions: Notification Bell + Add Story */}
+            {/* Mobile Actions: Notification Bell + Review Desk + Add Story */}
             <div className="flex sm:hidden items-center gap-1.5">
               <NotificationCenter />
+              {isAdmin && (
+                <Link
+                  to="/admin/review"
+                  className="bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 text-[11px] font-black px-2 py-1.5 rounded-xl flex items-center gap-1 shadow-xs"
+                  title="Open Admin Review Desk"
+                >
+                  <span>🛡️</span>
+                  <span>Review</span>
+                </Link>
+              )}
               <Link
                 to="/create-news"
                 className="bg-[#B8323C] hover:bg-red-700 text-white text-[11px] font-black px-2.5 py-1.5 rounded-xl flex items-center gap-1 shadow-xs"
@@ -400,7 +441,7 @@ export default function App() {
                 <span>📍</span>
                 <span>Map</span>
               </a>
-              {user?.role === "admin" && (
+              {isAdmin && (
                 <Link
                   to="/admin/review"
                   onClick={() => setMobileMenuOpen(false)}
