@@ -25,7 +25,7 @@ import {
   playNotificationSound,
 } from "../utils/notificationService";
 
-export default function NotificationCenter() {
+export default function NotificationCenter({ lightMode = false, subtleDot = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -236,17 +236,25 @@ export default function NotificationCenter() {
         }}
         className={`relative p-2 rounded-xl transition duration-200 cursor-pointer ${
           isOpen
-            ? "bg-blue-600/30 text-blue-400 border border-blue-500/40"
-            : "text-slate-300 hover:text-white hover:bg-slate-800/80 border border-transparent"
+            ? lightMode
+              ? "bg-slate-100 text-slate-900 border border-slate-300"
+              : "bg-blue-600/30 text-blue-400 border border-blue-500/40"
+            : lightMode
+              ? "text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-transparent"
+              : "text-slate-300 hover:text-white hover:bg-slate-800/80 border border-transparent"
         }`}
         title="Notifications & Device Alerts"
         aria-label="Open notifications"
       >
         <Bell className="w-5 h-5 transition-transform active:scale-90" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4.5 min-w-4.5 px-1 items-center justify-center rounded-full bg-red-600 text-[10px] font-black text-white shadow-md ring-2 ring-slate-900 animate-pulse">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
+          subtleDot ? (
+            <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-red-600 ring-2 ring-white animate-pulse" />
+          ) : (
+            <span className="absolute -top-1 -right-1 flex h-4.5 min-w-4.5 px-1 items-center justify-center rounded-full bg-red-600 text-[10px] font-black text-white shadow-md ring-2 ring-slate-900 animate-pulse">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )
         )}
       </button>
 

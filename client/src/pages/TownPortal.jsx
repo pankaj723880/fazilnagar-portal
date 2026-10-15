@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import API from "../api";
 import seedPlaces from "../data/places.json";
 import { openGoogleMapsDirections } from "../utils/directions";
@@ -7,6 +7,7 @@ import InstallButton from "../components/InstallButton";
 import AdvertisementSlot from "../components/AdvertisementSlot";
 import { usePageSEO } from "../utils/seo";
 import CommunityPlaceModal from "../components/CommunityPlaceModal";
+import MobileHomePortal from "../components/MobileHomePortal";
 import { getAuthUser, clearAuthSession, getAuthToken } from "../utils/authStorage";
 import { performLogout } from "../api";
 import StoryVideoPreview from "../components/StoryVideoPreview";
@@ -161,6 +162,8 @@ const INITIAL_PLACES = activeSeedPlaces.length > 0
 
 export default function TownPortal() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isMobilePreview = searchParams.get("view") === "mobile";
   usePageSEO({
     title: "Fazilnagar Town Civic & Local Directory Portal | Kushinagar, UP",
     description: "Official civic and local directory portal for Fazilnagar town (PIN 274401, Kushinagar, Uttar Pradesh). Verified town directory of schools, hospitals, local doctors, emergency helplines, shops, markets, and community news.",
@@ -567,7 +570,20 @@ export default function TownPortal() {
     MAP_CATEGORY_TABS.find((t) => t.id === mapFilter)?.label || "Verified Places";
 
   return (
-    <div className="w-full max-w-full overflow-x-hidden bg-[#F5F7F8] font-sans text-[#18232E] selection:bg-[#B8323C] selection:text-white">
+    <>
+      {/* ========================================================
+          MOBILE-FIRST APP EXPERIENCE (Targeted for mobile phones < md, or ?view=mobile)
+          ======================================================== */}
+      <div className={isMobilePreview ? "block py-6 bg-slate-200/70 min-h-screen" : "block md:hidden"}>
+        <div className={isMobilePreview ? "max-w-[420px] mx-auto shadow-2xl rounded-3xl overflow-hidden border border-slate-300 bg-slate-50" : "w-full"}>
+          <MobileHomePortal />
+        </div>
+      </div>
+
+      {/* ========================================================
+          DESKTOP CIVIC & LOCAL DIRECTORY PORTAL (>= md, hidden on mobile)
+          ======================================================== */}
+      <div className={isMobilePreview ? "hidden" : "hidden md:block w-full max-w-full overflow-x-hidden bg-[#F5F7F8] font-sans text-[#18232E] selection:bg-[#B8323C] selection:text-white"}>
 
 
       {/* Dynamic Civic Announcement Ticker Banner */}
@@ -2684,6 +2700,7 @@ export default function TownPortal() {
           <span>{toastMsg}</span>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

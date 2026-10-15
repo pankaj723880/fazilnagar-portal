@@ -125,6 +125,15 @@
   background: #94A3B8;
 }
 
+/* Cross-browser no-scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* ========================================================
    SMOOTH TRANSITIONS & SECTION REVEAL ANIMATIONS
    ======================================================== */
