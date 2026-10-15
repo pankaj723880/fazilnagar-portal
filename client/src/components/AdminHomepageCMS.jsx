@@ -873,13 +873,14 @@ export default function AdminHomepageCMS() {
                     <button
                       type="button"
                       onClick={() => handleActionButtonChange(idx, "isActive", btn.isActive === false)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition ${
                         btn.isActive !== false
                           ? "bg-emerald-950 border border-emerald-800 text-emerald-400"
                           : "bg-slate-800 border border-slate-700 text-slate-400"
                       }`}
                     >
-                      {btn.isActive !== false ? "Visible" : "Hidden"}
+                      {btn.isActive !== false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                      <span>{btn.isActive !== false ? "Visible" : "Hidden"}</span>
                     </button>
                   </div>
                 </div>
@@ -894,20 +895,43 @@ export default function AdminHomepageCMS() {
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {(formData.heroContent?.trustBadges || []).map((badge, idx) => (
-                <div key={badge.id || idx} className="bg-[#0F1B2F] p-3 rounded-xl border border-slate-700">
-                  <label className="text-[10px] text-slate-400 block mb-1">Badge #{idx + 1}</label>
+                <div key={badge.id || idx} className="bg-[#0F1B2F] p-3 rounded-xl border border-slate-700 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] text-slate-400 block">Badge #{idx + 1}</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsDirty(true);
+                        const updated = [...(formData.heroContent?.trustBadges || [])];
+                        updated[idx] = { ...updated[idx], isActive: updated[idx].isActive === false };
+                        setFormData((prev) => ({
+                          ...prev,
+                          heroContent: { ...prev.heroContent, trustBadges: updated },
+                        }));
+                      }}
+                      className={`px-2 py-0.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition ${
+                        badge.isActive !== false
+                          ? "bg-emerald-950 border border-emerald-800 text-emerald-400"
+                          : "bg-slate-800 border border-slate-700 text-slate-400"
+                      }`}
+                    >
+                      {badge.isActive !== false ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                      <span>{badge.isActive !== false ? "Visible" : "Hidden"}</span>
+                    </button>
+                  </div>
                   <input
                     type="text"
-                    value={badge.text || ""}
+                    value={badge.label ?? badge.text ?? ""}
                     onChange={(e) => {
                       setIsDirty(true);
                       const updated = [...(formData.heroContent?.trustBadges || [])];
-                      updated[idx] = { ...updated[idx], text: e.target.value };
+                      updated[idx] = { ...updated[idx], label: e.target.value, text: e.target.value };
                       setFormData((prev) => ({
                         ...prev,
                         heroContent: { ...prev.heroContent, trustBadges: updated },
                       }));
                     }}
+                    placeholder={`Badge #${idx + 1} Label`}
                     className="w-full bg-[#14233B] border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white"
                   />
                 </div>

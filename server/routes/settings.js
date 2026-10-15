@@ -1,3 +1,4 @@
+import express from "express";
 import SiteSettings, {
   DEFAULT_NAV_ITEMS,
   DEFAULT_TRUST_BADGES,
@@ -263,7 +264,11 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
         ...existingHC,
         ...updateData.heroContent,
         trustBadges: Array.isArray(updateData.heroContent.trustBadges)
-          ? updateData.heroContent.trustBadges
+          ? updateData.heroContent.trustBadges.map((badge, index) => ({
+              ...badge,
+              label: (badge.label || badge.text || "").trim() || (existingHC.trustBadges?.[index]?.label || `Badge #${index + 1}`),
+              isActive: badge.isActive !== false,
+            }))
           : (existingHC.trustBadges || []),
         actionButtons: Array.isArray(updateData.heroContent.actionButtons)
           ? updateData.heroContent.actionButtons.map((button, index) => ({

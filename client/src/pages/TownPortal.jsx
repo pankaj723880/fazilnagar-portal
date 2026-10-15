@@ -767,6 +767,26 @@ export default function TownPortal() {
                 })}
             </div>
           )}
+
+          {/* Town Trust Badges (Below Buttons) */}
+          {Array.isArray(siteSettings.heroContent?.trustBadges) && siteSettings.heroContent.trustBadges.some((badge) => badge.isActive !== false) && (
+            <div className="hero-trust-badges flex flex-wrap items-center justify-center gap-2 sm:gap-3 mt-4 sm:mt-5">
+              {siteSettings.heroContent.trustBadges
+                .filter((badge) => badge.isActive !== false)
+                .map((badge) => {
+                  const Icon = HERO_ICON_MAP[badge.icon] || ShieldCheck;
+                  return (
+                    <div
+                      key={badge.id || badge.label}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/15 text-[11px] sm:text-xs text-slate-200 font-medium shadow-md"
+                    >
+                      <Icon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>{badge.label || badge.text}</span>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
         </div>
       </section>
       )}
