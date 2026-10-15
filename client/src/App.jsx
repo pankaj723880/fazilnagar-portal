@@ -290,8 +290,8 @@ export default function App() {
                       ? "bg-amber-600 text-white border-amber-600 shadow-amber-900/20"
                       : "bg-amber-100 hover:bg-amber-200 text-amber-950 border-amber-300"
                   }`}
-                  aria-label="Review Desk"
-                  title="Review Desk"
+                  aria-label="Admin dashboard"
+                  title="Admin dashboard"
                 >
                   <ShieldAlert className="w-5 h-5 text-amber-950" aria-hidden="true" />
                 </Link>
@@ -349,8 +349,8 @@ export default function App() {
                       ? "bg-amber-600 text-white border-amber-600 shadow-amber-900/20"
                       : "bg-amber-100 hover:bg-amber-200 text-amber-950 border-amber-300"
                   }`}
-                  aria-label="Review Desk"
-                  title="Review Desk"
+                  aria-label="Admin dashboard"
+                  title="Admin dashboard"
                 >
                   <ShieldAlert className="w-5 h-5 text-amber-950" aria-hidden="true" />
                 </Link>
@@ -499,8 +499,8 @@ export default function App() {
                 <li><Link to="/create-news" className="hover:text-white">Submit Local News</Link></li>
                 <li><Link to="/login" className="hover:text-white">Citizen / Reporter Login</Link></li>
                 <li><Link to="/register" className="hover:text-white">Register Resident Account</Link></li>
-                {user?.role === "admin" && (
-                  <li><Link to="/admin/review" className="hover:text-amber-400 text-amber-300 font-bold flex items-center gap-1"><span>🛡️</span> Admin Review Desk</Link></li>
+                {(isAdmin || user?.role === "admin") && (
+                  <li><Link to="/admin/review" className="hover:text-amber-400 text-amber-300 font-bold flex items-center gap-1"><span>🛡️</span> Admin dashboard</Link></li>
                 )}
               </ul>
             </div>
@@ -622,6 +622,19 @@ export default function App() {
                     <span>📍</span>
                     <span>Town Map</span>
                   </a>
+                  <Link
+                    to="/admin/review"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="col-span-2 p-2.5 rounded-xl text-xs font-bold flex items-center justify-between bg-amber-50 hover:bg-amber-100/90 text-amber-950 border border-amber-300 shadow-2xs active:scale-95 transition"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🛡️</span>
+                      <span className="font-bold">Admin dashboard</span>
+                    </div>
+                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-amber-200 text-amber-900">
+                      {isAdmin ? "Admin Desk" : "Login"}
+                    </span>
+                  </Link>
                 </div>
               </div>
 
