@@ -9,6 +9,7 @@ export default function AdminLayout({
   currentUser,
   onLogout,
   pendingSubmissions = [],
+  pendingCount,
   entitiesCount = 19,
   liveAdsCount = 0,
   newsCount = 0,
@@ -24,13 +25,18 @@ export default function AdminLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
+  const calculatedPendingCount =
+    typeof pendingCount === "number"
+      ? pendingCount
+      : pendingSubmissions.filter((s) => s.status === "pending").length;
+
   return (
     <div className="min-h-screen bg-[#F5F7FA] flex text-[#18232E] font-sans antialiased selection:bg-blue-600 selection:text-white">
       {/* Sidebar Navigation */}
       <AdminSidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        pendingCount={pendingSubmissions.filter((s) => s.status === "pending").length}
+        pendingCount={calculatedPendingCount}
         entitiesCount={entitiesCount}
         liveAdsCount={liveAdsCount}
         newsCount={newsCount}
@@ -60,6 +66,7 @@ export default function AdminLayout({
           isCollapsed={sidebarCollapsed}
           currentUser={currentUser}
           onLogout={onLogout}
+          pendingCount={calculatedPendingCount}
           pendingSubmissions={pendingSubmissions}
           onRefresh={onRefresh}
           loading={loading}

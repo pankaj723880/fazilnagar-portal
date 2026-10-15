@@ -21,6 +21,9 @@ import {
   Calendar,
   Layers,
   Megaphone,
+  LayoutDashboard,
+  Users,
+  HardDrive,
 } from "lucide-react";
 
 export default function AdminTopbar({
@@ -30,6 +33,7 @@ export default function AdminTopbar({
   isCollapsed = false,
   currentUser = null,
   onLogout = () => {},
+  pendingCount: propPendingCount,
   pendingSubmissions = [],
   onRefresh = () => {},
   loading = false,
@@ -122,20 +126,26 @@ export default function AdminTopbar({
   };
 
   const breadcrumb = getBreadcrumb();
-  const pendingCount = pendingSubmissions.filter((s) => s.status === "pending").length;
+  const pendingCount =
+    typeof propPendingCount === "number"
+      ? propPendingCount
+      : pendingSubmissions.filter((s) => s.status === "pending").length;
 
   // Search shortcuts index
   const quickJumpModules = [
+    { label: "Dashboard", tab: "dashboard", group: "Overview", icon: LayoutDashboard },
     { label: "Site Settings", tab: "cms-settings", group: "Website & Content", icon: Settings },
     { label: "Hero Carousel", tab: "cms-hero", group: "Website & Content", icon: Layers },
     { label: "Public Services", tab: "cms-services", group: "Website & Content", icon: Compass },
+    { label: "Ad Registry", tab: "ads", group: "Directory Management", icon: Megaphone },
+    { label: "Entities (19)", tab: "manage-entities", group: "Directory Management", icon: Building2 },
+    { label: "News & Reels", tab: "news-manage", group: "Website & Content", icon: Newspaper },
+    { label: "Submissions", tab: "community-places", group: "Directory Management", icon: ShieldCheck },
     { label: "Events & Melas", tab: "cms-events", group: "Website & Content", icon: Calendar },
-    { label: "Twin Heritage (Pawa & Kushinagar)", tab: "cms-heritage", group: "Website & Content", icon: Compass },
-    { label: "News & Reels Studio", tab: "news-manage", group: "Website & Content", icon: Newspaper },
+    { label: "Twin Heritage", tab: "cms-heritage", group: "Website & Content", icon: Compass },
     { label: "Media Library", tab: "cms-media", group: "Website & Content", icon: Sparkles },
-    { label: "Entities (19 Verified)", tab: "manage-entities", group: "Directory Management", icon: Building2 },
-    { label: "Community Submissions", tab: "community-places", group: "Directory Management", icon: ShieldCheck },
-    { label: "Homepage Advertisements", tab: "ads", group: "Directory Management", icon: Megaphone },
+    { label: "Users & Accounts", tab: "manage-users", group: "Directory Management", icon: Users },
+    { label: "Google Drive", tab: "drive", group: "Directory Management", icon: HardDrive },
     { label: "Audit Logs", tab: "cms-audit", group: "Security & Administration", icon: ShieldCheck },
   ];
 
@@ -150,15 +160,26 @@ export default function AdminTopbar({
   return (
     <div className="sticky top-0 z-30">
       {/* SECTION 1: COMMON ADMIN HEADER (Sticky, 54px h) */}
-      <header className="h-[54px] bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 flex items-center justify-between shadow-2xs">
-        {/* Left: Brand mark [F] with FAZILNAGAR and Admin ⚙️ sub-badge */}
-        <div className="flex items-center gap-2.5 min-w-0">
+      <header className="h-[54px] bg-white/95 backdrop-blur-md border-b border-slate-100 px-3 sm:px-4 flex items-center justify-between shadow-2xs">
+        {/* Left: Hamburger Menu trigger (for mobile), Brand mark [F], and Admin ⚙️ badge */}
+        <div className="flex items-center gap-2 min-w-0">
+          {/* Mobile Explicit Sidebar Drawer Button with Hamburger Icon */}
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            className="lg:hidden p-1.5 -ml-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 flex items-center justify-center active:scale-95 transition cursor-pointer shrink-0"
+            title="Open Admin Sidebar Navigation"
+            aria-label="Open Admin Sidebar Navigation"
+          >
+            <Menu className="w-5 h-5 text-slate-800" />
+          </button>
+
           <button
             type="button"
             onClick={onToggleSidebar}
             className="w-8 h-8 rounded-xl bg-slate-900 text-white font-black text-sm flex items-center justify-center shadow-xs active:scale-95 transition cursor-pointer shrink-0"
-            title="Toggle Menu"
-            aria-label="Toggle Navigation Menu"
+            title="Toggle Sidebar"
+            aria-label="Toggle Sidebar"
           >
             F
           </button>
@@ -257,10 +278,18 @@ export default function AdminTopbar({
       </header>
 
       {/* Breadcrumb Area (Immediately below header, 32px h) */}
-      <div className="h-8 bg-slate-50/90 backdrop-blur-xs border-b border-slate-100 px-4 flex items-center justify-between text-xs">
+      <div className="h-8 bg-slate-50/90 backdrop-blur-xs border-b border-slate-100 px-3 sm:px-4 flex items-center justify-between text-xs">
         <div className="flex items-center gap-1.5 text-[11px] text-slate-500 truncate">
-          <span className="font-medium text-slate-400">Fazilnagar Portal</span>
-          <span className="text-slate-300">/</span>
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            className="lg:hidden text-blue-600 font-bold hover:text-blue-700 flex items-center gap-1 shrink-0 mr-1 cursor-pointer"
+          >
+            <Menu className="w-3.5 h-3.5" />
+            <span>Modules</span>
+          </button>
+          <span className="font-medium text-slate-400 hidden sm:inline">Fazilnagar Portal</span>
+          <span className="text-slate-300 hidden sm:inline">/</span>
           <span className="font-semibold text-slate-600 truncate">{breadcrumb.group || "Website"}</span>
           <span className="text-slate-300">/</span>
           <span className="font-extrabold text-slate-900 truncate">{breadcrumb.label}</span>
@@ -275,6 +304,35 @@ export default function AdminTopbar({
           <span>View Website</span>
           <ExternalLink className="w-3 h-3" />
         </a>
+      </div>
+
+      {/* Mobile Fast-Switch Module Ribbon (lg:hidden) */}
+      <div className="lg:hidden bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-2.5 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar shadow-2xs">
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 text-white flex items-center gap-1 shrink-0 active:scale-95 transition shadow-xs cursor-pointer"
+        >
+          <Menu className="w-3.5 h-3.5" />
+          <span>All Modules</span>
+        </button>
+        {quickJumpModules.map((item) => {
+          const isActive = activeTab === item.tab || (item.tab === "dashboard" && (activeTab === "overview" || !activeTab));
+          return (
+            <button
+              key={item.tab}
+              type="button"
+              onClick={() => handleTabChange(item.tab)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition active:scale-95 cursor-pointer ${
+                isActive
+                  ? "bg-blue-600 text-white shadow-xs font-black"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/60"
+              }`}
+            >
+              {item.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

@@ -106,6 +106,8 @@ export default function App() {
     location.pathname === "/directory" ||
     location.pathname === "/local-directory";
 
+  const isAdminPage = location.pathname.startsWith("/admin");
+
   const hasSubNav = DIRECTORY_SUB_NAV_PATHS.includes(location.pathname) && !isNewsPage;
   const isAdmin = Boolean(user && (user.role === "admin" || user.email === "pankaj723880@gmail.com")) || isUserAdmin();
 
@@ -198,7 +200,7 @@ export default function App() {
       {/* ========================================================
           PERMANENT FIXED TOP SHELL (Desktop / Non-Portal Pages)
           ======================================================== */}
-      <header className={`fixed top-0 left-0 right-0 z-50 bg-[#FFFFFF] shadow-xs ${isPortalPage || isDirectoryPage || isMobilePreview ? "hidden md:block" : ""}`}>
+      <header className={`fixed top-0 left-0 right-0 z-50 bg-[#FFFFFF] shadow-xs ${isAdminPage ? "hidden" : isPortalPage || isDirectoryPage || isMobilePreview ? "hidden md:block" : ""}`}>
         {/* Top Alert & User Status Bar - Modern Civic Deep Slate & Crimson (Desktop / Tablet) */}
         {siteSettings?.topAlertBar?.enabled !== false && (
           <div className="hidden sm:flex h-8 bg-[#18232E] text-slate-300 text-[11px] font-semibold px-4 justify-between items-center border-b border-slate-800 shadow-xs">
@@ -417,7 +419,9 @@ export default function App() {
           ======================================================== */}
       <main
         className={`flex-1 w-full ${
-          isNewsPage
+          isAdminPage
+            ? "pt-0 pb-0 p-0 m-0 w-full max-w-full"
+            : isNewsPage
             ? "pt-16 sm:pt-[96px] pb-14 sm:pb-0 p-0 m-0 overflow-hidden"
             : isPortalPage
             ? (isMobilePreview ? "pt-0 pb-16" : "pt-0 md:pt-[96px] pb-16 sm:pb-8")
@@ -476,7 +480,7 @@ export default function App() {
           FOOTER - Modern Civic Deep Slate with Crimson & Emerald Accents
           (Hidden on /news full-screen reels page and TownPortal homepage which has its own footer)
           ======================================================== */}
-      {!isNewsPage && !isPortalPage && (
+      {!isNewsPage && !isPortalPage && !isAdminPage && (
         <footer className="bg-[#18232E] text-slate-400 text-xs mt-12 border-t border-slate-800 pb-28 sm:pb-8">
           {/* Mobile Collapsible Accordions (md:hidden) */}
           <div className="md:hidden max-w-lg mx-auto px-4 py-6 space-y-2.5">
@@ -910,90 +914,92 @@ export default function App() {
           MOBILE NATIVE BOTTOM APP BAR (Fixed at bottom for phones < 640px)
           Provides effortless 1-thumb native app navigation across the portal
           ======================================================== */}
-      <nav className={`fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.07)] pb-[max(0.5rem,env(safe-area-inset-bottom))] ${isMobilePreview ? "block" : "sm:hidden"}`}>
-        <div className="max-w-[420px] mx-auto w-full px-2 py-1 flex items-center justify-around">
-          <NavLink
-            to="/"
-            end
-            onClick={() => {
-              if (location.pathname === "/") {
-                window.scrollTo({ top: 0, behavior: "smooth" });
+      {!isAdminPage && (
+        <nav className={`fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.07)] pb-[max(0.5rem,env(safe-area-inset-bottom))] ${isMobilePreview ? "block" : "sm:hidden"}`}>
+          <div className="max-w-[420px] mx-auto w-full px-2 py-1 flex items-center justify-around">
+            <NavLink
+              to="/"
+              end
+              onClick={() => {
+                if (location.pathname === "/") {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
+              className={({ isActive }) =>
+                `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold touch-manipulation ${
+                  isActive && location.pathname === "/"
+                    ? "text-[#B8323C]"
+                    : "text-slate-600 hover:text-slate-900"
+                }`
               }
-            }}
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold touch-manipulation ${
-                isActive && location.pathname === "/"
+            >
+              <Home className="w-5 h-5 mb-0.5" />
+              <span>Home</span>
+            </NavLink>
+
+            <NavLink
+              to="/directory"
+              className={({ isActive }) =>
+                `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold relative touch-manipulation ${
+                  isActive || location.pathname.startsWith("/directory")
+                    ? "text-[#B8323C]"
+                    : "text-slate-600 hover:text-slate-900"
+                }`
+              }
+            >
+              <Compass className="w-5 h-5 mb-0.5" />
+              <span>Directory</span>
+              <span className="absolute top-1.5 right-2.5 w-1.5 h-1.5 rounded-full bg-[#0D5E49]"></span>
+            </NavLink>
+
+            <NavLink
+              to="/emergency"
+              className={({ isActive }) =>
+                `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold touch-manipulation ${
+                  isActive
+                    ? "text-[#B8323C]"
+                    : "text-slate-600 hover:text-slate-900"
+                }`
+              }
+            >
+              <PhoneCall className="w-5 h-5 mb-0.5 text-red-500" />
+              <span>24/7 Aid</span>
+            </NavLink>
+
+            <NavLink
+              to="/news"
+              className={({ isActive }) =>
+                `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold touch-manipulation ${
+                  isActive
+                    ? "text-[#B8323C]"
+                    : "text-slate-600 hover:text-slate-900"
+                }`
+              }
+            >
+              <Newspaper className="w-5 h-5 mb-0.5" />
+              <span>Updates</span>
+            </NavLink>
+
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+              className={`flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold cursor-pointer touch-manipulation ${
+                mobileMenuOpen
                   ? "text-[#B8323C]"
                   : "text-slate-600 hover:text-slate-900"
-              }`
-            }
-          >
-            <Home className="w-5 h-5 mb-0.5" />
-            <span>Home</span>
-          </NavLink>
-
-          <NavLink
-            to="/directory"
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold relative touch-manipulation ${
-                isActive || location.pathname.startsWith("/directory")
-                  ? "text-[#B8323C]"
-                  : "text-slate-600 hover:text-slate-900"
-              }`
-            }
-          >
-            <Compass className="w-5 h-5 mb-0.5" />
-            <span>Directory</span>
-            <span className="absolute top-1.5 right-2.5 w-1.5 h-1.5 rounded-full bg-[#0D5E49]"></span>
-          </NavLink>
-
-          <NavLink
-            to="/emergency"
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold touch-manipulation ${
-                isActive
-                  ? "text-[#B8323C]"
-                  : "text-slate-600 hover:text-slate-900"
-              }`
-            }
-          >
-            <PhoneCall className="w-5 h-5 mb-0.5 text-red-500" />
-            <span>24/7 Aid</span>
-          </NavLink>
-
-          <NavLink
-            to="/news"
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold touch-manipulation ${
-                isActive
-                  ? "text-[#B8323C]"
-                  : "text-slate-600 hover:text-slate-900"
-              }`
-            }
-          >
-            <Newspaper className="w-5 h-5 mb-0.5" />
-            <span>Updates</span>
-          </NavLink>
-
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen((prev) => !prev)}
-            className={`flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold cursor-pointer touch-manipulation ${
-              mobileMenuOpen
-                ? "text-[#B8323C]"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-            aria-label="Toggle navigation menu"
-          >
-            {mobileMenuOpen ? (
-              <X className="w-5 h-5 mb-0.5 text-[#B8323C]" />
-            ) : (
-              <Menu className="w-5 h-5 mb-0.5" />
-            )}
-            <span>{mobileMenuOpen ? "Close" : "Menu"}</span>
-          </button>
-        </div>
-      </nav>
+              }`}
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5 mb-0.5 text-[#B8323C]" />
+              ) : (
+                <Menu className="w-5 h-5 mb-0.5" />
+              )}
+              <span>{mobileMenuOpen ? "Close" : "Menu"}</span>
+            </button>
+          </div>
+        </nav>
+      )}
 
       {/* Global Floating Overlay & Sticky Banner Advertisements (Cancellable) */}
       <GlobalFloatingAndStickyAds />
