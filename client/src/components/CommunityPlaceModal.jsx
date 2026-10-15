@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import API from "../api";
+import { getAuthToken } from "../utils/authStorage";
 import {
   FAZILNAGAR_AREAS,
   COMMUNITY_ALLOWED_CATEGORIES,
@@ -29,6 +31,7 @@ import {
 } from "lucide-react";
 
 export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
+  const navigate = useNavigate();
   // Wizard steps: 1 = Basic Info, 2 = Map Pinning, 3 = Photos, 4 = Consent & Submit
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -389,6 +392,18 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
     if (e) e.preventDefault();
     if (!canSubmitFinal()) return;
 
+    const activeToken = getAuthToken();
+    if (!activeToken) {
+      setSubmitError("Authentication required: Please log in to submit a place to the town directory.");
+      navigate("/login", {
+        state: {
+          from: "/directory?add=true",
+          message: "Please log in to submit a place listing.",
+        },
+      });
+      return;
+    }
+
     setSubmitting(true);
     setSubmitError("");
     setDuplicateWarning(null);
@@ -475,6 +490,47 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
   };
 
   if (!isOpen) return null;
+
+  const currentToken = getAuthToken();
+  if (!currentToken) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/80 backdrop-blur-xs overflow-y-auto">
+        <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col p-6 text-center space-y-4 animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-14 h-14 bg-amber-100 text-amber-800 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+            <Store className="w-7 h-7 text-amber-700" />
+          </div>
+          <div className="space-y-1.5">
+            <h3 className="text-lg font-bold text-slate-900">Sign in to Add a Place</h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Registration and login are required to suggest or submit places to the Fazilnagar Town Directory. This helps ensure authentic community data and accountability.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <button
+              onClick={() => {
+                onClose();
+                navigate("/login", {
+                  state: {
+                    from: "/directory?add=true",
+                    message: "Please log in to add a place to the town directory.",
+                  },
+                });
+              }}
+              className="flex-1 bg-[#0D5E49] hover:bg-emerald-800 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition cursor-pointer"
+            >
+              Sign In to Continue
+            </button>
+            <button
+              onClick={onClose}
+              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-xl text-xs transition cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/80 backdrop-blur-sm overflow-y-auto">

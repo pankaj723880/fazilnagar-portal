@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getAuthToken } from "./utils/authStorage";
+import { getAuthToken, clearAuthSession } from "./utils/authStorage";
 
 const RENDER_PROD_API = "https://fazilnagar-portal.onrender.com/api";
 
@@ -28,13 +28,13 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-// Automatic fallback interceptor:
-// If request to local fails (e.g. 404 from another app running on 5000, ECONNREFUSED, or timeout),
-// retry against the production Render API automatically.
+// Automatic fallback interceptor & 401 auto-purge
 API.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // If local fails, retry against production Render API
     if (
       originalRequest &&
       !originalRequest._retry &&
@@ -45,9 +45,40 @@ API.interceptors.response.use(
       originalRequest.baseURL = RENDER_PROD_API;
       return axios(originalRequest);
     }
+
+    // On 401 Unauthorized (invalid/expired/revoked session), clear stale credentials
+    // except for explicit login/register requests
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest.url?.includes("/auth/login") &&
+      !originalRequest.url?.includes("/auth/register")
+    ) {
+      clearAuthSession();
+    }
+
     return Promise.reject(error);
   }
 );
+
+// Graceful logout helper that alerts backend and purges local storage
+export const performLogout = async () => {
+  const token = getAuthToken();
+  // 1. Immediately and synchronously clear all local and session credentials
+  clearAuthSession();
+
+  // 2. Notify backend to revoke the token session in RevokedToken registry
+  if (token) {
+    try {
+      await API.post("/auth/logout", {}, {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 4000,
+      });
+    } catch {
+      // Best effort logout notification
+    }
+  }
+};
 
 // Named export used by NewsDetail
 export const fetchNewsById = async (id) => {

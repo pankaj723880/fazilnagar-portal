@@ -132,10 +132,8 @@ export const DEFAULT_SITE_SETTINGS = {
       { id: "home", label: "Home", path: "/", badge: "", isExternal: false, isActive: true, displayOrder: 1 },
       { id: "explore", label: "Explore", path: "/#explore-categories", badge: "", isExternal: false, isActive: true, displayOrder: 2 },
       { id: "directory", label: "Directory", path: "/directory", badge: "37", isExternal: false, isActive: true, displayOrder: 3 },
-      { id: "events", label: "Events & Melas", path: "/#events-melas-section", badge: "", isExternal: false, isActive: true, displayOrder: 4 },
-      { id: "map", label: "Map", path: "/#town-map-section", badge: "", isExternal: false, isActive: true, displayOrder: 5 },
-      { id: "news", label: "Local Updates", path: "/news", badge: "", isExternal: false, isActive: true, displayOrder: 6 },
-      { id: "heritage", label: "Twin Heritage", path: "/#about-fazilnagar-section", badge: "", isExternal: false, isActive: true, displayOrder: 7 },
+      { id: "map", label: "Map", path: "/#town-map-section", badge: "", isExternal: false, isActive: true, displayOrder: 4 },
+      { id: "news", label: "Local Updates", path: "/news", badge: "", isExternal: false, isActive: true, displayOrder: 5 },
     ],
   },
   heroContent: {

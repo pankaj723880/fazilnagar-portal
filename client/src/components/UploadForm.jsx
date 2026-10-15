@@ -178,10 +178,15 @@ export default function UploadForm() {
     }
 
     try {
-      const headers = {};
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
+      const activeToken = getAuthToken();
+      if (!activeToken) {
+        setValidationError("Authentication required. Please sign in to submit a story.");
+        navigate("/login", {
+          state: { from: "/create-news", message: "Please log in to submit a local story." },
+        });
+        return;
       }
+      const headers = { Authorization: `Bearer ${activeToken}` };
 
       const res = await API.post("/news", formData, {
         headers,

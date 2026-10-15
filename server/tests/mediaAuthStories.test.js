@@ -16,7 +16,9 @@ import News from "../models/News.js";
 import Like from "../models/Like.js";
 import Comment from "../models/Comment.js";
 import User from "../models/User.js";
+import RevokedToken from "../models/RevokedToken.js";
 import newsRoutes, { normalizeMediaUrl } from "../routes/news.js";
+import authRoutes from "../routes/auth.js";
 
 const TEST_PORT = 5066;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/fazilnagar_db";
@@ -121,6 +123,8 @@ describe("Media Pipeline, Authentication & Stories Regression Tests", () => {
     app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
     app.use("/api/news", newsRoutes);
     app.use("/news", newsRoutes);
+    app.use("/api/auth", authRoutes);
+    app.use("/auth", authRoutes);
 
     await new Promise((resolve) => {
       server = app.listen(TEST_PORT, resolve);
@@ -130,6 +134,9 @@ describe("Media Pipeline, Authentication & Stories Regression Tests", () => {
   after(async () => {
     if (server) {
       await new Promise((resolve) => server.close(resolve));
+    }
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
     }
   });
 
@@ -583,7 +590,239 @@ describe("Media Pipeline, Authentication & Stories Regression Tests", () => {
   });
 
   // -------------------------------------------------------------------
-  // TEST 11: Clean up test documents
+  // TEST 11: Logout invalidates token on server; revoked token is rejected
+  // -------------------------------------------------------------------
+  it("Logout invalidates token on server; revoked token is rejected with 401 on protected endpoints", async () => {
+    // 1. Create a dedicated test user
+    const testEmail = `logout_test_${Date.now()}@fazilnagar.test`;
+    const testUser = await User.create({
+      name: "Logout Test User",
+      email: testEmail,
+      password: "hashedpassword123",
+      role: "user",
+      status: "active",
+    });
+
+    const sessionToken = jwt.sign(
+      { id: testUser._id.toString(), email: testUser.email, name: testUser.name, role: "user" },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    // 2. Verify token is initially valid on protected endpoint
+    const preLogoutRes = await httpRequest({
+      hostname: "127.0.0.1",
+      port: TEST_PORT,
+      path: "/api/auth/me",
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${sessionToken}`,
+      },
+    });
+    assert.equal(preLogoutRes.status, 200, "Token should be valid before logout");
+    assert.equal(preLogoutRes.data.user.email, testEmail);
+
+    // 3. Perform logout
+    const logoutRes = await httpRequest({
+      hostname: "127.0.0.1",
+      port: TEST_PORT,
+      path: "/api/auth/logout",
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${sessionToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+    assert.equal(logoutRes.status, 200);
+    assert.equal(logoutRes.data.success, true);
+
+    // 4. Directly calling /api/auth/me with revoked token returns 401
+    const postLogoutMeRes = await httpRequest({
+      hostname: "127.0.0.1",
+      port: TEST_PORT,
+      path: "/api/auth/me",
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${sessionToken}`,
+      },
+    });
+    assert.equal(postLogoutMeRes.status, 401, "Revoked token must be rejected with 401 on /me");
+
+    // 5. Directly calling /api/news/:id/like with revoked token returns 401
+    const postLogoutLikeRes = await httpRequest({
+      hostname: "127.0.0.1",
+      port: TEST_PORT,
+      path: `/api/news/${createdImageStoryId}/like`,
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${sessionToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+    assert.equal(postLogoutLikeRes.status, 401, "Revoked token must be rejected with 401 on like");
+
+    // 6. Directly calling /api/news/:id/comments with revoked token returns 401
+    const postLogoutCommentRes = await httpRequest({
+      hostname: "127.0.0.1",
+      port: TEST_PORT,
+      path: `/api/news/${createdImageStoryId}/comments`,
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${sessionToken}`,
+        "Content-Type": "application/json",
+      },
+    }, { text: "Should be rejected because user logged out" });
+    assert.equal(postLogoutCommentRes.status, 401, "Revoked token must be rejected with 401 on comments");
+
+    // Clean up test user & token
+    await User.findByIdAndDelete(testUser._id);
+    await RevokedToken.deleteMany({ token: sessionToken });
+  });
+
+  // -------------------------------------------------------------------
+  // TEST 12: Re-login after logout yields valid credentials that work normally
+  // -------------------------------------------------------------------
+  it("Valid login after logout works normally and allows liking/commenting", async () => {
+    // Fresh token for User B
+    const freshTokenB = jwt.sign(
+      { id: userBId, email: "userb@fazilnagar.com", name: "User Beta", role: "citizen" },
+      JWT_SECRET,
+      { expiresIn: "2h" }
+    );
+
+    const meRes = await httpRequest({
+      hostname: "127.0.0.1",
+      port: TEST_PORT,
+      path: "/api/auth/me",
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${freshTokenB}`,
+      },
+    });
+    // User B was a virtual token, but verify token is accepted by verifyToken
+    assert.notEqual(meRes.status, 401, "Fresh token should pass verifyToken");
+
+    // Like endpoint works normally with fresh token
+    const likeRes = await httpRequest({
+      hostname: "127.0.0.1",
+      port: TEST_PORT,
+      path: `/api/news/${createdImageStoryId}/like`,
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${freshTokenB}`,
+        "Content-Type": "application/json",
+      },
+    });
+    assert.equal(likeRes.status, 200, "Fresh token should allow liking");
+  });
+
+  // -------------------------------------------------------------------
+  // TEST 13: Impersonation attempt via request body is rejected/prevented
+  // -------------------------------------------------------------------
+  it("One authenticated user cannot impersonate another by passing userId in body", async () => {
+    const spoofAttempt = await httpRequest({
+      hostname: "127.0.0.1",
+      port: TEST_PORT,
+      path: `/api/news/${createdImageStoryId}/comments`,
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${userBToken}`,
+        "Content-Type": "application/json",
+      },
+    }, {
+      text: "Authentic message from user B",
+      userId: userAId, // Attempting to impersonate User A
+      authorName: "Attacker Spoofed Admin",
+    });
+
+    assert.equal(spoofAttempt.status, 201);
+    assert.equal(String(spoofAttempt.data.comment.userId), userBId, "Must bind to authenticated credentials, not body userId");
+    assert.equal(spoofAttempt.data.comment.authorName, "User Beta", "Must bind to authenticated name, not spoofed authorName");
+
+    // Clean up created spoof test comment
+    if (spoofAttempt.data.comment._id) {
+      await Comment.findByIdAndDelete(spoofAttempt.data.comment._id);
+    }
+  });
+
+  // -------------------------------------------------------------------
+  // TEST 14: All Like/Comment mutation endpoints reject unauthenticated guests
+  // -------------------------------------------------------------------
+  it("Guest direct calls to all like/comment mutation endpoints return HTTP 401", async () => {
+    const fakeCommentId = new mongoose.Types.ObjectId().toString();
+    const fakeReplyId = new mongoose.Types.ObjectId().toString();
+
+    // 1. Post Like
+    const r1 = await httpRequest({
+      hostname: "127.0.0.1",
+      port: TEST_PORT,
+      path: `/api/news/${createdImageStoryId}/like`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    assert.equal(r1.status, 401);
+
+    // 2. Create Comment
+    const r2 = await httpRequest({
+      hostname: "127.0.0.1",
+      port: TEST_PORT,
+      path: `/api/news/${createdImageStoryId}/comments`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    }, { text: "guest comment" });
+    assert.equal(r2.status, 401);
+
+    // 3. Comment Like
+    const r3 = await httpRequest({
+      hostname: "127.0.0.1",
+      port: TEST_PORT,
+      path: `/api/news/${createdImageStoryId}/comments/${fakeCommentId}/like`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    assert.equal(r3.status, 401);
+
+    // 4. Post Reply
+    const r4 = await httpRequest({
+      hostname: "127.0.0.1",
+      port: TEST_PORT,
+      path: `/api/news/${createdImageStoryId}/comments/${fakeCommentId}/replies`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    }, { text: "guest reply" });
+    assert.equal(r4.status, 401);
+
+    // 5. Reply Like
+    const r5 = await httpRequest({
+      hostname: "127.0.0.1",
+      port: TEST_PORT,
+      path: `/api/news/${createdImageStoryId}/comments/${fakeCommentId}/replies/${fakeReplyId}/like`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    assert.equal(r5.status, 401);
+
+    // 6. Delete Comment
+    const r6 = await httpRequest({
+      hostname: "127.0.0.1",
+      port: TEST_PORT,
+      path: `/api/news/${createdImageStoryId}/comments/${fakeCommentId}`,
+      method: "DELETE",
+    });
+    assert.equal(r6.status, 401);
+
+    // 7. Delete Reply
+    const r7 = await httpRequest({
+      hostname: "127.0.0.1",
+      port: TEST_PORT,
+      path: `/api/news/${createdImageStoryId}/comments/${fakeCommentId}/replies/${fakeReplyId}`,
+      method: "DELETE",
+    });
+    assert.equal(r7.status, 401);
+  });
+
+  // -------------------------------------------------------------------
+  // TEST 15: Clean up test documents
   // -------------------------------------------------------------------
   it("Cleans up created test records cleanly without modifying production data", async () => {
     if (createdImageStoryId) {

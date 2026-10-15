@@ -230,4 +230,13 @@ describe("Settings Persistence & Live Version Endpoint Verification", () => {
       assert.equal(t.isActive, true)
     );
   });
+
+  after(async () => {
+    if (server) {
+      await new Promise((resolve) => server.close(resolve));
+    }
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
+    }
+  });
 });

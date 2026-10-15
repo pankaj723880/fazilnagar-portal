@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import API from "../api";
@@ -8,7 +8,7 @@ import { openGoogleMapsDirections } from "../utils/directions";
 import { usePageSEO } from "../utils/seo";
 import CommunityPlaceModal from "../components/CommunityPlaceModal";
 import AdminPlaceEditModal from "../components/AdminPlaceEditModal";
-import { isUserAdmin } from "../utils/authStorage";
+import { isUserAdmin, getAuthToken } from "../utils/authStorage";
 import { FAZILNAGAR_AREAS } from "../constants/areas";
 import {
   Search,
@@ -143,6 +143,7 @@ export default function Directory({ user }) {
   }, [user]);
   const isAdmin = user?.role === "admin" || isAdminState || isUserAdmin();
 
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCat = searchParams.get("category") || "all";
   const initialSearch = searchParams.get("search") || "";
@@ -166,9 +167,18 @@ export default function Directory({ user }) {
 
   useEffect(() => {
     if (searchParams.get("add") === "true") {
-      setShowAddModal(true);
+      if (!getAuthToken()) {
+        navigate("/login", {
+          state: {
+            from: "/directory?add=true",
+            message: "Please log in to add a place to the town directory.",
+          },
+        });
+      } else {
+        setShowAddModal(true);
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
   const handleToggleAccordion = useCallback((entityId) => {
     setExpandedEntityId((prevId) => (prevId === entityId ? null : entityId));
@@ -697,7 +707,18 @@ export default function Directory({ user }) {
           {/* Quick Action Buttons */}
           <div className="flex items-center gap-2 shrink-0 pt-1 sm:pt-0">
             <button
-              onClick={() => setShowAddModal(true)}
+              onClick={() => {
+                if (!getAuthToken()) {
+                  navigate("/login", {
+                    state: {
+                      from: "/directory?add=true",
+                      message: "Please log in to add a place to the town directory.",
+                    },
+                  });
+                  return;
+                }
+                setShowAddModal(true);
+              }}
               className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs cursor-pointer active:scale-95"
               title="Add place with exact map location and images (4-Step Wizard)"
             >
@@ -798,15 +819,15 @@ export default function Directory({ user }) {
           ======================================================== */}
       <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/90 shadow-2xs space-y-2.5">
         {/* Search input + View Switcher */}
-        <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
-          <div className="relative flex-1">
+        <form onSubmit={handleSearchSubmit} className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+          <div className="relative flex-1 min-w-[200px]">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search schools, hospitals, shops, pharmacies, landmarks…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50/80 text-slate-900 placeholder-slate-400 text-xs sm:text-sm pl-9 pr-8 py-2 rounded-xl border border-slate-200 outline-none focus:border-[#B8323C] focus:bg-white transition"
+              className="w-full bg-slate-50/80 text-slate-900 placeholder-slate-400 text-sm pl-9 pr-8 py-2.5 min-h-[44px] rounded-xl border border-slate-200 outline-none focus:border-[#B8323C] focus:bg-white transition font-medium"
               aria-label="Search directory"
             />
             {searchQuery && (
@@ -816,49 +837,51 @@ export default function Directory({ user }) {
                   setSearchQuery("");
                   fetchPlaces();
                 }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 cursor-pointer"
                 aria-label="Clear search"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
 
-          <button
-            type="submit"
-            className="bg-[#18232E] hover:bg-[#B8323C] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-2xs shrink-0 cursor-pointer"
-          >
-            Search
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="submit"
+              className="bg-[#18232E] hover:bg-[#B8323C] text-white text-xs font-bold px-4 py-2.5 min-h-[44px] rounded-xl transition shadow-2xs shrink-0 cursor-pointer flex items-center justify-center"
+            >
+              Search
+            </button>
 
-          {/* View Mode Switcher */}
-          <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 shrink-0">
-            <button
-              type="button"
-              onClick={() => setViewMode("map")}
-              className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition ${
-                viewMode === "map"
-                  ? "bg-white text-slate-900 shadow-2xs"
-                  : "text-slate-500 hover:text-slate-800"
-              }`}
-              title="Map View"
-            >
-              <MapIcon className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Map</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("list")}
-              className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition ${
-                viewMode === "list"
-                  ? "bg-white text-slate-900 shadow-2xs"
-                  : "text-slate-500 hover:text-slate-800"
-              }`}
-              title="List View"
-            >
-              <ListIcon className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">List</span>
-            </button>
+            {/* View Mode Switcher */}
+            <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewMode("map")}
+                className={`p-2 sm:px-2.5 sm:py-1.5 min-h-[40px] rounded-lg text-xs font-bold flex items-center gap-1 transition cursor-pointer ${
+                  viewMode === "map"
+                    ? "bg-white text-slate-900 shadow-2xs font-black"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
+                title="Map View"
+              >
+                <MapIcon className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Map</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("list")}
+                className={`p-2 sm:px-2.5 sm:py-1.5 min-h-[40px] rounded-lg text-xs font-bold flex items-center gap-1 transition cursor-pointer ${
+                  viewMode === "list"
+                    ? "bg-white text-slate-900 shadow-2xs font-black"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
+                title="List View"
+              >
+                <ListIcon className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">List</span>
+              </button>
+            </div>
           </div>
         </form>
 

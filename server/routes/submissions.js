@@ -58,9 +58,10 @@ const PROTECTED_CATEGORIES = [
 
 // @route   POST /api/submissions/upload-images
 // @desc    Upload entity primary and gallery photos
-// @access  Public
+// @access  Private (Authenticated Users Only)
 router.post(
   "/upload-images",
+  verifyToken,
   (req, res, next) => {
     upload.any()(req, res, (err) => {
       if (err instanceof multer.MulterError) {
@@ -134,8 +135,8 @@ router.post(
 
 // @route   POST /api/submissions/place
 // @desc    Submit a new community business / place with exact map coordinates
-// @access  Public
-router.post("/place", async (req, res) => {
+// @access  Private (Authenticated Users Only)
+router.post("/place", verifyToken, async (req, res) => {
   try {
     const {
       name,
@@ -243,7 +244,9 @@ router.post("/place", async (req, res) => {
       duplicateWarning: dupCheck.warningMessage || "",
       status: "pending",
       submittedBy: {
-        name: ownerName ? ownerName.trim() : "Community Submitter",
+        userId: req.user.id,
+        name: req.user.name || (ownerName ? ownerName.trim() : "Community Submitter"),
+        email: req.user.email || "",
         phone: phone.trim(),
         ipAddress: req.ip || "",
       },
@@ -483,8 +486,8 @@ router.patch("/places/admin/:id/review", verifyToken, requireAdmin, handlePlaceR
 router.patch("/places/:id/review", verifyToken, requireAdmin, handlePlaceReview);
 
 // @route   POST /api/submissions (Legacy Citizen Corner compatibility)
-// @access  Public
-router.post("/", async (req, res) => {
+// @access  Private (Authenticated Users Only)
+router.post("/", verifyToken, async (req, res) => {
   try {
     const { type, title, category, phone, landmark, venue, eventDate, organizer, details, submittedBy } = req.body;
 
@@ -506,7 +509,11 @@ router.post("/", async (req, res) => {
       eventDate: eventDate ? eventDate.trim() : "",
       organizer: organizer ? organizer.trim() : "",
       details: details ? details.trim() : "",
-      submittedBy: submittedBy || { name: "Local Citizen" },
+      submittedBy: {
+        userId: req.user.id,
+        name: req.user.name || submittedBy?.name || "Local Citizen",
+        email: req.user.email || "",
+      },
       status: "pending",
     });
 

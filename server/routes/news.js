@@ -938,10 +938,11 @@ router.get("/admin/all", verifyToken, requireAdmin, async (req, res) => {
 });
 
 // @route   POST /api/news
-// @desc    Post news with optional image/video files (Admin publishes or drafts; Citizens submit to pending review)
-// @access  Public / Private (Open to all visitors and citizens)
+// @desc    Post news with optional image/video files (Requires authenticated user)
+// @access  Private (Authenticated Users Only)
 router.post(
   "/",
+  verifyToken,
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "video", maxCount: 1 },
@@ -951,7 +952,6 @@ router.post(
   async (req, res) => {
     let createdLocalFiles = [];
     try {
-      req.user = getOptionalUser(req);
       const {
         title,
         titleHi,

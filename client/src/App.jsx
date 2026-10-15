@@ -3,6 +3,7 @@ import { Routes, Route, NavLink, Link, useNavigate, useLocation } from "react-ro
 
 import TownPortal from "./pages/TownPortal";
 import { getAuthUser, clearAuthSession, isUserAdmin } from "./utils/authStorage";
+import { performLogout } from "./api";
 import { getCachedSettings, getSiteSettings, DEFAULT_SITE_SETTINGS, subscribeToCMSLiveUpdates } from "./services/cmsService";
 
 // Lazy-Loaded Route Components (Code-split to reduce initial unused JS)
@@ -33,11 +34,25 @@ const MAIN_NAV_ITEMS = [
   { path: "/", label: "Home" },
   { path: "/#explore-categories", label: "Explore", isHash: true },
   { path: "/directory", label: "Directory", count: "37" },
-  { path: "/#events-melas-section", label: "Events & Melas", isHash: true },
   { path: "/#town-map-section", label: "Map", isHash: true },
   { path: "/news", label: "Local Updates" },
-  { path: "/#about-fazilnagar-section", label: "Twin Heritage", isHash: true },
 ];
+
+const isExcludedNavItem = (item) => {
+  if (!item) return true;
+  const p = (item.path || "").toLowerCase();
+  const l = (item.label || "").toLowerCase();
+  const id = (item.id || "").toLowerCase();
+  return (
+    p.includes("events-melas-section") ||
+    p.includes("about-fazilnagar-section") ||
+    l.includes("events & melas") ||
+    l.includes("events and melas") ||
+    l.includes("twin heritage") ||
+    id === "events" ||
+    id === "heritage"
+  );
+};
 
 const DIRECTORY_SUB_NAV = [
   { path: "/directory", label: "Town Directory", icon: "🗺️", badge: "Verified" },
@@ -163,7 +178,7 @@ export default function App() {
   }, []);
 
   const handleLogout = () => {
-    clearAuthSession(true); // logs out current tab session
+    performLogout();
     setUser(null);
   };
 
@@ -212,7 +227,7 @@ export default function App() {
                 <span className="text-base font-extrabold tracking-tight text-[#18232E] leading-none block font-heading">
                   {siteSettings?.navigation?.brandFirst || "FAZIL"}<span className="text-[#B8323C]">{siteSettings?.navigation?.brandSecond || "NAGAR"}</span>
                 </span>
-                <span className="text-[10px] font-medium text-[#647180] tracking-wider block">
+                <span className="text-[10px] font-medium text-[#647180] tracking-wider hidden min-[370px]:block truncate max-w-[170px]">
                   {siteSettings?.navigation?.tagline || "Your Town. Your Community."}
                 </span>
               </div>
@@ -221,8 +236,8 @@ export default function App() {
             {/* Desktop Navigation Links */}
             <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold text-[#18232E]">
               {(siteSettings?.navigation?.navItems && siteSettings.navigation.navItems.length > 0
-                ? siteSettings.navigation.navItems.filter((i) => i.isActive !== false)
-                : MAIN_NAV_ITEMS
+                ? siteSettings.navigation.navItems.filter((i) => i.isActive !== false && !isExcludedNavItem(i))
+                : MAIN_NAV_ITEMS.filter((i) => !isExcludedNavItem(i))
               ).map((item) => {
                 const isHash = item.path.includes("#");
                 const isActiveRoute = location.pathname === item.path || (isHash && location.hash === item.path.substring(item.path.indexOf("#")));
@@ -258,50 +273,37 @@ export default function App() {
                   </Link>
                 );
               })}
-              {isAdmin && (
-                <Link
-                  to="/admin/review"
-                  className={`transition flex items-center gap-1 font-bold ${
-                    location.pathname.startsWith("/admin")
-                      ? "text-[#B8323C]"
-                      : "text-amber-700 hover:text-amber-800"
-                  }`}
-                  title="Admin Review Desk"
-                >
-                  <span className="text-xs">🛡️</span>
-                  <span>Review Desk</span>
-                </Link>
-              )}
             </nav>
 
             {/* Auth & Post Actions Bar */}
             <div className="hidden sm:flex items-center gap-2.5 shrink-0">
               <NotificationCenter />
 
-              {/* Admin Review Desk Button */}
+              {/* Admin Review Desk Icon-Only Control (Exactly ONE on desktop) */}
               {isAdmin && (
                 <Link
                   to="/admin/review"
-                  className={`border text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5 ${
+                  className={`min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl border flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer ${
                     location.pathname.startsWith("/admin")
                       ? "bg-amber-600 text-white border-amber-600 shadow-amber-900/20"
                       : "bg-amber-100 hover:bg-amber-200 text-amber-950 border-amber-300"
                   }`}
-                  title="Open Admin Review Desk"
+                  aria-label="Review Desk"
+                  title="Review Desk"
                 >
-                  <span>🛡️</span>
-                  <span>Review Desk</span>
+                  <ShieldAlert className="w-5 h-5 text-amber-950" aria-hidden="true" />
                 </Link>
               )}
 
-              {/* Add Story Button - Dynamic Label & Link */}
+              {/* Add Story Icon-Only Control */}
               <Link
-                to={siteSettings?.navigation?.actionButtonLink || "/create-news"}
-                className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-extrabold px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5"
-                title={siteSettings?.navigation?.actionButtonText || "Post local news story"}
+                to={user ? (siteSettings?.navigation?.actionButtonLink || "/create-news") : "/login"}
+                state={!user ? { from: "/create-news", message: "Please log in to submit a local story." } : undefined}
+                className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#B8323C] hover:bg-[#991B1B] text-white flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-[#B8323C]/50 cursor-pointer"
+                aria-label="Add Story"
+                title="Add Story"
               >
-                <span>✍️</span>
-                <span>{siteSettings?.navigation?.actionButtonText || "+ Add Story"}</span>
+                <span className="text-base select-none" aria-hidden="true">✍️</span>
               </Link>
 
               {user ? (
@@ -334,26 +336,31 @@ export default function App() {
               )}
             </div>
 
-            {/* Mobile Actions: Notification Bell + Review Desk + Add Story */}
+            {/* Mobile Actions: Notification Bell + Review Desk + Add Story (Icon-Only Controls) */}
             <div className="flex sm:hidden items-center gap-1.5">
               <NotificationCenter />
               {isAdmin && (
                 <Link
                   to="/admin/review"
-                  className="bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 text-[11px] font-black px-2 py-1.5 rounded-xl flex items-center gap-1 shadow-xs"
-                  title="Open Admin Review Desk"
+                  className={`min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl border flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer ${
+                    location.pathname.startsWith("/admin")
+                      ? "bg-amber-600 text-white border-amber-600 shadow-amber-900/20"
+                      : "bg-amber-100 hover:bg-amber-200 text-amber-950 border-amber-300"
+                  }`}
+                  aria-label="Review Desk"
+                  title="Review Desk"
                 >
-                  <span>🛡️</span>
-                  <span>Review</span>
+                  <ShieldAlert className="w-5 h-5 text-amber-950" aria-hidden="true" />
                 </Link>
               )}
               <Link
-                to="/create-news"
-                className="bg-[#B8323C] hover:bg-red-700 text-white text-[11px] font-black px-2.5 py-1.5 rounded-xl flex items-center gap-1 shadow-xs"
-                title="Post a story"
+                to={user ? "/create-news" : "/login"}
+                state={!user ? { from: "/create-news", message: "Please log in to submit a local story." } : undefined}
+                className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#B8323C] hover:bg-red-700 text-white flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-[#B8323C]/50 cursor-pointer"
+                aria-label="Add Story"
+                title="Add Story"
               >
-                <span>✍️</span>
-                <span>+Story</span>
+                <span className="text-base select-none" aria-hidden="true">✍️</span>
               </Link>
             </div>
           </div>
@@ -441,27 +448,14 @@ export default function App() {
                 <span>📍</span>
                 <span>Map</span>
               </a>
-              {isAdmin && (
-                <Link
-                  to="/admin/review"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-amber-50 text-amber-900 border border-amber-300"
-                >
-                  <span>🛡️</span>
-                  <span>Review Desk</span>
-                </Link>
-              )}
-              <a
-                href="/#about-fazilnagar-section"
-                onClick={(e) => {
-                  setMobileMenuOpen(false);
-                  handleNavClick(e, "/#about-fazilnagar-section", true);
-                }}
+              <Link
+                to="/about"
+                onClick={() => setMobileMenuOpen(false)}
                 className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/60"
               >
                 <span>ℹ️</span>
                 <span>About</span>
-              </a>
+              </Link>
             </div>
 
             {/* Mobile Civic Hubs Shortcuts */}
@@ -487,7 +481,8 @@ export default function App() {
             {/* Direct Add Story Button for All Users */}
             <div className="pt-2 border-t border-slate-100 space-y-2">
               <Link
-                to="/create-news"
+                to={user ? "/create-news" : "/login"}
+                state={!user ? { from: "/create-news", message: "Please log in to submit a local story." } : undefined}
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full bg-[#B8323C] hover:bg-red-700 text-white text-xs font-black py-2.5 rounded-xl text-center shadow-xs flex items-center justify-center gap-1.5"
               >
@@ -537,12 +532,12 @@ export default function App() {
       <main
         className={`flex-1 w-full ${
           isNewsPage
-            ? "pt-[88px] sm:pt-[96px] pb-14 sm:pb-0 p-0 m-0 overflow-hidden"
+            ? "pt-16 sm:pt-[96px] pb-14 sm:pb-0 p-0 m-0 overflow-hidden"
             : isPortalPage
-            ? "pt-[88px] sm:pt-[96px] pb-24 sm:pb-8"
+            ? "pt-16 sm:pt-[96px] pb-24 sm:pb-8"
             : hasSubNav
-            ? "pt-[136px] sm:pt-[144px] pb-24 sm:pb-8 max-w-7xl mx-auto px-3 sm:px-6"
-            : "pt-[104px] sm:pt-[112px] pb-24 sm:pb-8 max-w-7xl mx-auto px-3 sm:px-6"
+            ? "pt-[110px] sm:pt-[144px] pb-24 sm:pb-8 max-w-7xl mx-auto px-3 sm:px-6"
+            : "pt-[76px] sm:pt-[112px] pb-24 sm:pb-8 max-w-7xl mx-auto px-3 sm:px-6"
         }`}
       >
         <div key={location.pathname} className={isNewsPage ? "h-full w-full" : isPortalPage ? "w-full" : "animate-page-enter"}>
@@ -557,6 +552,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<TownPortal />} />
               <Route path="/news" element={<ReelsNewsFeed />} />
+              <Route path="/news/:id" element={<ReelsNewsFeed />} />
               <Route path="/local-updates" element={<ReelsNewsFeed />} />
               <Route path="/directory/news" element={<ReelsNewsFeed />} />
               <Route path="/news/classic" element={<News />} />
@@ -650,7 +646,7 @@ export default function App() {
           MOBILE NATIVE BOTTOM APP BAR (Fixed at bottom for phones < 640px)
           Provides effortless 1-thumb native app navigation across the portal
           ======================================================== */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.07)] px-2 py-1.5 flex items-center justify-around pb-[max(0.4rem,env(safe-area-inset-bottom))]">
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.07)] px-2 py-1 flex items-center justify-around pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <NavLink
           to="/"
           end
@@ -660,7 +656,7 @@ export default function App() {
             }
           }}
           className={({ isActive }) =>
-            `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition text-[10px] font-bold ${
+            `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold touch-manipulation ${
               isActive && location.pathname === "/"
                 ? "text-[#B8323C]"
                 : "text-slate-600 hover:text-slate-900"
@@ -674,7 +670,7 @@ export default function App() {
         <NavLink
           to="/directory"
           className={({ isActive }) =>
-            `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition text-[10px] font-bold relative ${
+            `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold relative touch-manipulation ${
               isActive || location.pathname.startsWith("/directory")
                 ? "text-[#B8323C]"
                 : "text-slate-600 hover:text-slate-900"
@@ -683,13 +679,13 @@ export default function App() {
         >
           <Compass className="w-5 h-5 mb-0.5" />
           <span>Directory</span>
-          <span className="absolute top-1 right-2 w-1.5 h-1.5 rounded-full bg-[#0D5E49]"></span>
+          <span className="absolute top-1.5 right-2.5 w-1.5 h-1.5 rounded-full bg-[#0D5E49]"></span>
         </NavLink>
 
         <NavLink
           to="/emergency"
           className={({ isActive }) =>
-            `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition text-[10px] font-bold ${
+            `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold touch-manipulation ${
               isActive
                 ? "text-[#B8323C]"
                 : "text-slate-600 hover:text-slate-900"
@@ -703,7 +699,7 @@ export default function App() {
         <NavLink
           to="/news"
           className={({ isActive }) =>
-            `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition text-[10px] font-bold ${
+            `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold touch-manipulation ${
               isActive
                 ? "text-[#B8323C]"
                 : "text-slate-600 hover:text-slate-900"
@@ -717,7 +713,7 @@ export default function App() {
         <button
           type="button"
           onClick={() => setMobileMenuOpen((prev) => !prev)}
-          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition text-[10px] font-bold cursor-pointer ${
+          className={`flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold cursor-pointer touch-manipulation ${
             mobileMenuOpen
               ? "text-[#B8323C]"
               : "text-slate-600 hover:text-slate-900"

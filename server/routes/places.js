@@ -312,9 +312,9 @@ function syncJsonPlaces(mutator) {
 }
 
 // @route   POST /api/places
-// @desc    Create or submit a place
-// @access  Public / Admin
-router.post("/", async (req, res) => {
+// @desc    Create an official place directly in directory
+// @access  Private (Admin Only)
+router.post("/", verifyToken, requireAdmin, async (req, res) => {
   try {
     const {
       name,

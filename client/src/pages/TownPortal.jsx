@@ -7,7 +7,9 @@ import InstallButton from "../components/InstallButton";
 import AdvertisementSlot from "../components/AdvertisementSlot";
 import { usePageSEO } from "../utils/seo";
 import CommunityPlaceModal from "../components/CommunityPlaceModal";
-import { getAuthUser, clearAuthSession } from "../utils/authStorage";
+import { getAuthUser, clearAuthSession, getAuthToken } from "../utils/authStorage";
+import { performLogout } from "../api";
+import StoryVideoPreview from "../components/StoryVideoPreview";
 import {
   getSiteSettings,
   DEFAULT_SITE_SETTINGS,
@@ -387,7 +389,7 @@ export default function TownPortal() {
   }, []);
 
   const handleLogout = () => {
-    clearAuthSession(true);
+    performLogout();
     setCurrentUser(null);
   };
 
@@ -485,8 +487,33 @@ export default function TownPortal() {
     if (mapSec) mapSec.scrollIntoView({ behavior: "smooth" });
   };
 
+  const handleRequireAuthAction = (action, actionName = "continue") => {
+    if (!getAuthToken()) {
+      showToast(`Please sign in to ${actionName}.`);
+      navigate("/login", {
+        state: {
+          from: "/",
+          message: `Please log in to ${actionName}.`,
+        },
+      });
+      return;
+    }
+    action();
+  };
+
   const handleFormSubmit = async (e, type) => {
     e.preventDefault();
+    if (!getAuthToken()) {
+      showToast("Authentication required: Please sign in to submit.");
+      navigate("/login", {
+        state: {
+          from: "/",
+          message: "Please log in to submit suggestions or announcements.",
+        },
+      });
+      return;
+    }
+
     const form = e.target;
     const formData = new FormData(form);
 
@@ -943,7 +970,7 @@ export default function TownPortal() {
             <div className="flex flex-wrap items-center gap-2.5">
               <button
                 type="button"
-                onClick={() => setCommunityModalOpen(true)}
+                onClick={() => handleRequireAuthAction(() => setCommunityModalOpen(true), "add a place to the town directory")}
                 className="bg-[#0D5E49] hover:bg-emerald-800 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
                 title="Add place with exact map location and images (4-Step Wizard)"
               >
@@ -1432,8 +1459,10 @@ export default function TownPortal() {
               <button
                 type="button"
                 onClick={() => {
-                  setModalType("event");
-                  setCommunityModalOpen(true);
+                  handleRequireAuthAction(() => {
+                    setModalType("event");
+                    setCommunityModalOpen(true);
+                  }, "submit a local event or mela");
                 }}
                 className="inline-flex items-center gap-1.5 bg-[#0D5E49] hover:bg-[#0a4838] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-xs cursor-pointer"
               >
@@ -1673,7 +1702,14 @@ export default function TownPortal() {
                   key={item._id || item.id}
                   className="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-slate-700 transition-all group"
                 >
-                  {item.image && (
+                  {(item.mediaType === "video" || item.video) ? (
+                    <StoryVideoPreview
+                      story={item}
+                      className="h-40 w-full"
+                      aspectRatio="aspect-auto"
+                      fallbackPoster={item.image || ""}
+                    />
+                  ) : item.image ? (
                     <div className="h-40 w-full overflow-hidden bg-slate-950">
                       <img
                         src={item.image}
@@ -1681,7 +1717,7 @@ export default function TownPortal() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
-                  )}
+                  ) : null}
                   <div className="p-5 flex-1 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between text-xs mb-2">
@@ -2276,7 +2312,7 @@ export default function TownPortal() {
                 </p>
               </div>
               <button
-                onClick={() => setModalType("business")}
+                onClick={() => handleRequireAuthAction(() => setModalType("business"), "suggest a business or place")}
                 className="w-full bg-[#18232E] hover:bg-[#B8323C] text-white font-bold text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs"
               >
                 <PlusCircle className="w-4 h-4" />
@@ -2296,7 +2332,7 @@ export default function TownPortal() {
                 </p>
               </div>
               <button
-                onClick={() => setModalType("correction")}
+                onClick={() => handleRequireAuthAction(() => setModalType("correction"), "report incorrect information")}
                 className="w-full bg-white hover:bg-slate-50 text-[#18232E] border border-[#E1E6EA] font-bold text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs"
               >
                 <AlertCircle className="w-4 h-4 text-amber-600" />
@@ -2316,7 +2352,7 @@ export default function TownPortal() {
                 </p>
               </div>
               <button
-                onClick={() => setModalType("event")}
+                onClick={() => handleRequireAuthAction(() => setModalType("event"), "submit a local event")}
                 className="w-full bg-[#0D5E49] hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs"
               >
                 <CalendarPlus className="w-4 h-4" />
@@ -2389,8 +2425,8 @@ export default function TownPortal() {
               Support & Legal
             </h3>
             <ul className="space-y-2 text-xs">
-              <li><button onClick={() => setModalType("correction")} className="hover:text-white text-left cursor-pointer py-1 inline-block">Report Inaccurate Data</button></li>
-              <li><button onClick={() => setModalType("business")} className="hover:text-white text-left cursor-pointer py-1 inline-block">Suggest New Place</button></li>
+              <li><button onClick={() => handleRequireAuthAction(() => setModalType("correction"), "report inaccurate data")} className="hover:text-white text-left cursor-pointer py-1 inline-block">Report Inaccurate Data</button></li>
+              <li><button onClick={() => handleRequireAuthAction(() => setModalType("business"), "suggest a new place")} className="hover:text-white text-left cursor-pointer py-1 inline-block">Suggest New Place</button></li>
               <li><Link to="/admin/review" className="hover:text-amber-300 text-amber-400 font-bold flex items-center gap-1"><span>🛡️</span> Admin Review Desk</Link></li>
               <li><span className="text-slate-400">Postal Area: PIN 274401</span></li>
               <li><span className="text-slate-400">District: Kushinagar, UP</span></li>
@@ -2421,6 +2457,41 @@ export default function TownPortal() {
             >
               <X className="w-5 h-5" />
             </button>
+
+            {!getAuthToken() ? (
+              <div className="text-center py-4 space-y-3">
+                <div className="w-12 h-12 bg-amber-100 text-amber-800 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+                  <Store className="w-6 h-6 text-amber-700" />
+                </div>
+                <h3 className="text-base font-bold text-slate-900">Sign in Required</h3>
+                <p className="text-xs text-slate-600 max-w-xs mx-auto">
+                  Please sign in or create an account to submit places, report corrections, or broadcast town announcements.
+                </p>
+                <div className="flex gap-2 pt-2 justify-center">
+                  <button
+                    onClick={() => {
+                      setModalType(null);
+                      navigate("/login", {
+                        state: {
+                          from: "/",
+                          message: "Please log in to submit suggestions or announcements.",
+                        },
+                      });
+                    }}
+                    className="bg-[#18232E] hover:bg-[#B8323C] text-white font-bold py-2 px-4 rounded-xl text-xs transition cursor-pointer"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => setModalType(null)}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-xl text-xs transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
 
             {modalType === "business" && (
               <>
@@ -2589,6 +2660,8 @@ export default function TownPortal() {
                     Broadcast Event
                   </button>
                 </form>
+              </>
+            )}
               </>
             )}
           </div>

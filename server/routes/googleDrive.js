@@ -507,10 +507,11 @@ router.get("/oauth/callback", async (req, res) => {
 /**
  * @route   POST /api/google-drive/upload
  * @desc    Standard media upload endpoint for the website to store images/videos in Google Drive.
- * @access  Public (or Authenticated)
+ * @access  Private (Authenticated Users Only)
  */
 router.post(
   "/upload",
+  verifyToken,
   uploadMem.fields([
     { name: "file", maxCount: 1 },
     { name: "image", maxCount: 1 },
@@ -525,22 +526,11 @@ router.post(
         return res.status(400).json({ message: "No media file provided for upload." });
       }
 
-      // Check optional user auth from bearer token if present
-      let user = null;
-      const authHeader = req.headers.authorization;
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        try {
-          const token = authHeader.split(" ")[1];
-          const secretKey = process.env.JWT_SECRET || "fallback_secret_key";
-          user = jwt.verify(token, secretKey);
-        } catch (_) {}
-      }
-
       const { mediaDoc } = await uploadMediaToDrive({
         buffer: file.buffer,
         originalName: file.originalname || "upload",
         mimeType: file.mimetype || "application/octet-stream",
-        user,
+        user: req.user,
         isTest: false,
       });
 

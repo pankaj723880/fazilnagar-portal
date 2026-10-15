@@ -23,7 +23,7 @@ describe("CMS Models & Dynamic Schemas Verification", () => {
     assert.equal(settings.navigation.brandFirst, "FAZIL");
     assert.equal(settings.navigation.brandSecond, "NAGAR");
     assert.ok(Array.isArray(settings.navigation.navItems));
-    assert.ok(settings.navigation.navItems.length >= 7);
+    assert.ok(settings.navigation.navItems.length >= 5);
     assert.ok(Array.isArray(settings.heroContent.trustBadges));
     assert.ok(settings.heroContent.trustBadges.length >= 3);
     assert.ok(Array.isArray(settings.heroContent.actionButtons));

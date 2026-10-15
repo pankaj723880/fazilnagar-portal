@@ -2,6 +2,8 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import RevokedToken from "../models/RevokedToken.js";
+import verifyToken from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -128,6 +130,71 @@ router.post("/login", async (req, res) => {
   } catch (err) {
     console.error("Login Error:", err);
     res.status(500).json({ message: "Server error during login." });
+  }
+});
+
+// @route   POST /api/auth/logout
+// @desc    Invalidate token session on server
+// @access  Public / Authenticated
+router.post("/logout", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      if (token && token !== "undefined" && token !== "null") {
+        let userId = null;
+        try {
+          const secretKey = process.env.JWT_SECRET || "fallback_secret_key";
+          const decoded = jwt.verify(token, secretKey);
+          userId = decoded.id;
+        } catch {
+          // Token may already be expired or malformed, but still record in RevokedToken
+        }
+
+        await RevokedToken.findOneAndUpdate(
+          { token },
+          { token, userId, revokedAt: new Date() },
+          { upsert: true, new: true }
+        );
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully. Authentication token invalidated.",
+    });
+  } catch (err) {
+    console.error("Logout Error:", err);
+    res.status(500).json({ message: "Server error during logout." });
+  }
+});
+
+// @route   GET /api/auth/me
+// @desc    Get current authenticated user profile
+// @access  Private
+router.get("/me", verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    if (user.status === "inactive" || user.status === "suspended") {
+      return res.status(403).json({ message: "Account is inactive or suspended." });
+    }
+    res.status(200).json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone || "",
+        role: user.role || "user",
+        status: user.status || "active",
+        lastLogin: user.lastLogin,
+      },
+    });
+  } catch (err) {
+    console.error("Get Me Error:", err);
+    res.status(500).json({ message: "Server error fetching user profile." });
   }
 });
 
