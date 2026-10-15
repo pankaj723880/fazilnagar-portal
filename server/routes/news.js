@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -20,6 +21,23 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+// Allowed MIME types for story photos and video clips
+const ALLOWED_IMAGE_MIMES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/svg+xml",
+];
+
+const ALLOWED_VIDEO_MIMES = [
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+  "video/x-msvideo",
+];
+
 // Multer storage setup for image and video uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -35,7 +53,102 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+  fileFilter: (req, file, cb) => {
+    const mime = (file.mimetype || "").toLowerCase();
+    if (ALLOWED_IMAGE_MIMES.includes(mime) || ALLOWED_VIDEO_MIMES.includes(mime)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Unsupported file format. Please upload a valid image (JPG, PNG, WebP, GIF, SVG) or video (MP4, WebM, MOV)."));
+    }
+  },
 });
+
+// Helper to reliably normalize stored media URLs across hosts, origins, and environments
+export function normalizeMediaUrl(rawUrl, req) {
+  if (!rawUrl || typeof rawUrl !== "string") return "";
+  const trimmed = rawUrl.trim();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("blob:")) return "";
+  if (trimmed.startsWith("data:")) return trimmed;
+
+  const configuredBase = (process.env.BACKEND_URL || "").replace(/\/+$/, "");
+  let hostBase = "";
+  if (req && req.get) {
+    const protocol =
+      req.protocol === "https" || req.secure || req.headers["x-forwarded-proto"] === "https"
+        ? "https"
+        : "http";
+    const host = req.get("host") || "localhost:5000";
+    hostBase = `${protocol}://${host}`;
+  }
+  const effectiveBase = configuredBase || hostBase || "https://fazilnagar-portal.onrender.com";
+
+  // Rewrite legacy hardcoded localhost / loopback URLs to the active reachable backend base
+  if (trimmed.includes("localhost:") || trimmed.includes("127.0.0.1:")) {
+    const uploadsIdx = trimmed.indexOf("/uploads/");
+    if (uploadsIdx !== -1) {
+      return `${effectiveBase}${trimmed.substring(uploadsIdx)}`;
+    }
+    const driveIdx = trimmed.indexOf("/api/google-drive/");
+    if (driveIdx !== -1) {
+      return `${effectiveBase}${trimmed.substring(driveIdx)}`;
+    }
+  }
+
+  if (trimmed.startsWith("/")) {
+    return `${effectiveBase}${trimmed}`;
+  }
+
+  return trimmed;
+}
+
+// Helper to reliably detect media types and ensure proper image/video assignment
+export function formatNewsMedia(item, req) {
+  if (!item) return { image: "", video: "", mediaUrl: "", mediaType: "none" };
+
+  let image = normalizeMediaUrl(item.image, req);
+  let video = normalizeMediaUrl(item.video, req);
+  let mediaUrl = normalizeMediaUrl(item.mediaUrl, req);
+  let mediaType = (item.mediaType || "none").toLowerCase();
+
+  const isVideoExt = (url) => /\.(mp4|webm|mov|ogg|avi|m4v)($|\?)/i.test(url);
+  const isImageExt = (url) => /\.(png|jpe?g|webp|gif|svg|bmp)($|\?)/i.test(url);
+
+  // If item.video is actually an image (e.g. video-123.png)
+  if (video && isImageExt(video)) {
+    if (!image) image = video;
+    video = "";
+    mediaType = "image";
+  }
+
+  // If item.image is actually a video (e.g. image-123.mp4)
+  if (image && isVideoExt(image)) {
+    if (!video) video = image;
+    image = "";
+    mediaType = "video";
+  }
+
+  if (!mediaUrl) {
+    mediaUrl = video || image || "";
+  }
+
+  if (!mediaType || mediaType === "none") {
+    if (video) mediaType = "video";
+    else if (image) mediaType = "image";
+    else if (mediaUrl) mediaType = isVideoExt(mediaUrl) ? "video" : "image";
+    else mediaType = "none";
+  }
+
+  // Ensure image is populated if mediaType is image and vice versa
+  if (mediaType === "image" && !image && mediaUrl) {
+    image = mediaUrl;
+  }
+  if (mediaType === "video" && !video && mediaUrl) {
+    video = mediaUrl;
+  }
+
+  return { image, video, mediaUrl, mediaType };
+}
 
 // Helper to sanitize comment text (prevents stored XSS)
 function sanitizeText(str) {
@@ -116,35 +229,28 @@ router.get("/feed", async (req, res) => {
       }
     }
 
-    // Attach like status for the current user or client anonId
+    // Attach like status for the verified authenticated user (guests cannot like)
     const storyIds = stories.map((s) => s._id);
     let userLikedSet = new Set();
 
-    if (storyIds.length > 0) {
-      let likeQuery = null;
-      if (user?.id) {
-        likeQuery = { newsId: { $in: storyIds }, userId: user.id };
-      } else if (anonId) {
-        likeQuery = { newsId: { $in: storyIds }, anonId: String(anonId).trim() };
-      }
-
-      if (likeQuery) {
-        const userLikes = await Like.find(likeQuery).select("newsId").lean();
-        userLikedSet = new Set(userLikes.map((l) => String(l.newsId)));
-      }
+    if (storyIds.length > 0 && user?.id) {
+      const userLikes = await Like.find({ newsId: { $in: storyIds }, userId: user.id })
+        .select("newsId")
+        .lean();
+      userLikedSet = new Set(userLikes.map((l) => String(l.newsId)));
     }
 
-    const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal.onrender.com").replace(/\/+$/, "");
-
-    // Map stories with accurate likeCount, commentCount, and isLiked boolean
-    const enrichedStories = stories.map((s) => ({
-      ...s,
-      image: s.image && s.image.startsWith("/") ? `${backendBase}${s.image}` : s.image,
-      video: s.video && s.video.startsWith("/") ? `${backendBase}${s.video}` : s.video,
-      likeCount: s.likeCount ?? s.likes ?? 0,
-      commentCount: s.commentCount ?? 0,
-      isLiked: userLikedSet.has(String(s._id)),
-    }));
+    // Map stories with accurate likeCount, commentCount, normalized media URLs and mediaType
+    const enrichedStories = stories.map((s) => {
+      const media = formatNewsMedia(s, req);
+      return {
+        ...s,
+        ...media,
+        likeCount: s.likeCount ?? s.likes ?? 0,
+        commentCount: s.commentCount ?? 0,
+        isLiked: userLikedSet.has(String(s._id)),
+      };
+    });
 
     res.status(200).json({
       stories: enrichedStories,
@@ -166,12 +272,15 @@ router.get("/feed", async (req, res) => {
 
 // @route   POST /api/news/:id/like
 // @desc    Toggle like state for a news reel story
-// @access  Public / Authenticated
-router.post("/:id/like", async (req, res) => {
+// @access  Private (Authenticated Users Only)
+router.post("/:id/like", verifyToken, async (req, res) => {
   try {
     const newsId = req.params.id;
-    const user = getOptionalUser(req);
-    const anonId = req.headers["x-anon-id"] || req.body.anonId || null;
+    if (!mongoose.Types.ObjectId.isValid(newsId)) {
+      return res.status(400).json({ message: "Invalid news story ID." });
+    }
+
+    const userId = req.user.id || req.user._id;
     const ip = req.ip || req.connection?.remoteAddress || "";
 
     const story = await News.findById(newsId);
@@ -179,19 +288,7 @@ router.post("/:id/like", async (req, res) => {
       return res.status(404).json({ message: "News story not found." });
     }
 
-    if (!user?.id && !anonId) {
-      return res.status(400).json({ message: "Identifier (user token or client ID) required to like." });
-    }
-
-    // Build query to find existing like
-    const query = { newsId };
-    if (user?.id) {
-      query.userId = user.id;
-    } else {
-      query.anonId = String(anonId).trim();
-    }
-
-    const existingLike = await Like.findOne(query);
+    const existingLike = await Like.findOne({ newsId, userId });
 
     if (existingLike) {
       // User is UNLIKING
@@ -220,8 +317,7 @@ router.post("/:id/like", async (req, res) => {
       try {
         await Like.create({
           newsId,
-          userId: user?.id || null,
-          anonId: user?.id ? null : String(anonId).trim(),
+          userId,
           userIp: ip,
         });
 
@@ -319,13 +415,16 @@ router.get("/:id/comments", async (req, res) => {
 
 // @route   POST /api/news/:id/comments
 // @desc    Submit a new comment or reply to any comment/reply at unlimited depth
-// @access  Public (Citizen or Authenticated)
-router.post("/:id/comments", async (req, res) => {
+// @access  Private (Authenticated Users Only)
+router.post("/:id/comments", verifyToken, async (req, res) => {
   try {
     const newsId = req.params.id;
-    const { text, authorName, parentId, replyToAuthorName } = req.body;
-    const user = getOptionalUser(req);
-    const anonId = req.headers["x-anon-id"] || req.body.anonId || null;
+    if (!mongoose.Types.ObjectId.isValid(newsId)) {
+      return res.status(400).json({ message: "Invalid news story ID." });
+    }
+
+    const { text, parentId, replyToAuthorName } = req.body;
+    const userId = req.user.id || req.user._id;
 
     if (!text || text.trim().length === 0) {
       return res.status(400).json({ message: "Comment text cannot be empty." });
@@ -363,9 +462,9 @@ router.post("/:id/comments", async (req, res) => {
       }
     }
 
-    // Determine author name
+    // Determine author name from verified user identity
     const finalAuthorName = sanitizeText(
-      user?.name || authorName || "Fazilnagar Resident"
+      req.user.name || "Fazilnagar Resident"
     ).slice(0, 60);
     const sanitizedText = sanitizeText(text);
 
@@ -373,8 +472,7 @@ router.post("/:id/comments", async (req, res) => {
       newsId,
       parentId: verifiedParentId,
       replyToAuthorName: targetReplyAuthor,
-      userId: user?.id || null,
-      anonId: user?.id ? null : (anonId ? String(anonId).trim() : null),
+      userId,
       authorName: finalAuthorName,
       text: sanitizedText,
       status: "visible",
@@ -402,13 +500,16 @@ router.post("/:id/comments", async (req, res) => {
 
 // @route   POST /api/news/:id/comments/:commentId/replies
 // @desc    Add a reply to an existing comment (supports legacy route)
-// @access  Public (Citizen or Authenticated)
-router.post("/:id/comments/:commentId/replies", async (req, res) => {
+// @access  Private (Authenticated Users Only)
+router.post("/:id/comments/:commentId/replies", verifyToken, async (req, res) => {
   try {
     const { id: newsId, commentId } = req.params;
-    const { text, authorName } = req.body;
-    const user = getOptionalUser(req);
-    const anonId = req.headers["x-anon-id"] || req.body.anonId || null;
+    if (!mongoose.Types.ObjectId.isValid(newsId) || !mongoose.Types.ObjectId.isValid(commentId)) {
+      return res.status(400).json({ message: "Invalid ID parameters." });
+    }
+
+    const { text } = req.body;
+    const userId = req.user.id || req.user._id;
 
     if (!text || text.trim().length === 0) {
       return res.status(400).json({ message: "Reply text cannot be empty." });
@@ -424,7 +525,7 @@ router.post("/:id/comments/:commentId/replies", async (req, res) => {
     }
 
     const finalAuthorName = sanitizeText(
-      user?.name || authorName || "Fazilnagar Resident"
+      req.user.name || "Fazilnagar Resident"
     ).slice(0, 60);
     const sanitizedText = sanitizeText(text);
 
@@ -432,8 +533,7 @@ router.post("/:id/comments/:commentId/replies", async (req, res) => {
       newsId,
       parentId: parentComment._id,
       replyToAuthorName: parentComment.authorName,
-      userId: user?.id || null,
-      anonId: user?.id ? null : (anonId ? String(anonId).trim() : null),
+      userId,
       authorName: finalAuthorName,
       text: sanitizedText,
       status: "visible",
@@ -460,17 +560,14 @@ router.post("/:id/comments/:commentId/replies", async (req, res) => {
 
 // @route   POST /api/news/:id/comments/:commentId/like
 // @desc    Toggle like state for any comment or reply node
-// @access  Public / Authenticated
-router.post("/:id/comments/:commentId/like", async (req, res) => {
+// @access  Private (Authenticated Users Only)
+router.post("/:id/comments/:commentId/like", verifyToken, async (req, res) => {
   try {
     const { id: newsId, commentId } = req.params;
-    const user = getOptionalUser(req);
-    const anonId = req.headers["x-anon-id"] || req.body.anonId || null;
-    const identifier = user?.id ? String(user.id) : (anonId ? String(anonId).trim() : null);
-
-    if (!identifier) {
-      return res.status(400).json({ message: "Identifier required to like comment." });
+    if (!mongoose.Types.ObjectId.isValid(newsId) || !mongoose.Types.ObjectId.isValid(commentId)) {
+      return res.status(400).json({ message: "Invalid ID parameters." });
     }
+    const identifier = String(req.user.id || req.user._id);
 
     let comment = await Comment.findOne({ _id: commentId, newsId });
     if (!comment) {
@@ -524,19 +621,14 @@ router.post("/:id/comments/:commentId/like", async (req, res) => {
 
 // @route   POST /api/news/:id/comments/:commentId/replies/:replyId/like
 // @desc    Toggle like state for a reply (supports legacy route)
-// @access  Public / Authenticated
-router.post("/:id/comments/:commentId/replies/:replyId/like", async (req, res) => {
+// @access  Private (Authenticated Users Only)
+router.post("/:id/comments/:commentId/replies/:replyId/like", verifyToken, async (req, res) => {
   try {
     const { id: newsId, replyId } = req.params;
-    req.params.commentId = replyId;
-    // Delegate directly to the unified comment/reply like endpoint
-    const user = getOptionalUser(req);
-    const anonId = req.headers["x-anon-id"] || req.body.anonId || null;
-    const identifier = user?.id ? String(user.id) : (anonId ? String(anonId).trim() : null);
-
-    if (!identifier) {
-      return res.status(400).json({ message: "Identifier required to like reply." });
+    if (!mongoose.Types.ObjectId.isValid(newsId) || !mongoose.Types.ObjectId.isValid(replyId)) {
+      return res.status(400).json({ message: "Invalid ID parameters." });
     }
+    const identifier = String(req.user.id || req.user._id);
 
     let comment = await Comment.findOne({ _id: replyId, newsId });
     if (!comment) {
@@ -588,12 +680,14 @@ router.post("/:id/comments/:commentId/replies/:replyId/like", async (req, res) =
 
 // @route   DELETE /api/news/:id/comments/:commentId
 // @desc    Delete a comment or reply with cascading branch deletion
-// @access  Public with verification or Authenticated
-router.delete("/:id/comments/:commentId", async (req, res) => {
+// @access  Private (Comment Author, Story Creator, or Admin)
+router.delete("/:id/comments/:commentId", verifyToken, async (req, res) => {
   try {
     const { id: newsId, commentId } = req.params;
-    const user = getOptionalUser(req);
-    const anonId = req.headers["x-anon-id"] || req.query.anonId || req.body?.anonId || null;
+    if (!mongoose.Types.ObjectId.isValid(newsId) || !mongoose.Types.ObjectId.isValid(commentId)) {
+      return res.status(400).json({ message: "Invalid ID parameters." });
+    }
+    const user = req.user;
 
     let [comment, story] = await Promise.all([
       Comment.findById(commentId),
@@ -607,11 +701,10 @@ router.delete("/:id/comments/:commentId", async (req, res) => {
         const reply = parentWithReply.replies.id(commentId);
         if (reply) {
           const isAdmin = user?.role === "admin" || user?.email === "pankaj723880@gmail.com";
-          const isReplyAuthorUser = user?.id && reply.userId && String(reply.userId) === String(user.id);
-          const isReplyAuthorAnon = !reply.userId && anonId && reply.anonId && String(reply.anonId) === String(anonId).trim();
+          const isReplyAuthor = user?.id && reply.userId && String(reply.userId) === String(user.id);
           const isStoryAuthor = user?.id && story?.author && String(story.author) === String(user.id);
 
-          if (!isAdmin && !isReplyAuthorUser && !isReplyAuthorAnon && !isStoryAuthor) {
+          if (!isAdmin && !isReplyAuthor && !isStoryAuthor) {
             return res.status(403).json({
               message: "You are not authorized to delete this reply. Only the author, story creator, or admin can delete it.",
             });
@@ -636,11 +729,10 @@ router.delete("/:id/comments/:commentId", async (req, res) => {
 
     // Check authorization:
     const isAdmin = user?.role === "admin" || user?.email === "pankaj723880@gmail.com";
-    const isCommentAuthorUser = user?.id && comment.userId && String(comment.userId) === String(user.id);
-    const isCommentAuthorAnon = !comment.userId && anonId && comment.anonId && String(comment.anonId) === String(anonId).trim();
+    const isCommentAuthor = user?.id && comment.userId && String(comment.userId) === String(user.id);
     const isStoryAuthor = user?.id && story?.author && String(story.author) === String(user.id);
 
-    if (!isAdmin && !isCommentAuthorUser && !isCommentAuthorAnon && !isStoryAuthor) {
+    if (!isAdmin && !isCommentAuthor && !isStoryAuthor) {
       return res.status(403).json({
         message: "You are not authorized to delete this comment. Only the commenter, story author, or admin can delete it.",
       });
@@ -689,14 +781,16 @@ router.delete("/:id/comments/:commentId", async (req, res) => {
 
 // @route   DELETE /api/news/:id/comments/:commentId/replies/:replyId
 // @desc    Delete a reply (supports legacy route)
-// @access  Public with verification or Authenticated
-router.delete("/:id/comments/:commentId/replies/:replyId", async (req, res) => {
+// @access  Private (Reply Author, Story Creator, or Admin)
+router.delete("/:id/comments/:commentId/replies/:replyId", verifyToken, async (req, res) => {
   // Delegate directly to the recursive delete route using replyId
   req.params.commentId = req.params.replyId;
   try {
     const { id: newsId, replyId } = req.params;
-    const user = getOptionalUser(req);
-    const anonId = req.headers["x-anon-id"] || req.query.anonId || req.body?.anonId || null;
+    if (!mongoose.Types.ObjectId.isValid(newsId) || !mongoose.Types.ObjectId.isValid(replyId)) {
+      return res.status(400).json({ message: "Invalid ID parameters." });
+    }
+    const user = req.user;
 
     let [comment, story] = await Promise.all([
       Comment.findById(replyId),
@@ -709,11 +803,10 @@ router.delete("/:id/comments/:commentId/replies/:replyId", async (req, res) => {
         const reply = parentWithReply.replies.id(replyId);
         if (reply) {
           const isAdmin = user?.role === "admin" || user?.email === "pankaj723880@gmail.com";
-          const isReplyAuthorUser = user?.id && reply.userId && String(reply.userId) === String(user.id);
-          const isReplyAuthorAnon = !reply.userId && anonId && reply.anonId && String(reply.anonId) === String(anonId).trim();
+          const isReplyAuthor = user?.id && reply.userId && String(reply.userId) === String(user.id);
           const isStoryAuthor = user?.id && story?.author && String(story.author) === String(user.id);
 
-          if (!isAdmin && !isReplyAuthorUser && !isReplyAuthorAnon && !isStoryAuthor) {
+          if (!isAdmin && !isReplyAuthor && !isStoryAuthor) {
             return res.status(403).json({
               message: "You are not authorized to delete this reply. Only the author, story creator, or admin can delete it.",
             });
@@ -737,11 +830,10 @@ router.delete("/:id/comments/:commentId/replies/:replyId", async (req, res) => {
     }
 
     const isAdmin = user?.role === "admin" || user?.email === "pankaj723880@gmail.com";
-    const isReplyAuthorUser = user?.id && comment.userId && String(comment.userId) === String(user.id);
-    const isReplyAuthorAnon = !comment.userId && anonId && comment.anonId && String(comment.anonId) === String(anonId).trim();
+    const isReplyAuthor = user?.id && comment.userId && String(comment.userId) === String(user.id);
     const isStoryAuthor = user?.id && story?.author && String(story.author) === String(user.id);
 
-    if (!isAdmin && !isReplyAuthorUser && !isReplyAuthorAnon && !isStoryAuthor) {
+    if (!isAdmin && !isReplyAuthor && !isStoryAuthor) {
       return res.status(403).json({
         message: "You are not authorized to delete this reply. Only the author, story creator, or admin can delete it.",
       });
@@ -810,12 +902,10 @@ router.get("/", async (req, res) => {
       .populate("author", "name email role")
       .sort({ isFeatured: -1, publishedAt: -1, createdAt: -1 });
 
-    const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal.onrender.com").replace(/\/+$/, "");
     const normalizedNews = news.map((item) => {
       const obj = item.toObject();
-      if (obj.image && obj.image.startsWith("/")) obj.image = `${backendBase}${obj.image}`;
-      if (obj.video && obj.video.startsWith("/")) obj.video = `${backendBase}${obj.video}`;
-      return obj;
+      const media = formatNewsMedia(obj, req);
+      return { ...obj, ...media };
     });
 
     res.status(200).json(normalizedNews);
@@ -834,12 +924,10 @@ router.get("/admin/all", verifyToken, requireAdmin, async (req, res) => {
       .populate("author", "name email role")
       .sort({ createdAt: -1 });
 
-    const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal.onrender.com").replace(/\/+$/, "");
     const normalizedStories = allStories.map((item) => {
       const obj = item.toObject();
-      if (obj.image && obj.image.startsWith("/")) obj.image = `${backendBase}${obj.image}`;
-      if (obj.video && obj.video.startsWith("/")) obj.video = `${backendBase}${obj.video}`;
-      return obj;
+      const media = formatNewsMedia(obj, req);
+      return { ...obj, ...media };
     });
 
     res.status(200).json(normalizedStories);
@@ -857,8 +945,11 @@ router.post(
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "video", maxCount: 1 },
+    { name: "media", maxCount: 1 },
+    { name: "file", maxCount: 1 },
   ]),
   async (req, res) => {
+    let createdLocalFiles = [];
     try {
       req.user = getOptionalUser(req);
       const {
@@ -871,6 +962,9 @@ router.post(
         location,
         source,
         imageUrl: providedImageUrl,
+        videoUrl: providedVideoUrl,
+        mediaUrl: providedMediaUrl,
+        mediaType: providedMediaType,
         isFeatured,
         isPublished,
         status,
@@ -880,45 +974,91 @@ router.post(
         return res.status(400).json({ message: "Headline and story description/summary are required." });
       }
 
+      // Check for and reject invalid blob URLs
       let imagePath = (providedImageUrl || "").trim();
-      let videoPath = "";
+      let videoPath = (providedVideoUrl || "").trim();
+      let mediaUrl = (providedMediaUrl || "").trim();
 
-      const host = req.get("host") || "localhost:5000";
-      const protocol =
-        req.protocol === "https" || req.secure || req.headers["x-forwarded-proto"] === "https"
-          ? "https"
-          : "http";
-      const baseUrl = `${protocol}://${host}`;
+      if (imagePath.startsWith("blob:")) imagePath = "";
+      if (videoPath.startsWith("blob:")) videoPath = "";
+      if (mediaUrl.startsWith("blob:")) mediaUrl = "";
 
-      if (req.files?.image?.[0]) {
-        try {
-          const imgFile = req.files.image[0];
-          const fileBuffer = fs.readFileSync(imgFile.path);
-          const mime = imgFile.mimetype || "image/jpeg";
+      let mediaType = (providedMediaType || "none").toLowerCase();
+      let mediaMeta = null;
 
-          // Upload to dedicated Google Drive folder (Fazilnagar Media)
-          try {
-            const { mediaDoc } = await uploadMediaToDrive({
-              buffer: fileBuffer,
-              originalName: imgFile.originalname || "news_image.jpg",
-              mimeType: mime,
-              user: req.user,
-            });
-            imagePath = mediaDoc.deliveryUrl;
-          } catch (driveErr) {
-            console.warn("[News] Drive upload fallback:", driveErr.message);
-            imagePath = `data:${mime};base64,${fileBuffer.toString("base64")}`;
-          }
+      // Identify uploaded file from fields (image, video, media, file)
+      const rawImageFile = req.files?.image?.[0];
+      const rawVideoFile = req.files?.video?.[0];
+      const genericMediaFile = req.files?.media?.[0] || req.files?.file?.[0];
 
-          try { fs.unlinkSync(imgFile.path); } catch (_) {}
-        } catch (e) {
-          console.warn("Base64 conversion error:", e);
-          imagePath = `${baseUrl}/uploads/${req.files.image[0].filename}`;
+      let imageFile = rawImageFile;
+      let videoFile = rawVideoFile;
+
+      // Smart detection based on actual MIME type or file extension
+      const isVideoFile = (f) => {
+        if (!f) return false;
+        const mime = (f.mimetype || "").toLowerCase();
+        const ext = path.extname(f.originalname || f.filename || "").toLowerCase();
+        return ALLOWED_VIDEO_MIMES.includes(mime) || [".mp4", ".webm", ".mov", ".ogg", ".avi"].includes(ext);
+      };
+
+      const isImageFile = (f) => {
+        if (!f) return false;
+        const mime = (f.mimetype || "").toLowerCase();
+        const ext = path.extname(f.originalname || f.filename || "").toLowerCase();
+        return ALLOWED_IMAGE_MIMES.includes(mime) || [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"].includes(ext);
+      };
+
+      if (rawVideoFile && isImageFile(rawVideoFile) && !imageFile) {
+        imageFile = rawVideoFile;
+        videoFile = null;
+      } else if (rawImageFile && isVideoFile(rawImageFile) && !videoFile) {
+        videoFile = rawImageFile;
+        imageFile = null;
+      }
+
+      if (genericMediaFile) {
+        createdLocalFiles.push(genericMediaFile.path);
+        if (isVideoFile(genericMediaFile)) {
+          videoFile = genericMediaFile;
+        } else if (isImageFile(genericMediaFile)) {
+          imageFile = genericMediaFile;
         }
-      } else if (providedImageUrl && providedImageUrl.startsWith("data:image/")) {
-        // If client submitted base64 dataUrl, persist in Google Drive to avoid MongoDB bloat
+      }
+
+      if (rawImageFile) createdLocalFiles.push(rawImageFile.path);
+      if (rawVideoFile) createdLocalFiles.push(rawVideoFile.path);
+
+      if (imageFile) {
+        const fileBuffer = fs.readFileSync(imageFile.path);
+        const mime = (imageFile.mimetype || "image/jpeg").toLowerCase();
+        mediaMeta = {
+          originalName: imageFile.originalname || "image.jpg",
+          mimeType: mime,
+          size: imageFile.size,
+        };
+        mediaType = "image";
+
         try {
-          const matches = providedImageUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+          const { mediaDoc } = await uploadMediaToDrive({
+            buffer: fileBuffer,
+            originalName: imageFile.originalname || "news_image.jpg",
+            mimeType: mime,
+            user: req.user,
+          });
+          imagePath = mediaDoc.deliveryUrl;
+          // Unlink local temp file because it's safely stored in Google Drive
+          try { fs.unlinkSync(imageFile.path); } catch (_) {}
+          createdLocalFiles = createdLocalFiles.filter((p) => p !== imageFile.path);
+        } catch (driveErr) {
+          console.warn("[News] Drive upload fallback to local storage:", driveErr.message);
+          // Keep local file in uploadsDir and store relative path
+          imagePath = `/uploads/${imageFile.filename}`;
+        }
+      } else if (imagePath && imagePath.startsWith("data:image/")) {
+        mediaType = "image";
+        try {
+          const matches = imagePath.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
           if (matches && matches.length === 3) {
             const mime = matches[1];
             const buffer = Buffer.from(matches[2], "base64");
@@ -935,13 +1075,46 @@ router.post(
         }
       }
 
-      if (req.files?.video?.[0]) {
-        videoPath = `${baseUrl}/uploads/${req.files.video[0].filename}`;
+      if (videoFile) {
+        const fileBuffer = fs.readFileSync(videoFile.path);
+        const mime = (videoFile.mimetype || "video/mp4").toLowerCase();
+        mediaMeta = {
+          originalName: videoFile.originalname || "video.mp4",
+          mimeType: mime,
+          size: videoFile.size,
+        };
+        mediaType = "video";
+
+        try {
+          const { mediaDoc } = await uploadMediaToDrive({
+            buffer: fileBuffer,
+            originalName: videoFile.originalname || "news_video.mp4",
+            mimeType: mime,
+            user: req.user,
+          });
+          videoPath = mediaDoc.deliveryUrl;
+          try { fs.unlinkSync(videoFile.path); } catch (_) {}
+          createdLocalFiles = createdLocalFiles.filter((p) => p !== videoFile.path);
+        } catch (driveErr) {
+          console.warn("[News] Video Drive upload fallback to local storage:", driveErr.message);
+          videoPath = `/uploads/${videoFile.filename}`;
+        }
+      }
+
+      // Consolidate final mediaUrl and mediaType
+      if (videoPath) {
+        mediaUrl = videoPath;
+        mediaType = "video";
+      } else if (imagePath) {
+        mediaUrl = imagePath;
+        mediaType = "image";
+      } else if (mediaUrl) {
+        if (!mediaType || mediaType === "none") {
+          mediaType = /\.(mp4|webm|mov|ogg)($|\?)/i.test(mediaUrl) ? "video" : "image";
+        }
       }
 
       const isAuthorAdmin = req.user?.role === "admin";
-
-      // Stories are approved and published by default so they appear live immediately
       let initialStatus = "approved";
       let initialPublished = true;
 
@@ -961,6 +1134,9 @@ router.post(
         source: (source || (isAuthorAdmin ? "Town Bureau" : "Citizen Reporter")).trim(),
         image: imagePath,
         video: videoPath,
+        mediaUrl: mediaUrl,
+        mediaType: mediaType,
+        mediaMeta: mediaMeta,
         author: req.user?.id,
         status: initialStatus,
         isPublished: initialPublished,
@@ -978,14 +1154,25 @@ router.post(
         }).catch(() => {});
       }
 
+      const resp = news.toObject();
+      resp.image = normalizeMediaUrl(resp.image, req);
+      resp.video = normalizeMediaUrl(resp.video, req);
+      resp.mediaUrl = normalizeMediaUrl(resp.mediaUrl || resp.video || resp.image, req);
+      resp.mediaType = resp.mediaType || (resp.video ? "video" : resp.image ? "image" : "none");
+
       res.status(201).json({
-        ...news.toObject(),
+        ...resp,
         moderationMessage: initialPublished
           ? "Story published live to Fazilnagar News Feed."
           : "Story saved as draft.",
       });
     } catch (err) {
       console.error("Create News Error:", err);
+      for (const filePath of createdLocalFiles) {
+        try {
+          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        } catch (_) {}
+      }
       res.status(500).json({ message: "Failed to publish news article." });
     }
   }
@@ -1001,8 +1188,11 @@ router.put(
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "video", maxCount: 1 },
+    { name: "media", maxCount: 1 },
+    { name: "file", maxCount: 1 },
   ]),
   async (req, res) => {
+    let createdLocalFiles = [];
     try {
       const article = await News.findById(req.params.id);
       if (!article) {
@@ -1019,6 +1209,9 @@ router.put(
         location,
         source,
         imageUrl: providedImageUrl,
+        videoUrl: providedVideoUrl,
+        mediaUrl: providedMediaUrl,
+        mediaType: providedMediaType,
         isFeatured,
         isPublished,
         status,
@@ -1033,60 +1226,149 @@ router.put(
       if (location !== undefined) article.location = location.trim();
       if (source !== undefined) article.source = source.trim();
 
-      const host = req.get("host") || "localhost:5000";
-      const protocol =
-        req.protocol === "https" || req.secure || req.headers["x-forwarded-proto"] === "https"
-          ? "https"
-          : "http";
-      const baseUrl = `${protocol}://${host}`;
-
-      if (req.files?.image?.[0]) {
-        try {
-          const imgFile = req.files.image[0];
-          const fileBuffer = fs.readFileSync(imgFile.path);
-          const mime = imgFile.mimetype || "image/jpeg";
-
+      // Check for provided media strings without saving blob URLs
+      if (providedImageUrl && !providedImageUrl.startsWith("blob:")) {
+        if (providedImageUrl.startsWith("data:image/")) {
           try {
-            const { mediaDoc } = await uploadMediaToDrive({
-              buffer: fileBuffer,
-              originalName: imgFile.originalname || "news_image.jpg",
-              mimeType: mime,
-              user: req.user,
-            });
-            article.image = mediaDoc.deliveryUrl;
+            const matches = providedImageUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+            if (matches && matches.length === 3) {
+              const mime = matches[1];
+              const buffer = Buffer.from(matches[2], "base64");
+              const { mediaDoc } = await uploadMediaToDrive({
+                buffer,
+                originalName: "news_image.jpg",
+                mimeType: mime,
+                user: req.user,
+              });
+              article.image = mediaDoc.deliveryUrl;
+            }
           } catch (driveErr) {
-            console.warn("[News] Drive upload fallback:", driveErr.message);
-            article.image = `data:${mime};base64,${fileBuffer.toString("base64")}`;
+            console.warn("[News] Base64 Drive upload fallback:", driveErr.message);
+            article.image = providedImageUrl.trim();
           }
-
-          try { fs.unlinkSync(imgFile.path); } catch (_) {}
-        } catch (e) {
-          article.image = `${baseUrl}/uploads/${req.files.image[0].filename}`;
-        }
-      } else if (providedImageUrl && providedImageUrl.startsWith("data:image/")) {
-        try {
-          const matches = providedImageUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-          if (matches && matches.length === 3) {
-            const mime = matches[1];
-            const buffer = Buffer.from(matches[2], "base64");
-            const { mediaDoc } = await uploadMediaToDrive({
-              buffer,
-              originalName: "news_image.jpg",
-              mimeType: mime,
-              user: req.user,
-            });
-            article.image = mediaDoc.deliveryUrl;
-          }
-        } catch (driveErr) {
-          console.warn("[News] Base64 Drive upload fallback:", driveErr.message);
+        } else {
           article.image = providedImageUrl.trim();
         }
-      } else if (providedImageUrl && providedImageUrl.trim() !== "") {
-        article.image = providedImageUrl.trim();
       }
 
-      if (req.files?.video?.[0]) {
-        article.video = `${baseUrl}/uploads/${req.files.video[0].filename}`;
+      if (providedVideoUrl && !providedVideoUrl.startsWith("blob:")) {
+        article.video = providedVideoUrl.trim();
+      }
+
+      if (providedMediaUrl && !providedMediaUrl.startsWith("blob:")) {
+        article.mediaUrl = providedMediaUrl.trim();
+      }
+
+      if (providedMediaType) {
+        article.mediaType = providedMediaType.toLowerCase();
+      }
+
+      // Handle newly uploaded files
+      const rawImageFile = req.files?.image?.[0];
+      const rawVideoFile = req.files?.video?.[0];
+      const genericMediaFile = req.files?.media?.[0] || req.files?.file?.[0];
+
+      let imageFile = rawImageFile;
+      let videoFile = rawVideoFile;
+
+      // Smart detection based on actual MIME type or file extension
+      const isVideoFile = (f) => {
+        if (!f) return false;
+        const mime = (f.mimetype || "").toLowerCase();
+        const ext = path.extname(f.originalname || f.filename || "").toLowerCase();
+        return ALLOWED_VIDEO_MIMES.includes(mime) || [".mp4", ".webm", ".mov", ".ogg", ".avi"].includes(ext);
+      };
+
+      const isImageFile = (f) => {
+        if (!f) return false;
+        const mime = (f.mimetype || "").toLowerCase();
+        const ext = path.extname(f.originalname || f.filename || "").toLowerCase();
+        return ALLOWED_IMAGE_MIMES.includes(mime) || [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"].includes(ext);
+      };
+
+      if (rawVideoFile && isImageFile(rawVideoFile) && !imageFile) {
+        imageFile = rawVideoFile;
+        videoFile = null;
+      } else if (rawImageFile && isVideoFile(rawImageFile) && !videoFile) {
+        videoFile = rawImageFile;
+        imageFile = null;
+      }
+
+      if (genericMediaFile) {
+        createdLocalFiles.push(genericMediaFile.path);
+        if (isVideoFile(genericMediaFile)) {
+          videoFile = genericMediaFile;
+        } else if (isImageFile(genericMediaFile)) {
+          imageFile = genericMediaFile;
+        }
+      }
+
+      if (rawImageFile) createdLocalFiles.push(rawImageFile.path);
+      if (rawVideoFile) createdLocalFiles.push(rawVideoFile.path);
+
+      if (imageFile) {
+        const fileBuffer = fs.readFileSync(imageFile.path);
+        const mime = (imageFile.mimetype || "image/jpeg").toLowerCase();
+        article.mediaMeta = {
+          originalName: imageFile.originalname || "image.jpg",
+          mimeType: mime,
+          size: imageFile.size,
+        };
+
+        try {
+          const { mediaDoc } = await uploadMediaToDrive({
+            buffer: fileBuffer,
+            originalName: imageFile.originalname || "news_image.jpg",
+            mimeType: mime,
+            user: req.user,
+          });
+          article.image = mediaDoc.deliveryUrl;
+          article.mediaUrl = mediaDoc.deliveryUrl;
+          article.mediaType = "image";
+          try { fs.unlinkSync(imageFile.path); } catch (_) {}
+          createdLocalFiles = createdLocalFiles.filter((p) => p !== imageFile.path);
+        } catch (driveErr) {
+          console.warn("[News] Drive upload fallback:", driveErr.message);
+          article.image = `/uploads/${imageFile.filename}`;
+          article.mediaUrl = `/uploads/${imageFile.filename}`;
+          article.mediaType = "image";
+        }
+      }
+
+      if (videoFile) {
+        const fileBuffer = fs.readFileSync(videoFile.path);
+        const mime = (videoFile.mimetype || "video/mp4").toLowerCase();
+        article.mediaMeta = {
+          originalName: videoFile.originalname || "video.mp4",
+          mimeType: mime,
+          size: videoFile.size,
+        };
+
+        try {
+          const { mediaDoc } = await uploadMediaToDrive({
+            buffer: fileBuffer,
+            originalName: videoFile.originalname || "news_video.mp4",
+            mimeType: mime,
+            user: req.user,
+          });
+          article.video = mediaDoc.deliveryUrl;
+          article.mediaUrl = mediaDoc.deliveryUrl;
+          article.mediaType = "video";
+          try { fs.unlinkSync(videoFile.path); } catch (_) {}
+          createdLocalFiles = createdLocalFiles.filter((p) => p !== videoFile.path);
+        } catch (driveErr) {
+          console.warn("[News] Video Drive upload fallback:", driveErr.message);
+          article.video = `/uploads/${videoFile.filename}`;
+          article.mediaUrl = `/uploads/${videoFile.filename}`;
+          article.mediaType = "video";
+        }
+      }
+
+      if (!article.mediaUrl) {
+        article.mediaUrl = article.video || article.image || "";
+      }
+      if (!article.mediaType || article.mediaType === "none") {
+        article.mediaType = article.video ? "video" : article.image ? "image" : "none";
       }
 
       if (isFeatured !== undefined) {
@@ -1110,9 +1392,21 @@ router.put(
       }
 
       await article.save();
-      res.status(200).json({ message: "News story updated successfully.", article });
+
+      const resp = article.toObject();
+      resp.image = normalizeMediaUrl(resp.image, req);
+      resp.video = normalizeMediaUrl(resp.video, req);
+      resp.mediaUrl = normalizeMediaUrl(resp.mediaUrl || resp.video || resp.image, req);
+      resp.mediaType = resp.mediaType || (resp.video ? "video" : resp.image ? "image" : "none");
+
+      res.status(200).json({ message: "News story updated successfully.", article: resp });
     } catch (err) {
       console.error("Update News Error:", err);
+      for (const filePath of createdLocalFiles) {
+        try {
+          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        } catch (_) {}
+      }
       res.status(500).json({ message: "Failed to update article." });
     }
   }
@@ -1273,12 +1567,10 @@ router.get("/:id", async (req, res) => {
 
     News.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }).exec();
 
-    const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal.onrender.com").replace(/\/+$/, "");
     const obj = article.toObject();
-    if (obj.image && obj.image.startsWith("/")) obj.image = `${backendBase}${obj.image}`;
-    if (obj.video && obj.video.startsWith("/")) obj.video = `${backendBase}${obj.video}`;
+    const media = formatNewsMedia(obj, req);
 
-    res.status(200).json(obj);
+    res.status(200).json({ ...obj, ...media });
   } catch (err) {
     console.error("Fetch Single News Error:", err);
     res.status(400).json({ message: "Invalid article ID or server error." });

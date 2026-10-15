@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import API from "../api";
 
 // Important Places Data
 const PLACES = [
@@ -55,10 +56,9 @@ export default function Home() {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/news");
-        if (response.ok) {
-          const data = await response.json();
-          setLatestNews(data.slice(0, 3)); // Display top 3
+        const response = await API.get("/news");
+        if (response.data && Array.isArray(response.data)) {
+          setLatestNews(response.data.slice(0, 3)); // Display top 3
         }
       } catch (err) {
         console.error("Failed to load news for home page:", err);

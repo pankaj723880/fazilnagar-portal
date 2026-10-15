@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import API from "../api";
 import { usePageSEO } from "../utils/seo";
+import { getAuthToken, getAuthUser } from "../utils/authStorage";
 import {
   Newspaper,
   Share2,
@@ -22,6 +23,8 @@ import {
   ShieldCheck,
   RefreshCw,
   CornerDownRight,
+  LogIn,
+  UserPlus,
 } from "lucide-react";
 
 const FALLBACK_COVER_IMAGE =
@@ -41,17 +44,70 @@ function StoryMediaCover({ story, active, muted }) {
   const [imgFailed, setImgFailed] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
 
-  let rawVideo = story.video && String(story.video).trim();
-  if (rawVideo && rawVideo.startsWith("/")) {
-    rawVideo = `https://fazilnagar-portal.onrender.com${rawVideo}`;
-  }
-  const hasVideo = !!rawVideo && !videoFailed;
+  const backendBase = (API.defaults.baseURL || "").replace(/\/api\/?$/, "");
 
-  let rawImage = story.image && String(story.image).trim();
-  if (rawImage && rawImage.startsWith("/")) {
-    rawImage = `https://fazilnagar-portal.onrender.com${rawImage}`;
+  const normalizeUrl = (u) => {
+    if (!u || typeof u !== "string") return "";
+    const trimmed = u.trim();
+    if (trimmed.startsWith("blob:")) return "";
+    if (trimmed.startsWith("/")) return `${backendBase}${trimmed}`;
+    if (trimmed.includes("localhost:") || trimmed.includes("127.0.0.1:")) {
+      const uploadsIdx = trimmed.indexOf("/uploads/");
+      if (uploadsIdx !== -1) return `${backendBase}${trimmed.substring(uploadsIdx)}`;
+      const driveIdx = trimmed.indexOf("/api/google-drive/");
+      if (driveIdx !== -1) return `${backendBase}${trimmed.substring(driveIdx)}`;
+    }
+    return trimmed;
+  };
+
+  const isVideoExt = (url) => /\.(mp4|webm|mov|ogg|avi|m4v)($|\?)/i.test(url);
+  const isImageExt = (url) => /\.(png|jpe?g|webp|gif|svg|bmp)($|\?)/i.test(url);
+
+  const normVideo = normalizeUrl(story.video);
+  const normImage = normalizeUrl(story.image);
+  const normMedia = normalizeUrl(story.mediaUrl);
+
+  let detectedVideo = "";
+  let detectedImage = "";
+
+  // 1. Analyze video candidate
+  if (normVideo) {
+    if (isImageExt(normVideo)) {
+      detectedImage = normVideo;
+    } else {
+      detectedVideo = normVideo;
+    }
   }
-  const hasUserImage = rawImage && !imgFailed;
+
+  // 2. Analyze image candidate
+  if (normImage) {
+    if (isVideoExt(normImage)) {
+      if (!detectedVideo) detectedVideo = normImage;
+    } else {
+      if (!detectedImage) detectedImage = normImage;
+    }
+  }
+
+  // 3. Analyze generic mediaUrl candidate
+  if (normMedia) {
+    if (isVideoExt(normMedia) && !detectedVideo) {
+      detectedVideo = normMedia;
+    } else if (isImageExt(normMedia) && !detectedImage) {
+      detectedImage = normMedia;
+    } else if (!detectedVideo && !detectedImage) {
+      if (story.mediaType === "video") detectedVideo = normMedia;
+      else detectedImage = normMedia;
+    }
+  }
+
+  // 4. Fallback: If video failed or error fired, automatically attempt to display as photo
+  if (videoFailed && detectedVideo && !detectedImage) {
+    detectedImage = detectedVideo;
+    detectedVideo = "";
+  }
+
+  const hasVideo = !!detectedVideo && !videoFailed;
+  const hasUserImage = !!detectedImage && !imgFailed;
 
   return (
     <div className="absolute inset-0 z-0 bg-[#0B1118] overflow-hidden flex items-center justify-center select-none">
@@ -82,7 +138,7 @@ function StoryMediaCover({ story, active, muted }) {
       {/* Video layer if present */}
       {hasVideo && (
         <video
-          src={rawVideo}
+          src={detectedVideo}
           autoPlay={active}
           loop
           muted={muted}
@@ -95,8 +151,8 @@ function StoryMediaCover({ story, active, muted }) {
       {/* Photo Layer: Render ONLY if story has an actual user-uploaded image */}
       {!hasVideo && hasUserImage && (
         <img
-          src={rawImage}
-          alt=""
+          src={detectedImage}
+          alt={story.title || "Story Media"}
           className="absolute inset-0 w-full h-full object-cover object-center z-10"
           loading={active ? "eager" : "lazy"}
           onError={() => setImgFailed(true)}
@@ -317,19 +373,23 @@ export default function ReelsNewsFeed() {
   const [replyText, setReplyText] = useState("");
   const [submittingReply, setSubmittingReply] = useState(false);
 
+  // Authentication prompt modal state for guests
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalReason, setAuthModalReason] = useState("");
+
   // Current logged in user (if any)
   const [currentUser, setCurrentUser] = useState(null);
 
   const containerRef = useRef(null);
   const storyRefs = useRef([]);
 
-  // Sync user from local storage
+  // Sync user from authStorage
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      try {
-        setCurrentUser(JSON.parse(savedUser));
-      } catch (_) {}
+    const user = getAuthUser();
+    if (user) {
+      setCurrentUser(user);
     }
   }, []);
 
@@ -469,6 +529,13 @@ export default function ReelsNewsFeed() {
   // LIKE TOGGLE HANDLER (Optimistic UI + Server Sync)
   // -------------------------------------------------------------
   const handleToggleLike = async (storyId) => {
+    const token = getAuthToken();
+    if (!token) {
+      setAuthModalReason("Please log in or create an account to like local news stories.");
+      setAuthModalOpen(true);
+      return;
+    }
+
     const currentStory = stories.find((s) => String(s._id) === String(storyId));
     if (!currentStory) return;
 
@@ -488,8 +555,7 @@ export default function ReelsNewsFeed() {
     );
 
     try {
-      const anonId = localStorage.getItem("fazil_anon_id");
-      const res = await API.post(`/news/${storyId}/like`, { anonId });
+      const res = await API.post(`/news/${storyId}/like`);
       // Update with server verified count
       if (res.data) {
         setStories((prev) =>
@@ -514,6 +580,10 @@ export default function ReelsNewsFeed() {
             : s
         )
       );
+      if (err.response?.status === 401) {
+        setAuthModalReason("Your session has expired. Please log in again to like stories.");
+        setAuthModalOpen(true);
+      }
     }
   };
 
@@ -604,6 +674,13 @@ export default function ReelsNewsFeed() {
 
   const handlePostComment = async (e) => {
     e.preventDefault();
+    const token = getAuthToken();
+    if (!token) {
+      setAuthModalReason("Please sign in or create an account to post a comment.");
+      setAuthModalOpen(true);
+      return;
+    }
+
     if (!commentText.trim() || !commentDrawerStory) return;
     if (commentText.trim().length > 500) {
       setCommentError("Comment cannot exceed 500 characters.");
@@ -614,11 +691,8 @@ export default function ReelsNewsFeed() {
     setCommentError("");
 
     try {
-      const anonId = localStorage.getItem("fazil_anon_id");
       const payload = {
         text: commentText.trim(),
-        authorName: currentUser?.name || guestAuthorName.trim() || undefined,
-        anonId,
       };
 
       const res = await API.post(
@@ -644,15 +718,27 @@ export default function ReelsNewsFeed() {
       }
     } catch (err) {
       console.error("Comment submission error:", err);
-      setCommentError(
-        err.response?.data?.message || "Failed to post comment. Try again."
-      );
+      if (err.response?.status === 401) {
+        setAuthModalReason("Your session has expired. Please sign in to comment.");
+        setAuthModalOpen(true);
+      } else {
+        setCommentError(
+          err.response?.data?.message || "Failed to post comment. Try again."
+        );
+      }
     } finally {
       setSubmittingComment(false);
     }
   };
 
   const handlePostReply = async (targetParentId, targetAuthorName) => {
+    const token = getAuthToken();
+    if (!token) {
+      setAuthModalReason("Please sign in or create an account to post a reply.");
+      setAuthModalOpen(true);
+      return;
+    }
+
     if (!replyText.trim() || !commentDrawerStory) return;
     if (replyText.trim().length > 500) {
       alert("Reply cannot exceed 500 characters.");
@@ -661,13 +747,10 @@ export default function ReelsNewsFeed() {
 
     setSubmittingReply(true);
     try {
-      const anonId = localStorage.getItem("fazil_anon_id");
       const payload = {
         text: replyText.trim(),
-        authorName: currentUser?.name || guestAuthorName.trim() || undefined,
         parentId: targetParentId,
         replyToAuthorName: targetAuthorName,
-        anonId,
       };
 
       const res = await API.post(
@@ -693,16 +776,27 @@ export default function ReelsNewsFeed() {
       }
     } catch (err) {
       console.error("Reply post error:", err);
-      alert(err.response?.data?.message || "Failed to post reply.");
+      if (err.response?.status === 401) {
+        setAuthModalReason("Your session has expired. Please sign in to reply.");
+        setAuthModalOpen(true);
+      } else {
+        alert(err.response?.data?.message || "Failed to post reply.");
+      }
     } finally {
       setSubmittingReply(false);
     }
   };
 
   const handleToggleCommentLike = async (commentId) => {
+    const token = getAuthToken();
+    if (!token) {
+      setAuthModalReason("Please sign in or create an account to like comments.");
+      setAuthModalOpen(true);
+      return;
+    }
+
     if (!commentDrawerStory) return;
-    const anonId = localStorage.getItem("fazil_anon_id") || "guest";
-    const identifier = currentUser?.id ? String(currentUser.id) : String(anonId);
+    const identifier = String(currentUser?.id || "auth_user");
 
     // Optimistic UI for any comment or reply node in tree
     setComments((prev) =>
@@ -719,8 +813,7 @@ export default function ReelsNewsFeed() {
 
     try {
       const res = await API.post(
-        `/news/${commentDrawerStory._id}/comments/${commentId}/like`,
-        { anonId }
+        `/news/${commentDrawerStory._id}/comments/${commentId}/like`
       );
       if (res.data) {
         setComments((prev) =>
@@ -739,6 +832,10 @@ export default function ReelsNewsFeed() {
       }
     } catch (err) {
       console.error("Comment like error:", err);
+      if (err.response?.status === 401) {
+        setAuthModalReason("Your session has expired. Please log in again to interact.");
+        setAuthModalOpen(true);
+      }
     }
   };
 
@@ -931,7 +1028,7 @@ export default function ReelsNewsFeed() {
                 {/* Right Floating Actions Rail (Reels / Shorts Style) */}
                 <div className="absolute right-3.5 bottom-20 sm:bottom-24 z-20 flex flex-col items-center gap-4">
                   {/* Video Mute Toggle */}
-                  {story.video && (
+                  {((story.mediaType === "video" && !/\.(png|jpe?g|webp|gif|svg)($|\?)/i.test(story.video || story.mediaUrl)) || (story.video && /\.(mp4|webm|mov|ogg)($|\?)/i.test(story.video))) && (
                     <button
                       onClick={() => setVideoMuted(!videoMuted)}
                       className="w-11 h-11 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/80 transition cursor-pointer shadow-lg"
@@ -1172,48 +1269,69 @@ export default function ReelsNewsFeed() {
                 })}
             </div>
 
-            {/* Comment Post Form */}
-            <form
-              onSubmit={handlePostComment}
-              className="p-3 border-t border-slate-700/80 bg-slate-900/90 space-y-2 shrink-0"
-            >
-              {commentError && (
-                <div className="text-[11px] text-red-400 bg-red-950/60 p-2 rounded-lg border border-red-800">
-                  {commentError}
+            {/* Comment Post Form or Login Prompt */}
+            {!currentUser && !getAuthToken() ? (
+              <div className="p-4 border-t border-slate-700/80 bg-slate-900/90 text-center space-y-2.5 shrink-0">
+                <p className="text-xs text-slate-300 font-medium">
+                  🔒 Please sign in to join the discussion and post comments.
+                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const from = commentDrawerStory ? `/news?storyId=${commentDrawerStory._id}` : "/news";
+                      navigate("/login", { state: { from } });
+                    }}
+                    className="bg-[#B8323C] hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    <span>Login / लॉगिन</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const from = commentDrawerStory ? `/news?storyId=${commentDrawerStory._id}` : "/news";
+                      navigate("/register", { state: { from } });
+                    }}
+                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>Register / नया खाता</span>
+                  </button>
                 </div>
-              )}
-
-              {!currentUser && (
-                <input
-                  type="text"
-                  placeholder="Your Name (Optional)"
-                  value={guestAuthorName}
-                  onChange={(e) => setGuestAuthorName(e.target.value)}
-                  maxLength={50}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-[#B8323C]"
-                />
-              )}
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Add a comment..."
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  maxLength={500}
-                  disabled={submittingComment}
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-[#B8323C]"
-                />
-                <button
-                  type="submit"
-                  disabled={submittingComment || !commentText.trim()}
-                  className="bg-[#B8323C] hover:bg-[#991B1B] disabled:opacity-40 text-white p-2 rounded-xl transition cursor-pointer"
-                  title="Post comment"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
               </div>
-            </form>
+            ) : (
+              <form
+                onSubmit={handlePostComment}
+                className="p-3 border-t border-slate-700/80 bg-slate-900/90 space-y-2 shrink-0"
+              >
+                {commentError && (
+                  <div className="text-[11px] text-red-400 bg-red-950/60 p-2 rounded-lg border border-red-800">
+                    {commentError}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Add a verified comment..."
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    maxLength={500}
+                    disabled={submittingComment}
+                    className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-[#B8323C]"
+                  />
+                  <button
+                    type="submit"
+                    disabled={submittingComment || !commentText.trim()}
+                    className="bg-[#B8323C] hover:bg-[#991B1B] disabled:opacity-40 text-white p-2 rounded-xl transition cursor-pointer"
+                    title="Post comment"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
@@ -1245,20 +1363,69 @@ export default function ReelsNewsFeed() {
 
             {/* Modal Body */}
             <div className="overflow-y-auto p-5 sm:p-6 space-y-4 flex-1">
-              {readingStory.image && (
-                <div className="w-full h-56 sm:h-72 rounded-2xl overflow-hidden bg-slate-950">
-                  <img
-                    src={readingStory.image}
-                    alt={readingStory.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      if (e.currentTarget.src !== FALLBACK_COVER_IMAGE) {
-                        e.currentTarget.src = FALLBACK_COVER_IMAGE;
-                      }
-                    }}
-                  />
-                </div>
-              )}
+              {(() => {
+                const isVideoExt = (url) => /\.(mp4|webm|mov|ogg|avi|m4v)($|\?)/i.test(url);
+                const isImageExt = (url) => /\.(png|jpe?g|webp|gif|svg|bmp)($|\?)/i.test(url);
+
+                const vidUrl = readingStory.video || "";
+                const imgUrl = readingStory.image || "";
+                const medUrl = readingStory.mediaUrl || "";
+
+                let resolvedVideo = "";
+                let resolvedImage = "";
+
+                if (vidUrl) {
+                  if (isImageExt(vidUrl)) resolvedImage = vidUrl;
+                  else resolvedVideo = vidUrl;
+                }
+                if (imgUrl) {
+                  if (isVideoExt(imgUrl)) {
+                    if (!resolvedVideo) resolvedVideo = imgUrl;
+                  } else {
+                    if (!resolvedImage) resolvedImage = imgUrl;
+                  }
+                }
+                if (medUrl) {
+                  if (isVideoExt(medUrl) && !resolvedVideo) resolvedVideo = medUrl;
+                  else if (isImageExt(medUrl) && !resolvedImage) resolvedImage = medUrl;
+                  else if (!resolvedVideo && !resolvedImage) {
+                    if (readingStory.mediaType === "video") resolvedVideo = medUrl;
+                    else resolvedImage = medUrl;
+                  }
+                }
+
+                if (resolvedVideo) {
+                  return (
+                    <div className="w-full rounded-2xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center">
+                      <video
+                        src={resolvedVideo}
+                        controls
+                        playsInline
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  );
+                }
+
+                if (resolvedImage) {
+                  return (
+                    <div className="w-full h-56 sm:h-72 rounded-2xl overflow-hidden bg-slate-950 flex items-center justify-center">
+                      <img
+                        src={resolvedImage}
+                        alt={readingStory.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          if (e.currentTarget.src !== FALLBACK_COVER_IMAGE) {
+                            e.currentTarget.src = FALLBACK_COVER_IMAGE;
+                          }
+                        }}
+                      />
+                    </div>
+                  );
+                }
+
+                return null;
+              })()}
 
               <div className="space-y-2">
                 <h2 className="text-xl sm:text-2xl font-extrabold text-white font-heading leading-tight">
@@ -1312,6 +1479,65 @@ export default function ReelsNewsFeed() {
                 className="bg-[#B8323C] hover:bg-red-700 text-white text-xs font-bold px-5 py-2 rounded-xl transition cursor-pointer"
               >
                 Close Article
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          GUEST AUTHENTICATION REQUIRED PROMPT MODAL
+          ======================================================== */}
+      {authModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-[#18232E] text-white w-full max-w-sm rounded-3xl border border-slate-700 shadow-2xl p-6 text-center space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-red-950/80 border border-red-800/80 text-rose-400 mx-auto flex items-center justify-center shadow-lg">
+              <LogIn className="w-7 h-7" />
+            </div>
+
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-black text-white">
+                Sign In Required / लॉगिन आवश्यक है
+              </h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                {authModalReason ||
+                  "Please log in or create an account to like or comment on local news stories. Verified accounts protect community integrity."}
+              </p>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const activeStory = stories[activeStoryIndex];
+                  const from = activeStory ? `/news?storyId=${activeStory._id}` : "/news";
+                  navigate("/login", { state: { from } });
+                }}
+                className="w-full py-2.5 bg-[#B8323C] hover:bg-red-700 text-white font-bold text-xs rounded-xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Login / लॉगिन करें</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const activeStory = stories[activeStoryIndex];
+                  const from = activeStory ? `/news?storyId=${activeStory._id}` : "/news";
+                  navigate("/register", { state: { from } });
+                }}
+                className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition border border-slate-700 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>Create Free Account / नया खाता बनाएं</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAuthModalOpen(false)}
+                className="text-xs text-slate-400 hover:text-white pt-1 font-semibold cursor-pointer block w-full text-center"
+              >
+                Cancel / बाद में
               </button>
             </div>
           </div>

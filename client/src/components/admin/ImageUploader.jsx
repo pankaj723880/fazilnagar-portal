@@ -67,8 +67,11 @@ export default function ImageUploader({
       if (onFileSelect) {
         onFileSelect(file);
       } else {
-        const tempUrl = URL.createObjectURL(file);
-        onChange(tempUrl);
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          onChange(evt.target.result);
+        };
+        reader.readAsDataURL(file);
       }
     }
   };
@@ -83,8 +86,11 @@ export default function ImageUploader({
       if (onFileSelect) {
         onFileSelect(file);
       } else {
-        const tempUrl = URL.createObjectURL(file);
-        onChange(tempUrl);
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          onChange(evt.target.result);
+        };
+        reader.readAsDataURL(file);
       }
     }
   };

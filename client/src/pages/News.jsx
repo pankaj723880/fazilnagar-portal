@@ -159,13 +159,28 @@ export default function News() {
               className="bg-white rounded-3xl border border-[#E1E6EA] shadow-2xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group"
             >
               <div>
-                {/* Image if available */}
-                {article.image ? (
+                {/* Media if available */}
+                {(article.mediaType === "video" || article.video) ? (
+                  <div className="h-48 w-full overflow-hidden bg-black flex items-center justify-center relative">
+                    <video
+                      src={article.video || article.mediaUrl}
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                    <span className="absolute top-2 right-2 bg-black/70 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                      📹 Video
+                    </span>
+                  </div>
+                ) : (article.image || article.mediaUrl) ? (
                   <div className="h-48 w-full overflow-hidden bg-slate-100">
                     <img
-                      src={article.image}
+                      src={article.image || article.mediaUrl}
                       alt={article.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
                     />
                   </div>
                 ) : (

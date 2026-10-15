@@ -57,6 +57,9 @@ export default function AdminNewsCMS({ onStatsChange }) {
   const [newsFormLocation, setNewsFormLocation] = useState("Fazilnagar");
   const [newsFormSource, setNewsFormSource] = useState("Municipal Ward Bureau");
   const [newsFormImageUrl, setNewsFormImageUrl] = useState("");
+  const [newsFormImageFile, setNewsFormImageFile] = useState(null);
+  const [newsFormVideoUrl, setNewsFormVideoUrl] = useState("");
+  const [newsFormVideoFile, setNewsFormVideoFile] = useState(null);
   const [newsFormIsFeatured, setNewsFormIsFeatured] = useState(false);
   const [newsFormIsPublished, setNewsFormIsPublished] = useState(true);
   const [newsFormSubmitting, setNewsFormSubmitting] = useState(false);
@@ -115,6 +118,9 @@ export default function AdminNewsCMS({ onStatsChange }) {
     setNewsFormLocation("Fazilnagar");
     setNewsFormSource("Municipal Ward Bureau");
     setNewsFormImageUrl("");
+    setNewsFormImageFile(null);
+    setNewsFormVideoUrl("");
+    setNewsFormVideoFile(null);
     setNewsFormIsFeatured(false);
     setNewsFormIsPublished(true);
     setNewsModalOpen(true);
@@ -130,6 +136,9 @@ export default function AdminNewsCMS({ onStatsChange }) {
     setNewsFormLocation(item.location || "Fazilnagar");
     setNewsFormSource(item.source || "Town Reporter");
     setNewsFormImageUrl(item.image || item.imageUrl || "");
+    setNewsFormImageFile(null);
+    setNewsFormVideoUrl(item.video || item.videoUrl || "");
+    setNewsFormVideoFile(null);
     setNewsFormIsFeatured(item.isFeatured === true);
     setNewsFormIsPublished(item.isPublished === true || item.status === "approved");
     setNewsModalOpen(true);
@@ -150,34 +159,41 @@ export default function AdminNewsCMS({ onStatsChange }) {
     const token = getAuthToken();
 
     try {
-      const payload = {
-        title: newsFormTitle.trim(),
-        titleHi: newsFormTitleHi.trim(),
-        summary: newsFormSummary.trim(),
-        description: newsFormSummary.trim(),
-        content: newsFormContent.trim() || newsFormSummary.trim(),
-        category: newsFormCategory,
-        location: newsFormLocation.trim(),
-        source: newsFormSource.trim(),
-        image: newsFormImageUrl.trim(),
-        imageUrl: newsFormImageUrl.trim(),
-        isFeatured: newsFormIsFeatured,
-        isPublished: newsFormIsPublished,
-        status: newsFormIsPublished ? "approved" : "draft",
-      };
+      const formData = new FormData();
+      formData.append("title", newsFormTitle.trim());
+      formData.append("titleHi", newsFormTitleHi.trim());
+      formData.append("summary", newsFormSummary.trim());
+      formData.append("description", newsFormSummary.trim());
+      formData.append("content", newsFormContent.trim() || newsFormSummary.trim());
+      formData.append("category", newsFormCategory);
+      formData.append("location", newsFormLocation.trim());
+      formData.append("source", newsFormSource.trim());
+      formData.append("isFeatured", newsFormIsFeatured);
+      formData.append("isPublished", newsFormIsPublished);
+      formData.append("status", newsFormIsPublished ? "approved" : "draft");
+
+      if (newsFormImageFile) {
+        formData.append("image", newsFormImageFile);
+      } else if (newsFormImageUrl && !newsFormImageUrl.startsWith("blob:")) {
+        formData.append("imageUrl", newsFormImageUrl.trim());
+      }
+
+      if (newsFormVideoFile) {
+        formData.append("video", newsFormVideoFile);
+      } else if (newsFormVideoUrl && !newsFormVideoUrl.startsWith("blob:")) {
+        formData.append("videoUrl", newsFormVideoUrl.trim());
+      }
+
+      const headers = { Authorization: `Bearer ${token}` };
 
       if (editingNews) {
-        const res = await API.put(`/news/${editingNews._id}`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await API.put(`/news/${editingNews._id}`, formData, { headers });
         setNewsList((prev) =>
           prev.map((n) => (n._id === editingNews._id ? res.data?.article || res.data || n : n))
         );
         showToast("success", "News story updated successfully.");
       } else {
-        const res = await API.post("/news", payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await API.post("/news", formData, { headers });
         if (res.data?._id || res.data?.article) {
           setNewsList((prev) => [res.data?.article || res.data, ...prev]);
         }
@@ -691,19 +707,64 @@ export default function AdminNewsCMS({ onStatsChange }) {
                 </div>
               </FormSection>
 
-              {/* Cover Image */}
+              {/* Media Attachment (Photo & Video) */}
               <FormSection
                 icon={Smartphone}
-                title="Cover Photograph / Reel Visual"
-                description="High quality 16:9 or 4:3 photograph for the news dispatch"
+                title="Cover Photograph & Video Reel"
+                description="High quality photograph or video clip for mobile story cards"
               >
-                <ImageUploader
-                  value={newsFormImageUrl}
-                  onChange={setNewsFormImageUrl}
-                  onPickFromLibrary={() => setMediaPickerOpen(true)}
-                  label="News Cover Image"
-                  aspectRatio="16:9"
-                />
+                <div className="space-y-4">
+                  <ImageUploader
+                    value={newsFormImageUrl}
+                    onChange={setNewsFormImageUrl}
+                    onFileSelect={setNewsFormImageFile}
+                    onPickFromLibrary={() => setMediaPickerOpen(true)}
+                    label="News Cover Image"
+                    aspectRatio="16:9"
+                  />
+
+                  <div className="pt-2 border-t border-slate-100">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Video Clip (MP4 / WebM - Optional for Video Reel)
+                    </label>
+                    <input
+                      type="file"
+                      accept="video/mp4,video/webm,video/quicktime"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setNewsFormVideoFile(file);
+                          setNewsFormVideoUrl("");
+                        }
+                      }}
+                      className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 file:font-semibold hover:file:bg-blue-100 cursor-pointer"
+                    />
+                    {newsFormVideoFile && (
+                      <div className="mt-1 flex items-center gap-2 text-xs text-blue-700 font-medium">
+                        <span>📹 {newsFormVideoFile.name} ({(newsFormVideoFile.size / (1024 * 1024)).toFixed(1)} MB)</span>
+                        <button
+                          type="button"
+                          onClick={() => setNewsFormVideoFile(null)}
+                          className="text-red-500 hover:text-red-700 font-bold ml-1 cursor-pointer"
+                        >
+                          ✕ Remove
+                        </button>
+                      </div>
+                    )}
+                    {!newsFormVideoFile && newsFormVideoUrl && (
+                      <div className="mt-1 flex items-center gap-2 text-xs text-slate-600">
+                        <span className="truncate max-w-xs">Current Video: {newsFormVideoUrl}</span>
+                        <button
+                          type="button"
+                          onClick={() => setNewsFormVideoUrl("")}
+                          className="text-red-500 hover:text-red-700 font-bold ml-1 cursor-pointer"
+                        >
+                          ✕ Clear
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </FormSection>
 
               {/* Status and Pinned controls */}

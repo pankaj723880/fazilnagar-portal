@@ -12,6 +12,17 @@ const newsSchema = new mongoose.Schema(
     source: { type: String, default: "Town Bureau", trim: true },
     image: { type: String, default: "" },
     video: { type: String, default: "" },
+    mediaUrl: { type: String, default: "" },
+    mediaType: {
+      type: String,
+      enum: ["image", "video", "none", ""],
+      default: "",
+    },
+    mediaMeta: {
+      originalName: { type: String, default: "" },
+      mimeType: { type: String, default: "" },
+      size: { type: Number, default: 0 },
+    },
     author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     status: {
       type: String,

@@ -66,19 +66,22 @@ export default function NewsDetail() {
         )}
       </div>
 
-      {article.image && (
-        <img
-          src={article.image}
-          alt={article.title}
-          className="w-full h-80 object-cover rounded-2xl"
-        />
-      )}
-
-      {article.video && (
-        <video controls className="w-full h-80 object-cover rounded-2xl">
-          <source src={article.video} type="video/mp4" />
+      {(article.video || article.mediaType === "video") && (
+        <video controls playsInline className="w-full max-h-96 object-contain bg-black rounded-2xl">
+          <source src={article.video || article.mediaUrl} />
           Your browser does not support the video tag.
         </video>
+      )}
+
+      {!(article.video || article.mediaType === "video") && (article.image || article.mediaUrl) && (
+        <img
+          src={article.image || article.mediaUrl}
+          alt={article.title}
+          className="w-full h-80 object-cover rounded-2xl"
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+          }}
+        />
       )}
 
       <div className="flex items-center justify-between text-xs text-slate-400 border-y border-slate-100 py-3">
