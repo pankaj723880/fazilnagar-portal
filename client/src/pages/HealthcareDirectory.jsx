@@ -162,21 +162,22 @@ export default function HealthcareDirectory() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+            <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 pt-1 gap-1">
               <span>📍 {place.location}</span>
+              <span className="font-semibold text-slate-700">📞 {place.contact}</span>
             </div>
 
             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
               <a
                 href={`tel:${place.contact.replace(/\s+/g, "")}`}
-                className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2.5 rounded-xl text-center"
+                className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2.5 px-2 rounded-xl text-center min-h-[44px] flex items-center justify-center transition-colors"
               >
-                📞 Call ({place.contact})
+                📞 Call Now
               </a>
               <button
                 type="button"
                 onClick={() => openGoogleMapsDirections(place)}
-                className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold py-2.5 rounded-xl text-center cursor-pointer transition-colors"
+                className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold py-2.5 px-2 rounded-xl text-center cursor-pointer transition-colors min-h-[44px] flex items-center justify-center"
               >
                 🧭 Directions
               </button>

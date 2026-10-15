@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation, useParams } from "react-router-dom";
 import API from "../api";
 import { usePageSEO } from "../utils/seo";
 import { getAuthToken, getAuthUser } from "../utils/authStorage";
@@ -25,6 +25,8 @@ import {
   CornerDownRight,
   LogIn,
   UserPlus,
+  Play,
+  Pause,
 } from "lucide-react";
 
 const FALLBACK_COVER_IMAGE =
@@ -40,9 +42,11 @@ const CATEGORY_FALLBACK_IMAGES = {
 };
 
 // Robust Story Media Cover: Shows user's uploaded photo/video or clean civic poster
-function StoryMediaCover({ story, active, muted }) {
+function StoryMediaCover({ story, active, muted, isPaused = false }) {
   const [imgFailed, setImgFailed] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef(null);
 
   const backendBase = (API.defaults.baseURL || "").replace(/\/api\/?$/, "");
 
@@ -109,6 +113,72 @@ function StoryMediaCover({ story, active, muted }) {
   const hasVideo = !!detectedVideo && !videoFailed;
   const hasUserImage = !!detectedImage && !imgFailed;
 
+  // Strict video playback lifecycle: Play ONLY when active AND not paused; immediately pause otherwise!
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !hasVideo) return;
+
+    video.muted = muted;
+
+    if (active && !isPaused) {
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch((err) => {
+            // Autoplay with audio was blocked by browser; retry muted
+            if (!video.muted) {
+              video.muted = true;
+              video
+                .play()
+                .then(() => setIsPlaying(true))
+                .catch(() => setIsPlaying(false));
+            } else {
+              setIsPlaying(false);
+            }
+          });
+      }
+    } else {
+      // Immediately stop playback and reset frame when navigating away
+      video.pause();
+      setIsPlaying(false);
+      if (!active) {
+        try {
+          video.currentTime = 0;
+        } catch {
+          // Ignore seek errors on unloaded streams
+        }
+      }
+    }
+
+    return () => {
+      video.pause();
+      setIsPlaying(false);
+    };
+  }, [active, muted, isPaused, hasVideo, detectedVideo]);
+
+  const handleTogglePlay = (e) => {
+    e.stopPropagation();
+    const video = videoRef.current;
+    if (!video || !hasVideo) return;
+
+    if (video.paused) {
+      video.muted = muted;
+      video
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch(() => {
+          video.muted = true;
+          video.play().then(() => setIsPlaying(true)).catch(() => {});
+        });
+    } else {
+      video.pause();
+      setIsPlaying(false);
+    }
+  };
+
   return (
     <div className="absolute inset-0 z-0 bg-[#0B1118] overflow-hidden flex items-center justify-center select-none">
       {/* Dynamic Civic News Poster Backdrop - Shows when no user photo/video is attached */}
@@ -138,14 +208,28 @@ function StoryMediaCover({ story, active, muted }) {
       {/* Video layer if present */}
       {hasVideo && (
         <video
+          ref={videoRef}
           src={detectedVideo}
-          autoPlay={active}
           loop
           muted={muted}
           playsInline
           className="absolute inset-0 w-full h-full object-cover z-10"
           onError={() => setVideoFailed(true)}
         />
+      )}
+
+      {/* Center Tap-to-Play Overlay if video is active but paused */}
+      {hasVideo && active && !isPlaying && (
+        <button
+          type="button"
+          onClick={handleTogglePlay}
+          className="absolute inset-0 z-20 flex items-center justify-center cursor-pointer bg-black/25 transition-opacity"
+          aria-label="Play video"
+        >
+          <div className="w-16 h-16 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center shadow-2xl border border-white/20 animate-pulse">
+            <Play className="w-8 h-8 fill-current ml-1" />
+          </div>
+        </button>
       )}
 
       {/* Photo Layer: Render ONLY if story has an actual user-uploaded image */}
@@ -182,6 +266,7 @@ function CommentBranchNode({
   handleToggleCommentLike,
   handleDeleteComment,
   formatRelativeTime,
+  triggerAuthModal,
 }) {
   const isCommentLiked = node.likedBy?.includes(currentIdentifier);
   const isCommentCreator =
@@ -253,6 +338,12 @@ function CommentBranchNode({
         <button
           type="button"
           onClick={() => {
+            if (!getAuthToken()) {
+              if (triggerAuthModal) {
+                triggerAuthModal("Please log in to comment on this post/story.");
+              }
+              return;
+            }
             if (isReplyingThis) {
               setReplyingTo(null);
             } else {
@@ -331,6 +422,7 @@ function CommentBranchNode({
               handleToggleCommentLike={handleToggleCommentLike}
               handleDeleteComment={handleDeleteComment}
               formatRelativeTime={formatRelativeTime}
+              triggerAuthModal={triggerAuthModal}
             />
           ))}
         </div>
@@ -346,7 +438,8 @@ export default function ReelsNewsFeed() {
     canonicalPath: "/news",
   });
   const [searchParams] = useSearchParams();
-  const targetStoryId = searchParams.get("storyId") || searchParams.get("targetId");
+  const { id: paramStoryId } = useParams();
+  const targetStoryId = paramStoryId || searchParams.get("storyId") || searchParams.get("targetId");
 
   const [stories, setStories] = useState([]);
   const [page, setPage] = useState(1);
@@ -385,12 +478,14 @@ export default function ReelsNewsFeed() {
   const containerRef = useRef(null);
   const storyRefs = useRef([]);
 
-  // Sync user from authStorage
+  // Sync user from authStorage (listens to auth-change for instant reactive updates)
   useEffect(() => {
-    const user = getAuthUser();
-    if (user) {
-      setCurrentUser(user);
-    }
+    const syncUser = () => {
+      setCurrentUser(getAuthUser());
+    };
+    syncUser();
+    window.addEventListener("auth-change", syncUser);
+    return () => window.removeEventListener("auth-change", syncUser);
   }, []);
 
   // Lock body scroll while on Local Updates / News page, restore on unmount
@@ -531,7 +626,7 @@ export default function ReelsNewsFeed() {
   const handleToggleLike = async (storyId) => {
     const token = getAuthToken();
     if (!token) {
-      setAuthModalReason("Please log in or create an account to like local news stories.");
+      setAuthModalReason("Please log in to like this post/story.");
       setAuthModalOpen(true);
       return;
     }
@@ -676,7 +771,7 @@ export default function ReelsNewsFeed() {
     e.preventDefault();
     const token = getAuthToken();
     if (!token) {
-      setAuthModalReason("Please sign in or create an account to post a comment.");
+      setAuthModalReason("Please log in to comment on this post/story.");
       setAuthModalOpen(true);
       return;
     }
@@ -734,7 +829,7 @@ export default function ReelsNewsFeed() {
   const handlePostReply = async (targetParentId, targetAuthorName) => {
     const token = getAuthToken();
     if (!token) {
-      setAuthModalReason("Please sign in or create an account to post a reply.");
+      setAuthModalReason("Please log in to comment on this post/story.");
       setAuthModalOpen(true);
       return;
     }
@@ -777,7 +872,7 @@ export default function ReelsNewsFeed() {
     } catch (err) {
       console.error("Reply post error:", err);
       if (err.response?.status === 401) {
-        setAuthModalReason("Your session has expired. Please sign in to reply.");
+        setAuthModalReason("Your session has expired. Please log in again to comment.");
         setAuthModalOpen(true);
       } else {
         alert(err.response?.data?.message || "Failed to post reply.");
@@ -790,7 +885,7 @@ export default function ReelsNewsFeed() {
   const handleToggleCommentLike = async (commentId) => {
     const token = getAuthToken();
     if (!token) {
-      setAuthModalReason("Please sign in or create an account to like comments.");
+      setAuthModalReason("Please log in to like this post/story.");
       setAuthModalOpen(true);
       return;
     }
@@ -1023,6 +1118,7 @@ export default function ReelsNewsFeed() {
                   story={story}
                   active={idx === activeStoryIndex}
                   muted={videoMuted}
+                  isPaused={Boolean(readingStory || commentDrawerStory)}
                 />
 
                 {/* Right Floating Actions Rail (Reels / Shorts Style) */}
@@ -1264,6 +1360,10 @@ export default function ReelsNewsFeed() {
                       handleToggleCommentLike={handleToggleCommentLike}
                       handleDeleteComment={handleDeleteComment}
                       formatRelativeTime={formatRelativeTime}
+                      triggerAuthModal={(reason) => {
+                        setAuthModalReason(reason);
+                        setAuthModalOpen(true);
+                      }}
                     />
                   );
                 })}
@@ -1273,7 +1373,7 @@ export default function ReelsNewsFeed() {
             {!currentUser && !getAuthToken() ? (
               <div className="p-4 border-t border-slate-700/80 bg-slate-900/90 text-center space-y-2.5 shrink-0">
                 <p className="text-xs text-slate-300 font-medium">
-                  🔒 Please sign in to join the discussion and post comments.
+                  🔒 Please log in to comment on this post/story.
                 </p>
                 <div className="flex items-center justify-center gap-2">
                   <button
@@ -1303,7 +1403,7 @@ export default function ReelsNewsFeed() {
             ) : (
               <form
                 onSubmit={handlePostComment}
-                className="p-3 border-t border-slate-700/80 bg-slate-900/90 space-y-2 shrink-0"
+                className="p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-slate-700/80 bg-slate-900/90 space-y-2 shrink-0"
               >
                 {commentError && (
                   <div className="text-[11px] text-red-400 bg-red-950/60 p-2 rounded-lg border border-red-800">
@@ -1319,12 +1419,12 @@ export default function ReelsNewsFeed() {
                     onChange={(e) => setCommentText(e.target.value)}
                     maxLength={500}
                     disabled={submittingComment}
-                    className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-[#B8323C]"
+                    className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm sm:text-xs min-h-[44px] text-white placeholder-slate-400 focus:outline-none focus:border-[#B8323C] font-medium"
                   />
                   <button
                     type="submit"
                     disabled={submittingComment || !commentText.trim()}
-                    className="bg-[#B8323C] hover:bg-[#991B1B] disabled:opacity-40 text-white p-2 rounded-xl transition cursor-pointer"
+                    className="bg-[#B8323C] hover:bg-[#991B1B] disabled:opacity-40 text-white min-h-[44px] min-w-[44px] rounded-xl transition cursor-pointer flex items-center justify-center"
                     title="Post comment"
                   >
                     <Send className="w-4 h-4" />
@@ -1509,7 +1609,7 @@ export default function ReelsNewsFeed() {
               <button
                 type="button"
                 onClick={() => {
-                  const activeStory = stories[activeStoryIndex];
+                  const activeStory = stories[activeStoryIndex] || commentDrawerStory;
                   const from = activeStory ? `/news?storyId=${activeStory._id}` : "/news";
                   navigate("/login", { state: { from } });
                 }}
@@ -1522,7 +1622,7 @@ export default function ReelsNewsFeed() {
               <button
                 type="button"
                 onClick={() => {
-                  const activeStory = stories[activeStoryIndex];
+                  const activeStory = stories[activeStoryIndex] || commentDrawerStory;
                   const from = activeStory ? `/news?storyId=${activeStory._id}` : "/news";
                   navigate("/register", { state: { from } });
                 }}

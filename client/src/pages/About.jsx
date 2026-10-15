@@ -118,13 +118,13 @@ export default function About() {
 
       {/* Interactive Tabs */}
       <div id="heritage-showcase" className="scroll-mt-24 space-y-8">
-        <div className="flex flex-wrap items-center justify-center gap-2 p-1.5 bg-[#F5F7F8] rounded-2xl border border-[#E1E6EA] max-w-xl mx-auto">
+        <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center justify-center gap-2 p-1.5 bg-[#F5F7F8] rounded-2xl border border-[#E1E6EA] max-w-xl mx-auto">
           <button
             type="button"
             onClick={() => setActiveTab("fazilnagar")}
-            className={`flex-1 min-w-[150px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+            className={`w-full sm:w-auto sm:flex-1 min-h-[44px] py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "fazilnagar"
-                ? "bg-[#18232E] text-white shadow-md"
+                ? "bg-[#18232E] text-white shadow-md font-black"
                 : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
             }`}
           >
@@ -133,9 +133,9 @@ export default function About() {
           <button
             type="button"
             onClick={() => setActiveTab("kushinagar")}
-            className={`flex-1 min-w-[150px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+            className={`w-full sm:w-auto sm:flex-1 min-h-[44px] py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "kushinagar"
-                ? "bg-[#18232E] text-white shadow-md"
+                ? "bg-[#18232E] text-white shadow-md font-black"
                 : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
             }`}
           >
@@ -144,9 +144,9 @@ export default function About() {
           <button
             type="button"
             onClick={() => setActiveTab("connection")}
-            className={`flex-1 min-w-[150px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+            className={`w-full sm:w-auto sm:flex-1 min-h-[44px] py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "connection"
-                ? "bg-[#18232E] text-white shadow-md"
+                ? "bg-[#18232E] text-white shadow-md font-black"
                 : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
             }`}
           >

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import API from "../api";
+import API, { performLogout } from "../api";
 import { getAuthToken, getAuthUser, setAuthSession, clearAuthSession } from "../utils/authStorage";
 import { usePageSEO } from "../utils/seo";
 
@@ -85,6 +85,8 @@ export default function AdminReview({ user: propUser }) {
         setCurrentUser(u);
       } else if (propUser) {
         setCurrentUser(propUser);
+      } else {
+        setCurrentUser(null);
       }
     };
 
@@ -190,8 +192,8 @@ export default function AdminReview({ user: propUser }) {
     }
   };
 
-  const handleLogout = () => {
-    clearAuthSession(false);
+  const handleLogout = async () => {
+    await performLogout();
     setCurrentUser(null);
     navigate("/login");
   };

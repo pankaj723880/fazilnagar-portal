@@ -118,22 +118,22 @@ export default function Tourism() {
       </div>
 
       {/* Tabs */}
-      <div className="flex bg-slate-200/80 p-1.5 rounded-2xl max-w-md">
+      <div className="flex items-center gap-1.5 bg-slate-200/80 p-1.5 rounded-2xl w-full max-w-md overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab("places")}
-          className={`flex-1 py-2 text-xs font-bold rounded-xl transition cursor-pointer ${
+          className={`flex-1 min-w-[100px] py-2 px-2.5 text-xs font-bold rounded-xl transition cursor-pointer min-h-[44px] flex items-center justify-center text-center whitespace-nowrap ${
             activeTab === "places"
-              ? "bg-[#0D5E49] text-white shadow-xs"
+              ? "bg-[#0D5E49] text-white shadow-xs font-black"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
-          🏰 Heritage Sites ({heritageSites.length})
+          🏰 Sites ({heritageSites.length})
         </button>
         <button
           onClick={() => setActiveTab("itinerary")}
-          className={`flex-1 py-2 text-xs font-bold rounded-xl transition cursor-pointer ${
+          className={`flex-1 min-w-[100px] py-2 px-2.5 text-xs font-bold rounded-xl transition cursor-pointer min-h-[44px] flex items-center justify-center text-center whitespace-nowrap ${
             activeTab === "itinerary"
-              ? "bg-[#0D5E49] text-white shadow-xs"
+              ? "bg-[#0D5E49] text-white shadow-xs font-black"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
@@ -141,9 +141,9 @@ export default function Tourism() {
         </button>
         <button
           onClick={() => setActiveTab("stays")}
-          className={`flex-1 py-2 text-xs font-bold rounded-xl transition cursor-pointer ${
+          className={`flex-1 min-w-[100px] py-2 px-2.5 text-xs font-bold rounded-xl transition cursor-pointer min-h-[44px] flex items-center justify-center text-center whitespace-nowrap ${
             activeTab === "stays"
-              ? "bg-[#0D5E49] text-white shadow-xs"
+              ? "bg-[#0D5E49] text-white shadow-xs font-black"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >

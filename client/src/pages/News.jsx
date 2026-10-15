@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import API from "../api";
 import { usePageSEO } from "../utils/seo";
 import { Newspaper, PlusCircle, Search, Calendar, User, Tag, Sparkles } from "lucide-react";
+import StoryVideoPreview from "../components/StoryVideoPreview";
 
 const FALLBACK_NEWS = [
   {
@@ -161,17 +162,12 @@ export default function News() {
               <div>
                 {/* Media if available */}
                 {(article.mediaType === "video" || article.video) ? (
-                  <div className="h-48 w-full overflow-hidden bg-black flex items-center justify-center relative">
-                    <video
-                      src={article.video || article.mediaUrl}
-                      muted
-                      playsInline
-                      className="w-full h-full object-cover"
-                    />
-                    <span className="absolute top-2 right-2 bg-black/70 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                      📹 Video
-                    </span>
-                  </div>
+                  <StoryVideoPreview
+                    story={article}
+                    className="h-48 w-full"
+                    aspectRatio="aspect-auto"
+                    fallbackPoster={article.image || ""}
+                  />
                 ) : (article.image || article.mediaUrl) ? (
                   <div className="h-48 w-full overflow-hidden bg-slate-100">
                     <img
@@ -216,7 +212,9 @@ export default function News() {
                   </div>
 
                   <h2 className="text-base font-bold text-[#18232E] group-hover:text-[#B8323C] transition-colors leading-snug line-clamp-2">
-                    {article.title}
+                    <Link to={`/news?storyId=${article._id || article.id}`}>
+                      {article.title}
+                    </Link>
                   </h2>
 
                   {article.titleHi && (
@@ -236,9 +234,12 @@ export default function News() {
                   <User className="w-3.5 h-3.5 text-slate-400" />
                   <span>{article.author?.name || "Local Resident"}</span>
                 </span>
-                <span className="text-[#168568] font-bold text-[10px] uppercase">
-                  Verified Update
-                </span>
+                <Link
+                  to={`/news?storyId=${article._id || article.id}`}
+                  className="text-red-700 hover:text-red-800 font-bold text-xs"
+                >
+                  View Story →
+                </Link>
               </div>
             </article>
           ))}

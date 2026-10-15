@@ -138,14 +138,17 @@ export default function EducationHub() {
                 <p><strong>📝 Admissions:</strong> {inst.admission}</p>
                 <p><strong>🎓 Scholarships:</strong> {inst.scholarship}</p>
                 <p><strong>🏠 Hostel:</strong> {inst.hostel}</p>
+                <p><strong>📞 Helpline:</strong> {inst.contact}</p>
               </div>
             </div>
 
             <a
               href={`tel:${inst.contact}`}
-              className="block bg-slate-900 hover:bg-slate-800 text-white text-center font-bold text-xs py-3 rounded-xl transition-colors"
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white text-center font-bold text-xs py-2.5 px-3 rounded-xl transition-colors min-h-[44px] flex items-center justify-center gap-1.5"
             >
-              📞 Admission Inquiry ({inst.contact})
+              <span>📞</span>
+              <span>Call Admission Desk</span>
+              <span className="opacity-80 font-normal hidden min-[360px]:inline">({inst.contact})</span>
             </a>
           </div>
         ))}

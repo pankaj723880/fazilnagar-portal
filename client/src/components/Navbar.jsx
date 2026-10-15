@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getAuthToken, getAuthUser, clearAuthSession } from "../utils/authStorage";
+import { performLogout } from "../api";
 
 export default function Navbar() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -17,8 +18,8 @@ export default function Navbar() {
     return () => window.removeEventListener("auth-change", checkAuth);
   }, []);
 
-  const handleLogout = () => {
-    clearAuthSession(true);
+  const handleLogout = async () => {
+    await performLogout();
     setCurrentUser(null);
     navigate("/login");
   };

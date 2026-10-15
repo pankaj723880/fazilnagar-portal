@@ -82,15 +82,18 @@ export default function Marketplace() {
               </span>
               <h3 className="text-base font-bold text-slate-900 mt-2">{prod.name}</h3>
               <p className="text-xs text-slate-500 font-medium">🏪 Seller: {prod.seller}</p>
+              <p className="text-xs text-slate-600 font-semibold">📞 {prod.contact}</p>
               <p className="text-sm font-extrabold text-emerald-700 mt-2">💵 {prod.price}</p>
               <p className="text-xs text-slate-400 mt-1">📍 {prod.location}</p>
             </div>
 
             <a
               href={`tel:${prod.contact}`}
-              className="block bg-slate-900 hover:bg-slate-800 text-white text-center font-bold text-xs py-2.5 rounded-xl transition-colors"
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white text-center font-bold text-xs py-2.5 px-3 rounded-xl transition-colors min-h-[44px] flex items-center justify-center gap-1.5"
             >
-              📞 Contact Seller ({prod.contact})
+              <span>📞</span>
+              <span>Contact Seller</span>
+              <span className="opacity-80 font-normal hidden min-[360px]:inline">({prod.contact})</span>
             </a>
           </div>
         ))}

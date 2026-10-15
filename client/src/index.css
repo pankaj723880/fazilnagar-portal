@@ -21,6 +21,8 @@
     padding: 0;
     position: relative;
     overscroll-behavior-x: none;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
@@ -31,19 +33,28 @@
     padding: 0;
     position: relative;
     overscroll-behavior-x: none;
+    -webkit-tap-highlight-color: transparent;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #F5F7F8;
+    color: #18232E;
   }
 
   #root {
     overflow-x: hidden;
     max-width: 100vw;
     width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
 
-  body {
-    overscroll-behavior-x: none;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: #F5F7F8;
-    color: #18232E;
+  /* Prevent iOS Safari from auto-zooming on focus when font-size < 16px */
+  @media screen and (max-width: 640px) {
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
   }
 
   h1, h2, h3, h4, h5, h6, .font-heading {
@@ -53,6 +64,18 @@
   .font-hindi {
     font-family: 'Noto Sans Devanagari', sans-serif;
   }
+}
+
+/* Mobile Safe-Area Utilities */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
 }
 
 /* Modern Civic & Editorial Custom Color Utilities */

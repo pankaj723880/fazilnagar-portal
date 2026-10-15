@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { isUserLoggedIn } from "../utils/authStorage";
 
 // Carousel Banner Images
 const CAROUSEL_SLIDES = [];
@@ -74,6 +76,9 @@ const FOOD_POSTS = [
 export default function Fazilnagar() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [likedPosts, setLikedPosts] = useState({});
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalReason, setAuthModalReason] = useState("");
+  const navigate = useNavigate();
 
   // Auto-play Carousel
   useEffect(() => {
@@ -85,6 +90,23 @@ export default function Fazilnagar() {
 
   const toggleLike = (postId) => {
     setLikedPosts((prev) => ({ ...prev, [postId]: !prev[postId] }));
+  };
+
+  const handleLike = (postId) => {
+    if (!isUserLoggedIn()) {
+      setAuthModalReason("Please log in to like this post/story.");
+      setAuthModalOpen(true);
+      return;
+    }
+    toggleLike(postId);
+  };
+
+  const handleComment = () => {
+    if (!isUserLoggedIn()) {
+      setAuthModalReason("Please log in to comment on this post/story.");
+      setAuthModalOpen(true);
+      return;
+    }
   };
 
   return (
@@ -202,15 +224,22 @@ export default function Fazilnagar() {
               <div className="px-4 pt-3 flex items-center justify-between text-slate-700">
                 <div className="flex items-center space-x-4 text-xl">
                   <button
-                    onClick={() => toggleLike(`tourist_${post.id}`)}
-                    className="focus:outline-none transition-transform active:scale-125"
+                    onClick={() => handleLike(`tourist_${post.id}`)}
+                    className="focus:outline-none transition-transform active:scale-125 cursor-pointer"
+                    aria-label="Like post"
                   >
                     {likedPosts[`tourist_${post.id}`] ? "❤️" : "🤍"}
                   </button>
-                  <button>💬</button>
-                  <button>🚀</button>
+                  <button
+                    onClick={() => handleComment()}
+                    className="cursor-pointer"
+                    aria-label="Comment on post"
+                  >
+                    💬
+                  </button>
+                  <button aria-label="Share">🚀</button>
                 </div>
-                <button>🔖</button>
+                <button aria-label="Save">🔖</button>
               </div>
 
               {/* Post Content */}
@@ -278,15 +307,22 @@ export default function Fazilnagar() {
               <div className="px-4 pt-3 flex items-center justify-between text-slate-700">
                 <div className="flex items-center space-x-4 text-xl">
                   <button
-                    onClick={() => toggleLike(`food_${post.id}`)}
-                    className="focus:outline-none transition-transform active:scale-125"
+                    onClick={() => handleLike(`food_${post.id}`)}
+                    className="focus:outline-none transition-transform active:scale-125 cursor-pointer"
+                    aria-label="Like post"
                   >
                     {likedPosts[`food_${post.id}`] ? "❤️" : "🤍"}
                   </button>
-                  <button>💬</button>
-                  <button>🚀</button>
+                  <button
+                    onClick={() => handleComment()}
+                    className="cursor-pointer"
+                    aria-label="Comment on post"
+                  >
+                    💬
+                  </button>
+                  <button aria-label="Share">🚀</button>
                 </div>
-                <button>🔖</button>
+                <button aria-label="Save">🔖</button>
               </div>
 
               {/* Post Content */}
@@ -308,6 +344,52 @@ export default function Fazilnagar() {
           ))}
         </div>
       </section>
+
+      {/* Guest Auth Required Prompt Modal */}
+      {authModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-[#18232E] text-white w-full max-w-sm rounded-3xl border border-slate-700 shadow-2xl p-6 text-center space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-red-950/80 border border-red-800/80 text-rose-400 mx-auto flex items-center justify-center shadow-lg text-2xl">
+              🔒
+            </div>
+
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-black text-white">
+                Sign In Required / लॉगिन आवश्यक है
+              </h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                {authModalReason || "Please log in to like this post/story."}
+              </p>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <button
+                type="button"
+                onClick={() => navigate("/login", { state: { from: "/fazilnagar" } })}
+                className="w-full py-2.5 bg-[#B8323C] hover:bg-red-700 text-white font-bold text-xs rounded-xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Login / लॉगिन करें</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate("/register", { state: { from: "/fazilnagar" } })}
+                className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition border border-slate-700 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Create Free Account / नया खाता बनाएं</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAuthModalOpen(false)}
+                className="text-xs text-slate-400 hover:text-white pt-1 font-semibold cursor-pointer block w-full text-center"
+              >
+                Cancel / बाद में
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

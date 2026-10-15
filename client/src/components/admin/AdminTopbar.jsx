@@ -273,7 +273,7 @@ export default function AdminTopbar({
           </button>
 
           {notifDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-50 text-xs animate-in fade-in slide-in-from-top-2">
+            <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-50 text-xs animate-in fade-in slide-in-from-top-2">
               <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
                 <span className="font-extrabold text-[#18232E]">Review Queue Notifications</span>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
@@ -354,7 +354,7 @@ export default function AdminTopbar({
           </button>
 
           {profileDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-50 text-xs animate-in fade-in slide-in-from-top-2">
+            <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-[260px] sm:w-60 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-50 text-xs animate-in fade-in slide-in-from-top-2">
               <div className="p-3.5 bg-slate-50 border-b border-slate-200">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                   Civic Administrator

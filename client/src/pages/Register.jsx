@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import API from "../api";
 import { setAuthSession } from "../utils/authStorage";
 import { usePageSEO } from "../utils/seo";
@@ -17,6 +17,9 @@ export default function Register({ setUser }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const redirectPath = location.state?.from || "/";
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -32,7 +35,7 @@ export default function Register({ setUser }) {
       
       if (setUser) setUser(userData);
 
-      navigate("/");
+      navigate(redirectPath, { replace: true });
     } catch (err) {
       const serverMessage = err.response?.data?.message || "Registration failed. Try again.";
       setError(serverMessage);
