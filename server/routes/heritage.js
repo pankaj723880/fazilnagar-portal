@@ -130,7 +130,6 @@ async function seedDefaultHeritageIfEmpty() {
 // @access  Public
 router.get("/", async (req, res) => {
   try {
-    await seedDefaultHeritageIfEmpty();
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     const sites = await HeritageSite.find({ isPublished: true }).sort({ displayOrder: 1, createdAt: -1 });
     res.status(200).json({ success: true, count: sites.length, sites });
@@ -145,7 +144,6 @@ router.get("/", async (req, res) => {
 // @access  Private (Admin)
 router.get("/admin", verifyToken, requireAdmin, async (req, res) => {
   try {
-    await seedDefaultHeritageIfEmpty();
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     const sites = await HeritageSite.find().sort({ displayOrder: 1, createdAt: -1 });
     res.status(200).json({ success: true, count: sites.length, sites });

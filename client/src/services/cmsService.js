@@ -583,7 +583,7 @@ export async function getEvents({ category = "All", search = "", timeFilter = ""
   } catch (err) {
     console.warn("[CMSService] Events fetch error, using fallbacks:", err.message);
   }
-  return memoryCache.events.data || getPersistentCache("events") || DEFAULT_EVENTS;
+  return [];
 }
 
 /**
@@ -609,5 +609,5 @@ export async function getHeritageSites(forceFresh = false) {
   } catch (err) {
     console.warn("[CMSService] Heritage fetch error, using fallbacks:", err.message);
   }
-  return memoryCache.heritage.data || getPersistentCache("heritage") || DEFAULT_HERITAGE_SITES;
+  return [];
 }

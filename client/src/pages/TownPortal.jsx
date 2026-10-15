@@ -224,8 +224,8 @@ export default function TownPortal() {
 
   // Dynamic Site Settings, Heritage Sites & Events from CMS
   const [siteSettings, setSiteSettings] = useState(() => getCachedSettings() || DEFAULT_SITE_SETTINGS);
-  const [heritageSites, setHeritageSites] = useState(() => getCachedHeritage() || DEFAULT_HERITAGE_SITES);
-  const [events, setEvents] = useState(() => getCachedEvents() || DEFAULT_EVENTS);
+  const [heritageSites, setHeritageSites] = useState(() => getCachedHeritage() || []);
+  const [events, setEvents] = useState(() => getCachedEvents() || []);
   const [selectedEventCategory, setSelectedEventCategory] = useState("All");
 
   const loadCMSData = () => {

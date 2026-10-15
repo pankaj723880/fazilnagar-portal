@@ -16,6 +16,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import API from "../api";
+import { getAuthToken, getAuthUser } from "../utils/authStorage";
 import {
   getNotificationPermission,
   requestNotificationPermission,
@@ -32,6 +33,7 @@ export default function NotificationCenter() {
   const [permission, setPermission] = useState("default");
   const [isTesting, setIsTesting] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(() => getAuthUser()?.role === "admin");
   const containerRef = useRef(null);
 
   // Load notifications and permissions on mount
@@ -45,10 +47,13 @@ export default function NotificationCenter() {
     // Initial fetch
     loadNotifications(false);
 
-    // Periodic polling every 25 seconds for live alerts
+    // Poll frequently so broadcast notifications reach open visitor sessions promptly.
     const interval = setInterval(() => {
       fetchAndCheckNotifications({ triggerPopups: true });
-    }, 25000);
+    }, 5000);
+
+    const syncAdmin = () => setIsAdmin(getAuthUser()?.role === "admin");
+    window.addEventListener("auth-change", syncAdmin);
 
     // Listen for custom notification update events
     const handleUpdate = (e) => {
@@ -63,6 +68,7 @@ export default function NotificationCenter() {
 
     return () => {
       clearInterval(interval);
+      window.removeEventListener("auth-change", syncAdmin);
       window.removeEventListener("fazilnagar-notifications-updated", handleUpdate);
     };
   }, []);
@@ -114,15 +120,18 @@ export default function NotificationCenter() {
         }
       }
 
+      // Persist the broadcast first; only show local success after the server accepts it.
+      const response = await API.post(
+        "/notifications/test",
+        { deviceType: window.innerWidth > 768 ? "laptop / desktop" : "mobile phone" },
+        { headers: { Authorization: `Bearer ${getAuthToken()}` } }
+      );
+      if (!response.data?.success) throw new Error(response.data?.message || "Broadcast was rejected.");
+
       await showDeviceNotification({
         title: "🔔 Test Notification Received!",
         message: "Your laptop and mobile popup notifications are working perfectly with Fazilnagar Portal.",
         link: "/news",
-      });
-
-      // Also call backend test endpoint to insert in history
-      await API.post("/notifications/test", {
-        deviceType: window.innerWidth > 768 ? "laptop / desktop" : "mobile phone",
       });
       loadNotifications(false);
     } catch (err) {
@@ -292,8 +301,8 @@ export default function NotificationCenter() {
             </div>
           </div>
 
-          {/* OS Laptop / Mobile Notification Status Banner */}
-          <div className="p-3 border-b border-slate-800/70 bg-gradient-to-r from-blue-950/40 via-slate-900/50 to-indigo-950/40">
+          {/* Admin-only test controls; regular visitors only receive broadcasts. */}
+          {isAdmin && <div className="p-3 border-b border-slate-800/70 bg-gradient-to-r from-blue-950/40 via-slate-900/50 to-indigo-950/40">
             {permission === "granted" ? (
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
@@ -339,7 +348,7 @@ export default function NotificationCenter() {
                 </div>
               </div>
             )}
-          </div>
+          </div>}
 
           {/* Filter Tabs */}
           <div className="px-3 pt-2 pb-1 flex items-center gap-1 border-b border-slate-800/60 bg-slate-950/30 text-xs">

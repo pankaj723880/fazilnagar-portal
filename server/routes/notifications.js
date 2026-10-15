@@ -2,6 +2,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import Notification from "../models/Notification.js";
 import { createBroadcastNotification, createSubmissionNotification } from "../utils/notify.js";
+import verifyToken, { requireAdmin } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -163,7 +164,7 @@ router.post("/mark-all-read", async (req, res) => {
 // @route   POST /api/notifications/test
 // @desc    Trigger a test notification (useful for verifying laptop/phone popups)
 // @access  Public
-router.post("/test", async (req, res) => {
+router.post("/test", verifyToken, requireAdmin, async (req, res) => {
   try {
     const user = getOptionalUser(req);
     const { deviceType } = req.body;

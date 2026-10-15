@@ -63,7 +63,6 @@ async function seedDefaultEventsIfEmpty() {
 // @access  Public
 router.get("/", async (req, res) => {
   try {
-    await seedDefaultEventsIfEmpty();
     const { category, search, timeFilter } = req.query;
     const filter = { isPublished: true, status: "published" };
 
@@ -92,7 +91,6 @@ router.get("/", async (req, res) => {
 // @access  Private (Admin)
 router.get("/admin", verifyToken, requireAdmin, async (req, res) => {
   try {
-    await seedDefaultEventsIfEmpty();
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     const events = await Event.find().sort({ startDate: -1, createdAt: -1 });
     res.status(200).json({ success: true, count: events.length, events });

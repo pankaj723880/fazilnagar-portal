@@ -266,9 +266,14 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
           ? updateData.heroContent.trustBadges
           : (existingHC.trustBadges || []),
         actionButtons: Array.isArray(updateData.heroContent.actionButtons)
-          ? updateData.heroContent.actionButtons
+          ? updateData.heroContent.actionButtons.map((button, index) => ({
+              ...button,
+              isActive: button.isActive !== false,
+              displayOrder: button.displayOrder || index + 1,
+            }))
           : (existingHC.actionButtons || []),
       };
+      settings.markModified("heroContent");
     }
 
     if (updateData.homepageSections && typeof updateData.homepageSections === "object") {
