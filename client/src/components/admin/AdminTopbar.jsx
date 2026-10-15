@@ -148,265 +148,134 @@ export default function AdminTopbar({
     : [];
 
   return (
-    <header className="sticky top-0 z-20 h-16 bg-white border-b border-slate-200/90 shadow-2xs px-4 sm:px-6 flex items-center justify-between gap-4">
-      {/* Left: Sidebar Toggle + Breadcrumb */}
-      <div className="flex items-center gap-3 min-w-0">
-        <button
-          onClick={onToggleSidebar}
-          className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
-          title="Toggle Navigation Menu"
-          aria-label="Toggle Navigation Menu"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+    <div className="sticky top-0 z-30">
+      {/* SECTION 1: COMMON ADMIN HEADER (Sticky, 54px h) */}
+      <header className="h-[54px] bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 flex items-center justify-between shadow-2xs">
+        {/* Left: Brand mark [F] with FAZILNAGAR and Admin ⚙️ sub-badge */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            className="w-8 h-8 rounded-xl bg-slate-900 text-white font-black text-sm flex items-center justify-center shadow-xs active:scale-95 transition cursor-pointer shrink-0"
+            title="Toggle Menu"
+            aria-label="Toggle Navigation Menu"
+          >
+            F
+          </button>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="font-extrabold text-[14px] text-slate-900 tracking-tight font-heading truncate">
+              FAZILNAGAR
+            </span>
+            <span className="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200/80 px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shrink-0">
+              Admin ⚙️
+            </span>
+          </div>
+        </div>
 
-        <nav aria-label="Breadcrumb" className="hidden sm:flex items-center gap-2 text-xs truncate">
-          <span className="font-semibold text-slate-400">Fazilnagar Portal</span>
-          <span className="text-slate-300">/</span>
-          <span className="font-medium text-slate-500">{breadcrumb.group}</span>
-          <span className="text-slate-300">/</span>
-          <span className="font-extrabold text-[#18232E] truncate">{breadcrumb.label}</span>
-        </nav>
-      </div>
+        {/* Right: Notification Bell with alert dot and tiny red Logout button */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Refresh Action Button */}
+          <button
+            onClick={() => {
+              if (typeof onRefresh === "function") onRefresh();
+            }}
+            disabled={loading}
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
+            title="Refresh Data"
+            aria-label="Refresh Data from Server"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-blue-600" : ""}`} />
+          </button>
 
-      {/* Middle: Global Quick Search with Command Palette */}
-      <div className="flex-1 max-w-md hidden md:block" ref={searchContainerRef}>
-        <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
-          <input
-            ref={searchInputRef}
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => setSearchFocused(true)}
-            placeholder="Search portal modules (press Ctrl + K)..."
-            className="w-full pl-9 pr-14 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition outline-none"
-          />
-          <div className="absolute right-2.5 top-2 flex items-center">
-            <kbd className="text-[10px] font-mono font-bold bg-white border border-slate-200 text-slate-400 px-1.5 py-0.5 rounded shadow-2xs">
-              Ctrl + K
-            </kbd>
+          {/* Notifications Dropdown */}
+          <div className="relative" ref={notifRef}>
+            <button
+              onClick={() => setNotifDropdownOpen((prev) => !prev)}
+              className="relative p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
+              title="Notifications & Review Queue"
+              aria-label="Notifications"
+            >
+              <Bell className="w-4 h-4" />
+              {pendingCount > 0 && (
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-600 animate-pulse" />
+              )}
+            </button>
+
+            {notifDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-50 text-xs animate-in fade-in slide-in-from-top-2">
+                <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                  <span className="font-extrabold text-[#18232E]">Review Queue</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                    {pendingCount} Pending
+                  </span>
+                </div>
+
+                <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
+                  {pendingSubmissions.length === 0 ? (
+                    <div className="p-6 text-center text-slate-400">
+                      <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-500 mb-1.5" />
+                      <p className="font-semibold text-slate-700">Queue is clear</p>
+                      <p className="text-[11px] text-slate-400">All submissions have been verified.</p>
+                    </div>
+                  ) : (
+                    pendingSubmissions.slice(0, 6).map((sub) => (
+                      <div
+                        key={sub._id || sub.id}
+                        onClick={() => {
+                          handleTabChange("community-places");
+                          setNotifDropdownOpen(false);
+                        }}
+                        className="p-3 hover:bg-slate-50 transition cursor-pointer flex items-start gap-2.5"
+                      >
+                        <Clock className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-[#18232E] truncate">
+                            {sub.title || sub.name || "Place Submission"}
+                          </p>
+                          <p className="text-[10px] text-slate-500">
+                            {sub.category || "Listing"}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Quick jump search dropdown */}
-          {searchFocused && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-50 text-xs animate-in fade-in slide-in-from-top-2">
-              <div className="p-2.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
-                <span>{searchQuery ? "Search Results" : "Quick Module Jump"}</span>
-                <span className="text-[10px] font-normal text-slate-400">Press ESC to close</span>
-              </div>
-              <div className="max-h-64 overflow-y-auto p-1 space-y-0.5">
-                {(searchQuery ? searchResults : quickJumpModules.slice(0, 6)).map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.tab}
-                      onClick={() => {
-                        handleTabChange(item.tab);
-                        setSearchFocused(false);
-                        setSearchQuery("");
-                      }}
-                      className="w-full flex items-center justify-between p-2 rounded-xl text-left hover:bg-slate-100 text-slate-700 transition cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Icon className="w-4 h-4 text-slate-400" />
-                        <span className="font-bold text-slate-800">{item.label}</span>
-                      </div>
-                      <span className="text-[10px] text-slate-400 uppercase font-semibold">
-                        {item.group}
-                      </span>
-                    </button>
-                  );
-                })}
-                {searchQuery && searchResults.length === 0 && (
-                  <div className="p-4 text-center text-slate-400 text-xs">
-                    No matching modules found for "{searchQuery}".
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          {/* Tiny Logout button with red text */}
+          <button
+            onClick={() => {
+              if (typeof onLogout === "function") onLogout();
+            }}
+            className="text-red-600 hover:text-red-700 active:scale-95 text-xs font-bold px-2 py-1 rounded-lg hover:bg-red-50 transition cursor-pointer"
+          >
+            Logout
+          </button>
         </div>
-      </div>
+      </header>
 
-      {/* Right: Actions, Refresh, Notifications, Profile */}
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* Refresh Action Button */}
-        <button
-          onClick={() => {
-            if (typeof onRefresh === "function") onRefresh();
-          }}
-          disabled={loading}
-          className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
-          title="Refresh Data from Server"
-          aria-label="Refresh Data from Server"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-blue-600" : ""}`} />
-        </button>
-
-        {/* View Public Site (Desktop) */}
+      {/* Breadcrumb Area (Immediately below header, 32px h) */}
+      <div className="h-8 bg-slate-50/90 backdrop-blur-xs border-b border-slate-100 px-4 flex items-center justify-between text-xs">
+        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 truncate">
+          <span className="font-medium text-slate-400">Fazilnagar Portal</span>
+          <span className="text-slate-300">/</span>
+          <span className="font-semibold text-slate-600 truncate">{breadcrumb.group || "Website"}</span>
+          <span className="text-slate-300">/</span>
+          <span className="font-extrabold text-slate-900 truncate">{breadcrumb.label}</span>
+        </div>
         <a
           href="/"
           target="_blank"
           rel="noreferrer"
-          className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-blue-600 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition"
+          className="flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 shrink-0 cursor-pointer pl-2"
           title="Open Public Town Portal in New Tab"
         >
           <span>View Website</span>
-          <ExternalLink className="w-3.5 h-3.5" />
+          <ExternalLink className="w-3 h-3" />
         </a>
-
-        {/* Notifications Dropdown */}
-        <div className="relative" ref={notifRef}>
-          <button
-            onClick={() => setNotifDropdownOpen((prev) => !prev)}
-            className="relative p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
-            title="Notifications & Review Queue"
-            aria-label="Notifications & Review Queue"
-          >
-            <Bell className="w-4 h-4" />
-            {pendingCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-amber-500 text-slate-950 text-[9px] font-black flex items-center justify-center border-2 border-white shadow-2xs">
-                {pendingCount}
-              </span>
-            )}
-          </button>
-
-          {notifDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-50 text-xs animate-in fade-in slide-in-from-top-2">
-              <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                <span className="font-extrabold text-[#18232E]">Review Queue Notifications</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                  {pendingCount} Pending
-                </span>
-              </div>
-
-              <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
-                {pendingSubmissions.length === 0 ? (
-                  <div className="p-6 text-center text-slate-400">
-                    <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-500 mb-1.5" />
-                    <p className="font-semibold text-slate-700">Review queue is clear!</p>
-                    <p className="text-[11px] text-slate-400">All citizen submissions have been audited.</p>
-                  </div>
-                ) : (
-                  pendingSubmissions.slice(0, 6).map((sub) => (
-                    <div
-                      key={sub._id || sub.id}
-                      onClick={() => {
-                        handleTabChange("community-places");
-                        setNotifDropdownOpen(false);
-                      }}
-                      className="p-3 hover:bg-slate-50 transition cursor-pointer flex items-start gap-2.5"
-                    >
-                      <Clock className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <p className="font-bold text-[#18232E] truncate">
-                          {sub.title || sub.name || "Place Submission"}
-                        </p>
-                        <p className="text-[10px] text-slate-500">
-                          {sub.category || "Listing"} •{" "}
-                          {sub.createdAt ? new Date(sub.createdAt).toLocaleDateString() : "Recent"}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {pendingSubmissions.length > 0 && (
-                <div className="p-2.5 bg-slate-50 border-t border-slate-100 text-center">
-                  <button
-                    onClick={() => {
-                      handleTabChange("community-places");
-                      setNotifDropdownOpen(false);
-                    }}
-                    className="text-[11px] font-bold text-blue-600 hover:text-blue-800"
-                  >
-                    Open Community Review Desk ({pendingSubmissions.length} Total) →
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Divider */}
-        <div className="h-6 w-px bg-slate-200 hidden sm:block" />
-
-        {/* Admin Profile Dropdown */}
-        <div className="relative" ref={profileRef}>
-          <button
-            onClick={() => setProfileDropdownOpen((prev) => !prev)}
-            className="flex items-center gap-2 p-1 sm:px-2.5 sm:py-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer"
-          >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#2563EB] to-indigo-600 text-white font-extrabold flex items-center justify-center text-xs shadow-xs">
-              {(currentUser?.name || currentUser?.email || "Admin")[0].toUpperCase()}
-            </div>
-            <div className="hidden sm:block text-left leading-tight">
-              <span className="text-xs font-bold text-[#18232E] block truncate max-w-[110px]">
-                {currentUser?.name || "Town Admin"}
-              </span>
-              <span className="text-[10px] text-slate-400 block truncate max-w-[110px]">
-                {currentUser?.email || "admin@fazilnagar.com"}
-              </span>
-            </div>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
-          </button>
-
-          {profileDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-[260px] sm:w-60 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-50 text-xs animate-in fade-in slide-in-from-top-2">
-              <div className="p-3.5 bg-slate-50 border-b border-slate-200">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                  Civic Administrator
-                </span>
-                <p className="font-extrabold text-[#18232E] truncate mt-0.5">
-                  {currentUser?.email || "admin@fazilnagar.com"}
-                </p>
-                <div className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                  <span>Authorized Official</span>
-                </div>
-              </div>
-
-              <div className="p-1.5 space-y-0.5">
-                <button
-                  onClick={() => {
-                    handleTabChange("cms-settings");
-                    setProfileDropdownOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 font-semibold cursor-pointer text-left"
-                >
-                  <Settings className="w-4 h-4 text-slate-400" />
-                  <span>Portal Settings</span>
-                </button>
-
-                <a
-                  href="/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 font-semibold cursor-pointer text-left"
-                >
-                  <ExternalLink className="w-4 h-4 text-slate-400" />
-                  <span>View Public Portal</span>
-                </a>
-
-                <div className="border-t border-slate-100 my-1" />
-
-                <button
-                  onClick={() => {
-                    setProfileDropdownOpen(false);
-                    if (typeof onLogout === "function") onLogout();
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 font-bold cursor-pointer text-left"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Sign Out</span>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
-    </header>
+    </div>
   );
 }

@@ -356,7 +356,8 @@ export default function MobileHomePortal({
   // Section 8: Footer Accordions
   const [footerOpen, setFooterOpen] = useState({
     quickNav: false,
-    categories: false,
+    community: false,
+    emergency: false,
     legal: false,
   });
 
@@ -1365,17 +1366,30 @@ export default function MobileHomePortal({
       </section>
 
       {/* ========================================================
-          SECTION 6: COMPREHENSIVE DIRECTORY FOOTER (Collapsible Accordions)
+          SECTION 6: ADAPTABLE FOOTER SYSTEM (Collapsible Accordions)
           ======================================================== */}
-      <footer className="mt-4 px-4 pt-4 pb-28 border-t border-slate-200 bg-white text-slate-600 text-xs space-y-2">
-        {/* Accordion 1: Quick Navigation */}
-        <div className="border border-slate-100 rounded-xl overflow-hidden">
+      <footer className="mt-4 px-4 pt-4 pb-28 border-t border-slate-200 bg-white text-slate-600 text-xs space-y-2.5">
+        {/* Custom Brand Title Block */}
+        <div className="border-b border-slate-100 pb-3">
+          <h3 className="text-slate-900 font-extrabold text-sm tracking-tight font-heading">
+            FAZIL<span className="text-[#B8323C]">NAGAR</span> Civic Portal
+          </h3>
+          <p className="text-slate-500 text-[11px] mt-0.5 leading-relaxed">
+            PIN 274401. NH-27 Corridor, Kushinagar, UP
+          </p>
+          <p className="text-[10px] text-slate-400 mt-1">
+            Admin Help / Complaints: <span className="text-slate-700 font-mono">+91 5564 222102</span> • Toll-Free: <span className="text-slate-700 font-mono">1800-180-5145</span>
+          </p>
+        </div>
+
+        {/* Accordion 1: Civic Navigation */}
+        <div className="border border-slate-200/80 rounded-xl overflow-hidden shadow-2xs">
           <button
             type="button"
             onClick={() => toggleFooterSection("quickNav")}
             className="w-full p-3 flex items-center justify-between font-bold text-slate-800 bg-slate-50/70 cursor-pointer"
           >
-            <span>▶ Quick Navigation</span>
+            <span>▶ Civic Navigation (Town Directory, News, Emergency)</span>
             {footerOpen.quickNav ? (
               <ChevronUp className="w-4 h-4 text-slate-500" />
             ) : (
@@ -1387,62 +1401,101 @@ export default function MobileHomePortal({
               <Link to="/" className="block py-1.5 text-slate-700 hover:text-red-600">
                 🏛️ Portal Home
               </Link>
-              <Link to="/directory" className="block py-1.5 text-slate-700 hover:text-red-600">
-                🗺️ Town Directory & Map
+              <Link to="/directory" className="block py-1.5 text-slate-700 hover:text-red-600 font-semibold text-red-600">
+                📍 Town Directory &amp; Map
               </Link>
               <Link to="/news" className="block py-1.5 text-slate-700 hover:text-red-600">
-                📰 Town Updates & News
+                📰 Town Updates &amp; News
               </Link>
               <Link to="/emergency" className="block py-1.5 text-slate-700 hover:text-red-600">
-                🚨 24/7 Helplines & Police
+                🚨 24/7 Helplines &amp; Police
               </Link>
-              <Link to="/about" className="block py-1.5 text-slate-700 hover:text-red-600">
-                ℹ️ About Fazilnagar
+              <Link to="/healthcare" className="block py-1.5 text-slate-700 hover:text-red-600">
+                🏥 Hospitals &amp; Clinics
+              </Link>
+              <Link to="/govt" className="block py-1.5 text-slate-700 hover:text-red-600">
+                🏛️ Public Services
               </Link>
             </div>
           )}
         </div>
 
-        {/* Accordion 2: Popular Categories */}
-        <div className="border border-slate-100 rounded-xl overflow-hidden">
+        {/* Accordion 2: Community Actions */}
+        <div className="border border-slate-200/80 rounded-xl overflow-hidden shadow-2xs">
           <button
             type="button"
-            onClick={() => toggleFooterSection("categories")}
+            onClick={() => toggleFooterSection("community")}
             className="w-full p-3 flex items-center justify-between font-bold text-slate-800 bg-slate-50/70 cursor-pointer"
           >
-            <span>▶ Popular Categories</span>
-            {footerOpen.categories ? (
+            <span>▶ Community Actions (Submit Local News, Citizen Login)</span>
+            {footerOpen.community ? (
               <ChevronUp className="w-4 h-4 text-slate-500" />
             ) : (
               <ChevronDown className="w-4 h-4 text-slate-500" />
             )}
           </button>
-          {footerOpen.categories && (
+          {footerOpen.community && (
             <div className="p-3 bg-white divide-y divide-slate-100 text-xs">
-              <Link to="/healthcare" className="block py-1.5 text-slate-700 hover:text-red-600">
-                🏥 CHC & Private Hospitals
+              <Link to="/create-news" className="block py-1.5 text-slate-700 hover:text-red-600">
+                ✍️ Submit Local News
               </Link>
-              <Link to="/education" className="block py-1.5 text-slate-700 hover:text-red-600">
-                🏫 Schools & Inter Colleges
+              <Link to="/login" className="block py-1.5 text-slate-700 hover:text-red-600">
+                👤 Citizen / Reporter Login
               </Link>
-              <Link to="/directory?category=Sweet%20Shops%20%26%20Bakeries" className="block py-1.5 text-slate-700 hover:text-red-600">
-                🍬 Famous Sweet Shops & Chaat
+              <Link to="/register" className="block py-1.5 text-slate-700 hover:text-red-600">
+                📝 Register Resident Account
               </Link>
-              <Link to="/jobs" className="block py-1.5 text-slate-700 hover:text-red-600">
-                🌾 Krishi Mandi & Local Trade
+              <Link to="/admin/review" className="block py-1.5 text-amber-700 font-bold hover:text-amber-800">
+                🛡️ Admin dashboard
               </Link>
             </div>
           )}
         </div>
 
-        {/* Accordion 3: Legal & Independent Notice */}
-        <div className="border border-slate-100 rounded-xl overflow-hidden">
+        {/* Accordion 3: Emergency Hotline Numbers */}
+        <div className="border border-slate-200/80 rounded-xl overflow-hidden shadow-2xs">
+          <button
+            type="button"
+            onClick={() => toggleFooterSection("emergency")}
+            className="w-full p-3 flex items-center justify-between font-bold text-slate-800 bg-slate-50/70 cursor-pointer"
+          >
+            <span>▶ Emergency Hotline Numbers (Police 112, CHC Ambulance 108)</span>
+            {footerOpen.emergency ? (
+              <ChevronUp className="w-4 h-4 text-slate-500" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-slate-500" />
+            )}
+          </button>
+          {footerOpen.emergency && (
+            <div className="p-3 bg-white divide-y divide-slate-100 text-xs">
+              <div className="flex items-center justify-between py-1.5">
+                <span className="text-slate-700">Police Outpost:</span>
+                <a href="tel:112" className="text-red-600 font-black font-mono">112</a>
+              </div>
+              <div className="flex items-center justify-between py-1.5">
+                <span className="text-slate-700">Ambulance Emergency:</span>
+                <a href="tel:108" className="text-emerald-600 font-black font-mono">108</a>
+              </div>
+              <div className="flex items-center justify-between py-1.5">
+                <span className="text-slate-700">Women Helpline:</span>
+                <a href="tel:1090" className="text-amber-600 font-black font-mono">1090</a>
+              </div>
+              <div className="flex items-center justify-between py-1.5">
+                <span className="text-slate-700">Fazilnagar CHC Direct:</span>
+                <a href="tel:05564222108" className="text-blue-600 font-bold font-mono">+91 5564 222108</a>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Accordion 4: Legal & Independent Portal Notice */}
+        <div className="border border-slate-200/80 rounded-xl overflow-hidden shadow-2xs">
           <button
             type="button"
             onClick={() => toggleFooterSection("legal")}
             className="w-full p-3 flex items-center justify-between font-bold text-slate-800 bg-slate-50/70 cursor-pointer"
           >
-            <span>▶ Legal & Independent Notice</span>
+            <span>▶ Legal &amp; Independent Portal Notice</span>
             {footerOpen.legal ? (
               <ChevronUp className="w-4 h-4 text-slate-500" />
             ) : (
@@ -1452,7 +1505,7 @@ export default function MobileHomePortal({
           {footerOpen.legal && (
             <div className="p-3 bg-white text-[11px] text-slate-500 leading-relaxed space-y-1.5">
               <p>
-                <strong>Independent Civic Directory:</strong> Fazilnagar Portal is an independent community initiative for residents, travelers, and local businesses in Fazilnagar Block (PIN 274401, Kushinagar).
+                <strong>Independent community directory notice:</strong> Fazilnagar Portal is an independent community initiative for residents, travelers, and local businesses in Fazilnagar Block (PIN 274401, Kushinagar).
               </p>
               <p>
                 Emergency numbers link directly to respective national and state utility hotlines (112, 108, 1912).
@@ -1462,7 +1515,7 @@ export default function MobileHomePortal({
         </div>
 
         <div className="pt-3 pb-6 text-center text-[11px] text-slate-400">
-          © {new Date().getFullYear()} Fazilnagar Town Portal • PIN 274401
+          Copyright: 2026 Fazilnagar Town Portal Modern Civic &amp; Editorial System
         </div>
       </footer>
 

@@ -148,54 +148,60 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
   ];
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Site Settings & Controls"
-        description="Centralized administration for town brand identity, emergency helplines, live announcement ticker, and 12 homepage section visibility switches."
-        icon={Sliders}
-        badge={
-          isDirty ? (
-            <span className="bg-amber-100 text-amber-800 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-amber-300">
-              Unsaved Changes
-            </span>
-          ) : (
-            <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">
-              Synced with Live Portal
-            </span>
-          )
-        }
-        actions={
-          <>
-            {isDirty && (
-              <button
-                type="button"
-                onClick={() => setResetDialogOpen(true)}
-                disabled={saving}
-                className="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-2xs flex items-center gap-1.5 cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset Changes</span>
-              </button>
+    <div className="space-y-4">
+      {/* 2.1 Quick Save Actions Bar: Sticky-top block */}
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-slate-200/90 shadow-sm flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight truncate font-heading">
+              Site Settings &amp; Controls
+            </h1>
+            {isDirty ? (
+              <span className="bg-amber-100 text-amber-900 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-300 shrink-0">
+                ● Unsaved
+              </span>
+            ) : (
+              <span className="bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200 shrink-0 flex items-center gap-1">
+                <span>✔</span> Synced
+              </span>
             )}
+          </div>
+          <p className="text-[11px] text-slate-500 truncate hidden sm:block">
+            Brand identity, announcement ticker, official helplines, and homepage visibility
+          </p>
+        </div>
 
+        <div className="flex items-center gap-2 shrink-0">
+          {isDirty && (
             <button
-              onClick={handleSave}
+              type="button"
+              onClick={() => setResetDialogOpen(true)}
               disabled={saving}
-              className="bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="h-10 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1 cursor-pointer active:scale-95"
+              title="Reset Changes"
             >
-              {saving ? (
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Save className="w-3.5 h-3.5" />
-              )}
-              <span>{saving ? "Saving Changes..." : "Save Settings"}</span>
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Reset</span>
             </button>
-          </>
-        }
-      />
+          )}
 
-      {/* Subtabs Bar */}
-      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none bg-white p-1.5 rounded-2xl border border-slate-200/90 shadow-2xs text-xs">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="h-10 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-50"
+          >
+            {saving ? (
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Save className="w-3.5 h-3.5" />
+            )}
+            <span>{saving ? "Saving..." : "Save Settings"}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 2.2 Horizontal Navigation Carousel (Swipeable row for settings panels) */}
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -203,10 +209,10 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3.5 py-2 rounded-xl font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer ${
                 isActive
-                  ? "bg-[#2563EB] text-white shadow-xs"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                  ? "bg-slate-900 text-white shadow-xs"
+                  : "bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-100"
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -217,17 +223,22 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
       </div>
 
       {/* Form Container */}
-      <form onSubmit={handleSave} className="space-y-6">
-        {/* SUBTAB 1: GENERAL IDENTITY */}
+      <form onSubmit={handleSave} className="space-y-4">
+        {/* SUBTAB 1: GENERAL IDENTITY (Single-Column Form Card) */}
         {activeTab === "general" && (
-          <FormSection
-            title="General Identity & Municipal Taglines"
-            description="Manage the official portal branding, English & Hindi taglines, and town crest."
-            icon={Globe}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-5 space-y-3.5 shadow-2xs">
+            <div className="border-b border-slate-100 pb-2.5">
+              <h2 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                <span>🏛️</span> General Identity &amp; Municipal Taglines
+              </h2>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Manage the official portal branding, English &amp; Hindi taglines, and town crest emblem.
+              </p>
+            </div>
+
+            <div className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
+                <label className="block text-[12px] font-bold text-slate-800 mb-1">
                   Full Portal Name (पूरा नाम) *
                 </label>
                 <input
@@ -235,13 +246,13 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
                   value={settings.siteName || ""}
                   onChange={(e) => updateField("siteName", e.target.value)}
                   placeholder="Fazilnagar Town Portal"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                  className="w-full h-[42px] px-3 py-2 text-sm rounded-xl border border-slate-200/90 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
+                <label className="block text-[12px] font-bold text-slate-800 mb-1">
                   Short Brand Name (संक्षिप्त नाम) *
                 </label>
                 <input
@@ -249,13 +260,13 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
                   value={settings.shortName || ""}
                   onChange={(e) => updateField("shortName", e.target.value)}
                   placeholder="FAZILNAGAR"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                  className="w-full h-[42px] px-3 py-2 text-sm rounded-xl border border-slate-200/90 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
+                <label className="block text-[12px] font-bold text-slate-800 mb-1">
                   Municipal Tagline (English)
                 </label>
                 <input
@@ -263,12 +274,12 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
                   value={settings.tagline || ""}
                   onChange={(e) => updateField("tagline", e.target.value)}
                   placeholder="Town Directory, Public Utilities & Civic Digital Services"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                  className="w-full h-[42px] px-3 py-2 text-sm rounded-xl border border-slate-200/90 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1 font-hindi">
+                <label className="block text-[12px] font-bold text-slate-800 mb-1 font-hindi">
                   Municipal Tagline (हिंदी)
                 </label>
                 <input
@@ -276,13 +287,13 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
                   value={settings.taglineHi || ""}
                   onChange={(e) => updateField("taglineHi", e.target.value)}
                   placeholder="फाजिलनगर नगर पंचायत — डिजिटल नागरिक सेवा पोर्टल"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-hindi focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                  className="w-full h-[42px] px-3 py-2 text-sm font-hindi rounded-xl border border-slate-200/90 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
                 />
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-xs font-bold text-slate-800 mb-1">
-                  Portal Logo / Emblem URL
+              <div>
+                <label className="block text-[12px] font-bold text-slate-800 mb-1">
+                  Logo Emblem URL
                 </label>
                 <div className="flex items-center gap-2">
                   <input
@@ -290,19 +301,19 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
                     value={settings.logoUrl || ""}
                     onChange={(e) => updateField("logoUrl", e.target.value)}
                     placeholder="https://example.com/logo.png"
-                    className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                    className="flex-1 h-[42px] px-3 py-2 text-sm rounded-xl border border-slate-200/90 bg-slate-50/50 font-mono focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
                   />
                   <button
                     type="button"
                     onClick={() => setMediaPickerTarget("logoUrl")}
-                    className="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
+                    className="h-[42px] px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
                   >
                     <span>Media Library</span>
                   </button>
                 </div>
               </div>
             </div>
-          </FormSection>
+          </div>
         )}
 
         {/* SUBTAB 2: ANNOUNCEMENT TICKER */}
@@ -531,43 +542,46 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
 
         {/* SUBTAB 4: HOMEPAGE VISIBILITY (THE 12 SWITCHES) */}
         {activeTab === "sections" && (
-          <FormSection
-            title="Homepage Section Visibility Switches (12 Sections)"
-            description="Control which sections appear on the live portal homepage without modifying codebase. Switches persist directly to database upon saving."
-            icon={Eye}
-          >
-            <div className="space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-5 space-y-4 shadow-2xs">
+            <div className="border-b border-slate-100 pb-2.5">
+              <h2 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                <span>👁️</span> Homepage Visibility Switches (12 Sections)
+              </h2>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Toggle sections live on the citizen portal instantly. Switches persist directly to database upon saving.
+              </p>
+            </div>
+
+            <div className="space-y-4">
               {/* Group A: Hero & Alerts */}
               <div>
                 <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
-                  A. Hero Carousel & Civic Alerts
+                  A. Hero Carousel &amp; Civic Alerts
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   {[
-                    { key: "heroCarousel", label: "Hero Banner & Carousel", desc: "Top animated photo slides" },
-                    { key: "announcementBanner", label: "Top Announcement Strip", desc: "Live scrolling notification bar" },
-                    { key: "emergencyStrip", label: "Emergency Dialer Strip", desc: "One-touch 24/7 call buttons" },
+                    { key: "heroCarousel", label: "Show Hero Carousel", desc: "Top animated photo slides" },
+                    { key: "announcementBanner", label: "Show News Ticker", desc: "Live scrolling notification bar" },
+                    { key: "emergencyStrip", label: "Show Emergency Grid", desc: "One-touch 24/7 call buttons" },
                   ].map((sec) => {
                     const isEnabled = settings.sections?.[sec.key] !== false;
                     return (
                       <div
                         key={sec.key}
                         onClick={() => updateField(`sections.${sec.key}`, !isEnabled)}
-                        className={`p-4 rounded-xl border transition cursor-pointer flex items-center justify-between gap-3 ${
+                        className={`p-3 rounded-xl border transition cursor-pointer flex items-center justify-between gap-2.5 active:scale-98 ${
                           isEnabled
-                            ? "bg-emerald-50/70 border-emerald-300 text-emerald-950"
-                            : "bg-slate-50 border-slate-200 text-slate-400"
+                            ? "bg-emerald-50/70 border-emerald-300 text-slate-900"
+                            : "bg-slate-50/70 border-slate-200 text-slate-500"
                         }`}
                       >
-                        <div>
-                          <h5 className="text-xs font-bold">{sec.label}</h5>
-                          <p className="text-[11px] opacity-75">{sec.desc}</p>
+                        <div className="min-w-0 pr-1">
+                          <h5 className="text-xs font-bold truncate">{sec.label}</h5>
+                          <p className="text-[10px] text-slate-500 truncate">{sec.desc}</p>
                         </div>
-                        <StatusBadge
-                          status={isEnabled ? "active" : "inactive"}
-                          label={isEnabled ? "Enabled" : "Hidden"}
-                          size="sm"
-                        />
+                        <div className={`w-9 h-5 rounded-full transition-colors relative shrink-0 ${isEnabled ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                          <div className={`w-3.5 h-3.5 rounded-full bg-white transition-transform absolute top-[3px] ${isEnabled ? 'left-[19px]' : 'left-[3px]'}`} />
+                        </div>
                       </div>
                     );
                   })}
@@ -577,35 +591,33 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
               {/* Group B: Directory & Discovery */}
               <div>
                 <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
-                  B. Directory & Geographic Discovery
+                  B. Directory &amp; Geographic Discovery
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   {[
-                    { key: "statsCounters", label: "Town Statistics Grid", desc: "19+ Verified Institution counters" },
-                    { key: "quickCategories", label: "Quick Category Hubs", desc: "Education, Hospitals, Fuel buttons" },
-                    { key: "interactiveMap", label: "Interactive Leaflet Map", desc: "Verified geographic town map" },
-                    { key: "featuredDirectory", label: "Curated Directory Cards", desc: "Town institutions preview" },
+                    { key: "statsCounters", label: "Show Statistics Grid", desc: "19+ Verified Institution counters" },
+                    { key: "quickCategories", label: "Show Category Hubs", desc: "Education, Hospitals, Fuel buttons" },
+                    { key: "interactiveMap", label: "Show Town Map", desc: "Verified geographic town map" },
+                    { key: "featuredDirectory", label: "Show Directory Cards", desc: "Town institutions preview" },
                   ].map((sec) => {
                     const isEnabled = settings.sections?.[sec.key] !== false;
                     return (
                       <div
                         key={sec.key}
                         onClick={() => updateField(`sections.${sec.key}`, !isEnabled)}
-                        className={`p-4 rounded-xl border transition cursor-pointer flex items-center justify-between gap-3 ${
+                        className={`p-3 rounded-xl border transition cursor-pointer flex items-center justify-between gap-2.5 active:scale-98 ${
                           isEnabled
-                            ? "bg-emerald-50/70 border-emerald-300 text-emerald-950"
-                            : "bg-slate-50 border-slate-200 text-slate-400"
+                            ? "bg-emerald-50/70 border-emerald-300 text-slate-900"
+                            : "bg-slate-50/70 border-slate-200 text-slate-500"
                         }`}
                       >
-                        <div>
-                          <h5 className="text-xs font-bold">{sec.label}</h5>
-                          <p className="text-[11px] opacity-75">{sec.desc}</p>
+                        <div className="min-w-0 pr-1">
+                          <h5 className="text-xs font-bold truncate">{sec.label}</h5>
+                          <p className="text-[10px] text-slate-500 truncate">{sec.desc}</p>
                         </div>
-                        <StatusBadge
-                          status={isEnabled ? "active" : "inactive"}
-                          label={isEnabled ? "Enabled" : "Hidden"}
-                          size="sm"
-                        />
+                        <div className={`w-9 h-5 rounded-full transition-colors relative shrink-0 ${isEnabled ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                          <div className={`w-3.5 h-3.5 rounded-full bg-white transition-transform absolute top-[3px] ${isEnabled ? 'left-[19px]' : 'left-[3px]'}`} />
+                        </div>
                       </div>
                     );
                   })}
@@ -615,34 +627,32 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
               {/* Group C: Public Services & Heritage */}
               <div>
                 <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
-                  C. Content, Public Utilities & Heritage
+                  C. Content, Public Utilities &amp; Heritage
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   {[
-                    { key: "heritageSpotlight", label: "Sacred Twin Heritage", desc: "Pawapuri and Kushinagar narrative" },
-                    { key: "publicServices", label: "Civic Public Services", desc: "e-District and government schemes" },
-                    { key: "latestNews", label: "Latest News & Reels", desc: "Community update bulletin carousel" },
+                    { key: "heritageSpotlight", label: "Show Heritage Section", desc: "Pawapuri and Kushinagar narrative" },
+                    { key: "publicServices", label: "Show Civic Services", desc: "e-District and government schemes" },
+                    { key: "latestNews", label: "Show News & Reels", desc: "Community update bulletin carousel" },
                   ].map((sec) => {
                     const isEnabled = settings.sections?.[sec.key] !== false;
                     return (
                       <div
                         key={sec.key}
                         onClick={() => updateField(`sections.${sec.key}`, !isEnabled)}
-                        className={`p-4 rounded-xl border transition cursor-pointer flex items-center justify-between gap-3 ${
+                        className={`p-3 rounded-xl border transition cursor-pointer flex items-center justify-between gap-2.5 active:scale-98 ${
                           isEnabled
-                            ? "bg-emerald-50/70 border-emerald-300 text-emerald-950"
-                            : "bg-slate-50 border-slate-200 text-slate-400"
+                            ? "bg-emerald-50/70 border-emerald-300 text-slate-900"
+                            : "bg-slate-50/70 border-slate-200 text-slate-500"
                         }`}
                       >
-                        <div>
-                          <h5 className="text-xs font-bold">{sec.label}</h5>
-                          <p className="text-[11px] opacity-75">{sec.desc}</p>
+                        <div className="min-w-0 pr-1">
+                          <h5 className="text-xs font-bold truncate">{sec.label}</h5>
+                          <p className="text-[10px] text-slate-500 truncate">{sec.desc}</p>
                         </div>
-                        <StatusBadge
-                          status={isEnabled ? "active" : "inactive"}
-                          label={isEnabled ? "Enabled" : "Hidden"}
-                          size="sm"
-                        />
+                        <div className={`w-9 h-5 rounded-full transition-colors relative shrink-0 ${isEnabled ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                          <div className={`w-3.5 h-3.5 rounded-full bg-white transition-transform absolute top-[3px] ${isEnabled ? 'left-[19px]' : 'left-[3px]'}`} />
+                        </div>
                       </div>
                     );
                   })}
@@ -652,40 +662,38 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
               {/* Group D: Citizen Corner & Sponsorship */}
               <div>
                 <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
-                  D. Citizen Engagement & Commercial
+                  D. Citizen Engagement &amp; Commercial
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   {[
-                    { key: "citizenCorner", label: "Citizen Submission Desk", desc: "Add local shop/place callout" },
-                    { key: "advertisements", label: "Live Advertisements", desc: "Floating, banner and sponsor slots" },
+                    { key: "citizenCorner", label: "Show Citizen Corner", desc: "Add local shop/place callout" },
+                    { key: "advertisements", label: "Show Ad Slots", desc: "Floating, banner and sponsor slots" },
                   ].map((sec) => {
                     const isEnabled = settings.sections?.[sec.key] !== false;
                     return (
                       <div
                         key={sec.key}
                         onClick={() => updateField(`sections.${sec.key}`, !isEnabled)}
-                        className={`p-4 rounded-xl border transition cursor-pointer flex items-center justify-between gap-3 ${
+                        className={`p-3 rounded-xl border transition cursor-pointer flex items-center justify-between gap-2.5 active:scale-98 ${
                           isEnabled
-                            ? "bg-emerald-50/70 border-emerald-300 text-emerald-950"
-                            : "bg-slate-50 border-slate-200 text-slate-400"
+                            ? "bg-emerald-50/70 border-emerald-300 text-slate-900"
+                            : "bg-slate-50/70 border-slate-200 text-slate-500"
                         }`}
                       >
-                        <div>
-                          <h5 className="text-xs font-bold">{sec.label}</h5>
-                          <p className="text-[11px] opacity-75">{sec.desc}</p>
+                        <div className="min-w-0 pr-1">
+                          <h5 className="text-xs font-bold truncate">{sec.label}</h5>
+                          <p className="text-[10px] text-slate-500 truncate">{sec.desc}</p>
                         </div>
-                        <StatusBadge
-                          status={isEnabled ? "active" : "inactive"}
-                          label={isEnabled ? "Enabled" : "Hidden"}
-                          size="sm"
-                        />
+                        <div className={`w-9 h-5 rounded-full transition-colors relative shrink-0 ${isEnabled ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                          <div className={`w-3.5 h-3.5 rounded-full bg-white transition-transform absolute top-[3px] ${isEnabled ? 'left-[19px]' : 'left-[3px]'}`} />
+                        </div>
                       </div>
                     );
                   })}
                 </div>
               </div>
             </div>
-          </FormSection>
+          </div>
         )}
 
         {/* SUBTAB 5: SEO & SOCIAL SHARING */}

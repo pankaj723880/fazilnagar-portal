@@ -20,7 +20,10 @@ import {
   Pause,
   Calendar,
   Layers,
-  Monitor
+  Monitor,
+  Phone,
+  Info,
+  Search,
 } from "lucide-react";
 import PageHeader from "./admin/PageHeader";
 import StatCard from "./admin/StatCard";
@@ -474,103 +477,246 @@ export default function AdminAdvertisementsCMS({ onStatsChange }) {
         ]}
       />
 
-      {/* Real Analytics Metrics Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          icon={Megaphone}
-          label="Active Campaigns"
-          value={liveAdsCount}
-          helperText="Currently live on portal"
-          color="blue"
-        />
-        <StatCard
-          icon={Eye}
-          label="Total Impressions"
-          value={totalImpressions.toLocaleString()}
-          helperText="Verified session displays"
-          color="indigo"
-        />
-        <StatCard
-          icon={MousePointer}
-          label="Total Click-Throughs"
-          value={totalClicks.toLocaleString()}
-          helperText="Direct visitor engagements"
-          color="emerald"
-        />
-        <StatCard
-          icon={TrendingUp}
-          label="Average CTR"
-          value={`${overallCtr}%`}
-          helperText="Click conversion rate"
-          color="amber"
-        />
+      {/* 5.1 Analytical Statistics Card Block (2x2 Grid on mobile) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        <button
+          type="button"
+          onClick={() => setStatusFilter("live")}
+          className="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-4 text-left shadow-2xs hover:border-slate-300 transition active:scale-95 cursor-pointer"
+        >
+          <div className="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+            <span className="flex items-center gap-1.5">
+              <span>🎯</span> Active Campaigns
+            </span>
+          </div>
+          <div className="text-base sm:text-xl font-black text-slate-900 tracking-tight">
+            {liveAdsCount}
+          </div>
+          <span className="text-[10px] text-blue-600 font-medium">Click to view</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {}}
+          className="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-4 text-left shadow-2xs hover:border-slate-300 transition active:scale-95 cursor-pointer"
+        >
+          <div className="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+            <span className="flex items-center gap-1.5">
+              <span>👁️</span> Total Impressions
+            </span>
+          </div>
+          <div className="text-base sm:text-xl font-black text-slate-900 tracking-tight">
+            {totalImpressions.toLocaleString()}
+          </div>
+          <span className="text-[10px] text-indigo-600 font-medium">Click to view</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {}}
+          className="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-4 text-left shadow-2xs hover:border-slate-300 transition active:scale-95 cursor-pointer"
+        >
+          <div className="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+            <span className="flex items-center gap-1.5">
+              <span>🖱️</span> Total Click-Throughs
+            </span>
+          </div>
+          <div className="text-base sm:text-xl font-black text-slate-900 tracking-tight">
+            {totalClicks.toLocaleString()}
+          </div>
+          <span className="text-[10px] text-emerald-600 font-medium">Click to view</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {}}
+          className="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-4 text-left shadow-2xs hover:border-slate-300 transition active:scale-95 cursor-pointer"
+        >
+          <div className="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+            <span className="flex items-center gap-1.5">
+              <span>📈</span> Average CTR
+            </span>
+          </div>
+          <div className="text-base sm:text-xl font-black text-slate-900 tracking-tight">
+            {overallCtr}%
+          </div>
+          <span className="text-[10px] text-amber-600 font-medium">Click to view</span>
+        </button>
       </div>
 
-      {/* Filters and Search */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-        <SearchAndFilters
-          searchPlaceholder="Search campaigns by business name or description..."
-          searchValue={search}
-          onSearchChange={setSearch}
-          filters={[
-            {
-              id: "format",
-              label: "Format",
-              value: formatFilter,
-              options: [
-                { label: "All Formats", value: "all" },
-                { label: "Floating Corner", value: "floating" },
-                { label: "Sticky Bottom", value: "sticky-bottom" },
-                { label: "Sticky Top", value: "sticky-top" },
-                { label: "Billboard Banner", value: "banner" },
-              ],
-              onChange: setFormatFilter,
-            },
-            {
-              id: "status",
-              label: "Status",
-              value: statusFilter,
-              options: [
-                { label: "All Statuses", value: "all" },
-                { label: "Currently Live", value: "live" },
-                { label: "Paused", value: "paused" },
-                { label: "Draft", value: "draft" },
-              ],
-              onChange: setStatusFilter,
-            },
-          ]}
-          onReset={() => {
-            setSearch("");
-            setFormatFilter("all");
-            setStatusFilter("all");
-          }}
-          totalResults={filteredAds.length}
-        />
+      {/* 5.2 Sub-filters: Rounded Search bar with tiny inline dropdowns */}
+      <div className="space-y-2">
+        <div className="relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search records..."
+            className="w-full h-10 pl-10 pr-4 text-xs rounded-xl border border-slate-200/90 bg-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition shadow-2xs"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <select
+            value={formatFilter}
+            onChange={(e) => setFormatFilter(e.target.value)}
+            className="h-8 px-2.5 rounded-xl border border-slate-200 bg-white text-[11px] font-bold text-slate-700 outline-none focus:border-blue-500 shadow-2xs"
+          >
+            <option value="all">All Formats ▾</option>
+            <option value="floating">Floating Corner</option>
+            <option value="sticky-bottom">Sticky Bottom</option>
+            <option value="sticky-top">Sticky Top</option>
+            <option value="banner">Billboard Banner</option>
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-8 px-2.5 rounded-xl border border-slate-200 bg-white text-[11px] font-bold text-slate-700 outline-none focus:border-blue-500 shadow-2xs"
+          >
+            <option value="all">All Statuses ▾</option>
+            <option value="live">Currently Live</option>
+            <option value="paused">Paused</option>
+            <option value="draft">Draft</option>
+          </select>
+
+          <span className="text-[11px] font-bold text-slate-500 ml-auto shrink-0">
+            {filteredAds.length} campaigns
+          </span>
+        </div>
       </div>
 
-      {/* Table */}
-      {loading ? (
-        <LoadingSkeleton type="table" rows={5} />
-      ) : filteredAds.length === 0 ? (
-        <EmptyState
-          icon={Megaphone}
-          title="No Advertisements Found"
-          description={
-            search || formatFilter !== "all" || statusFilter !== "all"
-              ? "No advertising campaigns match your filter criteria. Try clearing search filters."
-              : "No sponsor advertisements configured yet. Click Create Advertisement to launch your first banner."
-          }
-          actionLabel="Create Advertisement"
-          onAction={() => openCreateAdModal("floating", false)}
-        />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={filteredAds}
-          keyField="_id"
-          defaultSortKey="title"
-        />
-      )}
+      {/* 5.3 Campaign Listing Cards (Phone Layout) */}
+      <div className="block md:hidden space-y-2">
+        {loading ? (
+          <LoadingSkeleton type="table" rows={3} />
+        ) : filteredAds.length === 0 ? (
+          <EmptyState
+            icon={Megaphone}
+            title="No Advertisements Found"
+            description="No sponsor advertisements configured yet."
+            actionLabel="Create Advertisement"
+            onAction={() => openCreateAdModal("floating", false)}
+          />
+        ) : (
+          filteredAds.map((ad) => {
+            const isLive = ad.isPublished && ad.isActive;
+            const ctr = (ad.impressions || 0) > 0 ? (((ad.clicks || 0) / ad.impressions) * 100).toFixed(1) : "0.0";
+            const placement = ad.placement || "bottom-right";
+            const schedule = ad.isPermanent ? "Always Active" : (ad.startDate ? new Date(ad.startDate).toLocaleDateString() : "Always Active");
+
+            return (
+              <div
+                key={ad._id}
+                className="w-full bg-white rounded-2xl border border-slate-100 p-3.5 mb-2 shadow-xs space-y-2.5 transition"
+              >
+                {/* Left Area: Banner ID "Advertisement & Sponsor: Sticky-Top", Format & Placement: Pos: bottom-right, and Schedule: Always Active */}
+                <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-2">
+                  <div className="min-w-0 pr-1">
+                    <h4 className="text-xs font-bold text-slate-900 truncate">
+                      Advertisement &amp; Sponsor: {ad.title || "Sticky-Top"}
+                    </h4>
+                    <div className="flex items-center gap-2 text-[11px] text-slate-500 flex-wrap mt-0.5">
+                      <span>Pos: <strong className="text-slate-700">{placement}</strong></span>
+                      <span>•</span>
+                      <span>Schedule: <strong className="text-purple-700">{schedule}</strong></span>
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 flex items-center gap-1">
+                    <button
+                      onClick={() => openEditAdModal(ad)}
+                      className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer"
+                      title="Edit"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDeleteConfirmAd(ad);
+                        setDeleteDialogOpen(true);
+                      }}
+                      className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 cursor-pointer"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Middle Area: Real metrics highlight 26 views | 0 clicks (0.0%) with indicator dot 🟢 Active */}
+                <div className="flex items-center justify-between text-xs py-1.5 px-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <span className="font-semibold text-slate-700">
+                    {ad.impressions || 0} views | {ad.clicks || 0} clicks ({ctr}%)
+                  </span>
+                  <div className="flex items-center gap-1.5 font-bold text-[11px]">
+                    {isLive ? (
+                      <span className="flex items-center gap-1 text-emerald-700">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        Active
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-slate-500">
+                        <span className="w-2 h-2 rounded-full bg-slate-400" />
+                        Paused
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer Row: Compact dual options 📞 Call Advertiser or ℹ️ View Details */}
+                <div className="grid grid-cols-2 gap-2 pt-0.5">
+                  <a
+                    href={ad.destinationUrl?.startsWith("tel:") ? ad.destinationUrl : (ad.destinationUrl ? ad.destinationUrl : "#")}
+                    target={ad.destinationUrl?.startsWith("http") ? "_blank" : undefined}
+                    rel="noreferrer"
+                    className="h-9 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shadow-2xs"
+                  >
+                    <Phone className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Call Advertiser</span>
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() => setPreviewAd(ad)}
+                    className="h-9 px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shadow-2xs"
+                  >
+                    <Info className="w-3.5 h-3.5 text-slate-600" />
+                    <span>View Details</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop Table (hidden md:block) */}
+      <div className="hidden md:block">
+        {loading ? (
+          <LoadingSkeleton type="table" rows={5} />
+        ) : filteredAds.length === 0 ? (
+          <EmptyState
+            icon={Megaphone}
+            title="No Advertisements Found"
+            description={
+              search || formatFilter !== "all" || statusFilter !== "all"
+                ? "No advertising campaigns match your filter criteria. Try clearing search filters."
+                : "No sponsor advertisements configured yet. Click Create Advertisement to launch your first banner."
+            }
+            actionLabel="Create Advertisement"
+            onAction={() => openCreateAdModal("floating", false)}
+          />
+        ) : (
+          <DataTable
+            columns={columns}
+            data={filteredAds}
+            keyField="_id"
+            defaultSortKey="title"
+          />
+        )}
+      </div>
 
       {/* Create / Edit Modal */}
       {adModalOpen && (

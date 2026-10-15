@@ -111,6 +111,7 @@ export default function App() {
 
   const [mobileFooterNavOpen, setMobileFooterNavOpen] = useState(false);
   const [mobileFooterActionsOpen, setMobileFooterActionsOpen] = useState(false);
+  const [mobileFooterEmergencyOpen, setMobileFooterEmergencyOpen] = useState(false);
   const [mobileFooterLegalOpen, setMobileFooterLegalOpen] = useState(false);
 
   // Smooth scroll and route switch effect
@@ -479,12 +480,16 @@ export default function App() {
         <footer className="bg-[#18232E] text-slate-400 text-xs mt-12 border-t border-slate-800 pb-28 sm:pb-8">
           {/* Mobile Collapsible Accordions (md:hidden) */}
           <div className="md:hidden max-w-lg mx-auto px-4 py-6 space-y-2.5">
+            {/* Custom Brand Title Block */}
             <div className="border-b border-slate-800/80 pb-3">
               <h3 className="text-white font-extrabold text-sm tracking-tight font-heading">
                 FAZIL<span className="text-[#B8323C]">NAGAR</span> Civic Portal
               </h3>
-              <p className="text-slate-400 text-[11px] mt-1 leading-relaxed">
-                PIN 274401 • NH-27 Corridor, Kushinagar, UP
+              <p className="text-slate-400 text-[11px] mt-0.5 leading-relaxed">
+                PIN 274401. NH-27 Corridor, Kushinagar, UP
+              </p>
+              <p className="text-[10px] text-slate-500 mt-1">
+                Admin Help / Complaints: <span className="text-slate-300 font-mono">+91 5564 222102</span> • Toll-Free: <span className="text-slate-300 font-mono">1800-180-5145</span>
               </p>
             </div>
 
@@ -502,11 +507,11 @@ export default function App() {
               </button>
               {mobileFooterNavOpen && (
                 <ul className="px-3 pb-3 pt-1 space-y-2 border-t border-slate-800/60 text-xs bg-slate-900/30">
-                  <li><Link to="/directory" className="hover:text-red-300 font-bold text-[#B8323C] flex items-center gap-1.5"><span>📍</span> Town Directory (Map & List)</Link></li>
+                  <li><Link to="/directory" className="hover:text-red-300 font-bold text-[#B8323C] flex items-center gap-1.5"><span>📍</span> Town Directory (Map &amp; List)</Link></li>
                   <li><Link to="/news" className="hover:text-white flex items-center gap-1.5"><span>📰</span> Town News</Link></li>
                   <li><Link to="/emergency" className="hover:text-white flex items-center gap-1.5"><span>🚨</span> Emergency Helplines</Link></li>
-                  <li><Link to="/healthcare" className="hover:text-white flex items-center gap-1.5"><span>🏥</span> Hospitals & Clinics</Link></li>
-                  <li><Link to="/jobs" className="hover:text-white flex items-center gap-1.5"><span>💼</span> Local Jobs & Trade</Link></li>
+                  <li><Link to="/healthcare" className="hover:text-white flex items-center gap-1.5"><span>🏥</span> Hospitals &amp; Clinics</Link></li>
+                  <li><Link to="/jobs" className="hover:text-white flex items-center gap-1.5"><span>💼</span> Local Jobs &amp; Trade</Link></li>
                   <li><Link to="/govt" className="hover:text-white flex items-center gap-1.5"><span>🏛️</span> Government Services</Link></li>
                 </ul>
               )}
@@ -536,14 +541,48 @@ export default function App() {
               )}
             </div>
 
-            {/* Accordion 3: Legal & Independent Portal Notice */}
+            {/* Accordion 3: Emergency Hotline Numbers */}
+            <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/60">
+              <button
+                type="button"
+                onClick={() => setMobileFooterEmergencyOpen((prev) => !prev)}
+                className="w-full p-3 text-left font-bold text-white text-xs flex items-center justify-between cursor-pointer"
+              >
+                <span>▶ Emergency Hotline Numbers (Police 112, CHC Ambulance 108)</span>
+                <span className={`transform transition-transform text-slate-400 text-[10px] ${mobileFooterEmergencyOpen ? "rotate-90" : ""}`}>
+                  ▶
+                </span>
+              </button>
+              {mobileFooterEmergencyOpen && (
+                <div className="px-3 pb-3 pt-1 space-y-2 border-t border-slate-800/60 text-xs bg-slate-900/30">
+                  <div className="flex items-center justify-between py-1 border-b border-slate-800/40">
+                    <span className="text-slate-300">Police Chowki / Dial 112:</span>
+                    <a href="tel:112" className="text-red-400 font-black font-mono">112</a>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-slate-800/40">
+                    <span className="text-slate-300">CHC Ambulance:</span>
+                    <a href="tel:108" className="text-emerald-400 font-black font-mono">108</a>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-slate-800/40">
+                    <span className="text-slate-300">Women Powerline:</span>
+                    <a href="tel:1090" className="text-amber-400 font-black font-mono">1090</a>
+                  </div>
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-slate-300">Fazilnagar CHC Direct:</span>
+                    <a href="tel:05564222108" className="text-blue-400 font-bold font-mono">+91 5564 222108</a>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Accordion 4: Legal & Independent Portal Notice */}
             <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/60">
               <button
                 type="button"
                 onClick={() => setMobileFooterLegalOpen((prev) => !prev)}
                 className="w-full p-3 text-left font-bold text-white text-xs flex items-center justify-between cursor-pointer"
               >
-                <span>▶ Legal & Independent Portal Notice</span>
+                <span>▶ Legal &amp; Independent Portal Notice</span>
                 <span className={`transform transition-transform text-slate-400 text-[10px] ${mobileFooterLegalOpen ? "rotate-90" : ""}`}>
                   ▶
                 </span>
@@ -551,13 +590,8 @@ export default function App() {
               {mobileFooterLegalOpen && (
                 <div className="px-3 pb-3 pt-1 space-y-2 border-t border-slate-800/60 text-[11px] text-slate-400 bg-slate-900/30">
                   <p className="leading-relaxed">
-                    Fazilnagar Town Portal is an independent community and civic directory initiative serving Fazilnagar (PIN 274401, Kushinagar, Uttar Pradesh). Not affiliated directly with any single commercial entity.
+                    Fazilnagar Town Portal is an independent community and civic directory initiative serving Fazilnagar (PIN 274401, Kushinagar, Uttar Pradesh). Independent community directory notice: Not affiliated directly with any single commercial entity.
                   </p>
-                  <div className="pt-1 text-slate-300 space-y-1">
-                    <p>Police Emergency: <strong className="text-red-400">112</strong></p>
-                    <p>Ambulance Emergency: <strong className="text-emerald-400">108</strong></p>
-                    <p>Women Helpline: <strong className="text-amber-400">1090</strong></p>
-                  </div>
                 </div>
               )}
             </div>

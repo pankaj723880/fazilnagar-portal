@@ -27,6 +27,8 @@ import {
   Globe,
   X,
   FileText,
+  Search,
+  ChevronRight,
 } from "lucide-react";
 
 export default function AdminServicesCMS() {
@@ -394,83 +396,147 @@ export default function AdminServicesCMS() {
   ];
 
   return (
-    <div className="space-y-5">
-      <PageHeader
-        title="Public Civic Services CMS"
-        description="Catalog municipal certifications, UP e-District schemes, eligibility rules, and official departmental office locations."
-        icon={Landmark}
-        badge={
-          <StatusBadge
-            status="active"
-            label={`${services.filter((s) => s.isPublished).length} Live on Portal`}
+    <div className="space-y-4">
+      {/* 4.1 Primary Grid Controls: Bold sub-page header with amber-tint [+ Add Service] CTA */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-4 shadow-2xs flex items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight font-heading">
+              Public Civic Services
+            </h1>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+              {services.filter((s) => s.isPublished).length} Live on Portal
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-500 hidden sm:block">
+            Certifications, UP e-District schemes, eligibility rules, and official departmental desks.
+          </p>
+        </div>
+
+        <button
+          onClick={openCreateModal}
+          className="h-10 px-3.5 sm:px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0"
+        >
+          <Plus className="w-4 h-4" />
+          <span>+ Add Service</span>
+        </button>
+      </div>
+
+      {/* 4.2 Inline Search & subtle filter pill segment */}
+      <div className="space-y-2">
+        <div className="relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search services by title, eligibility, or office..."
+            className="w-full h-10 pl-10 pr-4 text-xs rounded-xl border border-slate-200/90 bg-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition shadow-2xs"
           />
-        }
-        actions={
-          <button
-            onClick={openCreateModal}
-            className="bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>+ Add Service</span>
-          </button>
-        }
-      />
+        </div>
 
-      {/* Search and Filters */}
-      <SearchAndFilters
-        searchQuery={search}
-        onSearchChange={setSearch}
-        placeholder="Search services by title, eligibility, or office..."
-        filters={[
-          {
-            id: "category",
-            label: "Category",
-            value: selectedCategory,
-            onChange: setSelectedCategory,
-            options: categories.map((c) => ({ label: c, value: c })),
-          },
-          {
-            id: "status",
-            label: "Status",
-            value: statusFilter,
-            onChange: setStatusFilter,
-            options: [
-              { label: "All Statuses", value: "all" },
-              { label: "Published Live", value: "published" },
-              { label: "Draft / Hidden", value: "draft" },
-            ],
-          },
-        ]}
-        totalCount={services.length}
-        filteredCount={filteredServices.length}
-        onReset={() => {
-          setSearch("");
-          setSelectedCategory("All");
-          setStatusFilter("all");
-        }}
-      />
+        <div className="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar py-0.5">
+          <div className="flex items-center gap-1.5 shrink-0">
+            {[
+              { id: "all", label: "All Statuses" },
+              { id: "published", label: "Published" },
+              { id: "draft", label: "Draft" },
+            ].map((st) => (
+              <button
+                key={st.id}
+                type="button"
+                onClick={() => setStatusFilter(st.id)}
+                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition cursor-pointer active:scale-95 ${
+                  statusFilter === st.id
+                    ? "bg-slate-900 text-white"
+                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                {st.label}
+              </button>
+            ))}
+          </div>
 
-      {/* Services DataTable */}
-      <DataTable
-        columns={tableColumns}
-        data={filteredServices}
-        loading={loading}
-        emptyState={
+          <span className="text-[11px] font-bold text-slate-500 shrink-0">
+            Showing {filteredServices.length} records
+          </span>
+        </div>
+      </div>
+
+      {/* 4.3 Tile-Based Services Feed (No Desktop Tables on phone viewports) */}
+      <div className="block md:hidden space-y-2">
+        {filteredServices.length === 0 ? (
           <EmptyState
             icon={Landmark}
             title="No Services Found"
-            description="No municipal or civic services match the current filter criteria."
+            description="No municipal or civic services match your search."
             action={
               <button
                 onClick={openCreateModal}
-                className="bg-[#2563EB] text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-blue-700 transition"
+                className="bg-amber-500 text-slate-950 text-xs font-bold px-4 py-2 rounded-xl"
               >
-                + Create New Service
+                + Add Service
               </button>
             }
           />
-        }
-      />
+        ) : (
+          filteredServices.map((svc) => (
+            <div
+              key={svc._id}
+              onClick={() => openEditModal(svc)}
+              className="w-full bg-white rounded-2xl border border-slate-100 p-3.5 space-y-2 mb-2 flex items-center justify-between hover:border-slate-300 transition shadow-xs cursor-pointer active:scale-98"
+            >
+              <div className="space-y-1 min-w-0 pr-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <h3 className="font-semibold text-[13px] text-slate-900 leading-snug">
+                    {svc.title} {svc.titleHi ? `(${svc.titleHi})` : ""}
+                  </h3>
+                  {svc.isFeatured && (
+                    <span className="text-amber-500 text-xs" title="Featured">★</span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-blue-600 bg-blue-50 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-100/60">
+                    {svc.category || "Certificates & Revenue"}
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    {svc.fees || "Free / Nominal standard fee"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1 shrink-0">
+                <ChevronRight className="w-5 h-5 text-slate-400" />
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop View Table (hidden on mobile, table-based on md+) */}
+      <div className="hidden md:block">
+        <DataTable
+          columns={tableColumns}
+          data={filteredServices}
+          loading={loading}
+          emptyState={
+            <EmptyState
+              icon={Landmark}
+              title="No Services Found"
+              description="No municipal or civic services match the current filter criteria."
+              action={
+                <button
+                  onClick={openCreateModal}
+                  className="bg-[#2563EB] text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-blue-700 transition"
+                >
+                  + Create New Service
+                </button>
+              }
+            />
+          }
+        />
+      </div>
 
       {/* Add / Edit Service Modal */}
       {modalOpen && (
