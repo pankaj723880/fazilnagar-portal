@@ -576,7 +576,11 @@ export default function TownPortal() {
           ======================================================== */}
       <div className={isMobilePreview ? "block py-6 bg-slate-200/70 min-h-screen" : "block md:hidden"}>
         <div className={isMobilePreview ? "max-w-[420px] mx-auto shadow-2xl rounded-3xl overflow-hidden border border-slate-300 bg-slate-50" : "w-full"}>
-          <MobileHomePortal />
+          <MobileHomePortal
+            onOpenAddPlace={() => setCommunityModalOpen(true)}
+            onOpenCorrection={() => setModalType("correction")}
+            onOpenEvent={() => setModalType("event")}
+          />
         </div>
       </div>
 
