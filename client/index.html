@@ -107,6 +107,13 @@
 
     <!-- Critical CSS for Instant Above-the-fold Layout & Zero CLS -->
     <style>
+      html, body {
+        background-color: #18232E;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+      }
       #hero-section { min-height: 440px; position: relative; background-color: #18232E; }
       .font-heading { font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; }
       @keyframes splashInitialMotion {
@@ -126,22 +133,22 @@
       } catch (e) {}
     </script>
   </head>
-  <body class="bg-slate-100 font-sans antialiased text-slate-800">
+  <body class="font-sans antialiased text-slate-800" style="background-color:#18232E;margin:0;padding:0;">
     <div id="root">
       <!-- Native App-Style Splash Shell: Renders instantly from first byte, eliminating any other logo or homepage flash -->
-      <div id="initial-splash-shell" style="position:fixed;inset:0;z-index:999999;height:100dvh;width:100vw;display:flex;flex-direction:column;align-items:center;justify-content:center;user-select:none;overflow:hidden;background:linear-gradient(to bottom, #020617, #0f172a, #020617);font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;">
-        <div style="position:absolute;width:320px;height:320px;border-radius:50%;pointer-events:none;filter:blur(64px);opacity:0.22;background:radial-gradient(circle, #f59e0b, #e11d48, #ea580c);"></div>
+      <div id="initial-splash-shell" style="position:fixed;inset:0;z-index:999999;height:100dvh;width:100vw;display:flex;flex-direction:column;align-items:center;justify-content:center;user-select:none;overflow:hidden;background:#18232E;background-image:linear-gradient(to bottom, #18232E, #131d27, #0f171e);font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;">
+        <div style="position:absolute;width:288px;height:288px;border-radius:50%;pointer-events:none;filter:blur(64px);opacity:0.20;background:radial-gradient(circle, #f59e0b, #e11d48, #ea580c);"></div>
         <div style="position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 24px;">
-          <div style="width:96px;height:96px;border-radius:18px;background:rgba(15,23,42,0.9);border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 32px rgba(0,0,0,0.6);padding:14px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;">
-            <img src="/icon-192.svg" alt="Fazilnagar Town Portal" width="68" height="68" style="width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 4px 14px rgba(184,50,60,0.5));" />
+          <div style="width:96px;height:96px;border-radius:16px;background:rgba(15,23,30,0.9);border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 32px rgba(0,0,0,0.5);padding:14px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-sizing:border-box;">
+            <img src="/icon-192.svg" alt="Fazilnagar Town Portal" width="68" height="68" style="width:68px;height:68px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(184,50,60,0.4));" />
           </div>
-          <h1 style="font-size:24px;font-weight:900;letter-spacing:0.05em;color:#ffffff;margin:0 0 8px 0;line-height:1.2;">
+          <h1 style="font-size:24px;font-weight:900;letter-spacing:0.05em;color:#ffffff;margin:0 0 6px 0;line-height:1.2;">
             FAZIL<span style="color:#B8323C;">NAGAR</span>
           </h1>
           <p style="font-size:11px;font-weight:600;letter-spacing:0.08em;color:#94a3b8;text-transform:uppercase;margin:0;">
             PIN 274401 • Your Town. Your Community.
           </p>
-          <div style="margin-top:28px;height:2px;width:128px;background:rgba(255,255,255,0.1);border-radius:9999px;overflow:hidden;position:relative;">
+          <div style="margin-top:24px;height:2px;width:128px;background:rgba(255,255,255,0.1);border-radius:9999px;overflow:hidden;position:relative;">
             <div class="splash-initial-shimmer" style="position:absolute;inset:0;width:64px;background:linear-gradient(to right, transparent, rgba(255,255,255,0.8), transparent);border-radius:9999px;"></div>
           </div>
         </div>

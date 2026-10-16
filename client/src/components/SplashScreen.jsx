@@ -11,7 +11,7 @@ import { useState, useEffect } from "react";
  * 5. GPU-accelerated exit fade & scale (400ms) with seamless homepage reveal.
  * 6. Body scroll locked during mount, pointer-events-none during exit, touch-none.
  */
-export default function SplashScreen({ onComplete, duration = 2000 }) {
+export default function SplashScreen({ onComplete, duration = 1800 }) {
   const [stage, setStage] = useState("active"); // 'active' | 'exit' | 'done'
 
   useEffect(() => {
@@ -21,10 +21,10 @@ export default function SplashScreen({ onComplete, duration = 2000 }) {
     document.body.style.overflow = "hidden";
     document.body.style.touchAction = "none";
 
-    // Trigger exit animation (after ~1.6s to finish by 2.0s over 400ms)
+    // Trigger smooth opacity cross-fade (300ms before completion)
     const exitTimer = setTimeout(() => {
       setStage("exit");
-    }, Math.max(1200, duration - 400));
+    }, Math.max(1000, duration - 300));
 
     // Fully complete & unmount
     const doneTimer = setTimeout(() => {
@@ -43,99 +43,60 @@ export default function SplashScreen({ onComplete, duration = 2000 }) {
   if (stage === "done") return null;
 
   const isExiting = stage === "exit";
-  const isActive = stage === "active" || isExiting;
 
   return (
     <aside
       role="status"
       aria-label="Loading Fazilnagar Town Portal"
       aria-live="polite"
-      className={`fixed inset-0 z-[999999] h-[100dvh] w-screen flex flex-col items-center justify-center select-none overflow-hidden touch-none ${
-        isExiting ? "pointer-events-none opacity-0 scale-105" : "pointer-events-auto opacity-100 scale-100"
-      } transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950`}
+      className={`fixed inset-0 z-[999999] h-[100dvh] w-full flex flex-col items-center justify-center select-none overflow-hidden touch-none ${
+        isExiting ? "pointer-events-none opacity-0" : "pointer-events-auto opacity-100"
+      } transition-opacity duration-300 ease-out bg-[#18232E] bg-gradient-to-b from-[#18232E] via-[#131d27] to-[#0f171e]`}
       style={{
         WebkitTapHighlightColor: "transparent",
-        willChange: "transform, opacity",
+        willChange: "opacity",
       }}
     >
-      {/* 1. Visual Background & Ambiance: Animated subtle warm amber/crimson ambient blur orb */}
+      {/* 1. Subtle warm ambient glow matching index.html shell */}
       <div
-        className="absolute w-72 h-72 sm:w-96 sm:h-96 rounded-full pointer-events-none filter blur-3xl opacity-20 bg-gradient-to-tr from-amber-500 via-rose-600 to-orange-500 animate-pulse"
+        className="absolute w-72 h-72 rounded-full pointer-events-none filter blur-3xl opacity-20 bg-gradient-to-tr from-amber-500/20 via-rose-600/15 to-orange-500/20"
         style={{
           transform: "translate3d(0, 0, 0)",
-          willChange: "transform, opacity, filter",
         }}
       />
 
-      {/* Ambient background secondary glow for rich depth */}
-      <div
-        className="absolute w-48 h-48 rounded-full pointer-events-none filter blur-2xl opacity-15 bg-amber-400/30"
-        style={{
-          transform: "translate3d(0, 20px, 0)",
-        }}
-      />
-
-      {/* Center Branding Content */}
+      {/* 2. Center Branding Content - Anchored at stable position without vertical shifting */}
       <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-sm mx-auto">
-        {/* 2. Logo Animation (Entrance Spring + Idle Breathing Glow/Pulse) */}
-        <div
-          className={`relative mb-6 transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-            isActive ? "scale-100 opacity-100" : "scale-[0.8] opacity-0"
-          }`}
-          style={{ willChange: "transform, opacity" }}
-        >
-          {/* Logo Continuous Breathing Glow Effect */}
-          <div
-            className={`absolute -inset-2.5 rounded-3xl bg-gradient-to-r from-amber-500/30 via-rose-500/25 to-orange-500/30 filter blur-xl transition-opacity duration-1000 ${
-              isActive ? "opacity-90 animate-pulse" : "opacity-0"
-            }`}
-          />
+        {/* Logo Card - Static, crisp, identical to HTML shell */}
+        <div className="relative mb-5">
+          {/* Subtle backdrop glow */}
+          <div className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-amber-500/20 via-rose-500/15 to-orange-500/20 filter blur-lg opacity-80" />
 
-          {/* Logo Card */}
-          <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-slate-900/90 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] p-3.5 flex items-center justify-center backdrop-blur-md">
+          {/* Logo Card Box */}
+          <div className="relative w-24 h-24 rounded-2xl bg-[#0f171e]/90 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] p-3.5 flex items-center justify-center backdrop-blur-md">
             <img
               src="/icon-192.svg"
               alt="Fazilnagar Town Portal"
-              className="w-full h-full object-contain filter drop-shadow-[0_4px_14px_rgba(184,50,60,0.5)]"
-              width="112"
-              height="112"
+              className="w-full h-full object-contain filter drop-shadow-[0_4px_12px_rgba(184,50,60,0.4)]"
+              width="68"
+              height="68"
             />
           </div>
         </div>
 
-        {/* 3. Typography & Badges: Staggered Slide-up */}
-        <div className="flex flex-col items-center space-y-2 overflow-hidden">
-          <h1
-            className={`text-2xl sm:text-3xl font-black tracking-wider text-white transition-all duration-500 ease-out font-heading ${
-              isActive
-                ? "translate-y-0 opacity-100 delay-150"
-                : "translate-y-4 opacity-0"
-            }`}
-            style={{ willChange: "transform, opacity" }}
-          >
+        {/* 3. Typography & Badges - Static alignment without translate-y animations */}
+        <div className="flex flex-col items-center">
+          <h1 className="text-2xl font-black tracking-wider text-white font-heading leading-tight m-0">
             FAZIL<span className="text-[#B8323C]">NAGAR</span>
           </h1>
 
-          <div
-            className={`flex items-center gap-1.5 transition-all duration-500 ease-out ${
-              isActive
-                ? "translate-y-0 opacity-100 delay-300"
-                : "translate-y-4 opacity-0"
-            }`}
-            style={{ willChange: "transform, opacity" }}
-          >
-            <p className="text-[11px] sm:text-xs font-semibold tracking-wider text-slate-400 uppercase">
-              PIN 274401 • Your Town. Your Community.
-            </p>
-          </div>
+          <p className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase mt-1.5 mb-0">
+            PIN 274401 • Your Town. Your Community.
+          </p>
         </div>
 
-        {/* 4. Minimal Loading Indicator: Thin glowing indeterminate progress bar */}
-        <div
-          className={`mt-7 h-0.5 w-32 bg-white/10 rounded-full overflow-hidden relative shadow-[0_0_8px_rgba(255,255,255,0.15)] transition-opacity duration-500 ${
-            isActive ? "opacity-100 delay-300" : "opacity-0"
-          }`}
-        >
+        {/* 4. Minimal Progress Indicator - Identical to index.html shell */}
+        <div className="mt-6 h-0.5 w-32 bg-white/10 rounded-full overflow-hidden relative shadow-[0_0_8px_rgba(255,255,255,0.15)]">
           <div className="splash-shimmer-indicator absolute inset-y-0 w-16 bg-gradient-to-r from-transparent via-white/80 to-transparent rounded-full" />
         </div>
       </div>

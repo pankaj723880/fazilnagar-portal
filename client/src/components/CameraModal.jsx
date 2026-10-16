@@ -28,64 +28,133 @@ export default function CameraModal({ isOpen, onClose, onCapture }) {
   const [recordedVideoUrl, setRecordedVideoUrl] = useState(null);
 
   const videoRef = useRef(null);
+  const streamRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
   const timerRef = useRef(null);
+  const nativeFileInputRef = useRef(null);
 
-  // Start camera stream
-  const startCamera = async (facing = facingMode) => {
+  // Start camera stream with multi-tier graceful fallbacks
+  const startCamera = async (facing = facingMode, currentMode = mode) => {
     setIsInitializing(true);
     setPermissionError("");
 
     // Stop existing stream tracks
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
       setStream(null);
     }
 
+    if (!navigator?.mediaDevices?.getUserMedia) {
+      setIsInitializing(false);
+      setPermissionError(
+        "Live camera preview is not available in this browser context (requires HTTPS or secure origin). You can still take photos directly using your device camera below."
+      );
+      return;
+    }
+
+    // Audio is strictly needed ONLY when recording video, never for taking photos
+    const wantAudio = currentMode === "video";
+    let mediaStream = null;
+
+    // Strategy 1: facingMode with ideal resolution, audio only if video mode
     try {
-      // First try requesting video and audio
-      let mediaStream;
-      try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: facing,
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
-          audio: true,
-        });
-      } catch (audioErr) {
-        // Fallback to video only if microphone is missing/denied
-        console.warn("Audio access failed, falling back to video only:", audioErr);
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: facing,
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
-          audio: false,
-        });
+      mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: facing,
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: wantAudio,
+      });
+    } catch (e1) {
+      console.warn("[Camera] Attempt 1 failed:", e1.name, e1.message);
+
+      // Strategy 2: If wantAudio failed, try video with facingMode without audio
+      if (wantAudio) {
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: facing,
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+            audio: false,
+          });
+        } catch (e2) {
+          console.warn("[Camera] Attempt 2 without audio failed:", e2.name, e2.message);
+        }
       }
 
+      // Strategy 3: Relaxed facingMode without strict resolution constraints
+      if (!mediaStream) {
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: facing },
+            audio: false,
+          });
+        } catch (e3) {
+          console.warn("[Camera] Attempt 3 without resolution constraints failed:", e3.name, e3.message);
+        }
+      }
+
+      // Strategy 4: Universal video: true constraint (works across all laptop webcams & phones)
+      if (!mediaStream) {
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+        } catch (e4) {
+          console.error("[Camera] All getUserMedia attempts failed:", e4);
+          if (e4.name === "NotAllowedError" || e4.name === "PermissionDeniedError") {
+            setPermissionError(
+              "Camera permission was blocked. Please click the lock 🔒 or camera icon in your browser address bar to allow camera access, or use the device camera button below."
+            );
+          } else if (e4.name === "NotFoundError" || e4.name === "DevicesNotFoundError") {
+            setPermissionError("No camera hardware detected on this device. You can capture or upload using the button below.");
+          } else if (e4.name === "NotReadableError" || e4.name === "TrackStartError") {
+            setPermissionError("Camera is currently in use by another application. Please close other camera apps and try again, or use device camera.");
+          } else {
+            setPermissionError("Unable to open camera: " + (e4.message || "Permission or hardware error"));
+          }
+          setIsInitializing(false);
+          return;
+        }
+      }
+    }
+
+    if (mediaStream) {
+      streamRef.current = mediaStream;
       setStream(mediaStream);
       setIsInitializing(false);
+      setPermissionError("");
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         videoRef.current.play().catch(() => {});
       }
-    } catch (err) {
-      console.error("Camera permission error:", err);
-      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-        setPermissionError("Camera and microphone permission was denied. Please allow camera access in your browser settings.");
-      } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
-        setPermissionError("No camera found on this device.");
-      } else {
-        setPermissionError("Unable to access camera: " + (err.message || "Unknown error"));
-      }
-    } finally {
-      setIsInitializing(false);
     }
+  };
+
+  // Direct native device camera file capture handler
+  const handleNativeFileCapture = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const isVid = file.type.startsWith("video");
+    if (isVid) {
+      setRecordedVideoUrl(url);
+      setCapturedBlob(file);
+    } else {
+      setCapturedPhotoUrl(url);
+      setCapturedBlob(file);
+    }
+    setPermissionError("");
+    e.target.value = "";
   };
 
   // Bind media stream to video whenever stream updates or preview is cleared
@@ -101,7 +170,7 @@ export default function CameraModal({ isOpen, onClose, onCapture }) {
   useEffect(() => {
     if (isOpen) {
       resetMedia();
-      startCamera(facingMode);
+      startCamera(facingMode, mode);
     } else {
       stopAllMedia();
     }
@@ -109,9 +178,13 @@ export default function CameraModal({ isOpen, onClose, onCapture }) {
     return () => {
       stopAllMedia();
     };
-  }, [isOpen, facingMode]);
+  }, [isOpen, facingMode, mode]);
 
   const stopAllMedia = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
       setStream(null);
@@ -312,23 +385,54 @@ export default function CameraModal({ isOpen, onClose, onCapture }) {
           </div>
         </div>
 
+        {/* Hidden Native File Input for Fallback / Direct Device Camera */}
+        <input
+          ref={nativeFileInputRef}
+          type="file"
+          accept={mode === "video" ? "video/*" : "image/*"}
+          capture={facingMode === "environment" ? "environment" : "user"}
+          onChange={handleNativeFileCapture}
+          className="hidden"
+        />
+
         {/* Viewfinder / Preview Screen */}
         <div className="relative flex-1 min-h-[300px] sm:min-h-[360px] bg-black flex items-center justify-center overflow-hidden">
           {permissionError ? (
-            <div className="p-6 text-center max-w-sm space-y-3">
+            <div className="p-5 text-center max-w-sm space-y-3">
               <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 mx-auto flex items-center justify-center">
                 <AlertCircle className="w-6 h-6" />
               </div>
               <h4 className="text-sm font-bold text-white">Camera Access Required</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">{permissionError}</p>
-              <button
-                type="button"
-                onClick={() => startCamera(facingMode)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#B8323C] hover:bg-red-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>Try Again / पुनः प्रयास करें</span>
-              </button>
+              <p className="text-xs text-slate-300 leading-relaxed">{permissionError}</p>
+
+              <div className="flex flex-col gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => startCamera(facingMode, mode)}
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#B8323C] hover:bg-red-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Try Again / पुनः प्रयास करें</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => nativeFileInputRef.current?.click()}
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-bold transition cursor-pointer border border-slate-700 hover:border-slate-600 shadow-sm"
+                >
+                  <Camera className="w-4 h-4 text-emerald-400" />
+                  <span>Use Device Camera / डिवाइस कैमरा खोलें</span>
+                </button>
+              </div>
+
+              <div className="bg-slate-800/80 rounded-xl p-3 text-[11px] text-slate-300 text-left border border-slate-700/80 mt-2 space-y-1">
+                <p className="font-bold text-slate-200">💡 Quick permission guide:</p>
+                <p className="text-[10px] text-slate-400">
+                  • <strong>Laptop</strong>: Click the 🔒 lock or camera icon on the left of your URL bar &rarr; Turn Camera to <strong>Allow</strong> &rarr; Click "Try Again".
+                </p>
+                <p className="text-[10px] text-slate-400">
+                  • <strong>Phone</strong>: Tap the lock/tune icon or 'aA' in the search bar &rarr; Site Settings &rarr; Camera &rarr; Allow.
+                </p>
+              </div>
             </div>
           ) : capturedPhotoUrl ? (
             <img
@@ -437,10 +541,10 @@ export default function CameraModal({ isOpen, onClose, onCapture }) {
                 {mode === "photo" ? (
                   <button
                     type="button"
-                    onClick={handleCapturePhoto}
-                    disabled={isInitializing || Boolean(permissionError)}
+                    onClick={permissionError ? () => nativeFileInputRef.current?.click() : handleCapturePhoto}
+                    disabled={isInitializing && !permissionError}
                     className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center hover:scale-105 active:scale-95 transition cursor-pointer disabled:opacity-40"
-                    title="Click to snap photo"
+                    title={permissionError ? "Open Device Camera / कैमरा खोलें" : "Click to snap photo"}
                   >
                     <div className="w-12 h-12 rounded-full bg-white active:bg-slate-200" />
                   </button>
@@ -456,10 +560,10 @@ export default function CameraModal({ isOpen, onClose, onCapture }) {
                 ) : (
                   <button
                     type="button"
-                    onClick={handleStartRecording}
-                    disabled={isInitializing || Boolean(permissionError)}
+                    onClick={permissionError ? () => nativeFileInputRef.current?.click() : handleStartRecording}
+                    disabled={isInitializing && !permissionError}
                     className="w-16 h-16 rounded-full border-4 border-red-500 flex items-center justify-center hover:scale-105 active:scale-95 transition cursor-pointer disabled:opacity-40"
-                    title="Start recording"
+                    title={permissionError ? "Open Device Camera / कैमरा खोलें" : "Start recording"}
                   >
                     <div className="w-12 h-12 rounded-full bg-red-600 active:bg-red-700" />
                   </button>
