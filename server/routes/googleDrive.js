@@ -6,8 +6,10 @@ import multer from "multer";
 import { Readable } from "stream";
 import mongoose from "mongoose";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
+import path from "path";
 import GoogleDriveToken from "../models/GoogleDriveToken.js";
 import GoogleDriveMedia from "../models/GoogleDriveMedia.js";
+import Message from "../models/Message.js";
 
 const router = express.Router();
 
@@ -632,24 +634,79 @@ router.get("/media/:id", async (req, res) => {
     if (!mediaDoc) {
       mediaDoc = await GoogleDriveMedia.findOne({ driveFileId: id });
     }
+    if (!mediaDoc && mongoose.Types.ObjectId.isValid(id)) {
+      const msg = await Message.findById(id).lean();
+      if (msg && (msg.driveFileId || msg.storageProvider === "google_drive")) {
+        mediaDoc = {
+          driveFileId: msg.driveFileId,
+          fileName: msg.fileName || "media",
+          mimeType: msg.mimeType,
+          fileSize: msg.fileSize,
+        };
+      }
+    }
 
-    if (!mediaDoc) {
+    if (!mediaDoc || !mediaDoc.driveFileId) {
       return res.status(404).json({ message: "Media file not found." });
+    }
+
+    // Resolve accurate MIME type based on extension if missing or generic
+    let resolvedMime = mediaDoc.mimeType;
+    const ext = path.extname(mediaDoc.fileName || "").toLowerCase();
+    const MIME_MAP = {
+      ".mp4": "video/mp4",
+      ".webm": "video/webm",
+      ".mov": "video/quicktime",
+      ".mkv": "video/x-matroska",
+      ".avi": "video/x-msvideo",
+      ".mp3": "audio/mpeg",
+      ".wav": "audio/wav",
+      ".m4a": "audio/mp4",
+      ".ogg": "audio/ogg",
+      ".jpg": "image/jpeg",
+      ".jpeg": "image/jpeg",
+      ".png": "image/png",
+      ".webp": "image/webp",
+      ".gif": "image/gif",
+      ".pdf": "application/pdf",
+      ".zip": "application/zip",
+    };
+
+    if (!resolvedMime || resolvedMime === "application/octet-stream") {
+      resolvedMime = MIME_MAP[ext] || "application/octet-stream";
     }
 
     const { drive } = await getAuthenticatedDriveClient();
 
+    const rangeHeader = req.headers.range;
+    const driveReqHeaders = {};
+    if (rangeHeader) {
+      driveReqHeaders.Range = rangeHeader;
+    }
+
     const driveStream = await drive.files.get(
       { fileId: mediaDoc.driveFileId, alt: "media" },
-      { responseType: "stream" }
+      { headers: driveReqHeaders, responseType: "stream" }
     );
 
-    res.setHeader("Content-Type", mediaDoc.mimeType || "application/octet-stream");
-    if (mediaDoc.fileSize) {
+    const isPartial = Boolean(rangeHeader && (driveStream.status === 206 || driveStream.headers?.["content-range"]));
+    res.status(isPartial ? 206 : driveStream.status || 200);
+
+    res.setHeader("Accept-Ranges", "bytes");
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    res.setHeader("Content-Type", resolvedMime);
+
+    if (driveStream.headers?.["content-range"]) {
+      res.setHeader("Content-Range", driveStream.headers["content-range"]);
+    }
+    if (driveStream.headers?.["content-length"]) {
+      res.setHeader("Content-Length", driveStream.headers["content-length"]);
+    } else if (mediaDoc.fileSize && !rangeHeader) {
       res.setHeader("Content-Length", mediaDoc.fileSize);
     }
+
     res.setHeader("Cache-Control", "public, max-age=86400, stale-while-revalidate=43200");
-    res.setHeader("Content-Disposition", `inline; filename="${mediaDoc.fileName}"`);
+    res.setHeader("Content-Disposition", `inline; filename="${mediaDoc.fileName || "attachment"}"`);
 
     driveStream.data.on("error", (err) => {
       console.error("[GoogleDrive] Stream transfer error:", err);

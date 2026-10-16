@@ -874,6 +874,11 @@ router.get("/conversations/:id/messages", verifyToken, async (req, res) => {
         body: bodyText,
         type: m.type,
         mediaUrl: m.isDeletedForEveryone ? "" : m.mediaUrl,
+        fileName: m.fileName || "",
+        fileSize: m.fileSize || 0,
+        mimeType: m.mimeType || "",
+        storageProvider: m.storageProvider || "local",
+        driveFileId: m.driveFileId || "",
         replyTo: m.replyTo,
         isEdited: m.isEdited,
         editedAt: m.editedAt,
@@ -900,6 +905,84 @@ router.get("/conversations/:id/messages", verifyToken, async (req, res) => {
   } catch (err) {
     console.error("Get Messages Error:", err);
     res.status(500).json({ success: false, message: "Failed to retrieve messages." });
+  }
+});
+
+// @route   GET /api/messages/conversations/:id/attachments
+// @desc    Get all shared media, videos, and files for a conversation
+// @access  Private
+router.get("/conversations/:id/attachments", verifyToken, async (req, res) => {
+  try {
+    const conversationId = req.params.id;
+    const currentUserId = req.user.id;
+
+    const membership = await ConversationMember.findOne({
+      conversation: conversationId,
+      user: currentUserId,
+    });
+
+    if (!membership || ["blocked", "declined"].includes(membership.status)) {
+      return res.status(403).json({ success: false, message: "Unauthorized access to this conversation." });
+    }
+
+    const deletedForMe = await MessageDeletion.find({ user: currentUserId }).distinct("message");
+    const query = {
+      conversation: conversationId,
+      isDeletedForEveryone: false,
+      mediaUrl: { $exists: true, $ne: "" },
+    };
+    if (deletedForMe.length) {
+      query._id = { $nin: deletedForMe };
+    }
+
+    const messages = await Message.find(query)
+      .sort({ createdAt: -1 })
+      .populate("sender", "_id name username avatar")
+      .lean();
+
+    const photos = [];
+    const videos = [];
+    const files = [];
+
+    for (const m of messages) {
+      const mime = (m.mimeType || "").toLowerCase();
+      const ext = path.extname(m.fileName || "").toLowerCase();
+      const isImg = m.type === "image" || mime.startsWith("image/") || [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"].includes(ext);
+      const isVid = m.type === "video" || mime.startsWith("video/") || [".mp4", ".webm", ".mov", ".mkv"].includes(ext);
+
+      const item = {
+        _id: m._id,
+        id: m._id,
+        body: m.body,
+        type: isImg ? "image" : isVid ? "video" : m.type || "document",
+        mediaUrl: m.mediaUrl,
+        fileName: m.fileName || (isImg ? "photo.jpg" : isVid ? "video.mp4" : "file"),
+        fileSize: m.fileSize || 0,
+        mimeType: m.mimeType || "",
+        storageProvider: m.storageProvider || "local",
+        sender: m.sender,
+        createdAt: m.createdAt,
+      };
+
+      if (isImg) {
+        photos.push(item);
+      } else if (isVid) {
+        videos.push(item);
+      } else {
+        files.push(item);
+      }
+    }
+
+    res.json({
+      success: true,
+      totalCount: messages.length,
+      photos,
+      videos,
+      files,
+    });
+  } catch (err) {
+    console.error("Get Attachments Error:", err);
+    res.status(500).json({ success: false, message: "Failed to retrieve conversation attachments." });
   }
 });
 
@@ -1974,7 +2057,11 @@ router.get("/blocked", verifyToken, async (req, res) => {
 // @access  Private
 router.post("/report", verifyToken, writeLimiter, async (req, res) => {
   try {
-    const { targetUserId, targetMessageId, targetConversationId, reason, details } = req.body;
+    const targetUserId = req.body.targetUserId || req.body.reportedUserId;
+    const targetMessageId = req.body.targetMessageId || req.body.messageId;
+    const targetConversationId = req.body.targetConversationId || req.body.conversationId;
+    const reason = req.body.reason;
+    const details = req.body.details || req.body.description || "";
     const currentUserId = req.user.id;
 
     if (!targetUserId) {

@@ -75,6 +75,8 @@ export default function ChatWindow({
   const [sendingRequest, setSendingRequest] = useState(false);
   const [requestActionMsg, setRequestActionMsg] = useState("");
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [videoErrors, setVideoErrors] = useState({});
   const [reportTarget, setReportTarget] = useState(null);
   const [editingMessage, setEditingMessage] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -108,6 +110,9 @@ export default function ChatWindow({
   const audioInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const docInputRef = useRef(null);
+  const actionsDropdownRef = useRef(null);
+  const emojiPickerRef = useRef(null);
+  const attachMenuRef = useRef(null);
 
   const conversationId = conversation?._id || conversation?.id;
   const isGroup = conversation?.type === "group";
@@ -178,6 +183,42 @@ export default function ChatWindow({
       window.removeEventListener("offline", handleOffline);
     };
   }, [conversationId]);
+
+  // Click-outside and Escape key listener for actions menu, emoji picker, attach menu, and modals
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showActionsDropdown && actionsDropdownRef.current && !actionsDropdownRef.current.contains(e.target)) {
+        setShowActionsDropdown(false);
+      }
+      if (showEmojiPicker && emojiPickerRef.current && !emojiPickerRef.current.contains(e.target)) {
+        setShowEmojiPicker(false);
+      }
+      if (showAttachMenu && attachMenuRef.current && !attachMenuRef.current.contains(e.target)) {
+        setShowAttachMenu(false);
+      }
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        if (showActionsDropdown) setShowActionsDropdown(false);
+        if (showEmojiPicker) setShowEmojiPicker(false);
+        if (showAttachMenu) setShowAttachMenu(false);
+        if (showBlockModal) setShowBlockModal(false);
+        if (lightboxImage) setLightboxImage(null);
+        if (reportTarget) setReportTarget(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside, { passive: true });
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showActionsDropdown, showEmojiPicker, showAttachMenu, showBlockModal, lightboxImage, reportTarget]);
 
   // Scroll to bottom helper with jitter prevention
   const scrollToBottom = (behavior = "smooth", force = false) => {
@@ -527,12 +568,9 @@ export default function ChatWindow({
     }
   };
 
-  // Resolve full URL for media attachments
+  // Resolve full URL for media attachments using robust mediaUtils resolver
   const getFullMediaUrl = (url) => {
-    if (!url) return "";
-    if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    const origin = (API.defaults.baseURL || "").replace(/\/api\/?$/, "");
-    return `${origin}${url}`;
+    return resolveMediaUrl(url);
   };
 
   const formatFileSize = (bytes) => {
@@ -906,21 +944,22 @@ export default function ChatWindow({
   };
 
   // Handle Block / Unblock User
-  const handleToggleBlock = async () => {
+  const handleToggleBlock = async (confirmed = false) => {
     setShowActionsDropdown(false);
     const otherId = otherUser._id || otherUser.id;
     if (!otherId) return;
 
-    if (!isBlocked) {
-      const ok = window.confirm(
-        `Are you sure you want to block ${otherUser.name || "this user"}? You won't receive messages from them, and they cannot discover your profile.`
-      );
-      if (!ok) return;
+    if (!confirmed) {
+      setShowBlockModal(true);
+      return;
+    }
 
+    if (!isBlocked) {
       try {
         const res = await API.post("/messages/block", { targetUserId: otherId });
         if (res.data?.success) {
           setIsBlocked(true);
+          setShowBlockModal(false);
           if (onConversationUpdated) {
             onConversationUpdated({ conversationId, status: "blocked" });
           }
@@ -933,6 +972,7 @@ export default function ChatWindow({
         const res = await API.post("/messages/unblock", { targetUserId: otherId });
         if (res.data?.success) {
           setIsBlocked(false);
+          setShowBlockModal(false);
           if (onConversationUpdated) {
             onConversationUpdated({ conversationId, status: "active" });
           }
@@ -1130,23 +1170,32 @@ export default function ChatWindow({
             </button>
           )}
 
-          <div className="relative">
+          <div className="relative" ref={actionsDropdownRef}>
             <button
               type="button"
-              onClick={() => setShowActionsDropdown((prev) => !prev)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowActionsDropdown((prev) => !prev);
+              }}
               className="w-9 h-9 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
               title="Options"
+              aria-label="Chat options"
+              aria-expanded={showActionsDropdown}
             >
               <MoreVertical className="w-4 h-4" />
             </button>
 
             {showActionsDropdown && (
-              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 py-1.5 z-20 text-xs">
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="absolute right-0 top-full mt-1.5 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 py-1.5 z-30 text-xs animate-in fade-in zoom-in-95 duration-100"
+              >
                 {isGroup ? (
                   <>
                     <button
                       type="button"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setShowActionsDropdown(false);
                         setShowGroupDetails(true);
                       }}
@@ -1158,7 +1207,8 @@ export default function ChatWindow({
 
                     <button
                       type="button"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setShowActionsDropdown(false);
                         setShowGroupDetails(true);
                       }}
@@ -1172,9 +1222,10 @@ export default function ChatWindow({
                   <>
                     <button
                       type="button"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setShowActionsDropdown(false);
-                        setReportTarget({ user: otherUser });
+                        setReportTarget({ user: otherUser, conversationId });
                       }}
                       className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2 text-slate-700 transition cursor-pointer"
                     >
@@ -1184,7 +1235,11 @@ export default function ChatWindow({
 
                     <button
                       type="button"
-                      onClick={handleToggleBlock}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowActionsDropdown(false);
+                        setShowBlockModal(true);
+                      }}
                       className="w-full px-3 py-2 text-left hover:bg-red-50 flex items-center gap-2 text-red-600 transition cursor-pointer"
                     >
                       <Ban className="w-3.5 h-3.5" />
@@ -1540,7 +1595,16 @@ export default function ChatWindow({
                                       onLoad={() => {
                                         if (isAtBottomRef.current) scrollToBottom("auto");
                                       }}
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = "none";
+                                        const fallback = e.currentTarget.parentElement?.querySelector(".img-fallback");
+                                        if (fallback) fallback.classList.remove("hidden");
+                                      }}
                                     />
+                                    <div className="img-fallback hidden p-4 text-center text-xs text-slate-500 flex flex-col items-center gap-1.5">
+                                      <ImageIcon className="w-6 h-6 text-slate-400" />
+                                      <span>Image unavailable / छवि अनुपलब्ध</span>
+                                    </div>
                                     <a
                                       href={getFullMediaUrl(m.mediaUrl)}
                                       download={m.fileName || "photo.jpg"}
@@ -1558,12 +1622,57 @@ export default function ChatWindow({
                                 {/* Video attachment */}
                                 {m.type === "video" && m.mediaUrl && (
                                   <div className="mb-1.5 rounded-xl overflow-hidden bg-black/10">
-                                    <video
-                                      controls
-                                      preload="metadata"
-                                      className="rounded-xl max-h-64 max-w-full sm:max-w-xs bg-black"
-                                      src={getFullMediaUrl(m.mediaUrl)}
-                                    />
+                                    {videoErrors[m._id || m.id] ? (
+                                      <div className="p-3 bg-slate-900/90 text-white rounded-xl flex flex-col gap-2 max-w-xs text-xs">
+                                        <div className="flex items-center gap-2 text-amber-400">
+                                          <AlertCircle className="w-4 h-4 shrink-0" />
+                                          <span className="font-semibold">Unable to play video inline</span>
+                                        </div>
+                                        <p className="text-[11px] text-slate-300">
+                                          Format may not be supported for inline streaming or connection timed out.
+                                        </p>
+                                        <div className="flex items-center gap-2 pt-1">
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setVideoErrors((prev) => {
+                                                const next = { ...prev };
+                                                delete next[m._id || m.id];
+                                                return next;
+                                              });
+                                            }}
+                                            className="px-2.5 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+                                          >
+                                            <RotateCw className="w-3 h-3" />
+                                            <span>Retry / पुनः प्रयास</span>
+                                          </button>
+                                          <a
+                                            href={getFullMediaUrl(m.mediaUrl)}
+                                            download={m.fileName || "video.mp4"}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="px-2.5 py-1 bg-[#B8323C] hover:bg-red-700 text-white rounded-lg text-[10px] font-bold flex items-center gap-1 transition"
+                                          >
+                                            <Download className="w-3 h-3" />
+                                            <span>Download / डाउनलोड</span>
+                                          </a>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <video
+                                        controls
+                                        playsInline
+                                        preload="metadata"
+                                        className="rounded-xl max-h-64 max-w-full sm:max-w-xs bg-black"
+                                        onError={(e) => {
+                                          console.warn("Video playback error for message:", m._id || m.id, e);
+                                          setVideoErrors((prev) => ({ ...prev, [m._id || m.id]: true }));
+                                        }}
+                                      >
+                                        <source src={getFullMediaUrl(m.mediaUrl)} type={m.mimeType || "video/mp4"} />
+                                        Your browser does not support inline video playback.
+                                      </video>
+                                    )}
                                     <div className="flex items-center justify-between px-1 pt-1 text-[10px] opacity-75">
                                       <span className="truncate max-w-[180px]">{m.fileName || "Video clip"}</span>
                                       <div className="flex items-center gap-1.5">
@@ -1952,7 +2061,11 @@ export default function ChatWindow({
         <div className="shrink-0 z-20 bg-white border-t border-slate-200/90 shadow-[0_-4px_16px_rgba(0,0,0,0.04)] pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           {/* Emoji Picker Tray */}
           {showEmojiPicker && (
-            <div className="absolute bottom-full mb-2 left-3 z-30 bg-white rounded-2xl shadow-xl border border-slate-200 p-3 w-72 animate-in fade-in zoom-in-95">
+            <div
+              ref={emojiPickerRef}
+              onClick={(e) => e.stopPropagation()}
+              className="absolute bottom-full mb-2 left-2 sm:left-3 z-30 bg-white rounded-2xl shadow-xl border border-slate-200 p-3 w-72 max-w-[calc(100vw-1.5rem)] animate-in fade-in zoom-in-95"
+            >
               <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 text-xs">
                 <span className="font-bold text-slate-700">Quick Emojis / इमोजी</span>
                 <button
@@ -1982,7 +2095,11 @@ export default function ChatWindow({
 
           {/* Attachment Menu Popover */}
           {showAttachMenu && (
-            <div className="absolute bottom-full mb-2 left-10 z-30 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 w-60 animate-in fade-in zoom-in-95 text-xs font-semibold">
+            <div
+              ref={attachMenuRef}
+              onClick={(e) => e.stopPropagation()}
+              className="absolute bottom-full mb-2 left-2 sm:left-12 z-30 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 w-64 max-w-[calc(100vw-1.5rem)] animate-in fade-in zoom-in-95 text-xs font-semibold"
+            >
               <div className="flex items-center justify-between pb-1.5 mb-1.5 px-2 border-b border-slate-100 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
                 <span>Attach / फ़ाइल जोड़ें</span>
                 <button
@@ -2084,7 +2201,7 @@ export default function ChatWindow({
 
           <form
             onSubmit={handleSendMessage}
-            className="p-2 sm:p-2.5 bg-white flex items-center gap-1.5 sm:gap-2 shrink-0"
+            className="p-1.5 sm:p-2.5 bg-white flex items-center gap-1 sm:gap-2 shrink-0 max-w-full"
           >
             {/* Hidden File Inputs for All Supported Media Types */}
             <input
@@ -2127,11 +2244,12 @@ export default function ChatWindow({
             {/* Emoji Trigger */}
             <button
               type="button"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setShowEmojiPicker((p) => !p);
                 setShowAttachMenu(false);
               }}
-              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition cursor-pointer shrink-0 ${
+              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition cursor-pointer shrink-0 ${
                 showEmojiPicker
                   ? "bg-amber-100 text-amber-700"
                   : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
@@ -2139,18 +2257,19 @@ export default function ChatWindow({
               title="Emoji / इमोजी"
               aria-label="Toggle emoji picker"
             >
-              <Smile className="w-5 h-5" />
+              <Smile className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
             {/* Attachment Menu Trigger */}
             <button
               type="button"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setShowAttachMenu((p) => !p);
                 setShowEmojiPicker(false);
               }}
               disabled={Boolean(editingMessage) || uploadingMedia}
-              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition cursor-pointer shrink-0 disabled:opacity-40 ${
+              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition cursor-pointer shrink-0 disabled:opacity-40 ${
                 showAttachMenu
                   ? "bg-red-50 text-[#B8323C] ring-1 ring-red-200"
                   : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
@@ -2158,23 +2277,24 @@ export default function ChatWindow({
               title="Attach media or document / मीडिया जोड़ें"
               aria-label="Attach file"
             >
-              <Paperclip className="w-5 h-5" />
+              <Paperclip className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
             {/* Quick Live Camera Snap / Record Trigger */}
             <button
               type="button"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setShowAttachMenu(false);
                 setShowEmojiPicker(false);
                 setShowCameraModal(true);
               }}
               disabled={Boolean(editingMessage) || uploadingMedia}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-slate-500 hover:text-[#B8323C] hover:bg-red-50 transition cursor-pointer shrink-0 disabled:opacity-40"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-slate-500 hover:text-[#B8323C] hover:bg-red-50 transition cursor-pointer shrink-0 disabled:opacity-40"
               title="Live Camera Photo & Video / लाइव कैमरा"
               aria-label="Open camera"
             >
-              <Camera className="w-5 h-5" />
+              <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
             {/* Message Input Field */}
@@ -2193,14 +2313,14 @@ export default function ChatWindow({
                   ? `Add a caption for this ${selectedCategory} (optional)...`
                   : "Type a message... / संदेश लिखें..."
               }
-              className="flex-1 px-4 py-2.5 rounded-full bg-slate-100/90 hover:bg-slate-100 focus:bg-white border border-slate-200/80 focus:border-[#B8323C] text-xs sm:text-sm font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#B8323C]/20 transition shadow-inner"
+              className="min-w-0 flex-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full bg-slate-100/90 hover:bg-slate-100 focus:bg-white border border-slate-200/80 focus:border-[#B8323C] text-xs sm:text-sm font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#B8323C]/20 transition shadow-inner"
             />
 
             {/* Send / Save Button */}
             <button
               type="submit"
               disabled={(!inputText.trim() && !selectedFile) || uploadingMedia}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition shadow-sm shrink-0 cursor-pointer ${
+              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition shadow-sm shrink-0 cursor-pointer ${
                 (!inputText.trim() && !selectedFile) || uploadingMedia
                   ? "bg-slate-100 text-slate-300 cursor-not-allowed shadow-none"
                   : "bg-[#B8323C] hover:bg-red-700 text-white shadow-md active:scale-95"
@@ -2333,6 +2453,60 @@ export default function ChatWindow({
               alt="Full view"
               className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
             />
+          </div>
+        </div>
+      )}
+
+      {/* Block Citizen Confirmation Modal */}
+      {showBlockModal && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+          onClick={() => setShowBlockModal(false)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-sm w-full p-5 relative shadow-2xl border border-slate-200 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`p-2.5 rounded-2xl ${isBlocked ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"}`}>
+                <Ban className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900">
+                  {isBlocked ? "Unblock Citizen / अनब्लॉक करें" : "Block Citizen / नागरिक को ब्लॉक करें"}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  {otherUser.name || "This citizen"}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              {isBlocked
+                ? `Are you sure you want to unblock ${otherUser.name || "this user"}? You will be able to exchange messages with them again.`
+                : `Are you sure you want to block ${otherUser.name || "this user"}? They won't be able to send you messages or view your online status in chats.`}
+            </p>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => handleToggleBlock(true)}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer text-white ${
+                  isBlocked
+                    ? "bg-emerald-600 hover:bg-emerald-700"
+                    : "bg-red-600 hover:bg-red-700"
+                }`}
+              >
+                {isBlocked ? "Yes, Unblock" : "Yes, Block"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowBlockModal(false)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Cancel / रद्द करें
+              </button>
+            </div>
           </div>
         </div>
       )}

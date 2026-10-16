@@ -1,5 +1,7 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
+const RegionalConnectivityMap = lazy(() => import("./RegionalConnectivityMap"));
 import {
   Search,
   Mic,
@@ -1343,6 +1345,35 @@ export default function MobileHomePortal({
             )}
           </div>
         </div>
+      </section>
+
+      {/* ========================================================
+          FAZILNAGAR & NEARBY PLACES (Regional Connectivity Map)
+          ======================================================== */}
+      <section id="regional-connectivity-mobile" className="px-4 py-3" aria-label="Regional Connectivity Map">
+        <div className="mb-2.5">
+          <div className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-0.5">
+            <Compass className="w-3.5 h-3.5" />
+            <span>Geospatial Hub & Network</span>
+          </div>
+          <h2 className="text-base font-black text-slate-900 tracking-tight font-heading">
+            Fazilnagar &amp; Nearby Places
+          </h2>
+          <p className="text-[11px] text-slate-500">
+            फाजिलनगर और आसपास के गाँव एवं शहर &bull; 126 verified block villages, market towns &amp; connected cities
+          </p>
+        </div>
+
+        <Suspense
+          fallback={
+            <div className="w-full h-80 bg-slate-900 rounded-3xl border border-slate-800 flex flex-col items-center justify-center text-slate-400 gap-2">
+              <div className="w-7 h-7 border-2 border-slate-700 border-t-[#B8323C] rounded-full animate-spin" />
+              <span className="text-xs font-bold text-slate-300">Loading Regional Map…</span>
+            </div>
+          }
+        >
+          <RegionalConnectivityMap />
+        </Suspense>
       </section>
 
       {/* ========================================================

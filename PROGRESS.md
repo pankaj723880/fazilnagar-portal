@@ -1,6 +1,36 @@
-# Town Messaging Implementation Progress
+# Town Portal & Regional Connectivity Implementation Progress
 
 ## Done Phases
+- **Interactive Fazilnagar Regional Connectivity Map (Completed)**
+  - **Geographic Dataset (`client/src/data/regionalLocations.js`)**:
+    - Central origin: Fazilnagar Town Centre (`26.6827° N, 84.0498° E`, PIN 274401).
+    - 1 Central Hub (Fazilnagar Centre with pulsing beacon marker).
+    - 7 Verified Surrounding Market Towns: Kasya / Kushinagar, Tamkuhi Raj, Padrauna, Hata, Seorahi, Ramkola, Sukrauli.
+    - 3 Connected Regional Cities: Deoria, Gorakhpur, Gopalganj.
+    - 126 Verified Villages of Fazilnagar Block (Census 2011 / LGD Code 0659 / Panchayati Raj UP).
+    - Total: 137 verified locations with exact coordinates, Haversine straight-line distance, compass direction, official source, and verified status. Zero synthetic duplicates.
+  - **Animated Connection Lines**:
+    - Progressive Leaflet SVG polyline with dash flow animation (`.fazilnagar-flow-line`) and traveling pulse beacon along the geographic projection.
+    - Smoothly transitions when hovering or selecting different destinations.
+    - Geographic coordinates stay anchored to pins during zoom and pan operations.
+    - Respects `prefers-reduced-motion`.
+  - **Discovery, Search & Directory**:
+    - Category filter tabs: All Places (137), Villages (126), Towns (7), Cities (3).
+    - Instant search autocomplete dropdown with distance readouts.
+    - Empty state card with "Clear Search & Show All" button for unmapped queries.
+    - "Directory" button opening a Browse All Locations drawer with 126 villages and regional destinations.
+    - Interactive bottom card showing name, Hindi name, distance, direction, block, district, verification source, and direct "Google Maps Directions" button.
+  - **Zoom-Dependent Density Strategy**:
+    - Low zoom (`< 11`): Micro-dots for villages, preventing marker clutter.
+    - Mid zoom (`11-12`): Standard pins with hover tooltips.
+    - High zoom (`>= 13`): Readable village name labels attached directly under markers.
+  - **Desktop & Mobile Integration**:
+    - Integrated on Desktop Homepage (`TownPortal.jsx`) under `#regional-connectivity-section` with brand styling.
+    - Integrated on Mobile Homepage (`MobileHomePortal.jsx`) under `#regional-connectivity-mobile` with touch-friendly controls.
+  - **Automated Regression Suite (`server/tests/regionalConnectivity.test.js`)**:
+    - 7 automated tests passing: Central hub origin, 137 dataset counts, town/city identities, coordinate bounding box, Haversine calculation accuracy (diff <= 0.2km), identifier uniqueness, and metadata schema.
+    - All 25 portal and location regression tests passing with 0 failures.
+
 - **Audit & Supabase Removal**
   - Audited and stripped `@supabase/supabase-js`, `client/src/supabase.js`, `SupabaseAuthContext.jsx`, SQL migrations, and Supabase env variables.
   - Re-anchored messaging directly to existing portal JWT auth and MongoDB Atlas user accounts.
@@ -342,6 +372,40 @@ The Fazilnagar Town Portal messaging architecture is fully implemented and opera
 - Offline Storage Utility: `client/src/utils/offlineChatStorage.js`
 - Message Model: `server/models/Message.js`
 - Media & Large File Routes: `server/routes/messages.js`
+
+## Phase 10 (Media Playback, Mobile Composer, Popovers, Shared Files & UI Polish) Completed
+- **Chats Page Title & Header**:
+  - Renamed the visible messaging page heading to **Chats** in `client/src/pages/Messages.jsx`.
+  - Removed the redundant subtitle "Fazilnagar real-time direct messaging & civic communications" to declutter the interface while keeping the messaging icon.
+  - Updated browser document title and SEO metadata to `Chats | Fazilnagar Town Portal`.
+  - Removed duplicate hamburger menu buttons on mobile screens.
+- **Video Playback Inside Chat**:
+  - Implemented HTTP Range request streaming (`Range`, `206 Partial Content`, `Content-Range`, `Accept-Ranges: bytes`, `Content-Length`) in `server/routes/googleDrive.js`.
+  - Enhanced backend `GET /conversations/:id/messages` in `server/routes/messages.js` to return complete attachment metadata: `fileName`, `fileSize`, `mimeType`, `storageProvider`, and `driveFileId`.
+  - Upgraded `<video>` player in `client/src/components/ChatWindow.jsx` with `playsInline`, `controls`, `preload="metadata"`, `<source type={m.mimeType || "video/mp4"} />`, and safe non-autoplay behavior.
+  - Added dedicated inline error boundary with informative notice ("Unable to play video inline"), Retry button, and direct Download option.
+  - Replaced corrupted test video files on disk with valid faststart H.264/AAC MP4 media and updated database records.
+- **Mobile Composer & Send Button**:
+  - Added `min-w-0 flex-1` on the message input field inside `ChatWindow.jsx` to prevent flex overflow and ensure the input shrinks properly across all mobile viewports down to 320px.
+  - Sized action buttons responsively (`w-8 h-8 sm:w-10 sm:h-10 shrink-0`) and send button (`w-8 h-8 sm:w-10 sm:h-10 shrink-0`).
+  - Send button remains reachable and completely visible without clipping or pushing outside the screen.
+  - Preserved bottom anchoring with safe-area insets (`pb-[max(0.5rem,env(safe-area-inset-bottom))]`) and independent message history scroll.
+- **Report Citizen & Block Citizen Popovers**:
+  - Fixed popover dismissal bug by attaching `actionsDropdownRef` with `mousedown` and `touchstart` click-outside detection and Escape key listeners.
+  - Added `e.stopPropagation()` on the three-dot button and inside dropdown menu containers to prevent premature closing when tapping menu controls.
+  - Selecting "Report Citizen" smoothly opens `ReportModal` without premature unmounting.
+  - Selecting "Block Citizen" cleanly triggers a custom modal confirmation dialog with Yes/Cancel actions instead of jarring OS `window.confirm`.
+- **Shared Photos, Videos & Files in Info Panel**:
+  - Added `GET /api/messages/conversations/:id/attachments` endpoint in `server/routes/messages.js` returning categorized attachment collections (`photos`, `videos`, `files`) derived directly from real MongoDB records.
+  - Updated `client/src/components/ConversationInfoPanel.jsx` to fetch real attachments with accurate count badges for Shared Photos, Shared Videos, and Shared Files.
+  - Used `resolveMediaUrl(url)` for thumbnail previews with image error fallbacks, file format badges, and secure download actions.
+  - Added mobile/tablet slide-over view for `ConversationInfoPanel`.
+- **Automated Verification**:
+  - `npm run build`: built cleanly in 7.09s with zero errors across 2,116 modules.
+  - `node --test server/tests/mediaAttachmentsPhase7.test.js`: 9/9 tests passing.
+  - `node --test server/tests/townMessagingCompletePhases789.test.js`: 15/15 tests passing.
+  - `node --test server/tests/moderationPhase4.test.js`: 8/8 tests passing.
+
 
 
 

@@ -18,6 +18,9 @@ import {
   Layers,
   CheckCircle2,
   Navigation,
+  ListFilter,
+  ArrowUpRight,
+  Map as MapIcon,
 } from "lucide-react";
 
 export default function RegionalConnectivityMap() {
@@ -31,10 +34,13 @@ export default function RegionalConnectivityMap() {
 
   const [activeFilter, setActiveFilter] = useState("all"); // 'all' | 'village' | 'town' | 'city'
   const [searchQuery, setSearchQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [hoveredLocation, setHoveredLocation] = useState(null);
   const [isMapActive, setIsMapActive] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentZoom, setCurrentZoom] = useState(11);
+  const [isBrowseOpen, setIsBrowseOpen] = useState(false);
 
   // The location currently highlighted (hovered has transient priority, fallback to selected)
   const currentHighlight = hoveredLocation || selectedLocation;
@@ -63,6 +69,20 @@ export default function RegionalConnectivityMap() {
       return true;
     });
   }, [activeFilter, searchQuery]);
+
+  // Instant Search Suggestions dropdown
+  const searchSuggestions = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
+    return REGIONAL_LOCATIONS.filter((loc) => {
+      if (loc.id === FAZILNAGAR_CENTRE.id) return false;
+      const matchName = loc.name.toLowerCase().includes(q);
+      const matchHindi = loc.hindiName && loc.hindiName.includes(q);
+      const matchBlock = loc.block && loc.block.toLowerCase().includes(q);
+      const matchType = loc.type && loc.type.toLowerCase().includes(q);
+      return matchName || matchHindi || matchBlock || matchType;
+    }).slice(0, 7);
+  }, [searchQuery]);
 
   // Counts by category
   const counts = useMemo(() => {
@@ -106,8 +126,8 @@ export default function RegionalConnectivityMap() {
     });
   };
 
-  // Helper: Create custom icon for Towns / Cities / Villages
-  const createLocationIcon = (loc, isHighlighted = false) => {
+  // Helper: Create custom icon for Towns / Cities / Villages with Zoom-Aware Density
+  const createLocationIcon = (loc, isHighlighted = false, zoom = 11) => {
     const isCity = loc.type === "city";
     const isTown = loc.type === "town";
 
@@ -155,14 +175,28 @@ export default function RegionalConnectivityMap() {
       });
     }
 
-    // Standard Village Dot Marker
+    // Zoom-Dependent Village Density Strategy:
+    // When zoomed in (zoom >= 13), show readable label directly under marker
+    // When zoomed out (zoom < 11), use micro-dots to avoid marker overlap
+    const isZoomedIn = zoom >= 13;
+    const isZoomedOut = zoom < 11;
     const color = isHighlighted ? "#B8323C" : "#1E293B";
-    const size = isHighlighted ? 18 : 12;
-    const border = isHighlighted ? "border-2 border-white ring-2 ring-red-500/50" : "border-1.5 border-white";
+    const size = isHighlighted ? 18 : isZoomedOut ? 8 : 12;
+    const border = isHighlighted
+      ? "border-2 border-white ring-2 ring-red-500/50"
+      : isZoomedOut
+      ? "border-1 border-white"
+      : "border-1.5 border-white";
+
+    const labelHtml = (isZoomedIn || isHighlighted)
+      ? `<div class="absolute -bottom-4.5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-slate-900/90 text-white text-[9px] font-semibold px-1 py-0.2 rounded shadow-xs border border-white/20 pointer-events-none">${loc.name}</div>`
+      : "";
+
     const html = `
       <div class="relative flex items-center justify-center cursor-pointer" style="width: ${size}px; height: ${size}px;">
         ${isHighlighted ? '<div class="absolute -inset-1 rounded-full bg-red-500 opacity-50 animate-ping"></div>' : ""}
         <div class="w-full h-full rounded-full bg-[${color}] ${border} shadow-sm transition-all duration-200"></div>
+        ${labelHtml}
       </div>
     `;
     return L.divIcon({
@@ -193,16 +227,23 @@ export default function RegionalConnectivityMap() {
         scrollWheelZoom: false,
       });
 
-      // CartoDB Positron / OSM Basemap
-      L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-        {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-          subdomains: "abcd",
-          maxZoom: 19,
-        }
-      ).addTo(map);
+      // CartoDB Voyager Basemap with CARTO API key
+      const cartoKey = import.meta.env.VITE_CARTO_API_KEY || "cb1_4mno_1_8619f278442c92595b7dec16";
+      const tileUrl = cartoKey
+        ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${cartoKey}`
+        : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+
+      L.tileLayer(tileUrl, {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: "abcd",
+        maxZoom: 19,
+      }).addTo(map);
+
+      // Track zoom level for density-adaptive rendering
+      map.on("zoomend", () => {
+        setCurrentZoom(map.getZoom());
+      });
 
       // Create dedicated marker layer
       const markersLayer = L.layerGroup().addTo(map);
@@ -244,7 +285,7 @@ export default function RegionalConnectivityMap() {
     }
   }, [isMapActive]);
 
-  // Render markers when filteredLocations or highlighted location changes
+  // Render markers when filteredLocations, highlighted location, or zoom changes
   useEffect(() => {
     const map = mapInstanceRef.current;
     const layer = markersLayerRef.current;
@@ -258,7 +299,7 @@ export default function RegionalConnectivityMap() {
 
       const icon = isHub
         ? createHubIcon()
-        : createLocationIcon(loc, isHighlighted);
+        : createLocationIcon(loc, isHighlighted, currentZoom);
 
       const marker = L.marker([loc.lat, loc.lng], {
         icon,
@@ -268,7 +309,7 @@ export default function RegionalConnectivityMap() {
       // Tooltip for quick context
       if (!isHub) {
         marker.bindTooltip(
-          `<strong>${loc.name}</strong>${loc.hindiName ? ` (${loc.hindiName})` : ""}<br/><span style="font-size:10px;color:#64748B;">${loc.distanceKm} km from Fazilnagar</span>`,
+          `<strong>${loc.name}</strong>${loc.hindiName ? ` (${loc.hindiName})` : ""}<br/><span style="font-size:10px;color:#94A3B8;">${loc.distanceKm} km from Fazilnagar Hub (${loc.compassDirection})</span>`,
           {
             direction: "top",
             offset: [0, -10],
@@ -281,11 +322,10 @@ export default function RegionalConnectivityMap() {
       marker.on("click", (e) => {
         L.DomEvent.stopPropagation(e);
         if (isHub) {
-          map.flyTo([FAZILNAGAR_CENTRE.lat, FAZILNAGAR_CENTRE.lng], 12, { duration: 0.8 });
+          map.flyTo([FAZILNAGAR_CENTRE.lat, FAZILNAGAR_CENTRE.lng], 11, { duration: 0.8 });
           setSelectedLocation(null);
         } else {
-          setSelectedLocation(loc);
-          map.panTo([loc.lat, loc.lng], { animate: true, duration: 0.6 });
+          handleSelectLocation(loc);
         }
       });
 
@@ -299,7 +339,25 @@ export default function RegionalConnectivityMap() {
 
       marker.addTo(layer);
     });
-  }, [filteredLocations, currentHighlight]);
+  }, [filteredLocations, currentHighlight, currentZoom]);
+
+  // Select location and smoothly frame connection
+  const handleSelectLocation = useCallback((loc) => {
+    setSelectedLocation(loc);
+    setHoveredLocation(null);
+    setShowSuggestions(false);
+    if (mapInstanceRef.current) {
+      const bounds = L.latLngBounds(
+        [FAZILNAGAR_CENTRE.lat, FAZILNAGAR_CENTRE.lng],
+        [loc.lat, loc.lng]
+      );
+      mapInstanceRef.current.fitBounds(bounds.pad(0.35), {
+        animate: true,
+        duration: 0.8,
+        maxZoom: 14,
+      });
+    }
+  }, []);
 
   // Handle Animated Connection Line & Traveling Dot
   useEffect(() => {
@@ -398,6 +456,7 @@ export default function RegionalConnectivityMap() {
     setSelectedLocation(null);
     setHoveredLocation(null);
     setSearchQuery("");
+    setShowSuggestions(false);
     setActiveFilter("all");
     if (mapInstanceRef.current) {
       mapInstanceRef.current.flyTo(
@@ -479,33 +538,95 @@ export default function RegionalConnectivityMap() {
           </button>
         </div>
 
-        {/* Search Input and Reset Action */}
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        {/* Search Input, Directory Button, and Reset Action */}
+        <div className="flex items-center gap-2 w-full md:w-auto relative">
           <div className="relative flex-1 md:w-72">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
               placeholder="Search village, town or city..."
-              className="w-full bg-slate-800/90 text-white placeholder-slate-400 text-xs pl-9 pr-8 py-2 rounded-xl border border-slate-700/80 focus:outline-hidden focus:border-[#B8323C] transition"
+              className="w-full bg-slate-800/90 text-white placeholder-slate-400 text-xs pl-9 pr-8 py-2 rounded-xl border border-slate-700/80 focus:outline-hidden focus:border-[#B8323C] focus:ring-1 focus:ring-[#B8323C] transition"
+              aria-label="Search village, town or city"
             />
             {searchQuery && (
               <button
                 type="button"
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                onClick={() => {
+                  setSearchQuery("");
+                  setShowSuggestions(false);
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+                aria-label="Clear search"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
+
+            {/* Instant Suggestions Dropdown */}
+            {showSuggestions && searchQuery.trim() && searchSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1.5 z-40 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden divide-y divide-slate-800/80 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="px-3 py-1.5 bg-slate-800/60 text-[10px] font-bold text-slate-400 flex items-center justify-between">
+                  <span>Matching Locations</span>
+                  <span>{searchSuggestions.length} found</span>
+                </div>
+                {searchSuggestions.map((sug) => (
+                  <button
+                    key={sug.id}
+                    type="button"
+                    onClick={() => handleSelectLocation(sug)}
+                    className="w-full px-3 py-2 text-left hover:bg-slate-800/90 flex items-center justify-between gap-2 transition cursor-pointer text-xs"
+                  >
+                    <div className="truncate">
+                      <div className="font-bold text-white truncate flex items-center gap-1.5">
+                        <span>{sug.name}</span>
+                        {sug.hindiName && (
+                          <span className="text-[10px] text-slate-400 font-normal">({sug.hindiName})</span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-400">{sug.block} Block</span>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded ${
+                        sug.type === "city" ? "bg-indigo-900 text-indigo-200" :
+                        sug.type === "town" ? "bg-emerald-900 text-emerald-200" :
+                        "bg-slate-800 text-slate-300"
+                      }`}>
+                        {sug.type}
+                      </span>
+                      <div className="text-[10px] font-mono font-bold text-amber-400 mt-0.5">
+                        {sug.distanceKm} km
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
+          {/* Browse Directory Button */}
+          <button
+            type="button"
+            onClick={() => setIsBrowseOpen(true)}
+            className="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer border border-slate-700/80 flex items-center gap-1.5 text-xs font-bold shrink-0"
+            title="Browse all 126 villages & towns directory"
+          >
+            <ListFilter className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Directory</span>
+          </button>
+
+          {/* Reset Map View */}
           <button
             type="button"
             onClick={handleResetView}
             className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer border border-slate-700/80 shrink-0"
             title="Reset Map to Fazilnagar Centre"
+            aria-label="Reset Map View"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
@@ -519,6 +640,7 @@ export default function RegionalConnectivityMap() {
           className="w-full h-full z-0 cursor-crosshair"
           onClick={() => {
             if (!isMapActive) setIsMapActive(true);
+            if (showSuggestions) setShowSuggestions(false);
           }}
         />
 
@@ -542,6 +664,7 @@ export default function RegionalConnectivityMap() {
             onClick={handleZoomIn}
             className="w-8 h-8 rounded-xl bg-slate-900/90 border border-slate-700 text-white flex items-center justify-center hover:bg-slate-800 transition cursor-pointer shadow-md"
             title="Zoom In"
+            aria-label="Zoom In"
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -550,6 +673,7 @@ export default function RegionalConnectivityMap() {
             onClick={handleZoomOut}
             className="w-8 h-8 rounded-xl bg-slate-900/90 border border-slate-700 text-white flex items-center justify-center hover:bg-slate-800 transition cursor-pointer shadow-md"
             title="Zoom Out"
+            aria-label="Zoom Out"
           >
             <Minus className="w-4 h-4" />
           </button>
@@ -560,6 +684,29 @@ export default function RegionalConnectivityMap() {
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           <span>{filteredLocations.length} Verified Locations Mapped</span>
         </div>
+
+        {/* Empty Search Result State Overlay */}
+        {filteredLocations.length <= 1 && searchQuery.trim() && (
+          <div className="absolute inset-x-4 top-16 z-20 mx-auto max-w-sm bg-slate-900/95 border border-slate-700/90 rounded-2xl p-4 text-center shadow-2xl backdrop-blur-md animate-in fade-in">
+            <div className="w-9 h-9 rounded-full bg-slate-800 text-amber-400 mx-auto flex items-center justify-center text-sm font-bold mb-2">
+              🔍
+            </div>
+            <h5 className="text-xs font-bold text-white mb-1">No Matching Locations</h5>
+            <p className="text-[11px] text-slate-400 mb-3 leading-relaxed">
+              No place matches "{searchQuery}" in {activeFilter === "all" ? "the regional directory" : activeFilter + " category"}.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery("");
+                setShowSuggestions(false);
+              }}
+              className="px-3.5 py-1.5 bg-[#B8323C] hover:bg-red-700 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-sm"
+            >
+              Clear Search &amp; Show All
+            </button>
+          </div>
+        )}
 
         {/* Selected / Hovered Destination Info Panel (Floating bottom overlay) */}
         {currentHighlight && currentHighlight.id !== FAZILNAGAR_CENTRE.id && (
@@ -596,7 +743,8 @@ export default function RegionalConnectivityMap() {
                 <button
                   type="button"
                   onClick={() => setSelectedLocation(null)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+                  aria-label="Close information card"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -605,7 +753,7 @@ export default function RegionalConnectivityMap() {
 
             <p className="text-[11px] text-slate-300 mt-2 leading-relaxed">
               {currentHighlight.description ||
-                `Part of ${currentHighlight.block} Block, ${currentHighlight.district} district. Verified via Census of India.`}
+                `Part of ${currentHighlight.block} Block, ${currentHighlight.district} district. Verified via ${currentHighlight.source || "Census of India 2011"}.`}
             </p>
 
             <div className="mt-3 pt-2.5 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
@@ -646,6 +794,77 @@ export default function RegionalConnectivityMap() {
           </div>
         </div>
       </div>
+
+      {/* Browse All Locations Drawer / Modal */}
+      {isBrowseOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+            {/* Drawer Header */}
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-extrabold text-white">
+                  Fazilnagar Block &amp; Regional Directory
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  126 Verified Villages, 7 Towns, and 3 Cities
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsBrowseOpen(false)}
+                className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Drawer Content List */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-1.5 divide-y divide-slate-800/60 custom-scrollbar">
+              {REGIONAL_LOCATIONS.filter((l) => l.id !== FAZILNAGAR_CENTRE.id).map((loc) => (
+                <button
+                  key={loc.id}
+                  type="button"
+                  onClick={() => {
+                    handleSelectLocation(loc);
+                    setIsBrowseOpen(false);
+                  }}
+                  className="w-full pt-2 first:pt-0 pb-1.5 px-2.5 rounded-xl hover:bg-slate-800/80 text-left flex items-center justify-between gap-3 transition cursor-pointer group"
+                >
+                  <div className="truncate">
+                    <div className="text-xs font-bold text-white group-hover:text-amber-400 transition truncate flex items-center gap-1.5">
+                      <span>{loc.name}</span>
+                      {loc.hindiName && (
+                        <span className="text-[10px] text-slate-400 font-normal">({loc.hindiName})</span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-400 truncate">
+                      {loc.block} Block &bull; {loc.district}
+                    </p>
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <span className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded ${
+                      loc.type === "city" ? "bg-indigo-900 text-indigo-200" :
+                      loc.type === "town" ? "bg-emerald-900 text-emerald-200" :
+                      "bg-slate-800 text-slate-300"
+                    }`}>
+                      {loc.type}
+                    </span>
+                    <div className="text-xs font-mono font-bold text-amber-400 mt-0.5">
+                      {loc.distanceKm} km {loc.compassDirection}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Drawer Footer */}
+            <div className="p-3 bg-slate-950/80 border-t border-slate-800 text-center text-xs text-slate-400">
+              Tap any location to trace animated connectivity to Fazilnagar Hub
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

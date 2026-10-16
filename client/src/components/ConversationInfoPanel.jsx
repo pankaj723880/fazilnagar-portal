@@ -10,6 +10,10 @@ import {
   Users,
   Image as ImageIcon,
   FileText,
+  Video,
+  Download,
+  Play,
+  RotateCw,
   Pin,
   Bell,
   BellOff,
@@ -38,8 +42,9 @@ export default function ConversationInfoPanel({
   const [isMuted, setIsMuted] = useState(Boolean(conversation?.isMuted));
   const [isPinned, setIsPinned] = useState(Boolean(conversation?.isPinned));
   const [localBlocked, setLocalBlocked] = useState(Boolean(propIsBlocked));
-  const [panelMessages, setPanelMessages] = useState(propMessages);
+  const [attachments, setAttachments] = useState({ photos: [], videos: [], files: [] });
   const [loadingMedia, setLoadingMedia] = useState(false);
+  const [failedThumbnails, setFailedThumbnails] = useState({});
   const [lightboxImage, setLightboxImage] = useState(null);
 
   // Embedded Report Modal State
@@ -62,23 +67,83 @@ export default function ConversationInfoPanel({
     }
   }, [propIsBlocked]);
 
-  useEffect(() => {
-    if (propMessages && propMessages.length > 0) {
-      setPanelMessages(propMessages);
-    } else if (conversationId) {
-      // If messages not passed or empty, fetch recent history to populate media & docs
-      setLoadingMedia(true);
-      API.get(`/messages/conversations/${conversationId}/messages`, {
-        params: { limit: 50 },
-      })
-        .then((res) => {
-          if (res.data?.success && Array.isArray(res.data.messages)) {
-            setPanelMessages(res.data.messages);
-          }
-        })
-        .catch(() => {})
-        .finally(() => setLoadingMedia(false));
+  const formatSize = (bytes) => {
+    if (!bytes || bytes <= 0) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const categorizeFromMessages = (msgs) => {
+    const photos = [];
+    const videos = [];
+    const files = [];
+    for (const m of msgs) {
+      if (!m.mediaUrl || m.isDeletedForEveryone) continue;
+      const mime = (m.mimeType || "").toLowerCase();
+      const ext = (m.fileName || m.mediaUrl || "").toLowerCase();
+      const isImg = m.type === "image" || mime.startsWith("image/") || /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(ext);
+      const isVid = m.type === "video" || mime.startsWith("video/") || /\.(mp4|webm|mov|mkv)$/i.test(ext);
+
+      const item = {
+        _id: m._id || m.id,
+        id: m._id || m.id,
+        body: m.body,
+        type: isImg ? "image" : isVid ? "video" : m.type || "document",
+        mediaUrl: m.mediaUrl,
+        fileName: m.fileName || (isImg ? "photo.jpg" : isVid ? "video.mp4" : "file"),
+        fileSize: m.fileSize || 0,
+        mimeType: m.mimeType || "",
+        createdAt: m.createdAt,
+      };
+
+      if (isImg) photos.push(item);
+      else if (isVid) videos.push(item);
+      else files.push(item);
     }
+    setAttachments({ photos, videos, files });
+  };
+
+  useEffect(() => {
+    if (!conversationId) return;
+
+    let isMounted = true;
+    setLoadingMedia(true);
+
+    const loadAttachments = async () => {
+      try {
+        const res = await API.get(`/messages/conversations/${conversationId}/attachments`);
+        if (isMounted && res.data?.success) {
+          setAttachments({
+            photos: res.data.photos || [],
+            videos: res.data.videos || [],
+            files: res.data.files || [],
+          });
+        }
+      } catch (err) {
+        console.warn("Could not fetch conversation attachments endpoint, fallback to messages:", err.message);
+        if (propMessages && propMessages.length > 0) {
+          categorizeFromMessages(propMessages);
+        } else {
+          try {
+            const fallbackRes = await API.get(`/messages/conversations/${conversationId}/messages`, {
+              params: { limit: 50 },
+            });
+            if (isMounted && fallbackRes.data?.success) {
+              categorizeFromMessages(fallbackRes.data.messages || []);
+            }
+          } catch (_) {}
+        }
+      } finally {
+        if (isMounted) setLoadingMedia(false);
+      }
+    };
+
+    loadAttachments();
+
+    return () => {
+      isMounted = false;
+    };
   }, [conversationId, propMessages]);
 
   const handleToggleMute = async () => {
@@ -169,10 +234,10 @@ export default function ConversationInfoPanel({
     setReportFeedback("");
     try {
       const res = await API.post("/messages/report", {
-        reportedUserId: otherId,
-        conversationId,
+        targetUserId: otherId,
+        targetConversationId: conversationId,
         reason: reportReason,
-        description: reportNotes.trim(),
+        details: reportNotes.trim(),
       });
       if (res.data?.success) {
         setReportFeedback("Report submitted to town moderation. Thank you for keeping Fazilnagar safe.");
@@ -194,14 +259,6 @@ export default function ConversationInfoPanel({
   const isGroup = conversation.type === "group";
   const otherUser = conversation.otherUser || {};
   const displayName = isGroup ? conversation.groupName || "Town Group" : otherUser.name || "Citizen";
-
-  // Filter media from messages history
-  const mediaMessages = panelMessages.filter(
-    (m) => m.type === "image" && m.mediaUrl && !m.isDeletedForEveryone
-  );
-  const docMessages = panelMessages.filter(
-    (m) => ["document", "video", "audio"].includes(m.type) && m.mediaUrl && !m.isDeletedForEveryone
-  );
 
   return (
     <div className="w-full bg-white rounded-3xl border border-slate-200/80 shadow-xs flex flex-col h-full min-h-0 overflow-hidden">
@@ -344,79 +401,165 @@ export default function ConversationInfoPanel({
           </button>
         </div>
 
-        {/* Shared Media Gallery Preview */}
-        <div className="p-4 border-b border-slate-100 flex-1">
+        {/* Shared Photos Gallery */}
+        <div className="p-4 border-b border-slate-100">
           <div className="flex items-center justify-between mb-2.5">
             <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
               <ImageIcon className="w-3.5 h-3.5 text-[#B8323C]" />
-              <span>Shared Photos ({mediaMessages.length})</span>
+              <span>Shared Photos ({attachments.photos.length})</span>
             </span>
             {loadingMedia && <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" />}
           </div>
 
-          {mediaMessages.length === 0 ? (
-            <div className="p-4 text-center text-xs text-slate-400 bg-slate-50/70 rounded-2xl border border-slate-100">
+          {attachments.photos.length === 0 ? (
+            <div className="p-3.5 text-center text-xs text-slate-400 bg-slate-50/70 rounded-2xl border border-slate-100">
               No photos shared in this chat yet.
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-2">
-              {mediaMessages.slice(0, 9).map((m) => (
-                <div
-                  key={m._id || m.id}
-                  onClick={() => {
-                    if (onSelectImage) onSelectImage(m.mediaUrl);
-                    else setLightboxImage(m.mediaUrl);
-                  }}
-                  className="aspect-square rounded-xl bg-slate-100 overflow-hidden border border-slate-200 cursor-pointer hover:opacity-90 hover:scale-[1.02] transition shadow-2xs"
-                  title="Click to view photo"
-                >
-                  <img
-                    src={m.mediaUrl}
-                    alt={m.body || "Chat photo"}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-              ))}
+              {attachments.photos.slice(0, 9).map((m) => {
+                const fullUrl = resolveMediaUrl(m.mediaUrl);
+                const isFailed = failedThumbnails[m._id || m.id];
+
+                return (
+                  <div
+                    key={m._id || m.id}
+                    onClick={() => {
+                      if (!isFailed) {
+                        if (onSelectImage) onSelectImage(fullUrl);
+                        else setLightboxImage(fullUrl);
+                      }
+                    }}
+                    className="aspect-square rounded-xl bg-slate-100 overflow-hidden border border-slate-200 cursor-pointer hover:opacity-90 hover:scale-[1.02] transition shadow-2xs relative flex items-center justify-center"
+                    title={m.fileName || "View photo"}
+                  >
+                    {isFailed ? (
+                      <div className="flex flex-col items-center justify-center p-1 text-slate-400">
+                        <ImageIcon className="w-4 h-4 mb-0.5 text-slate-300" />
+                        <span className="text-[8px] text-slate-400">Unavailable</span>
+                      </div>
+                    ) : (
+                      <img
+                        src={fullUrl}
+                        alt={m.body || m.fileName || "Chat photo"}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        onError={() => {
+                          setFailedThumbnails((prev) => ({ ...prev, [m._id || m.id]: true }));
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* Shared Files & Documents Preview */}
-        {docMessages.length > 0 && (
-          <div className="p-4 border-b border-slate-100">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-[#B8323C]" />
-                <span>Shared Files ({docMessages.length})</span>
-              </span>
-            </div>
-            <div className="space-y-1.5">
-              {docMessages.slice(0, 5).map((m) => (
-                <a
-                  key={m._id || m.id}
-                  href={m.mediaUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  download={m.fileName || "attachment"}
-                  className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-slate-100 transition text-xs group"
-                >
-                  <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                    <FileText className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-slate-800 truncate text-[11px] group-hover:text-[#B8323C]">
-                      {m.fileName || "Shared file"}
-                    </p>
-                    <p className="text-[9px] text-slate-400 font-mono">
-                      {m.fileSize ? `${(m.fileSize / 1024).toFixed(1)} KB` : m.type}
-                    </p>
-                  </div>
-                </a>
-              ))}
-            </div>
+        {/* Shared Videos Section */}
+        <div className="p-4 border-b border-slate-100">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <Video className="w-3.5 h-3.5 text-[#B8323C]" />
+              <span>Shared Videos ({attachments.videos.length})</span>
+            </span>
           </div>
-        )}
+
+          {attachments.videos.length === 0 ? (
+            <div className="p-3 text-center text-xs text-slate-400 bg-slate-50/70 rounded-2xl border border-slate-100">
+              No videos shared in this chat yet.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {attachments.videos.slice(0, 4).map((m) => {
+                const fullUrl = resolveMediaUrl(m.mediaUrl);
+                return (
+                  <div
+                    key={m._id || m.id}
+                    className="rounded-xl border border-slate-200/90 overflow-hidden bg-slate-900 shadow-2xs group"
+                  >
+                    <div className="relative aspect-video max-h-32 bg-black flex items-center justify-center">
+                      <video
+                        src={fullUrl}
+                        preload="metadata"
+                        playsInline
+                        controls
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="p-2 bg-slate-800/95 flex items-center justify-between text-white text-[11px] gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold truncate text-[11px]" title={m.fileName || "Video"}>
+                          {m.fileName || "Video clip"}
+                        </p>
+                        {m.fileSize > 0 && (
+                          <p className="text-[9px] text-slate-400 font-mono">
+                            {formatSize(m.fileSize)}
+                          </p>
+                        )}
+                      </div>
+                      <a
+                        href={fullUrl}
+                        download={m.fileName || "video.mp4"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition shrink-0"
+                        title="Download video"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Shared Files & Documents Section */}
+        <div className="p-4 border-b border-slate-100">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-[#B8323C]" />
+              <span>Shared Files ({attachments.files.length})</span>
+            </span>
+          </div>
+
+          {attachments.files.length === 0 ? (
+            <div className="p-3 text-center text-xs text-slate-400 bg-slate-50/70 rounded-2xl border border-slate-100">
+              No files or documents shared yet.
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {attachments.files.slice(0, 6).map((m) => {
+                const fullUrl = resolveMediaUrl(m.mediaUrl);
+                return (
+                  <a
+                    key={m._id || m.id}
+                    href={fullUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download={m.fileName || "document"}
+                    className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 transition text-xs group"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-slate-800 truncate text-[11px] group-hover:text-[#B8323C]">
+                        {m.fileName || "Shared file"}
+                      </p>
+                      <p className="text-[9px] text-slate-400 font-mono">
+                        {m.fileSize ? formatSize(m.fileSize) : m.type || "Document"}
+                      </p>
+                    </div>
+                    <Download className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 shrink-0" />
+                  </a>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* Actions (Report & Block buttons from screenshot) */}
         <div className="p-4 space-y-2 text-xs">

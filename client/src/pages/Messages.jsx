@@ -41,7 +41,7 @@ export default function Messages() {
   const convParam = searchParams.get("conv") || searchParams.get("conversationId");
 
   usePageSEO({
-    title: "Messages | Fazilnagar Town Portal",
+    title: "Chats | Fazilnagar Town Portal",
     description: "Private user-to-user town messaging and community communications in Fazilnagar.",
     canonicalPath: "/messages",
     noIndex: true,
@@ -88,9 +88,9 @@ export default function Messages() {
   const totalUnreadCount = conversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
   useEffect(() => {
     if (totalUnreadCount > 0) {
-      document.title = `(${totalUnreadCount}) Messages | Fazilnagar Town Portal`;
+      document.title = `(${totalUnreadCount}) Chats | Fazilnagar Town Portal`;
     } else {
-      document.title = "Messages | Fazilnagar Town Portal";
+      document.title = "Chats | Fazilnagar Town Portal";
     }
   }, [totalUnreadCount]);
 
@@ -551,28 +551,14 @@ export default function Messages() {
       {/* Top Bar */}
       <div className="flex items-center justify-between gap-3 pb-2.5 mb-2 border-b border-slate-200 shrink-0">
         <div className="flex items-center gap-2">
-          {/* Mobile Hamburger Drawer Trigger */}
-          <button
-            type="button"
-            onClick={() => setMobileDrawerOpen(true)}
-            className="p-1.5 -ml-1 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition md:hidden cursor-pointer"
-            title="Navigation Menu / मेन्यू"
-            aria-label="Open Mobile Navigation Menu"
-          >
-            <Menu className="w-5 h-5 text-slate-800" />
-          </button>
-
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#B8323C] text-white flex items-center justify-center shadow-xs">
               <MessageSquare className="w-4 h-4" />
             </div>
             <div>
               <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-tight">
-                Town Messaging / नगर संवाद
+                Chats
               </h1>
-              <p className="text-[11px] text-slate-500 hidden sm:block">
-                Fazilnagar real-time direct messaging &amp; civic communications
-              </p>
             </div>
           </div>
         </div>
@@ -751,6 +737,32 @@ export default function Messages() {
           </div>
         )}
       </div>
+
+      {/* Mobile / Tablet Slide-over Conversation Info Panel */}
+      {showInfoPanel && activeConversation && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex justify-end lg:hidden animate-in fade-in"
+          onClick={() => setShowInfoPanel(false)}
+        >
+          <div
+            className="w-full max-w-sm sm:max-w-md h-full bg-white shadow-2xl overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ConversationInfoPanel
+              conversation={activeConversation}
+              currentUserId={currentUserId}
+              onlineUserIds={onlineUserIds}
+              onClose={() => setShowInfoPanel(false)}
+              onConversationUpdated={handleConversationUpdated}
+              onLeftGroup={() => {
+                setActiveConversation(null);
+                activeConvIdRef.current = null;
+                setShowInfoPanel(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Mandatory Mobile Slide-in Drawer */}
       <MobileMessagingDrawer
