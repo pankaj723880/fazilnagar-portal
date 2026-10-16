@@ -345,13 +345,13 @@ h1, h2, h3, h4, h5, h6, .civic-card, .civic-card * {
   }
 
   #explore-categories,
-  #town-map-section,
+  #regional-connectivity-section,
   .mobile-density-section {
     padding-block: 40px;
   }
 
   #explore-categories > div:first-child,
-  #town-map-section > div > div:first-child,
+  #regional-connectivity-section > div > div:first-child,
   .mobile-density-section > div > div:first-child {
     margin-bottom: 24px;
   }

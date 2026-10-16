@@ -43,7 +43,7 @@ const MAIN_NAV_ITEMS = [
   { path: "/", label: "Home" },
   { path: "/#explore-categories", label: "Explore", isHash: true },
   { path: "/directory", label: "Directory", count: String(seedPlaces?.length || 19) },
-  { path: "/#town-map-section", label: "Map", isHash: true },
+  { path: "/#regional-connectivity-section", label: "Map", isHash: true },
   { path: "/news", label: "Local Updates" },
 ];
 
@@ -867,10 +867,10 @@ export default function App() {
                     <span>About Town</span>
                   </Link>
                   <a
-                    href="/#town-map-section"
+                    href="/#regional-connectivity-section"
                     onClick={(e) => {
                       setMobileMenuOpen(false);
-                      handleNavClick(e, "/#town-map-section", true);
+                      handleNavClick(e, "/#regional-connectivity-section", true);
                     }}
                     className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-800 hover:bg-slate-100 border border-slate-200/70 active:scale-95 transition"
                   >

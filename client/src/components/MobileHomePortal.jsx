@@ -691,7 +691,7 @@ export default function MobileHomePortal({
           1.4 HORIZONTAL SWIPE CATEGORY CAROUSEL
           ======================================================== */}
       <section className="px-4 pt-2.5 pb-1" aria-label="Category Filters">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 touch-pan-x">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
           {CATEGORY_PILLS.map((cat) => {
             const isActive = selectedCategory === cat.id;
             return (
@@ -699,10 +699,10 @@ export default function MobileHomePortal({
                 key={cat.id}
                 type="button"
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition active:scale-95 cursor-pointer ${
+                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-200 hover:-translate-y-0.5 active:scale-95 cursor-pointer ${
                   isActive
                     ? "bg-slate-900 text-white shadow-xs"
-                    : cat.style || "bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50"
+                    : cat.style || "bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50 hover:shadow-2xs"
                 }`}
               >
                 {cat.label}
@@ -746,17 +746,21 @@ export default function MobileHomePortal({
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto snap-x snap-mandatory flex gap-3 no-scrollbar pb-2 pt-1 touch-pan-x">
+          <div className="overflow-x-auto snap-x snap-mandatory flex gap-3 no-scrollbar pt-2.5 pb-4 px-0.5">
             {filteredPlaces.map((place, pIdx) => (
               <article
                 key={place._id || place.id || place.itemId || pIdx}
-                className="w-[270px] snap-start shrink-0 bg-white rounded-2xl border border-slate-200/80 p-3.5 shadow-sm overflow-hidden flex flex-col justify-between"
+                onClick={(e) => {
+                  if (e.target.closest("a, button")) return;
+                  navigate(`/directory?q=${encodeURIComponent(place.title || "")}`);
+                }}
+                className="group w-[270px] snap-start shrink-0 bg-white rounded-2xl border border-slate-200/80 p-3.5 shadow-sm hover:shadow-xl hover:border-slate-300 hover:-translate-y-2 active:translate-y-0 transition-all duration-300 ease-out overflow-hidden flex flex-col justify-between cursor-pointer select-none"
               >
                 <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-slate-100 mb-2.5">
                   <img
                     src={place.image}
                     alt={place.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     loading="lazy"
                   />
                   <span className="absolute top-2 left-2 bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-semibold px-2 py-0.5 rounded-md">
@@ -767,7 +771,7 @@ export default function MobileHomePortal({
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <h3 className="text-sm font-bold text-slate-900 truncate">
+                      <h3 className="text-sm font-bold text-slate-900 group-hover:text-red-700 transition-colors truncate">
                         {place.title}
                       </h3>
                       {place.verified !== false && (
@@ -842,7 +846,7 @@ export default function MobileHomePortal({
           {ESSENTIAL_SERVICES.map((srv) => (
             <div
               key={srv.id}
-              className="bg-white rounded-2xl p-3 border border-slate-200/80 shadow-2xs flex flex-col justify-between"
+              className="group bg-white rounded-2xl p-3 border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-slate-300 hover:-translate-y-1.5 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer"
             >
               <div>
                 <span className={`inline-block text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border uppercase tracking-wider mb-1.5 ${srv.badgeStyle}`}>
@@ -942,13 +946,13 @@ export default function MobileHomePortal({
           {RETAIL_SHOPS.map((shop) => (
             <div
               key={shop.id}
-              className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden flex flex-col justify-between"
+              className="group bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-slate-300 hover:-translate-y-1.5 active:translate-y-0 transition-all duration-300 ease-out overflow-hidden flex flex-col justify-between cursor-pointer"
             >
               <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
                 <img
                   src={shop.image}
                   alt={shop.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   loading="lazy"
                 />
                 <span className="absolute top-1.5 left-1.5 bg-slate-900/80 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">
@@ -1176,7 +1180,7 @@ export default function MobileHomePortal({
         </div>
 
         {/* Compact Chips */}
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-1 touch-pan-x mb-2.5">
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-1 mb-2.5">
           {EVENT_TABS.map((tab) => {
             const isActive = selectedEventTab === tab;
             return (
@@ -1184,10 +1188,10 @@ export default function MobileHomePortal({
                 key={tab}
                 type="button"
                 onClick={() => setSelectedEventTab(tab)}
-                className={`shrink-0 px-2.5 py-1 rounded-xl text-[11px] font-semibold transition active:scale-95 cursor-pointer ${
+                className={`shrink-0 px-2.5 py-1 rounded-xl text-[11px] font-semibold transition-all duration-200 hover:-translate-y-0.5 active:scale-95 cursor-pointer ${
                   isActive
                     ? "bg-slate-900 text-white shadow-xs"
-                    : "bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-50"
+                    : "bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-50 hover:shadow-2xs"
                 }`}
               >
                 {tab}

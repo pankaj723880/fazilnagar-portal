@@ -24,8 +24,7 @@ import {
   subscribeToCMSLiveUpdates,
 } from "../services/cmsService";
 
-// Lazy-load Leaflet Map to eliminate render-blocking JS and main-thread freeze
-const TownInteractiveMap = lazy(() => import("../components/TownInteractiveMap"));
+// Lazy-load Regional Map to eliminate render-blocking JS and main-thread freeze
 const RegionalConnectivityMap = lazy(() => import("../components/RegionalConnectivityMap"));
 import {
   MapPin,
@@ -120,20 +119,6 @@ const HERO_BUTTON_VARIANTS = {
   emerald: "bg-[#0D5E49] hover:bg-emerald-800 text-white shadow-lg",
 };
 
-function matchesCategory(placeCat, placeSubcat, targetCat) {
-  if (!targetCat || targetCat === "all" || targetCat === "All") return true;
-  const target = targetCat.toLowerCase().trim();
-  const c = (placeCat || "").toLowerCase().trim();
-  const sc = (placeSubcat || "").toLowerCase().trim();
-
-  if (c === target || sc === target) return true;
-  if (c && (c.includes(target) || target.includes(c))) return true;
-  if (sc && (sc.includes(target) || target.includes(sc))) return true;
-
-  const targetWords = target.split(/[\s&,/]+/).filter((w) => w.length > 3);
-  return targetWords.some((w) => c.includes(w) || sc.includes(w));
-}
-
 const activeSeedPlaces = Array.isArray(seedPlaces)
   ? seedPlaces.filter((p) => !p.isArchived && p.isPublished !== false)
   : [];
@@ -173,9 +158,6 @@ export default function TownPortal() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [places, setPlaces] = useState(INITIAL_PLACES);
-  const [selectedPlace, setSelectedPlace] = useState(null);
-  const [mapFilter, setMapFilter] = useState("all");
-  const [mapViewMode, setMapViewMode] = useState("map"); // "map" | "list"
   const [schoolFilter, setSchoolFilter] = useState("all");
   const [modalType, setModalType] = useState(null); // "business" | "correction" | "event" | null
   const [communityModalOpen, setCommunityModalOpen] = useState(false);
@@ -346,10 +328,8 @@ export default function TownPortal() {
   // Smooth scroll handler with visual landing glow pulse animation (Reflow-free)
   const handleSmoothScroll = (e, targetId) => {
     if (e && e.preventDefault) e.preventDefault();
-    if (targetId === "town-map-section") {
-      setIsMapVisible(true);
-    }
-    const element = document.getElementById(targetId);
+    const resolvedId = targetId === "town-map-section" ? "regional-connectivity-section" : targetId;
+    const element = document.getElementById(resolvedId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
       element.classList.remove("section-highlight-active");
@@ -359,10 +339,10 @@ export default function TownPortal() {
       setTimeout(() => {
         element.classList.remove("section-highlight-active");
       }, 2200);
-    } else if (targetId !== "hero-section") {
+    } else if (resolvedId !== "hero-section") {
       setIsBelowFoldReady(true);
       window.setTimeout(() => {
-        document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document.getElementById(resolvedId)?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 0);
     }
   };
@@ -370,10 +350,8 @@ export default function TownPortal() {
   // If user arrives with a hash in URL, smoothly scroll and highlight target section
   useEffect(() => {
     if (window.location.hash) {
-      const sectionId = window.location.hash.replace("#", "");
-      if (sectionId === "town-map-section") {
-        setIsMapVisible(true);
-      }
+      const rawId = window.location.hash.replace("#", "");
+      const sectionId = rawId === "town-map-section" ? "regional-connectivity-section" : rawId;
       setTimeout(() => {
         handleSmoothScroll(null, sectionId);
       }, 350);
@@ -396,8 +374,6 @@ export default function TownPortal() {
     performLogout();
     setCurrentUser(null);
   };
-
-  const [isMapVisible, setIsMapVisible] = useState(false);
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -447,30 +423,6 @@ export default function TownPortal() {
       });
   }, []);
 
-  // Lazy-load Town Map when user scrolls near the map section
-  useEffect(() => {
-    const el = document.getElementById("town-map-section");
-    if (!el) return;
-
-    if (!window.IntersectionObserver) {
-      setIsMapVisible(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setIsMapVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "350px" }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [isBelowFoldReady]);
-
   // Search autocomplete matches
   const searchMatches = searchQuery.trim()
     ? places.filter(
@@ -483,12 +435,13 @@ export default function TownPortal() {
     : [];
 
   const handleSelectLocation = (place) => {
-    setIsMapVisible(true);
-    setSelectedPlace(place);
     setSearchQuery("");
     setDropdownOpen(false);
-    const mapSec = document.getElementById("town-map-section");
-    if (mapSec) mapSec.scrollIntoView({ behavior: "smooth" });
+    if (place?.name) {
+      navigate(`/directory?q=${encodeURIComponent(place.name)}`);
+    } else {
+      navigate("/directory");
+    }
   };
 
   const handleRequireAuthAction = (action, actionName = "continue") => {
@@ -555,20 +508,6 @@ export default function TownPortal() {
   const schoolsList = places.filter(
     (p) => p.category === "Schools & Colleges" || (p.subcategory && p.subcategory.includes("School"))
   );
-
-  const MAP_CATEGORY_TABS = [
-    { id: "all", label: "All Verified Places" },
-    { id: "Schools & Colleges", label: "Schools & Colleges" },
-    { id: "Hospitals & Clinics", label: "Hospitals & Healthcare" },
-    { id: "Petrol Pumps", label: "Petrol Pumps & Fuel" },
-  ];
-
-  const filteredMapPlaces = places.filter(
-    (p) => matchesCategory(p.category, p.subcategory, mapFilter)
-  );
-
-  const currentMapTabLabel =
-    MAP_CATEGORY_TABS.find((t) => t.id === mapFilter)?.label || "Verified Places";
 
   return (
     <>
@@ -934,7 +873,7 @@ export default function TownPortal() {
               ? siteSettings.homepageSections.publicServices.cards
               : DEFAULT_SITE_SETTINGS.homepageSections.publicServices.cards
             ).map((card, idx) => (
-              <div key={card.id || idx} className="bg-[#F5F7F8] p-5 rounded-2xl border border-[#E1E6EA] flex flex-col justify-between">
+              <div key={card.id || idx} className="group bg-[#F5F7F8] hover:bg-white p-5 rounded-2xl border border-[#E1E6EA] hover:border-slate-300 shadow-2xs hover:shadow-lg hover:-translate-y-2 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
                 <div>
                   <span className="text-[10px] font-extrabold text-[#B8323C] uppercase tracking-wider block mb-1">
                     {card.badge}
@@ -970,250 +909,7 @@ export default function TownPortal() {
       </section>
 
       {/* ========================================================
-          SECTION 5: EXPLORE FAZILNAGAR ON MAP (Leaflet Synchronized)
-          ======================================================== */}
-      <section id="town-map-section" className="py-16 content-visibility-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-            <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0D5E49] uppercase tracking-wider mb-1">
-                <Map className="w-3.5 h-3.5" />
-                <span>{siteSettings?.homepageSections?.map?.badge || "Geospatial Verification"}</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#18232E] tracking-tight font-heading">
-                {siteSettings?.homepageSections?.map?.title || "Explore Fazilnagar on Map"}
-              </h2>
-              <p className="text-xs sm:text-sm text-[#647180] mt-1">
-                {siteSettings?.homepageSections?.map?.subtitle || "Every pin uses exact decimal coordinates along the NH-27, College Road, and Hospital Road axis."}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2.5">
-              <button
-                type="button"
-                onClick={() => handleRequireAuthAction(() => setCommunityModalOpen(true), "add a place to the town directory")}
-                className="bg-[#0D5E49] hover:bg-emerald-800 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
-                title="Add place with exact map location and images (4-Step Wizard)"
-              >
-                <PlusCircle className="w-4 h-4" />
-                <span>+ Add Place</span>
-              </button>
-
-              {/* Map & List View Toggle */}
-              <div className="bg-white p-1 rounded-xl border border-[#E1E6EA] flex items-center text-xs font-semibold">
-                <button
-                  onClick={() => setMapViewMode("map")}
-                  className={`px-3 py-1.5 rounded-lg transition ${
-                    mapViewMode === "map" ? "bg-[#18232E] text-white" : "text-[#647180] hover:text-[#18232E]"
-                  }`}
-                >
-                  Map View
-                </button>
-                <button
-                  onClick={() => setMapViewMode("list")}
-                  className={`px-3 py-1.5 rounded-lg transition ${
-                    mapViewMode === "list" ? "bg-[#18232E] text-white" : "text-[#647180] hover:text-[#18232E]"
-                  }`}
-                >
-                  List View
-                </button>
-              </div>
-
-              <div className="text-[11px] text-[#18232E] bg-white px-3 py-1.5 rounded-xl border border-[#E1E6EA] font-semibold hidden sm:flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#0D5E49] animate-pulse"></span>
-                <span>{siteSettings?.homepageSections?.map?.coordinatesText || "26.6827° N, 84.0498° E"}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Map Category Filters */}
-          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-3 mb-4 text-xs font-semibold custom-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-            {MAP_CATEGORY_TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setMapFilter(tab.id);
-                  setSelectedPlace(null);
-                }}
-                className={`px-3 sm:px-3.5 py-1.5 rounded-xl whitespace-nowrap transition border cursor-pointer ${
-                  mapFilter === tab.id
-                    ? "bg-[#18232E] text-white border-[#18232E]"
-                    : "bg-white border-[#E1E6EA] text-[#647180] hover:bg-slate-50 hover:text-[#18232E]"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Map Content */}
-          {mapViewMode === "map" ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-              {/* Leaflet Map Frame */}
-              <div className="lg:col-span-2 bg-white rounded-2xl overflow-hidden border border-[#E1E6EA] shadow-xs relative min-h-[290px] h-[310px] sm:h-[420px] lg:h-[480px]">
-                {isMapVisible ? (
-                  <Suspense
-                    fallback={
-                      <div className="w-full h-full min-h-[290px] bg-slate-50 flex flex-col items-center justify-center text-slate-400 gap-2">
-                        <div className="w-6 h-6 border-2 border-slate-300 border-t-[#B8323C] rounded-full animate-spin" />
-                        <span className="text-xs font-semibold">Loading Town Map…</span>
-                      </div>
-                    }
-                  >
-                    <TownInteractiveMap
-                      places={places}
-                      mapFilter={mapFilter}
-                      selectedPlace={selectedPlace}
-                      onSelectPlace={setSelectedPlace}
-                      matchesCategory={matchesCategory}
-                    />
-                  </Suspense>
-                ) : (
-                  <div className="w-full h-full min-h-[290px] bg-slate-50 flex flex-col items-center justify-center text-slate-400 gap-2">
-                    <MapPin className="w-7 h-7 text-[#B8323C]/60 animate-bounce" />
-                    <span className="text-xs font-semibold text-slate-500">Interactive OpenStreetMap</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Category Places List View (Maintains list visible at all times per user requirement) */}
-              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#E1E6EA] shadow-xs flex flex-col justify-between h-full min-h-[360px] sm:min-h-[440px] animate-fade-in-up">
-                <div className="flex flex-col h-full">
-                  <div className="pb-3 border-b border-[#E1E6EA] mb-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-extrabold text-[#18232E] flex items-center gap-1.5">
-                        <Layers className="w-4 h-4 text-[#B8323C]" />
-                        <span>{currentMapTabLabel}</span>
-                      </span>
-                      <span className="text-[11px] font-bold bg-slate-100 text-[#18232E] px-2.5 py-0.5 rounded-full">
-                        {filteredMapPlaces.length} places
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-[#647180] mt-1">
-                      Click any place below to zoom & highlight pin on map:
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 overflow-y-auto max-h-[360px] lg:max-h-[420px] pr-1 custom-scrollbar flex-1">
-                    {filteredMapPlaces.length === 0 ? (
-                      <div className="text-center py-10 text-xs text-[#647180]">
-                        No verified places found in this category.
-                      </div>
-                    ) : (
-                      filteredMapPlaces.map((p) => {
-                        const isSelected = selectedPlace && (
-                          (selectedPlace.id && (selectedPlace.id === p.id || selectedPlace.id === p._id)) ||
-                          (selectedPlace._id && (selectedPlace._id === p._id || selectedPlace._id === p.id)) ||
-                          selectedPlace.name === p.name
-                        );
-                        return (
-                          <div
-                            key={p.id || p._id}
-                            onClick={() => {
-                              setSelectedPlace(p);
-                            }}
-                            className={`p-3 rounded-xl border transition cursor-pointer group flex items-start justify-between gap-2 shadow-2xs ${
-                              isSelected
-                                ? "border-blue-500 bg-blue-50/70 shadow-xs ring-2 ring-blue-500/30"
-                                : "border-[#E1E6EA] hover:border-[#B8323C] bg-[#F5F7F8] hover:bg-white"
-                            }`}
-                          >
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded ${
-                                  isSelected ? "bg-blue-100 text-blue-800" : "bg-red-50 text-[#B8323C]"
-                                }`}>
-                                  {p.badge || p.subcategory || p.category}
-                                </span>
-                                {isSelected ? (
-                                  <span className="text-[9px] text-blue-700 bg-white/90 px-1.5 py-0.2 rounded-full border border-blue-200 font-bold flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>
-                                    <span>Pinned & Zoomed</span>
-                                  </span>
-                                ) : (
-                                  p.phone && (
-                                    <span className="text-[9px] text-[#0D5E49] font-semibold">
-                                      Verified
-                                    </span>
-                                  )
-                                )}
-                              </div>
-                              <h3 className={`text-sm font-bold transition mt-1 truncate ${
-                                isSelected ? "text-blue-900" : "text-[#18232E] group-hover:text-[#B8323C]"
-                              }`}>
-                                {p.name}
-                              </h3>
-                              {p.nameHindi && (
-                                <p className="text-[10px] text-[#647180] truncate">{p.nameHindi}</p>
-                              )}
-                              <p className="text-[11px] text-[#647180] flex items-center gap-1 mt-1 truncate">
-                                <MapPin className={`w-3 h-3 shrink-0 ${isSelected ? "text-blue-600 animate-bounce" : "text-slate-400"}`} />
-                                <span>{p.landmark || p.address}</span>
-                              </p>
-                            </div>
-                            <div className="shrink-0 pt-2 flex items-center gap-1">
-                              {isSelected && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openGoogleMapsDirections(p);
-                                  }}
-                                  className="text-[10px] font-bold text-white bg-[#0D5E49] hover:bg-emerald-700 px-2 py-1 rounded-lg shadow-2xs transition"
-                                  title="Get Google Maps Directions"
-                                >
-                                  🧭 Go
-                                </button>
-                              )}
-                              <ChevronRight className={`w-4 h-4 transition shrink-0 ${
-                                isSelected ? "text-blue-600" : "text-slate-400 group-hover:text-[#B8323C] group-hover:translate-x-0.5"
-                              }`} />
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* Map Alternative List View */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in-up">
-              {places
-                .filter((p) => mapFilter === "all" || p.category === mapFilter || p.subcategory === mapFilter)
-                .map((p) => (
-                  <div key={p.id} className="bg-white p-5 rounded-2xl border border-[#E1E6EA] shadow-xs flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between text-xs mb-2">
-                        <span className="text-[10px] font-bold text-[#B8323C] uppercase">{p.category}</span>
-                        <span className="text-[11px] text-[#0D5E49] font-semibold flex items-center gap-1">
-                          <Check className="w-3 h-3" /> Verified
-                        </span>
-                      </div>
-                      <h3 className="text-sm font-bold text-[#18232E] mb-1">{p.name}</h3>
-                      <p className="text-xs text-[#647180] mb-2">{p.landmark}</p>
-                      <p className="text-xs text-slate-600 line-clamp-2">{p.desc}</p>
-                    </div>
-                    <div className="pt-3 border-t border-[#E1E6EA] mt-3 flex items-center justify-between text-xs">
-                      <span className="text-[#647180] text-[11px]">{p.hours}</span>
-                      <button
-                        type="button"
-                        onClick={() => openGoogleMapsDirections(p)}
-                        className="text-[#0D5E49] font-bold hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        Directions <ChevronRight className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ========================================================
-          SECTION 5B: FAZILNAGAR & NEARBY PLACES (Regional Connectivity Map)
+          SECTION 5: FAZILNAGAR & NEARBY PLACES (Regional Connectivity Map)
           ======================================================== */}
       <section id="regional-connectivity-section" className="py-16 bg-[#18232E] text-white border-y border-slate-800 content-visibility-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1280,10 +976,10 @@ export default function TownPortal() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Prashant Sweet House */}
-            <div className="bg-[#F5F7F8] p-5 rounded-2xl border border-[#E1E6EA] flex flex-col justify-between">
+            <div className="group bg-[#F5F7F8] hover:bg-white p-5 rounded-2xl border border-[#E1E6EA] hover:border-slate-300 shadow-2xs hover:shadow-lg hover:-translate-y-2 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
               <div>
                 <span className="text-[10px] font-bold text-[#B8323C] uppercase">Sweet Shop & Chaat</span>
-                <h3 className="text-sm font-bold text-[#18232E] mt-1">Prashant Sweet House</h3>
+                <h3 className="text-sm font-bold text-[#18232E] group-hover:text-[#B8323C] transition-colors mt-1">Prashant Sweet House</h3>
                 <p className="text-xs text-[#647180] mt-0.5">Main Market, NH-27 Chowk</p>
                 <p className="text-xs text-slate-600 mt-2 line-clamp-2">
                   Famous for pure desi ghee peda, rasgulla, morning kachori-jalebi, and evening chaat snacks.
@@ -1304,10 +1000,10 @@ export default function TownPortal() {
             </div>
 
             {/* Kanha Sweets */}
-            <div className="bg-[#F5F7F8] p-5 rounded-2xl border border-[#E1E6EA] flex flex-col justify-between">
+            <div className="group bg-[#F5F7F8] hover:bg-white p-5 rounded-2xl border border-[#E1E6EA] hover:border-slate-300 shadow-2xs hover:shadow-lg hover:-translate-y-2 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
               <div>
                 <span className="text-[10px] font-bold text-[#B8323C] uppercase">Mithai & Snacks</span>
-                <h3 className="text-sm font-bold text-[#18232E] mt-1">Kanha Sweets</h3>
+                <h3 className="text-sm font-bold text-[#18232E] group-hover:text-[#B8323C] transition-colors mt-1">Kanha Sweets</h3>
                 <p className="text-xs text-[#647180] mt-0.5">College Road Crossing</p>
                 <p className="text-xs text-slate-600 mt-2 line-clamp-2">
                   Specialty sweets, fresh milk paneer, and authentic namkeen prepared daily with verified purity.
@@ -1328,10 +1024,10 @@ export default function TownPortal() {
             </div>
 
             {/* Amit Medical Store */}
-            <div className="bg-[#F5F7F8] p-5 rounded-2xl border border-[#E1E6EA] flex flex-col justify-between">
+            <div className="group bg-[#F5F7F8] hover:bg-white p-5 rounded-2xl border border-[#E1E6EA] hover:border-slate-300 shadow-2xs hover:shadow-lg hover:-translate-y-2 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
               <div>
                 <span className="text-[10px] font-bold text-[#0D5E49] uppercase">Retail Pharmacy</span>
-                <h3 className="text-sm font-bold text-[#18232E] mt-1">Amit Medical Store</h3>
+                <h3 className="text-sm font-bold text-[#18232E] group-hover:text-[#B8323C] transition-colors mt-1">Amit Medical Store</h3>
                 <p className="text-xs text-[#647180] mt-0.5">College Road, Fazilnagar</p>
                 <p className="text-xs text-slate-600 mt-2 line-clamp-2">
                   Licensed retail chemist providing allopathic pharmaceuticals, surgical kits, and health monitors.
@@ -1352,10 +1048,10 @@ export default function TownPortal() {
             </div>
 
             {/* Maurya Electronics */}
-            <div className="bg-[#F5F7F8] p-5 rounded-2xl border border-[#E1E6EA] flex flex-col justify-between">
+            <div className="group bg-[#F5F7F8] hover:bg-white p-5 rounded-2xl border border-[#E1E6EA] hover:border-slate-300 shadow-2xs hover:shadow-lg hover:-translate-y-2 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
               <div>
                 <span className="text-[10px] font-bold text-[#647180] uppercase">Electronics & Mobile</span>
-                <h3 className="text-sm font-bold text-[#18232E] mt-1">Maurya Electronics & Mobile</h3>
+                <h3 className="text-sm font-bold text-[#18232E] group-hover:text-[#B8323C] transition-colors mt-1">Maurya Electronics & Mobile</h3>
                 <p className="text-xs text-[#647180] mt-0.5">Babu Bazar, Fazilnagar</p>
                 <p className="text-xs text-slate-600 mt-2 line-clamp-2">
                   Smartphones, home appliances, inverter battery care, and chip-level device repair services.
@@ -2093,10 +1789,10 @@ export default function TownPortal() {
                   </div>
 
                   <a
-                    href="#town-map-section"
+                    href="#regional-connectivity-section"
                     className="w-full bg-[#18232E] hover:bg-[#B8323C] text-white text-xs font-bold py-2.5 rounded-xl transition text-center block shadow-xs"
                   >
-                    View Fazilnagar Landmarks on Map
+                    View Fazilnagar & Regional Map
                   </a>
                 </div>
               </div>
@@ -2457,7 +2153,7 @@ export default function TownPortal() {
             <ul className="space-y-2 text-xs">
               <li><button onClick={(e) => handleSmoothScroll(e, "hero-section")} className="hover:text-white cursor-pointer transition py-1 inline-block">Home</button></li>
               <li><Link to="/directory" className="hover:text-white font-bold text-red-400 py-1 inline-block">Town Directory (Map & List)</Link></li>
-              <li><button onClick={(e) => handleSmoothScroll(e, "town-map-section")} className="hover:text-white cursor-pointer transition py-1 inline-block">Interactive OpenStreetMap</button></li>
+              <li><button onClick={(e) => handleSmoothScroll(e, "regional-connectivity-section")} className="hover:text-white cursor-pointer transition py-1 inline-block">Regional Connectivity Map</button></li>
               <li><button onClick={(e) => handleSmoothScroll(e, "local-updates-section")} className="hover:text-white cursor-pointer transition py-1 inline-block">Local Updates & Notices</button></li>
               <li><button onClick={(e) => handleSmoothScroll(e, "about-fazilnagar-section")} className="hover:text-white cursor-pointer transition py-1 inline-block">About Fazilnagar</button></li>
               <li><button onClick={(e) => handleSmoothScroll(e, "citizen-corner-section")} className="hover:text-white cursor-pointer transition py-1 inline-block">Citizen Corner</button></li>
