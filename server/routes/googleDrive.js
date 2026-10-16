@@ -618,6 +618,26 @@ router.post(
 );
 
 /**
+ * @route   OPTIONS /api/google-drive/media/:id
+ * @desc    CORS preflight handler for streaming media
+ * @access  Public
+ */
+router.options("/media/:id", (req, res) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  } else {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Range, Authorization, Content-Type, Accept");
+  res.setHeader("Access-Control-Expose-Headers", "Content-Range, Content-Length, Accept-Ranges, Content-Type");
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  return res.sendStatus(204);
+});
+
+/**
  * @route   GET /api/google-drive/media/:id
  * @desc    Retrieves and streams media from Google Drive with proper caching and Content-Type.
  *          Does NOT expose Drive URLs or OAuth tokens, and maintains private file security.
@@ -715,6 +735,13 @@ router.get("/media/:id", async (req, res) => {
     const isPartial = Boolean(rangeHeader && (driveStream.status === 206 || driveContentRange));
     res.status(isPartial ? 206 : (driveStream.status || 200));
 
+    const origin = req.headers.origin;
+    if (origin) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+    } else {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+    }
     res.setHeader("Accept-Ranges", "bytes");
     res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
     res.setHeader("Access-Control-Expose-Headers", "Content-Range, Content-Length, Accept-Ranges, Content-Type");

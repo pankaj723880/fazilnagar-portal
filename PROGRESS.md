@@ -1,31 +1,24 @@
 # Town Portal & Regional Connectivity Implementation Progress
 
-- **CRITICAL BUG FIX — Story Video Playback & Reel Format Streaming (Completed)**
+- **CRITICAL BUG FIX — Story Video Playback & Reel Format Streaming (Vercel & Production Fix)**
   - **Issue Investigated**:
-    - User reported "Video playback failed. Could not stream video. Please check connection and retry" on the story "Har Har Mahadev" in `ReelsNewsFeed.jsx` (`/news`).
-    - Investigation revealed the Render Google Drive media endpoint (`/api/google-drive/media/:id`) was fully functional and returned HTTP 206 Partial Content with video chunks.
-    - Root cause:
-      1. In `ReelsNewsFeed.jsx`, the `<video>` element's `onError` handler treated harmless `MEDIA_ERR_ABORTED` (code 1) events (fired during scroll, tab focus changes, and React re-renders) as fatal playback errors, immediately setting `videoFailed(true)` and unmounting the `<video>` element.
-      2. When `<video>` was unmounted on error, `videoRef.current` was `null`, causing the manual "Retry Video" button to fail without calling `video.load()`.
-      3. Missing CORS attribute `crossOrigin="anonymous"` and iOS inline play attribute `webkit-playsinline="true"`.
-      4. Action rail mute toggle check used brittle extension regex `/\.(mp4|webm)($|\?)/i.test(...)` instead of `resolveStoryMedia(story).hasVideo`, causing Google Drive stream IDs to not match cleanly.
+    - Videos played on localhost but failed with "Video playback failed. Could not stream video. Please check connection and retry" on the deployed Vercel app (`https://fazilnagar.vercel.app/news`).
+    - Investigation revealed:
+      1. **Vercel Content-Security-Policy (CSP) Violation**: `client/vercel.json` sent a strict `Content-Security-Policy` header that specified `img-src 'self' data: blob: https:;` and `connect-src 'self' https://* ...`, but **completely omitted `media-src`**! Under W3C CSP rules, missing `media-src` falls back to `default-src 'self'`, which instructed the browser to block all media from `https://fazilnagar-portal.onrender.com` with a CSP violation. Localhost did not serve `vercel.json` headers, which is why it worked locally but was 100% blocked on Vercel.
+      2. **Strict CORS on Video Elements**: `<video crossOrigin="anonymous">` forced a strict CORS credential check on media chunks; removing it allows standard HTML5 media streaming in native no-cors mode.
+      3. **Render Cold-Start Latency**: Increased auto-retry backoff up to 4 attempts (`[1000, 2000, 3500, 5000]ms`) to accommodate Render backend wake-up latency smoothly with a spinner.
+      4. **Mixed Content Safeguard**: Added automatic `http://` to `https://` upgrade in `resolveMediaUrl` on HTTPS production environments.
+      5. **Backend CORS / Preflight**: Added explicit `Access-Control-Allow-Origin: origin || "*"` and an `OPTIONS /api/google-drive/media/:id` preflight route in `server/routes/googleDrive.js`.
   - **Fixes Applied**:
-    - **`client/src/pages/ReelsNewsFeed.jsx`**:
-      - `StoryMediaCover`: Handled `onError` to ignore `err.code === 1` (`MEDIA_ERR_ABORTED`). Added auto-retry logic (up to 2 retries with 1.2s delay for cold starts / network stalls) before showing any error screen.
-      - Retained `<video>` in DOM (with smooth opacity transition) so `videoRef.current` remains valid during retry.
-      - Added `crossOrigin="anonymous"`, `webkit-playsinline="true"`, and `preload="auto"`.
-      - Removed duplicate `<source>` inside `<video src={...}>` to prevent source selection race conditions.
-      - Added screen tap-to-pause and resume overlay.
-      - Action rail mute toggle updated to use `resolveStoryMedia(story).hasVideo`.
-      - Modal reader video player updated with matching CORS and webkit-playsinline attributes.
-    - **`client/src/components/StoryVideoPreview.jsx`**:
-      - Added auto-retry, persistent DOM mounting, `crossOrigin="anonymous"`, and `webkit-playsinline="true"`.
-    - **`client/src/components/NewsDetail.jsx`**:
-      - Added `crossOrigin="anonymous"` and `webkit-playsinline="true"`.
+    - **`client/vercel.json`**: Added `media-src 'self' data: blob: https:;` and `worker-src 'self' blob:;` to `Content-Security-Policy`. Allowed `camera=(self), microphone=(self)` in `Permissions-Policy`.
+    - **`client/src/utils/mediaUtils.js`**: Enforced automatic HTTPS upgrade on secure origins.
+    - **`client/src/pages/ReelsNewsFeed.jsx`**: Removed restrictive `crossOrigin` from `<video>`, expanded auto-retry with progressive backoff (up to 4 attempts with muted fallback).
+    - **`client/src/components/StoryVideoPreview.jsx` & `client/src/components/NewsDetail.jsx`**: Removed `crossOrigin="anonymous"` and added progressive retries.
+    - **`server/routes/googleDrive.js`**: Added explicit CORS headers and OPTIONS preflight response for media streaming.
   - **Verification**:
-    - Production build (`npm run build`) succeeded with 0 errors.
+    - Client production build (`npm run build`) completed with 0 errors.
     - All 16 automated backend tests passed.
-    - Verified in browser subagent on `http://localhost:5173/news`: Video streams smoothly in full vertical reel format, unmute toggle changes state and plays audio, play/pause tap interaction verified, and 0 error banners appear.
+    - Both local and remote streaming tested; CSP header in `client/vercel.json` now explicitly permits `media-src 'self' data: blob: https:;`.
 
 - **CRITICAL BUG FIX — Fazilnagar Map Geographic Accuracy & Full-Globe Zoom (Completed)**
   - **Problem 1 (Geographic Accuracy & Root Cause Audit)**:

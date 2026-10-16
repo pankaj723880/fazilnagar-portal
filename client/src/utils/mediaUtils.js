@@ -26,12 +26,17 @@ export function getBackendBase() {
  */
 export function resolveMediaUrl(url) {
   if (!url || typeof url !== "string") return "";
-  const trimmed = url.trim();
+  let trimmed = url.trim();
   if (!trimmed) return "";
 
   // Data URLs and local blob URLs don't need backend prefixing
   if (trimmed.startsWith("data:") || trimmed.startsWith("blob:")) {
     return trimmed;
+  }
+
+  // Force HTTPS on HTTPS pages (like Vercel production) to prevent Mixed Content blocking
+  if (typeof window !== "undefined" && window.location.protocol === "https:" && trimmed.startsWith("http://")) {
+    trimmed = trimmed.replace(/^http:\/\//i, "https://");
   }
 
   const backendBase = getBackendBase();

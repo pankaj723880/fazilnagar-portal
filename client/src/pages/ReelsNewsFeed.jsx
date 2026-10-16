@@ -145,10 +145,12 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
       return;
     }
 
-    // Auto-retry up to 2 times for Render backend cold starts or momentary network stalls
-    if (retryCountRef.current < 2) {
+    // Auto-retry up to 4 times with progressive backoff for Render cold starts / slow proxying
+    if (retryCountRef.current < 4) {
       retryCountRef.current += 1;
       setIsBuffering(true);
+      const delays = [1000, 2000, 3500, 5000];
+      const delay = delays[retryCountRef.current - 1] || 2000;
       setTimeout(() => {
         const video = videoRef.current;
         if (video) {
@@ -162,13 +164,28 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
                 setVideoFailed(false);
               })
               .catch(() => {
-                setIsBuffering(false);
+                // If unmuted playback failed, fallback to muted auto-play
+                if (!video.muted) {
+                  video.muted = true;
+                  video
+                    .play()
+                    .then(() => {
+                      setIsPlaying(true);
+                      setIsBuffering(false);
+                      setVideoFailed(false);
+                    })
+                    .catch(() => {
+                      setIsBuffering(false);
+                    });
+                } else {
+                  setIsBuffering(false);
+                }
               });
           } catch {
             setIsBuffering(false);
           }
         }
-      }, 1200);
+      }, delay);
       return;
     }
 
@@ -250,7 +267,6 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
           muted={muted}
           playsInline
           webkit-playsinline="true"
-          crossOrigin="anonymous"
           preload="auto"
           className={`absolute inset-0 w-full h-full object-cover z-10 transition-opacity duration-300 ${
             videoFailed ? "opacity-0 pointer-events-none" : "opacity-100"
@@ -1552,7 +1568,6 @@ export default function ReelsNewsFeed() {
                         controls
                         playsInline
                         webkit-playsinline="true"
-                        crossOrigin="anonymous"
                         preload="metadata"
                         className="w-full h-full object-contain"
                       >

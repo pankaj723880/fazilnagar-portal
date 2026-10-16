@@ -77,7 +77,6 @@ export default function NewsDetail() {
               controls
               playsInline
               webkit-playsinline="true"
-              crossOrigin="anonymous"
               preload="metadata"
               className="w-full max-h-96 object-contain bg-black rounded-2xl"
             >

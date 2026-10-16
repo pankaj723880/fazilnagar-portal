@@ -106,9 +106,11 @@ export default function StoryVideoPreview({
     const error = e?.target?.error;
     if (error && error.code === 1) return; // MEDIA_ERR_ABORTED
 
-    if (retryCountRef.current < 2) {
+    if (retryCountRef.current < 4) {
       retryCountRef.current += 1;
       setIsBuffering(true);
+      const delays = [1000, 2000, 3500, 5000];
+      const delay = delays[retryCountRef.current - 1] || 2000;
       setTimeout(() => {
         const video = videoRef.current;
         if (video) {
@@ -125,7 +127,7 @@ export default function StoryVideoPreview({
             setIsBuffering(false);
           }
         }
-      }, 1200);
+      }, delay);
       return;
     }
 
@@ -176,7 +178,6 @@ export default function StoryVideoPreview({
             muted
             playsInline
             webkit-playsinline="true"
-            crossOrigin="anonymous"
             loop
             preload="metadata"
             className={`w-full h-full object-cover pointer-events-none transition-opacity duration-200 ${
