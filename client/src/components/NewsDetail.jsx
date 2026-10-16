@@ -76,10 +76,11 @@ export default function NewsDetail() {
               src={videoUrl}
               controls
               playsInline
+              webkit-playsinline="true"
+              crossOrigin="anonymous"
               preload="metadata"
               className="w-full max-h-96 object-contain bg-black rounded-2xl"
             >
-              <source src={videoUrl} type={mimeType || "video/mp4"} />
               Your browser does not support the video tag.
             </video>
           );

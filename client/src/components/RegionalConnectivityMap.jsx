@@ -21,6 +21,7 @@ import {
   ListFilter,
   ArrowUpRight,
   Map as MapIcon,
+  Globe,
 } from "lucide-react";
 
 export default function RegionalConnectivityMap() {
@@ -158,15 +159,18 @@ export default function RegionalConnectivityMap() {
     if (isCity) {
       const bg = isHighlighted ? "#B8323C" : "#4338CA";
       const scale = isHighlighted ? "scale-110" : "scale-100";
+      const showLabel = zoom >= 5 || isHighlighted;
       const html = `
         <div class="relative flex items-center justify-center cursor-pointer transition-transform duration-200 ${scale}" style="width: 36px; height: 36px;">
           ${isHighlighted ? '<div class="absolute inset-0 rounded-full bg-red-500 opacity-40 animate-ping"></div>' : ""}
           <div class="relative z-10 w-8 h-8 rounded-xl bg-[${bg}] border-2 border-white shadow-md flex items-center justify-center text-white text-xs font-black">
             🏢
           </div>
-          <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-[#18232E] text-white text-[9px] font-bold px-1.5 py-0.2 rounded shadow">
-            ${loc.name}
-          </div>
+          ${showLabel ? `
+            <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-[#18232E] text-white text-[9px] font-bold px-1.5 py-0.2 rounded shadow border border-slate-700/60 pointer-events-none">
+              ${loc.name}
+            </div>
+          ` : ""}
         </div>
       `;
       return L.divIcon({
@@ -180,15 +184,18 @@ export default function RegionalConnectivityMap() {
     if (isTown) {
       const bg = isHighlighted ? "#B8323C" : "#0D5E49";
       const scale = isHighlighted ? "scale-110" : "scale-100";
+      const showLabel = zoom >= 7 || isHighlighted;
       const html = `
         <div class="relative flex items-center justify-center cursor-pointer transition-transform duration-200 ${scale}" style="width: 32px; height: 32px;">
           ${isHighlighted ? '<div class="absolute inset-0 rounded-full bg-red-500 opacity-40 animate-ping"></div>' : ""}
           <div class="relative z-10 w-7 h-7 rounded-xl bg-[${bg}] border-2 border-white shadow-md flex items-center justify-center text-white text-[11px] font-black">
             📍
           </div>
-          <div class="absolute -bottom-4.5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-[#18232E] text-white text-[9px] font-bold px-1.5 py-0.2 rounded shadow">
-            ${loc.name}
-          </div>
+          ${showLabel ? `
+            <div class="absolute -bottom-4.5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-[#18232E] text-white text-[9px] font-bold px-1.5 py-0.2 rounded shadow border border-slate-700/60 pointer-events-none">
+              ${loc.name}
+            </div>
+          ` : ""}
         </div>
       `;
       return L.divIcon({
@@ -200,25 +207,26 @@ export default function RegionalConnectivityMap() {
     }
 
     // Zoom-Dependent Village Density Strategy:
-    // When zoomed in (zoom >= 13), show readable label directly under marker
-    // When zoomed out (zoom < 11), use micro-dots to avoid marker overlap
-    const isZoomedIn = zoom >= 13;
+    // When zoomed in (zoom >= 14), show readable label directly under marker
+    // When zoomed out (zoom < 14), render micro-dots to eliminate visual label collision
+    // Individual names are always revealed via hover / tap tooltips or upon selection
+    const isZoomedIn = zoom >= 14;
     const isZoomedOut = zoom < 11;
-    const color = isHighlighted ? "#B8323C" : "#1E293B";
-    const size = isHighlighted ? 18 : isZoomedOut ? 8 : 12;
+    const color = isHighlighted ? "#B8323C" : "#475569";
+    const size = isHighlighted ? 18 : isZoomedOut ? 6 : 8;
     const border = isHighlighted
       ? "border-2 border-white ring-2 ring-red-500/50"
       : isZoomedOut
-      ? "border-1 border-white"
-      : "border-1.5 border-white";
+      ? "border-1 border-slate-900"
+      : "border-1 border-white/60";
 
     const labelHtml = (isZoomedIn || isHighlighted)
-      ? `<div class="absolute -bottom-4.5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-slate-900/90 text-white text-[9px] font-semibold px-1 py-0.2 rounded shadow-xs border border-white/20 pointer-events-none">${loc.name}</div>`
+      ? `<div class="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-slate-900/95 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-md border border-slate-700/80 pointer-events-none z-10">${loc.name}</div>`
       : "";
 
     const html = `
       <div class="relative flex items-center justify-center cursor-pointer" style="width: ${size}px; height: ${size}px;">
-        ${isHighlighted ? '<div class="absolute -inset-1 rounded-full bg-red-500 opacity-50 animate-ping"></div>' : ""}
+        ${isHighlighted ? '<div class="absolute -inset-1.5 rounded-full bg-red-500 opacity-60 animate-ping"></div>' : ""}
         <div class="w-full h-full rounded-full bg-[${color}] ${border} shadow-sm transition-all duration-200"></div>
         ${labelHtml}
       </div>
@@ -244,8 +252,9 @@ export default function RegionalConnectivityMap() {
       const map = L.map(container, {
         center: [FAZILNAGAR_CENTRE.lat, FAZILNAGAR_CENTRE.lng],
         zoom: 11,
-        minZoom: 9,
-        maxZoom: 16,
+        minZoom: 1,
+        maxZoom: 18,
+        worldCopyJump: true,
         zoomControl: false,
         dragging: true,
         touchZoom: true,
@@ -259,11 +268,16 @@ export default function RegionalConnectivityMap() {
         ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${cartoKey}`
         : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 
+      map.setMinZoom(1);
+      map.setMaxZoom(18);
+
       L.tileLayer(tileUrl, {
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: "abcd",
+        minZoom: 0,
         maxZoom: 19,
+        noWrap: false,
       }).addTo(map);
 
       // Track zoom level for density-adaptive rendering
@@ -398,13 +412,18 @@ export default function RegionalConnectivityMap() {
       const isHub = loc.id === FAZILNAGAR_CENTRE.id;
       const isHighlighted = currentHighlight && currentHighlight.id === loc.id;
 
+      // At low zoom levels (zoom < 9), hide unhighlighted villages to keep regional/world view clear
+      if (loc.type === "village" && currentZoom < 9 && !isHighlighted) {
+        return;
+      }
+
       const icon = isHub
         ? createHubIcon()
         : createLocationIcon(loc, isHighlighted, currentZoom);
 
       const marker = L.marker([loc.lat, loc.lng], {
         icon,
-        zIndexOffset: isHub ? 1000 : isHighlighted ? 800 : loc.type === "city" ? 500 : loc.type === "town" ? 400 : 100,
+        zIndexOffset: isHub ? 1000 : isHighlighted ? 900 : loc.type === "city" ? 500 : loc.type === "town" ? 400 : 100,
       });
 
       // Animated Preview Tooltip on Hover / Focus with Haversine distance
@@ -589,7 +608,32 @@ export default function RegionalConnectivityMap() {
 
   // Zoom In / Zoom Out
   const handleZoomIn = () => mapInstanceRef.current?.zoomIn();
-  const handleZoomOut = () => mapInstanceRef.current?.zoomOut();
+  const handleZoomOut = () => {
+    if (mapInstanceRef.current) {
+      if (mapInstanceRef.current.getMinZoom() > 1) {
+        mapInstanceRef.current.setMinZoom(1);
+      }
+      mapInstanceRef.current.zoomOut();
+    }
+  };
+
+  // World View (Full Globe Zoom-Out)
+  const handleWorldView = () => {
+    setSelectedLocation(null);
+    setHoveredLocation(null);
+    setSearchQuery("");
+    setShowSuggestions(false);
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setMinZoom(1);
+      try {
+        mapInstanceRef.current.flyTo([20, 0], 1, {
+          duration: 1.2,
+        });
+      } catch (e) {
+        mapInstanceRef.current.setView([20, 0], 1);
+      }
+    }
+  };
 
   return (
     <div className="w-full bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
@@ -740,6 +784,18 @@ export default function RegionalConnectivityMap() {
             <span className="hidden sm:inline">Directory</span>
           </button>
 
+          {/* World View / पूरी दुनिया Button */}
+          <button
+            type="button"
+            onClick={handleWorldView}
+            className="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer border border-slate-700/80 flex items-center gap-1.5 text-xs font-bold shrink-0"
+            title="World View / पूरी दुनिया (Zoom out to entire world)"
+            aria-label="World View / पूरी दुनिया"
+          >
+            <Globe className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden lg:inline">World View / पूरी दुनिया</span>
+          </button>
+
           {/* Reset Map View */}
           <button
             type="button"
@@ -811,8 +867,8 @@ export default function RegionalConnectivityMap() {
           <button
             type="button"
             onClick={handleZoomIn}
-            className="w-8 h-8 rounded-xl bg-slate-900/90 border border-slate-700 text-white flex items-center justify-center hover:bg-slate-800 transition cursor-pointer shadow-md"
-            title="Zoom In"
+            className="w-8.5 h-8.5 rounded-xl bg-slate-900/95 border border-slate-700/90 text-white flex items-center justify-center hover:bg-slate-800 hover:border-slate-500 transition cursor-pointer shadow-md"
+            title="Zoom In / ज़ूम इन"
             aria-label="Zoom In"
           >
             <Plus className="w-4 h-4" />
@@ -820,11 +876,21 @@ export default function RegionalConnectivityMap() {
           <button
             type="button"
             onClick={handleZoomOut}
-            className="w-8 h-8 rounded-xl bg-slate-900/90 border border-slate-700 text-white flex items-center justify-center hover:bg-slate-800 transition cursor-pointer shadow-md"
-            title="Zoom Out"
+            className="w-8.5 h-8.5 rounded-xl bg-slate-900/95 border border-slate-700/90 text-white flex items-center justify-center hover:bg-slate-800 hover:border-slate-500 transition cursor-pointer shadow-md"
+            title="Zoom Out / ज़ूम आउट"
             aria-label="Zoom Out"
           >
             <Minus className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handleWorldView}
+            className="px-2 h-8.5 rounded-xl bg-slate-900/95 border border-slate-700/90 text-amber-400 hover:text-white hover:bg-slate-800 hover:border-amber-400/50 transition cursor-pointer shadow-md flex items-center gap-1.5 text-xs font-bold"
+            title="World View / पूरी दुनिया (Zoom to entire globe)"
+            aria-label="World View / पूरी दुनिया"
+          >
+            <Globe className="w-4 h-4 text-amber-400 shrink-0" />
+            <span className="hidden sm:inline text-[10px] font-semibold text-slate-200">World View / पूरी दुनिया</span>
           </button>
         </div>
 

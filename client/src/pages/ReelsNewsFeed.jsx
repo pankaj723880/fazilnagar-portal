@@ -52,6 +52,7 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
   const [isBuffering, setIsBuffering] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef(null);
+  const retryCountRef = useRef(0);
 
   const { videoUrl, imageUrl, mimeType, hasVideo: detectedHasVideo } = useMemo(() => {
     return resolveStoryMedia(story);
@@ -60,8 +61,9 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
   const hasVideo = detectedHasVideo && Boolean(videoUrl);
   const hasUserImage = Boolean(imageUrl) && !imgFailed;
 
-  // Reset video error state on story transition
+  // Reset video state on story/URL transition
   useEffect(() => {
+    retryCountRef.current = 0;
     setVideoFailed(false);
     setIsBuffering(false);
     setIsPlaying(false);
@@ -136,28 +138,84 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
     }
   };
 
+  const handleVideoError = (e) => {
+    const error = e?.target?.error;
+    // Code 1 is MEDIA_ERR_ABORTED - triggered on scroll / user cancel / navigation, not a fatal failure
+    if (error && error.code === 1) {
+      return;
+    }
+
+    // Auto-retry up to 2 times for Render backend cold starts or momentary network stalls
+    if (retryCountRef.current < 2) {
+      retryCountRef.current += 1;
+      setIsBuffering(true);
+      setTimeout(() => {
+        const video = videoRef.current;
+        if (video) {
+          try {
+            video.load();
+            video
+              .play()
+              .then(() => {
+                setIsPlaying(true);
+                setIsBuffering(false);
+                setVideoFailed(false);
+              })
+              .catch(() => {
+                setIsBuffering(false);
+              });
+          } catch {
+            setIsBuffering(false);
+          }
+        }
+      }, 1200);
+      return;
+    }
+
+    console.warn("Story video playback error:", videoUrl, error);
+    setVideoFailed(true);
+    setIsBuffering(false);
+  };
+
   const handleRetryVideo = (e) => {
     e.stopPropagation();
+    retryCountRef.current = 0;
     setVideoFailed(false);
     setIsBuffering(true);
     const video = videoRef.current;
     if (video) {
-      video.load();
-      video
-        .play()
-        .then(() => {
-          setIsPlaying(true);
-          setIsBuffering(false);
-        })
-        .catch(() => {
-          setIsPlaying(false);
-          setIsBuffering(false);
-        });
+      try {
+        video.load();
+        video
+          .play()
+          .then(() => {
+            setIsPlaying(true);
+            setIsBuffering(false);
+          })
+          .catch(() => {
+            video.muted = true;
+            video
+              .play()
+              .then(() => {
+                setIsPlaying(true);
+                setIsBuffering(false);
+              })
+              .catch(() => {
+                setIsPlaying(false);
+                setIsBuffering(false);
+              });
+          });
+      } catch {
+        setIsBuffering(false);
+      }
     }
   };
 
   return (
-    <div className="absolute inset-0 z-0 bg-[#0B1118] overflow-hidden flex items-center justify-center select-none">
+    <div
+      className="absolute inset-0 z-0 bg-[#0B1118] overflow-hidden flex items-center justify-center select-none"
+      onClick={hasVideo && isPlaying ? handleTogglePlay : undefined}
+    >
       {/* Dynamic Civic News Poster Backdrop - Shows when no user photo/video is attached */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#0a1017] via-[#0F1E2E] to-[#080d14] flex flex-col justify-between p-6 pointer-events-none">
         {/* Luminous ambient meshes */}
@@ -182,8 +240,8 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
         </div>
       </div>
 
-      {/* Video layer if present */}
-      {hasVideo && !videoFailed && (
+      {/* Video layer if present - stays mounted so retry videoRef is always valid */}
+      {hasVideo && (
         <video
           key={videoUrl}
           ref={videoRef}
@@ -191,22 +249,21 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
           loop
           muted={muted}
           playsInline
-          preload="metadata"
-          className="absolute inset-0 w-full h-full object-cover z-10"
+          webkit-playsinline="true"
+          crossOrigin="anonymous"
+          preload="auto"
+          className={`absolute inset-0 w-full h-full object-cover z-10 transition-opacity duration-300 ${
+            videoFailed ? "opacity-0 pointer-events-none" : "opacity-100"
+          }`}
           onWaiting={() => setIsBuffering(true)}
           onPlaying={() => {
             setIsBuffering(false);
             setIsPlaying(true);
+            setVideoFailed(false);
           }}
           onCanPlay={() => setIsBuffering(false)}
-          onError={() => {
-            console.warn("Story video playback error:", videoUrl);
-            setVideoFailed(true);
-            setIsBuffering(false);
-          }}
-        >
-          <source src={videoUrl} type={mimeType || "video/mp4"} />
-        </video>
+          onError={handleVideoError}
+        />
       )}
 
       {/* Buffering Spinner */}
@@ -232,7 +289,7 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
 
       {/* Video Error Banner with Actionable Retry Button */}
       {hasVideo && videoFailed && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-black/75 backdrop-blur-xs">
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 text-center bg-black/75 backdrop-blur-xs">
           <div className="w-12 h-12 rounded-2xl bg-red-950/80 border border-red-500/40 flex items-center justify-center text-red-400 mb-3 shadow-lg">
             <AlertCircle className="w-6 h-6" />
           </div>
@@ -1125,6 +1182,7 @@ export default function ReelsNewsFeed() {
             const likeCount = story.likeCount ?? 0;
             const commentCount = story.commentCount ?? 0;
             const coverImage = story.image || FALLBACK_COVER_IMAGE;
+            const storyMedia = resolveStoryMedia(story);
 
             return (
               <article
@@ -1143,7 +1201,7 @@ export default function ReelsNewsFeed() {
                 {/* Right Floating Actions Rail (Reels / Shorts Style) */}
                 <div className="absolute right-3.5 bottom-20 sm:bottom-24 z-20 flex flex-col items-center gap-4">
                   {/* Video Mute Toggle */}
-                  {((story.mediaType === "video" && !/\.(png|jpe?g|webp|gif|svg)($|\?)/i.test(story.video || story.mediaUrl)) || (story.video && /\.(mp4|webm|mov|ogg)($|\?)/i.test(story.video))) && (
+                  {storyMedia.hasVideo && (
                     <button
                       onClick={() => setVideoMuted(!videoMuted)}
                       className="w-11 h-11 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/80 transition cursor-pointer shadow-lg"
@@ -1493,10 +1551,11 @@ export default function ReelsNewsFeed() {
                         src={resolvedVideo}
                         controls
                         playsInline
+                        webkit-playsinline="true"
+                        crossOrigin="anonymous"
                         preload="metadata"
                         className="w-full h-full object-contain"
                       >
-                        <source src={resolvedVideo} type={resolvedMime || "video/mp4"} />
                         Your browser does not support video playback.
                       </video>
                     </div>

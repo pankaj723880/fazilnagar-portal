@@ -1,6 +1,57 @@
 # Town Portal & Regional Connectivity Implementation Progress
 
-## Done Phases
+- **CRITICAL BUG FIX — Story Video Playback & Reel Format Streaming (Completed)**
+  - **Issue Investigated**:
+    - User reported "Video playback failed. Could not stream video. Please check connection and retry" on the story "Har Har Mahadev" in `ReelsNewsFeed.jsx` (`/news`).
+    - Investigation revealed the Render Google Drive media endpoint (`/api/google-drive/media/:id`) was fully functional and returned HTTP 206 Partial Content with video chunks.
+    - Root cause:
+      1. In `ReelsNewsFeed.jsx`, the `<video>` element's `onError` handler treated harmless `MEDIA_ERR_ABORTED` (code 1) events (fired during scroll, tab focus changes, and React re-renders) as fatal playback errors, immediately setting `videoFailed(true)` and unmounting the `<video>` element.
+      2. When `<video>` was unmounted on error, `videoRef.current` was `null`, causing the manual "Retry Video" button to fail without calling `video.load()`.
+      3. Missing CORS attribute `crossOrigin="anonymous"` and iOS inline play attribute `webkit-playsinline="true"`.
+      4. Action rail mute toggle check used brittle extension regex `/\.(mp4|webm)($|\?)/i.test(...)` instead of `resolveStoryMedia(story).hasVideo`, causing Google Drive stream IDs to not match cleanly.
+  - **Fixes Applied**:
+    - **`client/src/pages/ReelsNewsFeed.jsx`**:
+      - `StoryMediaCover`: Handled `onError` to ignore `err.code === 1` (`MEDIA_ERR_ABORTED`). Added auto-retry logic (up to 2 retries with 1.2s delay for cold starts / network stalls) before showing any error screen.
+      - Retained `<video>` in DOM (with smooth opacity transition) so `videoRef.current` remains valid during retry.
+      - Added `crossOrigin="anonymous"`, `webkit-playsinline="true"`, and `preload="auto"`.
+      - Removed duplicate `<source>` inside `<video src={...}>` to prevent source selection race conditions.
+      - Added screen tap-to-pause and resume overlay.
+      - Action rail mute toggle updated to use `resolveStoryMedia(story).hasVideo`.
+      - Modal reader video player updated with matching CORS and webkit-playsinline attributes.
+    - **`client/src/components/StoryVideoPreview.jsx`**:
+      - Added auto-retry, persistent DOM mounting, `crossOrigin="anonymous"`, and `webkit-playsinline="true"`.
+    - **`client/src/components/NewsDetail.jsx`**:
+      - Added `crossOrigin="anonymous"` and `webkit-playsinline="true"`.
+  - **Verification**:
+    - Production build (`npm run build`) succeeded with 0 errors.
+    - All 16 automated backend tests passed.
+    - Verified in browser subagent on `http://localhost:5173/news`: Video streams smoothly in full vertical reel format, unmute toggle changes state and plays audio, play/pause tap interaction verified, and 0 error banners appear.
+
+- **CRITICAL BUG FIX — Fazilnagar Map Geographic Accuracy & Full-Globe Zoom (Completed)**
+  - **Problem 1 (Geographic Accuracy & Root Cause Audit)**:
+    - Root cause identified: The 1 Hub (`Fazilnagar Centre`: 26.6827, 84.0498), 7 Towns (`Kasya`, `Tamkuhi Raj`, `Padrauna`, `Hata`, `Seorahi`, `Ramkola`, `Sukrauli`), and 3 Cities (`Deoria`, `Gorakhpur`, `Gopalganj`) have verified Census / Survey of India coordinates.
+    - In `client/scripts/buildRegionalLocations.js` (`FAZILNAGAR_VILLAGES_RAW`), 126 local revenue villages were generated with an artificial 50/50 split (exactly 63 north and 63 south of 26.6827) with synthetic repeating `.xx15`, `.xx45`, `.xx85` offsets. Real Gram Panchayats with locations north or south of Fazilnagar were placed symmetrically.
+    - Marker labels placed at `absolute -bottom-4.5` hung downward south from the marker dot, causing northern village labels to physically overlap southern dots, visually inverting label association.
+    - Coordinates preserved without unauthorized production overwrite; complete audit report and correction list prepared for approval.
+  - **Problem 2 (Full-Globe Zoom-Out & World View Control)**:
+    - Added dedicated "World View / पूरी दुनिया" control in both the top control bar and the floating top-left control stack (alongside `+` and `-`).
+    - Configured Leaflet `minZoom: 1`, `maxZoom: 18`, and `worldCopyJump: true` on `L.map` (removed restrictive `minZoom: 9`).
+    - Configured CartoDB Voyager basemap `minZoom: 0, maxZoom: 19, noWrap: false` for smooth antimeridian wrapping and global rendering.
+    - Implemented `handleWorldView` using `map.flyTo([20, 0], 1, { duration: 1.2 })` with explicit `setMinZoom(1)` enforcement, animating from local view to full globe.
+    - Preserved initial default view centered on Fazilnagar Centre (`26.6827, 84.0498`) at zoom 11; "Reset Map View" (`RotateCcw` / Hub click) smoothly flies back.
+  - **Problem 3 (Overlapping Labels Decluttering without Moving Markers)**:
+    - Implemented zoom-gated density strategy:
+      - Low zoom (`zoom < 9`): unhighlighted villages are omitted from DOM markers so national and world maps remain crystal clear.
+      - Mid zoom (`9 <= zoom < 14`): villages render as clean micro-dots (size 6-8px) without bulky text labels, preventing unreadable label blobs and collisions.
+      - Hover/tap tooltips: animated preview tooltips display village name, Hindi name, and Haversine distance dynamically.
+      - High zoom (`zoom >= 14`): permanent high-contrast village text badges display with border, background, and padding.
+      - Highlighted/selected locations: elevated to 18px with crimson pulse ring, zIndex 900, prominent badge, and Haversine connectivity polyline.
+      - Fazilnagar Centre Hub elevated with zIndex 1000, distinct gold star marker, and permanent origin badge.
+  - **Problem 4 (Verification & Regression Testing)**:
+    - Verified against Survey of India, Census, and OpenStreetMap benchmarks: Fazilnagar (`26.6827, 84.0498`), Kasya/Kushinagar (`26.7410, 83.8910`), Tamkuhi Raj (`26.6908, 84.1772`), Padrauna (`26.9025, 83.9825`), Hata (`26.7490, 83.7430`), Seorahi (`26.6430, 84.2560`), Deoria (`26.5020, 83.7780`), Gorakhpur (`26.7606, 83.3732`), Gopalganj (`26.4678, 84.4444`).
+    - Automated tests passing: `server/tests/regionalConnectivity.test.js` (7/7 pass), `server/tests/locationRegression.test.js` (9/9 pass).
+    - Production bundle build (`npm run build`) clean with 0 errors.
+
 - **Interactive Fazilnagar Regional Connectivity Map (Completed)**
   - **Geographic Dataset (`client/src/data/regionalLocations.js`)**:
     - Central origin: Fazilnagar Town Centre (`26.6827° N, 84.0498° E`, PIN 274401).

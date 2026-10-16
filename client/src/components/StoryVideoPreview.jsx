@@ -19,9 +19,17 @@ export default function StoryVideoPreview({
 
   const containerRef = useRef(null);
   const videoRef = useRef(null);
+  const retryCountRef = useRef(0);
 
   const { videoUrl, imageUrl, mimeType } = resolveStoryMedia(story);
   const posterUrl = imageUrl || fallbackPoster || "";
+
+  useEffect(() => {
+    retryCountRef.current = 0;
+    setIsFailed(false);
+    setIsBuffering(false);
+    setIsPlaying(false);
+  }, [videoUrl]);
 
   // IntersectionObserver: Play when visible in the viewport (>35% visible)
   useEffect(() => {
@@ -94,14 +102,60 @@ export default function StoryVideoPreview({
     }
   };
 
+  const handleVideoError = (e) => {
+    const error = e?.target?.error;
+    if (error && error.code === 1) return; // MEDIA_ERR_ABORTED
+
+    if (retryCountRef.current < 2) {
+      retryCountRef.current += 1;
+      setIsBuffering(true);
+      setTimeout(() => {
+        const video = videoRef.current;
+        if (video) {
+          try {
+            video.load();
+            video.play().then(() => {
+              setIsPlaying(true);
+              setIsBuffering(false);
+              setIsFailed(false);
+            }).catch(() => {
+              setIsBuffering(false);
+            });
+          } catch {
+            setIsBuffering(false);
+          }
+        }
+      }, 1200);
+      return;
+    }
+
+    console.warn("Story video preview error:", videoUrl, error);
+    setIsFailed(true);
+    setIsBuffering(false);
+  };
+
   const handleRetry = (e) => {
     e.stopPropagation();
+    retryCountRef.current = 0;
     setIsFailed(false);
     setIsBuffering(true);
     const video = videoRef.current;
     if (video) {
-      video.load();
-      video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      try {
+        video.load();
+        video
+          .play()
+          .then(() => {
+            setIsPlaying(true);
+            setIsBuffering(false);
+          })
+          .catch(() => {
+            setIsPlaying(false);
+            setIsBuffering(false);
+          });
+      } catch {
+        setIsBuffering(false);
+      }
     }
   };
 
@@ -112,45 +166,47 @@ export default function StoryVideoPreview({
       ref={containerRef}
       className={`relative overflow-hidden bg-slate-950 flex items-center justify-center select-none group ${aspectRatio} ${className}`}
     >
-      {videoUrl && !isFailed ? (
-        <video
-          key={videoUrl}
-          ref={videoRef}
-          src={videoUrl}
-          poster={posterUrl || undefined}
-          muted
-          playsInline
-          loop
-          preload="metadata"
-          className="w-full h-full object-cover pointer-events-none"
-          onWaiting={() => setIsBuffering(true)}
-          onPlaying={() => {
-            setIsBuffering(false);
-            setIsPlaying(true);
-          }}
-          onCanPlay={() => setIsBuffering(false)}
-          onEnded={() => setIsPlaying(false)}
-          onError={() => {
-            console.warn("Story video preview error:", videoUrl);
-            setIsFailed(true);
-            setIsBuffering(false);
-          }}
-        >
-          <source src={videoUrl} type={mimeType || "video/mp4"} />
-        </video>
-      ) : isFailed ? (
-        <div className="w-full h-full bg-slate-900/95 flex flex-col items-center justify-center text-slate-400 p-4 text-center space-y-2 z-10">
-          <Film className="w-7 h-7 text-red-400/80" />
-          <span className="text-[11px] font-semibold text-slate-300">Video preview unavailable</span>
-          <button
-            type="button"
-            onClick={handleRetry}
-            className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
-          >
-            <RotateCcw className="w-3 h-3" />
-            <span>Retry</span>
-          </button>
-        </div>
+      {videoUrl ? (
+        <>
+          <video
+            key={videoUrl}
+            ref={videoRef}
+            src={videoUrl}
+            poster={posterUrl || undefined}
+            muted
+            playsInline
+            webkit-playsinline="true"
+            crossOrigin="anonymous"
+            loop
+            preload="metadata"
+            className={`w-full h-full object-cover pointer-events-none transition-opacity duration-200 ${
+              isFailed ? "opacity-0 pointer-events-none absolute inset-0" : "opacity-100"
+            }`}
+            onWaiting={() => setIsBuffering(true)}
+            onPlaying={() => {
+              setIsBuffering(false);
+              setIsPlaying(true);
+              setIsFailed(false);
+            }}
+            onCanPlay={() => setIsBuffering(false)}
+            onEnded={() => setIsPlaying(false)}
+            onError={handleVideoError}
+          />
+          {isFailed && (
+            <div className="absolute inset-0 w-full h-full bg-slate-900/95 flex flex-col items-center justify-center text-slate-400 p-4 text-center space-y-2 z-10">
+              <Film className="w-7 h-7 text-red-400/80" />
+              <span className="text-[11px] font-semibold text-slate-300">Video preview unavailable</span>
+              <button
+                type="button"
+                onClick={handleRetry}
+                className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Retry</span>
+              </button>
+            </div>
+          )}
+        </>
       ) : posterUrl ? (
         <img
           src={posterUrl}
