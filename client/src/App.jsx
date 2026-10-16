@@ -24,6 +24,7 @@ const CreateNews = lazy(() => import("./pages/CreateNews"));
 const Directory = lazy(() => import("./pages/Directory"));
 const About = lazy(() => import("./pages/About"));
 const AdminReview = lazy(() => import("./pages/AdminReview"));
+import AdminRoute from "./components/AdminRoute";
 import InstallButton from "./components/InstallButton";
 import DirectionsModal from "./components/DirectionsModal";
 import NotificationCenter from "./components/NotificationCenter";
@@ -110,7 +111,7 @@ export default function App() {
   const isAdminPage = location.pathname.startsWith("/admin");
 
   const hasSubNav = DIRECTORY_SUB_NAV_PATHS.includes(location.pathname) && !isNewsPage;
-  const isAdmin = Boolean(user && (user.role === "admin" || user.email === "pankaj723880@gmail.com")) || isUserAdmin();
+  const isAdmin = Boolean(user && user.role === "admin") && isUserAdmin();
 
   const [mobileFooterNavOpen, setMobileFooterNavOpen] = useState(false);
   const [mobileFooterActionsOpen, setMobileFooterActionsOpen] = useState(false);
@@ -482,8 +483,22 @@ export default function App() {
               <Route path="/register" element={<Register setUser={setUser} />} />
               <Route path="/create-news" element={<CreateNews user={user} />} />
               <Route path="/upload" element={<CreateNews user={user} />} />
-              <Route path="/admin/review" element={<AdminReview user={user} />} />
-              <Route path="/admin" element={<AdminReview user={user} />} />
+              <Route
+                path="/admin/review"
+                element={
+                  <AdminRoute>
+                    <AdminReview user={user} />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <AdminRoute>
+                    <AdminReview user={user} />
+                  </AdminRoute>
+                }
+              />
             </Routes>
           </Suspense>
         </div>
@@ -551,7 +566,7 @@ export default function App() {
                   <li><Link to="/create-news" className="hover:text-white flex items-center gap-1.5"><span>✍️</span> Submit Local News</Link></li>
                   <li><Link to="/login" className="hover:text-white flex items-center gap-1.5"><span>👤</span> Citizen / Reporter Login</Link></li>
                   <li><Link to="/register" className="hover:text-white flex items-center gap-1.5"><span>📝</span> Register Resident Account</Link></li>
-                  {(isAdmin || user?.role === "admin") && (
+                  {isAdmin && (
                     <li><Link to="/admin/review" className="hover:text-amber-400 text-amber-300 font-bold flex items-center gap-1"><span>🛡️</span> Admin dashboard</Link></li>
                   )}
                 </ul>
@@ -647,7 +662,7 @@ export default function App() {
                 <li><Link to="/create-news" className="hover:text-white">Submit Local News</Link></li>
                 <li><Link to="/login" className="hover:text-white">Citizen / Reporter Login</Link></li>
                 <li><Link to="/register" className="hover:text-white">Register Resident Account</Link></li>
-                {(isAdmin || user?.role === "admin") && (
+                {isAdmin && (
                   <li><Link to="/admin/review" className="hover:text-amber-400 text-amber-300 font-bold flex items-center gap-1"><span>🛡️</span> Admin dashboard</Link></li>
                 )}
               </ul>
@@ -778,20 +793,22 @@ export default function App() {
                   </a>
                 </div>
 
-                {/* Highlighted Banner: Admin Dashboard 🛡️ ADMIN DESK */}
-                <Link
-                  to="/admin/review"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="mt-2 w-full p-2.5 rounded-xl text-xs font-bold flex items-center justify-between bg-amber-100/90 hover:bg-amber-200/90 text-amber-950 border border-amber-300 shadow-2xs active:scale-95 transition"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">🛡️</span>
-                    <span className="font-extrabold">Admin Dashboard</span>
-                  </div>
-                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-amber-300 text-amber-950 border border-amber-400/80">
-                    ADMIN DESK
-                  </span>
-                </Link>
+                {/* Highlighted Banner: Admin Dashboard 🛡️ ADMIN DESK (Strictly Admin-Only) */}
+                {isAdmin && (
+                  <Link
+                    to="/admin/review"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="mt-2 w-full p-2.5 rounded-xl text-xs font-bold flex items-center justify-between bg-amber-100/90 hover:bg-amber-200/90 text-amber-950 border border-amber-300 shadow-2xs active:scale-95 transition"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🛡️</span>
+                      <span className="font-extrabold">Admin Dashboard</span>
+                    </div>
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-amber-300 text-amber-950 border border-amber-400/80">
+                      ADMIN DESK
+                    </span>
+                  </Link>
+                )}
               </div>
 
               {/* 4.2 Grid layout 2: CIVIC HUBS (9 Colorful Tiles) */}

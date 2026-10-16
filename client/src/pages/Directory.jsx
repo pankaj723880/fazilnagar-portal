@@ -134,15 +134,15 @@ export default function Directory({ user }) {
     canonicalPath: "/directory",
   });
 
-  const [isAdminState, setIsAdminState] = useState(() => user?.role === "admin" || isUserAdmin());
+  const [isAdminState, setIsAdminState] = useState(() => Boolean(isUserAdmin() && (!user || user.role === "admin")));
   useEffect(() => {
     const handleAuth = () => {
-      setIsAdminState(user?.role === "admin" || isUserAdmin());
+      setIsAdminState(Boolean(isUserAdmin() && (!user || user.role === "admin")));
     };
     window.addEventListener("auth-change", handleAuth);
     return () => window.removeEventListener("auth-change", handleAuth);
   }, [user]);
-  const isAdmin = user?.role === "admin" || isAdminState || isUserAdmin();
+  const isAdmin = Boolean(isAdminState && isUserAdmin());
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();

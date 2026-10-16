@@ -7,63 +7,95 @@ export function getAuthEpoch() {
   return currentAuthEpoch;
 }
 
+export function decodeJwtPayload(token) {
+  if (!token || typeof token !== "string") return null;
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const jsonStr = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    const payload = JSON.parse(jsonStr);
+    // Validate expiration if exp is present
+    if (payload.exp && payload.exp * 1000 <= Date.now()) {
+      return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
 export function getAuthToken() {
   try {
-    const sessionToken = sessionStorage.getItem("token");
-    if (sessionToken && sessionToken !== "null" && sessionToken !== "undefined") {
-      return sessionToken;
+    let token = sessionStorage.getItem("token");
+    if (!token || token === "null" || token === "undefined") {
+      token = localStorage.getItem("token");
+      if (token && token !== "null" && token !== "undefined") {
+        sessionStorage.setItem("token", token);
+      } else {
+        token = null;
+      }
     }
 
-    // Fallback to localStorage if this tab hasn't populated sessionStorage yet
-    const localToken = localStorage.getItem("token");
-    if (localToken && localToken !== "null" && localToken !== "undefined") {
-      sessionStorage.setItem("token", localToken);
-      return localToken;
+    if (token) {
+      const payload = decodeJwtPayload(token);
+      if (!payload) {
+        // Expired or malformed token: purge immediately
+        clearAuthSession();
+        return null;
+      }
+      return token;
     }
   } catch {
-    // Storage access fallback
+    // Storage access error
   }
   return null;
 }
 
 export function getAuthUser() {
+  const token = getAuthToken();
+  if (!token) {
+    return null;
+  }
+
+  const payload = decodeJwtPayload(token);
+  if (!payload) {
+    return null;
+  }
+
+  // Parse cached display profile from storage if available
+  let cachedUser = null;
   try {
-    const sessionUser = sessionStorage.getItem("user");
-    if (sessionUser && sessionUser !== "null" && sessionUser !== "undefined") {
-      return JSON.parse(sessionUser);
-    }
-
-    const localUser = localStorage.getItem("user");
-    if (localUser && localUser !== "null" && localUser !== "undefined") {
-      const parsed = JSON.parse(localUser);
-      sessionStorage.setItem("user", localUser);
-      return parsed;
-    }
-
-    // Attempt token decode if user object is not cached
-    const token = getAuthToken();
-    if (token) {
-      const payloadBase64 = token.split(".")[1];
-      if (payloadBase64) {
-        const decoded = JSON.parse(
-          atob(payloadBase64.replace(/-/g, "+").replace(/_/g, "/"))
-        );
-        if (decoded) {
-          const u = {
-            id: decoded.id,
-            name: decoded.name || decoded.email?.split("@")[0] || "Citizen",
-            email: decoded.email,
-            role: decoded.role || (decoded.email === "pankaj723880@gmail.com" ? "admin" : "citizen"),
-          };
-          sessionStorage.setItem("user", JSON.stringify(u));
-          return u;
-        }
-      }
+    const raw = sessionStorage.getItem("user") || localStorage.getItem("user");
+    if (raw && raw !== "null" && raw !== "undefined") {
+      cachedUser = JSON.parse(raw);
     }
   } catch {
-    // Storage/JSON parse error
+    // ignore parse error
   }
-  return null;
+
+  // SECURITY ENFORCEMENT:
+  // The role and identity MUST be anchored to the server-signed JWT payload.
+  // Never trust client-modified localStorage values for administrative privileges.
+  const verifiedRole = payload.role === "admin" ? "admin" : (payload.role || cachedUser?.role || "user");
+  const email = payload.email || cachedUser?.email || "";
+  const id = payload.id || payload._id || cachedUser?.id || cachedUser?._id;
+  const name = cachedUser?.name || payload.name || email.split("@")[0] || "Citizen";
+
+  return {
+    id,
+    _id: id,
+    name,
+    email,
+    role: verifiedRole,
+    phone: cachedUser?.phone || "",
+    status: cachedUser?.status || "active",
+  };
 }
 
 export function isUserLoggedIn() {
@@ -71,9 +103,12 @@ export function isUserLoggedIn() {
 }
 
 export function isUserAdmin() {
+  const token = getAuthToken();
+  if (!token) return false;
   const u = getAuthUser();
-  return Boolean(u && (u.role === "admin" || u.email === "pankaj723880@gmail.com"));
+  return Boolean(u && u.role === "admin");
 }
+
 
 export function setAuthSession(token, user) {
   if (!token || token === "null" || token === "undefined") return;

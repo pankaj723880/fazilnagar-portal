@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import RevokedToken from "../models/RevokedToken.js";
+import User from "../models/User.js";
 
 const verifyToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -30,11 +31,29 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
-export const requireAdmin = (req, res, next) => {
+export const requireAdmin = async (req, res, next) => {
   if (!req.user || req.user.role !== "admin") {
     return res.status(403).json({ message: "Access denied. Admin privileges required." });
   }
+
+  // Cross-verify with database to ensure admin role has not been revoked or account suspended
+  try {
+    if (req.user.id) {
+      const dbUser = await User.findById(req.user.id).select("role status");
+      if (dbUser) {
+        if (dbUser.role !== "admin") {
+          return res.status(403).json({ message: "Access denied. Admin privileges required." });
+        }
+        if (dbUser.status === "inactive" || dbUser.status === "suspended") {
+          return res.status(403).json({ message: "Access denied. Account is inactive or suspended." });
+        }
+      }
+    }
+  } catch (err) {
+    console.error("requireAdmin user database verification error:", err);
+  }
+
   next();
 };
 
-export default verifyToken;
+export default verifyToken;

@@ -580,6 +580,26 @@ const handleGetStatus = async (req, res) => {
 router.get("/status/:id", handleGetStatus);
 router.get("/:id/status", handleGetStatus);
 
+// @route   GET /api/submissions/:id
+// @desc    Admin fetches single submission details
+// @access  Private (Admin)
+router.get("/:id", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const submission = await Submission.findById(req.params.id)
+      .populate("reviewedBy", "name email")
+      .populate("placeId");
+
+    if (!submission) {
+      return res.status(404).json({ message: "Submission not found." });
+    }
+
+    res.status(200).json(submission);
+  } catch (err) {
+    console.error("Fetch Single Submission Error:", err);
+    res.status(500).json({ message: "Failed to fetch submission details." });
+  }
+});
+
 // @route   PATCH or PUT /api/submissions/:id/status or /api/submissions/:id
 // @desc    Admin updates submission status (approve, reject, resolve, archive)
 // @access  Private (Admin)

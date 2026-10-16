@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams, Navigate } from "react-router-dom";
 import API, { performLogout } from "../api";
-import { getAuthToken, getAuthUser, setAuthSession, clearAuthSession } from "../utils/authStorage";
+import { getAuthToken, getAuthUser, clearAuthSession, isUserAdmin } from "../utils/authStorage";
 import { usePageSEO } from "../utils/seo";
 
 // Master Layout & Design System
@@ -28,13 +28,15 @@ import AdminCivicDirectoryCMS from "../components/AdminCivicDirectoryCMS"; // Ci
 
 import {
   ShieldCheck,
+  ShieldAlert,
   Lock,
   LogIn,
   AlertTriangle,
   Building,
   CheckCircle,
   Clock,
-  ExternalLink
+  ExternalLink,
+  ArrowLeft
 } from "lucide-react";
 
 export default function AdminReview({ user: propUser }) {
@@ -60,12 +62,6 @@ export default function AdminReview({ user: propUser }) {
   const [newsCount, setNewsCount] = useState(0);
   const [civicCount, setCivicCount] = useState(0);
   const [usersCount, setUsersCount] = useState(0);
-
-  // Authentication State
-  const [adminEmail, setAdminEmail] = useState("");
-  const [adminPassword, setAdminPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [loginSubmitting, setLoginSubmitting] = useState(false);
 
   // Synchronize Tab with URL
   const setActiveTab = (tabId) => {
@@ -102,10 +98,7 @@ export default function AdminReview({ user: propUser }) {
     };
   }, [propUser]);
 
-  const isAdmin =
-    currentUser?.role === "admin" ||
-    currentUser?.email === "admin@fazilnagar.com" ||
-    currentUser?.email === "pankaj723880@gmail.com";
+  const isAdmin = Boolean(currentUser && currentUser.role === "admin" && isUserAdmin());
 
   // Fetch real count badges for sidebar
   const fetchBadgeCounts = async () => {
@@ -188,110 +181,65 @@ export default function AdminReview({ user: propUser }) {
     }
   }, [isAdmin]);
 
-  const handleAdminLogin = async (e) => {
-    e.preventDefault();
-    setLoginSubmitting(true);
-    setLoginError("");
-
-    try {
-      const res = await API.post("/auth/login", {
-        email: adminEmail.trim(),
-        password: adminPassword,
-      });
-
-      if (res.data?.token && res.data?.user) {
-        setAuthSession(res.data.token, res.data.user);
-        setCurrentUser(res.data.user);
-      }
-    } catch (err) {
-      setLoginError(err.response?.data?.message || "Invalid Administrator Email or Password.");
-    } finally {
-      setLoginSubmitting(false);
-    }
-  };
-
   const handleLogout = async () => {
     await performLogout();
     setCurrentUser(null);
     navigate("/login");
   };
 
-  // If user is not authenticated as admin, show civic admin login screen
+  // If user is not authenticated as admin, show access denied or redirect
   if (!isAdmin) {
+    if (!currentUser) {
+      return (
+        <Navigate
+          to="/login"
+          state={{
+            from: "/admin/review",
+            message: "Please log in with administrator credentials to access the Municipal Review Desk.",
+          }}
+          replace
+        />
+      );
+    }
+
     return (
-      <div className="min-h-screen bg-[#F5F7FA] flex flex-col justify-center items-center p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-          {/* Header Banner */}
-          <div className="bg-[#14233B] text-white p-6 text-center relative overflow-hidden">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600/30 border border-blue-400/30 text-blue-300 mb-3 shadow-inner">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <h1 className="text-xl font-bold font-heading tracking-tight">Fazilnagar Civic Portal</h1>
-            <p className="text-xs text-slate-300 mt-1">
-              Municipal CMS & Content Review Desk
-            </p>
+      <div className="min-h-screen bg-[#F5F7FA] flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white rounded-2xl border border-red-200 shadow-xl overflow-hidden text-center p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mx-auto mb-4">
+            <ShieldAlert className="w-8 h-8" />
           </div>
 
-          {/* Form Area */}
-          <div className="p-6 space-y-5">
-            {loginError && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0" />
-                <span>{loginError}</span>
-              </div>
-            )}
+          <span className="text-[11px] font-black uppercase tracking-wider text-red-700 bg-red-100/80 px-2.5 py-0.5 rounded-full inline-block mb-2">
+            403 • Access Denied
+          </span>
 
-            <form onSubmit={handleAdminLogin} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Administrator Email
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={adminEmail}
-                  onChange={(e) => setAdminEmail(e.target.value)}
-                  placeholder="admin@fazilnagar.com"
-                  className="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-slate-50 focus:bg-white transition"
-                />
-              </div>
+          <h1 className="text-xl font-extrabold text-slate-900 font-heading">
+            Administrator Privileges Required
+          </h1>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-slate-50 focus:bg-white transition"
-                />
-              </div>
+          <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+            You are signed in as{" "}
+            <strong className="text-slate-800">
+              {currentUser?.name || currentUser?.email || "Citizen User"}
+            </strong>.
+            This municipal moderation desk and content management system is strictly restricted to authorized town administrators.
+          </p>
 
-              <button
-                type="submit"
-                disabled={loginSubmitting}
-                className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl transition shadow-xs flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
-              >
-                {loginSubmitting ? (
-                  <span>Authenticating...</span>
-                ) : (
-                  <>
-                    <LogIn className="w-4 h-4" />
-                    <span>Access Admin Console</span>
-                  </>
-                )}
-              </button>
-            </form>
-
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-              <Link to="/" className="hover:text-blue-600 flex items-center gap-1 transition">
-                ← Return to Public Portal
-              </Link>
-              <span className="text-[11px] font-mono text-slate-400">JWT Protected</span>
-            </div>
+          <div className="mt-6 flex flex-col sm:flex-row items-center gap-3 justify-center">
+            <Link
+              to="/"
+              className="w-full sm:w-auto px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Return to Town Portal</span>
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="w-full sm:w-auto px-4 py-2.5 bg-[#B8323C] hover:bg-red-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Sign In as Admin</span>
+            </button>
           </div>
         </div>
       </div>

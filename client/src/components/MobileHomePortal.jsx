@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import NotificationCenter from "./NotificationCenter";
 import { openGoogleMapsDirections } from "../utils/directions";
-import { getAuthUser } from "../utils/authStorage";
+import { getAuthUser, isUserAdmin } from "../utils/authStorage";
 import {
   getCivicDirectory,
   getCachedCivicDirectory,
@@ -333,10 +333,7 @@ export default function MobileHomePortal({
     };
   }, []);
 
-  const isAdmin =
-    authUser?.role === "admin" ||
-    authUser?.email === "admin@fazilnagar.com" ||
-    authUser?.email === "pankaj723880@gmail.com";
+  const isAdmin = Boolean(authUser && authUser.role === "admin" && isUserAdmin());
 
   // Search State
   const [searchQuery, setSearchQuery] = useState("");
@@ -1484,9 +1481,11 @@ export default function MobileHomePortal({
               <Link to="/register" className="block py-1.5 text-slate-700 hover:text-red-600">
                 📝 Register Resident Account
               </Link>
-              <Link to="/admin/review" className="block py-1.5 text-amber-700 font-bold hover:text-amber-800">
-                🛡️ Admin dashboard
-              </Link>
+              {isAdmin && (
+                <Link to="/admin/review" className="block py-1.5 text-amber-700 font-bold hover:text-amber-800">
+                  🛡️ Admin dashboard
+                </Link>
+              )}
             </div>
           )}
         </div>

@@ -8,7 +8,7 @@ import AdvertisementSlot from "../components/AdvertisementSlot";
 import { usePageSEO } from "../utils/seo";
 import CommunityPlaceModal from "../components/CommunityPlaceModal";
 import MobileHomePortal from "../components/MobileHomePortal";
-import { getAuthUser, clearAuthSession, getAuthToken } from "../utils/authStorage";
+import { getAuthUser, clearAuthSession, getAuthToken, isUserAdmin } from "../utils/authStorage";
 import { performLogout } from "../api";
 import StoryVideoPreview from "../components/StoryVideoPreview";
 import {
@@ -2447,7 +2447,9 @@ export default function TownPortal() {
             <ul className="space-y-2 text-xs">
               <li><button onClick={() => handleRequireAuthAction(() => setModalType("correction"), "report inaccurate data")} className="hover:text-white text-left cursor-pointer py-1 inline-block">Report Inaccurate Data</button></li>
               <li><button onClick={() => handleRequireAuthAction(() => setModalType("business"), "suggest a new place")} className="hover:text-white text-left cursor-pointer py-1 inline-block">Suggest New Place</button></li>
-              <li><Link to="/admin/review" className="hover:text-amber-300 text-amber-400 font-bold flex items-center gap-1"><span>🛡️</span> Admin dashboard</Link></li>
+              {Boolean(currentUser && currentUser.role === "admin" && isUserAdmin()) && (
+                <li><Link to="/admin/review" className="hover:text-amber-300 text-amber-400 font-bold flex items-center gap-1"><span>🛡️</span> Admin dashboard</Link></li>
+              )}
               <li><span className="text-slate-400">Postal Area: PIN 274401</span></li>
               <li><span className="text-slate-400">District: Kushinagar, UP</span></li>
               <li className="pt-2 text-[10px] text-slate-400">
