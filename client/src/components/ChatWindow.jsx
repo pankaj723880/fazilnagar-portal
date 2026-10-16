@@ -3,6 +3,7 @@ import API from "../api";
 import { getSocket, playMessageChime } from "../socket";
 import ReportModal from "./ReportModal";
 import GroupDetailsModal from "./GroupDetailsModal";
+import CameraModal from "./CameraModal";
 import {
   getCachedMessages,
   setCachedMessages,
@@ -93,10 +94,13 @@ export default function ChatWindow({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [activeReactionMsgId, setActiveReactionMsgId] = useState(null);
+  const [showCameraModal, setShowCameraModal] = useState(false);
 
   const abortControllerRef = useRef(null);
 
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+  const isAtBottomRef = useRef(true);
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
   const videoInputRef = useRef(null);
@@ -110,6 +114,13 @@ export default function ChatWindow({
   const isPendingRequest = !isGroup && conversation?.status === "pending" && !conversation?.isInitiator;
   const partnerId = String(otherUser?._id || otherUser?.id || "");
   const isPartnerOnline = !isGroup && partnerId && onlineUserIds?.has?.(partnerId);
+
+  // Keep track of scroll position to prevent message list jitter
+  const handleScroll = (e) => {
+    if (!e?.target) return;
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    isAtBottomRef.current = scrollHeight - scrollTop - clientHeight < 120;
+  };
 
   // Flush queued messages when connection is restored
   const flushQueuedMessages = async () => {
@@ -167,9 +178,11 @@ export default function ChatWindow({
     };
   }, [conversationId]);
 
-  // Scroll to bottom helper
-  const scrollToBottom = (behavior = "smooth") => {
-    messagesEndRef.current?.scrollIntoView({ behavior });
+  // Scroll to bottom helper with jitter prevention
+  const scrollToBottom = (behavior = "smooth", force = false) => {
+    if (force || isAtBottomRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior, block: "end" });
+    }
   };
 
   // Fetch initial message history with instant local cache hydration
@@ -183,7 +196,7 @@ export default function ChatWindow({
     if (cached.length > 0 || queued.length > 0) {
       setMessages([...cached, ...queued]);
       setLoading(false);
-      setTimeout(() => scrollToBottom("auto"), 20);
+      setTimeout(() => scrollToBottom("auto", true), 20);
     } else {
       setLoading(true);
     }
@@ -207,7 +220,7 @@ export default function ChatWindow({
       } finally {
         if (!isCancelled) {
           setLoading(false);
-          setTimeout(() => scrollToBottom("auto"), 100);
+          setTimeout(() => scrollToBottom("auto", false), 50);
         }
       }
     }
@@ -973,9 +986,9 @@ export default function ChatWindow({
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs flex flex-col h-[650px] overflow-hidden">
+    <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs flex flex-col h-full min-h-0 overflow-hidden">
       {/* Chat Header */}
-      <div className="p-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+      <div className="p-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {/* Hamburger button on mobile to open MobileMessagingDrawer */}
           {onOpenMobileMenu && (
@@ -1218,7 +1231,7 @@ export default function ChatWindow({
 
       {/* Offline Alert Banner */}
       {!isNetworkOnline && (
-        <div className="bg-amber-500/10 border-b border-amber-200 px-4 py-2 text-center text-xs text-amber-800 flex items-center justify-center gap-2">
+        <div className="bg-amber-500/10 border-b border-amber-200 px-4 py-2 text-center text-xs text-amber-800 flex items-center justify-center gap-2 shrink-0">
           <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
           <span>You are currently offline. Outgoing messages will queue and send automatically when you reconnect.</span>
         </div>
@@ -1226,7 +1239,7 @@ export default function ChatWindow({
 
       {/* In-Chat Search Bar */}
       {showChatSearch && (
-        <div className="bg-slate-50 border-b border-slate-200/80 px-3.5 py-2 flex items-center gap-2 animate-in fade-in">
+        <div className="bg-slate-50 border-b border-slate-200/80 px-3.5 py-2 flex items-center gap-2 shrink-0 animate-in fade-in">
           <Search className="w-4 h-4 text-slate-400 shrink-0" />
           <input
             type="text"
@@ -1264,8 +1277,12 @@ export default function ChatWindow({
         </div>
       )}
 
-      {/* Message Thread List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      {/* Message Thread List with smooth scrolling and jitter prevention */}
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain p-4 space-y-3 scroll-smooth"
+      >
         {hasMore && (
           <div className="text-center pt-1 pb-2">
             <button
@@ -1471,15 +1488,18 @@ export default function ChatWindow({
                                 {/* Photo / Image attachment */}
                                 {m.type === "image" && m.mediaUrl && (
                                   <div
-                                    className="mb-1.5 cursor-pointer overflow-hidden rounded-xl relative group"
+                                    className="mb-1.5 cursor-pointer overflow-hidden rounded-xl relative group bg-black/5 min-h-[140px] max-w-xs flex items-center justify-center transition-all duration-200"
                                     onClick={() => setLightboxImage(getFullMediaUrl(m.mediaUrl))}
                                     title="Click to view full photo / बड़ी तस्वीर देखें"
                                   >
                                     <img
                                       src={getFullMediaUrl(m.mediaUrl)}
                                       alt={m.body || m.fileName || "Chat attachment"}
-                                      className="rounded-xl max-h-60 max-w-full sm:max-w-xs object-cover hover:opacity-95 transition"
+                                      className="rounded-xl max-h-60 max-w-full sm:max-w-xs object-cover hover:opacity-95 transition-opacity duration-200"
                                       loading="lazy"
+                                      onLoad={() => {
+                                        if (isAtBottomRef.current) scrollToBottom("auto");
+                                      }}
                                     />
                                     <a
                                       href={getFullMediaUrl(m.mediaUrl)}
@@ -1767,7 +1787,7 @@ export default function ChatWindow({
 
       {/* Reply Quote Banner */}
       {replyTarget && (
-        <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600">
+        <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600 shrink-0">
           <div className="flex items-center gap-2 truncate">
             <Reply className="w-3.5 h-3.5 text-[#B8323C] shrink-0" />
             <span className="truncate">
@@ -1785,7 +1805,7 @@ export default function ChatWindow({
 
       {/* Editing Message Banner */}
       {editingMessage && (
-        <div className="px-4 py-2 bg-amber-50 border-t border-amber-200/80 flex items-center justify-between text-xs text-amber-900">
+        <div className="px-4 py-2 bg-amber-50 border-t border-amber-200/80 flex items-center justify-between text-xs text-amber-900 shrink-0">
           <div className="flex items-center gap-2 truncate">
             <Pencil className="w-3.5 h-3.5 text-amber-700 shrink-0" />
             <span className="truncate">
@@ -1804,7 +1824,7 @@ export default function ChatWindow({
 
       {/* Media & Document Attachment Preview Tray */}
       {selectedFile && (
-        <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs animate-in fade-in">
+        <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs shrink-0 animate-in fade-in">
           <div className="flex items-center gap-2.5 min-w-0">
             {filePreview ? (
               <img
@@ -1845,7 +1865,7 @@ export default function ChatWindow({
 
       {/* Uploading Progress Bar for Large Files / Attachments */}
       {uploadingMedia && (
-        <div className="px-4 py-2 bg-slate-900 text-white text-xs border-t border-slate-800 animate-in fade-in">
+        <div className="px-4 py-2 bg-slate-900 text-white text-xs border-t border-slate-800 shrink-0 animate-in fade-in">
           <div className="flex items-center justify-between gap-3 mb-1.5 font-medium">
             <span className="flex items-center gap-2 truncate">
               <Loader2 className="w-3.5 h-3.5 animate-spin text-[#B8323C] shrink-0" />
@@ -1874,7 +1894,7 @@ export default function ChatWindow({
 
       {/* Blocked Notice or Message Input Box */}
       {isBlocked ? (
-        <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3 text-xs text-slate-600">
+        <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3 text-xs text-slate-600 shrink-0">
           <div className="flex items-center gap-2">
             <Ban className="w-4 h-4 text-red-500 shrink-0" />
             <span>You have blocked this citizen. You cannot send or receive messages.</span>
@@ -1888,7 +1908,7 @@ export default function ChatWindow({
           </button>
         </div>
       ) : (
-        <div className="relative">
+        <div className="relative shrink-0">
           {/* Emoji Picker Tray */}
           {showEmojiPicker && (
             <div className="absolute bottom-full mb-2 left-3 z-30 bg-white rounded-2xl shadow-xl border border-slate-200 p-3 w-72 animate-in fade-in zoom-in-95">
@@ -2005,7 +2025,7 @@ export default function ChatWindow({
                   type="button"
                   onClick={() => {
                     setShowAttachMenu(false);
-                    cameraInputRef.current?.click();
+                    setShowCameraModal(true);
                   }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 transition cursor-pointer text-left"
                 >
@@ -2013,8 +2033,8 @@ export default function ChatWindow({
                     <Camera className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-slate-800 font-bold">Live Camera</div>
-                    <div className="text-[10px] text-slate-400 font-normal">Take instant photo</div>
+                    <div className="text-slate-800 font-bold">Live Camera / लाइव कैमरा</div>
+                    <div className="text-[10px] text-slate-400 font-normal">Snap photo or record video</div>
                   </div>
                 </button>
               </div>
@@ -2023,7 +2043,7 @@ export default function ChatWindow({
 
           <form
             onSubmit={handleSendMessage}
-            className="p-2.5 sm:p-3 border-t border-slate-100 bg-white flex items-center gap-1.5 sm:gap-2"
+            className="p-2.5 sm:p-3 border-t border-slate-100 bg-white flex items-center gap-1.5 sm:gap-2 shrink-0"
           >
             {/* Hidden File Inputs for All Supported Media Types */}
             <input
@@ -2267,6 +2287,21 @@ export default function ChatWindow({
           </div>
         </div>
       )}
+
+      {/* Live Camera Popup Modal */}
+      <CameraModal
+        isOpen={showCameraModal}
+        onClose={() => setShowCameraModal(false)}
+        onCapture={(file, category) => {
+          setSelectedFile(file);
+          setSelectedCategory(category);
+          if (category === "image") {
+            setFilePreview(URL.createObjectURL(file));
+          } else {
+            setFilePreview(null);
+          }
+        }}
+      />
     </div>
   );
 }

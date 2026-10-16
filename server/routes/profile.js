@@ -57,6 +57,7 @@ router.get("/me", verifyToken, async (req, res) => {
         email: user.email,
         username: user.username || "",
         avatar: user.avatar || "",
+        phone: user.phone || "",
         area: user.area || "",
         bio: user.bio || "",
         showEmail: user.showEmail ?? false,
@@ -81,6 +82,7 @@ router.patch("/me", verifyToken, async (req, res) => {
     const {
       name,
       username,
+      phone,
       area,
       bio,
       showEmail,
@@ -122,6 +124,7 @@ router.patch("/me", verifyToken, async (req, res) => {
     }
 
     if (name && typeof name === "string") user.name = name.trim().slice(0, 100);
+    if (phone !== undefined) user.phone = String(phone).trim().slice(0, 20);
     if (area !== undefined) user.area = String(area).trim().slice(0, 60);
     if (bio !== undefined) user.bio = String(bio).trim().slice(0, 250);
     if (showEmail !== undefined) user.showEmail = Boolean(showEmail);
@@ -143,6 +146,7 @@ router.patch("/me", verifyToken, async (req, res) => {
         email: user.email,
         username: user.username,
         avatar: user.avatar,
+        phone: user.phone || "",
         area: user.area,
         bio: user.bio,
         showEmail: user.showEmail,

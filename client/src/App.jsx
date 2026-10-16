@@ -116,6 +116,7 @@ export default function App() {
     location.pathname === "/local-directory";
 
   const isAdminPage = location.pathname.startsWith("/admin");
+  const isMessagesPage = location.pathname.startsWith("/messages");
 
   const hasSubNav = DIRECTORY_SUB_NAV_PATHS.includes(location.pathname) && !isNewsPage;
   const isAdmin = Boolean(user && user.role === "admin") && isUserAdmin();
@@ -482,6 +483,8 @@ export default function App() {
             ? "pt-0 pb-0 p-0 m-0 w-full max-w-full"
             : isNewsPage
             ? "pt-16 sm:pt-[96px] pb-14 sm:pb-0 p-0 m-0 overflow-hidden"
+            : isMessagesPage
+            ? "pt-16 sm:pt-[96px] pb-0 p-0 m-0 overflow-hidden h-[100dvh] flex flex-col"
             : isPortalPage
             ? (isMobilePreview ? "pt-0 pb-16" : "pt-0 md:pt-[96px] pb-16 sm:pb-8")
             : hasSubNav
@@ -489,7 +492,7 @@ export default function App() {
             : "pt-[76px] sm:pt-[112px] pb-24 sm:pb-8 max-w-7xl mx-auto px-3 sm:px-6"
         }`}
       >
-        <div key={location.pathname} className={isNewsPage ? "h-full w-full" : isPortalPage ? "w-full" : "animate-page-enter"}>
+        <div key={location.pathname} className={isNewsPage || isMessagesPage ? "h-full w-full flex-1 min-h-0 flex flex-col" : isPortalPage ? "w-full" : "animate-page-enter"}>
           <Suspense
             fallback={
               <div className="min-h-[40vh] flex flex-col items-center justify-center p-8 gap-3">
@@ -583,7 +586,7 @@ export default function App() {
           FOOTER - Modern Civic Deep Slate with Crimson & Emerald Accents
           (Hidden on /news full-screen reels page and TownPortal homepage which has its own footer)
           ======================================================== */}
-      {!isNewsPage && !isPortalPage && !isAdminPage && (
+      {!isNewsPage && !isPortalPage && !isAdminPage && !isMessagesPage && (
         <footer className="bg-[#18232E] text-slate-400 text-xs mt-12 border-t border-slate-800 pb-28 sm:pb-8">
           {/* Mobile Collapsible Accordions (md:hidden) */}
           <div className="md:hidden max-w-lg mx-auto px-4 py-6 space-y-2.5">
@@ -1035,7 +1038,7 @@ export default function App() {
           MOBILE NATIVE BOTTOM APP BAR (Fixed at bottom for phones < 640px)
           Provides effortless 1-thumb native app navigation across the portal
           ======================================================== */}
-      {!isAdminPage && (
+      {!isAdminPage && !isMessagesPage && (
         <nav className={`fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.07)] pb-[max(0.5rem,env(safe-area-inset-bottom))] ${isMobilePreview ? "block" : "sm:hidden"}`}>
           <div className="max-w-[420px] mx-auto w-full px-2 py-1 flex items-center justify-around">
             <NavLink

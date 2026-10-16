@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import API from "../api";
 import { getAuthUser } from "../utils/authStorage";
 import { usePageSEO } from "../utils/seo";
-import { Camera, Save, ArrowLeft, Shield, Lock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Camera, Save, ArrowLeft, Shield, Lock, CheckCircle2, AlertCircle, Phone } from "lucide-react";
 
 // Mask email utility (ra****@gmail.com)
 export function maskEmail(email) {
@@ -27,6 +27,7 @@ export default function ProfileEdit() {
 
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [phone, setPhone] = useState("");
   const [area, setArea] = useState("");
   const [bio, setBio] = useState("");
   const [showEmail, setShowEmail] = useState(false);
@@ -50,6 +51,7 @@ export default function ProfileEdit() {
           const p = res.data.profile;
           setUsername(p.username || "");
           setDisplayName(p.name || "");
+          setPhone(p.phone || "");
           setArea(p.area || "");
           setBio(p.bio || "");
           setShowEmail(Boolean(p.showEmail));
@@ -158,6 +160,7 @@ export default function ProfileEdit() {
       const res = await API.patch("/profile/me", {
         username: username.toLowerCase().trim(),
         name: displayName.trim(),
+        phone: phone.trim(),
         area: area.trim(),
         bio: bio.trim(),
         showEmail,
@@ -170,6 +173,7 @@ export default function ProfileEdit() {
         const p = res.data.profile;
         setUsername(p.username);
         setDisplayName(p.name);
+        setPhone(p.phone || "");
       }
 
       setSuccessMsg("Profile and privacy settings saved successfully! / प्रोफ़ाइल सुरक्षित हो गई।");
@@ -302,8 +306,29 @@ export default function ProfileEdit() {
             </div>
           </div>
 
-          {/* Area & Bio */}
+          {/* Mobile Number & Area */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                <span>Mobile Number / मोबाइल नंबर</span>
+                <span className="text-[10px] text-slate-400 font-normal">Optional</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-2.5 text-xs text-slate-400 font-mono flex items-center gap-1">
+                  <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                </span>
+                <input
+                  type="tel"
+                  maxLength={15}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/[^\d+\s-]/g, ""))}
+                  placeholder="e.g. 9876543210"
+                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono text-slate-900 focus:ring-2 focus:ring-[#B8323C] focus:border-transparent outline-none"
+                />
+              </div>
+              <span className="text-[10px] text-slate-400">For contact and civic identification.</span>
+            </div>
+
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
                 Area / Mohalla / मोहल्ला (Optional)
@@ -318,19 +343,21 @@ export default function ProfileEdit() {
               />
               <span className="text-[10px] text-slate-400">Helps neighbors identify you in search.</span>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Bio / संक्षिप्त परिचय (Optional)
-              </label>
-              <input
-                type="text"
-                maxLength={250}
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="e.g. Local shop owner / समाजसेवी"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs text-slate-900 focus:ring-2 focus:ring-[#B8323C] focus:border-transparent outline-none"
-              />
-            </div>
+          </div>
+
+          {/* Bio */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Bio / संक्षिप्त परिचय (Optional)
+            </label>
+            <input
+              type="text"
+              maxLength={250}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="e.g. Local shop owner / समाजसेवी"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs text-slate-900 focus:ring-2 focus:ring-[#B8323C] focus:border-transparent outline-none"
+            />
           </div>
 
           {/* Privacy Controls Section */}

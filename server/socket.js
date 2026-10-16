@@ -262,6 +262,11 @@ export function initSocket(httpServer) {
           readerId: userId,
           readAt: new Date(),
         });
+        socket.emit("conversation_marked_read", {
+          conversationId,
+          readerId: userId,
+          readAt: new Date(),
+        });
       }
     });
 
