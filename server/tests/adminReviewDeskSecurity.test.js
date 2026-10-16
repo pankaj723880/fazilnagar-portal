@@ -186,6 +186,7 @@ describe("CRITICAL SECURITY: Admin Review Desk Authentication & Authorization En
       "test_suspended_sec@fazilnagar.com"
     ] } });
     await RevokedToken.deleteOne({ token: revokedAdminToken });
+    await mongoose.disconnect();
   });
 
   // --- Category A: Unauthenticated Public Visitors (HTTP 401) ---

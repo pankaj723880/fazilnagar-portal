@@ -107,6 +107,9 @@ test("Notification Lifecycle & Admin Broadcast Test Suite", async (t) => {
     if (testIdsToClean.length > 0) {
       await Notification.deleteMany({ _id: { $in: testIdsToClean } });
     }
+    if (testUserIdsToClean.length > 0) {
+      await User.deleteMany({ _id: { $in: testUserIdsToClean } });
+    }
     await mongoose.disconnect();
   });
 
@@ -115,16 +118,44 @@ test("Notification Lifecycle & Admin Broadcast Test Suite", async (t) => {
   const markAllHandler = getRouteHandler(notificationRoutes, "/mark-all-read", "post");
   const broadcastHandler = getRouteHandler(notificationRoutes, "/admin/broadcast", "post");
 
-  // Mock users
+  const testUserIdsToClean = [];
+
+  // Create real test users in DB for live requireAdmin authorization verification
+  const adminDoc = await User.findOneAndUpdate(
+    { email: "admin_test_notif@fazilnagar.com" },
+    {
+      name: "Admin Test Notification",
+      email: "admin_test_notif@fazilnagar.com",
+      password: "dummy_hashed_password",
+      role: "admin",
+      status: "active",
+    },
+    { upsert: true, new: true }
+  );
+  testUserIdsToClean.push(adminDoc._id);
+
+  const citizenDoc = await User.findOneAndUpdate(
+    { email: "citizen_test_notif@fazilnagar.com" },
+    {
+      name: "Citizen Test Notification",
+      email: "citizen_test_notif@fazilnagar.com",
+      password: "dummy_hashed_password",
+      role: "citizen",
+      status: "active",
+    },
+    { upsert: true, new: true }
+  );
+  testUserIdsToClean.push(citizenDoc._id);
+
   const adminUser = {
-    id: new mongoose.Types.ObjectId().toString(),
-    email: "admin@fazilnagar.com",
+    id: adminDoc._id.toString(),
+    email: adminDoc.email,
     role: "admin",
   };
 
   const citizenUser = {
-    id: new mongoose.Types.ObjectId().toString(),
-    email: "citizen@fazilnagar.com",
+    id: citizenDoc._id.toString(),
+    email: citizenDoc.email,
     role: "citizen",
   };
 
