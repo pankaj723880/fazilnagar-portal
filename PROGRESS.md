@@ -289,7 +289,10 @@ The Fazilnagar Town Portal messaging architecture is fully implemented and opera
     - Removed redundant "Messages / संवाद" heading and duplicate message icon from `ConversationList.jsx`.
     - Positioned "+ New Chat" and "New Group" buttons neatly at the top of the sidebar.
     - Preserved instant search and conversation category filter pills.
-  - **Fixed Profile Photo / Avatar Rendering**:
+  - **Fixed Profile Photo / Avatar Rendering & Google Drive Storage**:
+    - Integrated Google Drive upload in `server/routes/profile.js` (`POST /api/profile/avatar`), streaming avatars to dedicated folder `"Fazilnagar Avatars"` and saving portable delivery URLs (`/api/google-drive/media/:id`), with local fallback.
+    - Upgraded avatar pixel resolution: Increased client canvas resolution from 600px to 1200px HD with `imageSmoothingQuality = "high"` and 0.92 WebP quality; raised backend multer file limit to 10 MB.
+    - Enlarged UI profile button and preview avatars to clear, crisp dimensions (`w-9 h-9 sm:w-10 sm:h-10` in header, `w-20 h-20` in modal preview, and `w-24 h-24` in `ProfileEdit.jsx`).
     - Updated `server/routes/auth.js` (`POST /login` and `GET /me`) to return `avatar` and `username`.
     - Updated `client/src/utils/authStorage.js` (`getAuthUser`) to parse and return `avatar` and `username`.
     - Updated `client/src/pages/Messages.jsx` top-right profile button to render `resolveMediaUrl(profile?.avatar || portalUser?.avatar)` with circular clipping, `object-fit: cover`, and resilient fallback initials (`absolute inset-0`).

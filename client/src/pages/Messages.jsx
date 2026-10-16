@@ -446,7 +446,7 @@ export default function Messages() {
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          const maxDim = 600;
+          const maxDim = 1200; // High-definition 1200px max dimension
           let { width, height } = img;
           if (width > maxDim || height > maxDim) {
             if (width > height) {
@@ -461,6 +461,8 @@ export default function Messages() {
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext("2d");
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
           ctx.drawImage(img, 0, 0, width, height);
           canvas.toBlob(
             (blob) => {
@@ -468,7 +470,7 @@ export default function Messages() {
               else reject(new Error("Compression failed"));
             },
             "image/webp",
-            0.85
+            0.92
           );
         };
         img.onerror = () => reject(new Error("Failed to load image"));
@@ -583,7 +585,7 @@ export default function Messages() {
             className="flex items-center gap-2 px-2.5 py-1 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 shadow-2xs transition cursor-pointer text-left group"
             title="Update Profile Picture & Mobile / प्रोफ़ाइल बदलें"
           >
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-200 overflow-hidden shrink-0 relative flex items-center justify-center border border-slate-200/90 shadow-2xs">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-200 overflow-hidden shrink-0 relative flex items-center justify-center border border-slate-200/90 shadow-2xs">
               <div className="absolute inset-0 flex items-center justify-center font-bold text-xs text-slate-700 bg-gradient-to-br from-slate-100 to-slate-200 select-none">
                 {(displayName || "C")[0]?.toUpperCase()}
               </div>
@@ -836,21 +838,20 @@ export default function Messages() {
             <form onSubmit={handleSaveProfile} className="space-y-4">
               {/* Avatar Selector */}
               <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-200">
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-slate-200 border-2 border-white shadow-xs shrink-0 flex items-center justify-center relative">
+                <div className="w-20 h-20 rounded-full overflow-hidden bg-slate-200 border-2 border-white shadow-xs shrink-0 flex items-center justify-center relative">
+                  <div className="absolute inset-0 flex items-center justify-center font-bold text-2xl text-slate-600 bg-gradient-to-br from-slate-100 to-slate-200 select-none">
+                    {(editName || displayName || "C")[0]?.toUpperCase()}
+                  </div>
                   {editAvatarPreview ? (
                     <img
                       src={resolveMediaUrl(editAvatarPreview)}
                       alt="Preview"
-                      className="w-full h-full object-cover"
+                      className="absolute inset-0 w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
                       }}
                     />
-                  ) : (
-                    <span className="text-xl font-bold text-slate-600">
-                      {(editName || displayName || "C")[0]?.toUpperCase()}
-                    </span>
-                  )}
+                  ) : null}
                 </div>
 
                 <div className="space-y-1">

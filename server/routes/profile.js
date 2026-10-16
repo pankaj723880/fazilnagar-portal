@@ -6,6 +6,9 @@ import { fileURLToPath } from "url";
 import User from "../models/User.js";
 import verifyToken from "../middleware/auth.js";
 import { normalizePhone } from "../utils/submissionUtils.js";
+import GoogleDriveMedia from "../models/GoogleDriveMedia.js";
+import GoogleDriveToken from "../models/GoogleDriveToken.js";
+import { getAuthenticatedDriveClient, getOrCreateAppFolder } from "./googleDrive.js";
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -28,16 +31,79 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 500 * 1024 }, // 500 KB limit as required
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit for high-resolution avatars
   fileFilter: (req, file, cb) => {
-    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
     if (allowed.includes(file.mimetype.toLowerCase())) {
       cb(null, true);
     } else {
-      cb(new Error("Only JPEG, PNG, or WebP images under 500 KB are allowed."));
+      cb(new Error("Only JPEG, PNG, WebP, or GIF images are allowed."));
     }
   },
 });
+
+// Helper to stream avatar image directly to Google Drive
+async function tryUploadAvatarToGoogleDrive({ filePath, originalName, mimeType, userId }) {
+  try {
+    const hasDriveConfig =
+      process.env.GOOGLE_CLIENT_ID &&
+      process.env.GOOGLE_CLIENT_SECRET &&
+      (process.env.GOOGLE_DRIVE_REFRESH_TOKEN || (await GoogleDriveToken.findOne({ key: "default_drive_account" })));
+    if (!hasDriveConfig) {
+      return null;
+    }
+
+    const { drive, accountEmail, tokenDoc } = await getAuthenticatedDriveClient();
+    const folderId = await getOrCreateAppFolder(drive, tokenDoc, "Fazilnagar Avatars");
+
+    const cleanName = `avatar_${Date.now()}_${(originalName || "profile.webp").replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const fileStream = fs.createReadStream(filePath);
+
+    const driveRes = await drive.files.create({
+      requestBody: {
+        name: cleanName,
+        parents: [folderId],
+      },
+      media: {
+        mimeType: mimeType || "image/webp",
+        body: fileStream,
+      },
+      fields: "id, name, mimeType, size, webViewLink, webContentLink",
+    });
+
+    const driveFileId = driveRes.data?.id;
+    if (!driveFileId) return null;
+
+    const stats = fs.existsSync(filePath) ? fs.statSync(filePath) : { size: 0 };
+    const mediaDoc = await GoogleDriveMedia.create({
+      driveFileId,
+      fileName: cleanName,
+      mimeType: mimeType || "image/webp",
+      fileSize: Number(driveRes.data.size) || stats.size,
+      owner: accountEmail,
+      folderId,
+      isTest: false,
+      uploadedBy: userId || null,
+    });
+
+    const backendBase = (process.env.BACKEND_URL || "").replace(/\/+$/, "");
+    mediaDoc.deliveryUrl = backendBase
+      ? `${backendBase}/api/google-drive/media/${mediaDoc._id}`
+      : `/api/google-drive/media/${mediaDoc._id}`;
+    await mediaDoc.save();
+
+    return {
+      driveFileId,
+      mediaDocId: mediaDoc._id,
+      deliveryUrl: mediaDoc.deliveryUrl,
+      webViewLink: driveRes.data.webViewLink,
+      webContentLink: driveRes.data.webContentLink,
+    };
+  } catch (err) {
+    console.warn("[Avatar Drive] Upload to Google Drive failed or not configured, using local storage:", err.message);
+    return null;
+  }
+}
 
 // @route   GET /api/profile/me
 // @desc    Get current user's profile and privacy preferences
@@ -196,7 +262,7 @@ router.patch("/me", verifyToken, async (req, res) => {
 });
 
 // @route   POST /api/profile/avatar
-// @desc    Upload avatar image (max 500 KB WebP/JPEG/PNG)
+// @desc    Upload avatar image to Google Drive with local fallback
 // @access  Private (Authenticated)
 router.post("/avatar", verifyToken, upload.single("avatar"), async (req, res) => {
   try {
@@ -210,7 +276,20 @@ router.post("/avatar", verifyToken, upload.single("avatar"), async (req, res) =>
       return res.status(404).json({ success: false, message: "User not found." });
     }
 
-    // Remove old avatar file if local
+    // Attempt to upload to Google Drive under "Fazilnagar Avatars"
+    let finalAvatarUrl = relativeUrl;
+    const driveResult = await tryUploadAvatarToGoogleDrive({
+      filePath: req.file.path,
+      originalName: req.file.originalname,
+      mimeType: req.file.mimetype,
+      userId: req.user.id,
+    });
+
+    if (driveResult && driveResult.deliveryUrl) {
+      finalAvatarUrl = driveResult.deliveryUrl;
+    }
+
+    // Remove old local avatar file if it was a local path
     if (user.avatar && user.avatar.startsWith("/uploads/avatars/")) {
       const oldPath = path.join(__dirname, "..", user.avatar);
       if (fs.existsSync(oldPath)) {
@@ -220,13 +299,15 @@ router.post("/avatar", verifyToken, upload.single("avatar"), async (req, res) =>
       }
     }
 
-    user.avatar = relativeUrl;
+    user.avatar = finalAvatarUrl;
     await user.save();
 
     res.json({
       success: true,
-      message: "Avatar uploaded successfully.",
-      avatar: relativeUrl,
+      message: driveResult ? "Avatar uploaded to Google Drive successfully." : "Avatar uploaded successfully.",
+      avatar: finalAvatarUrl,
+      driveFileId: driveResult?.driveFileId || null,
+      storageType: driveResult ? "google_drive" : "local",
     });
   } catch (err) {
     console.error("Avatar Upload Error:", err);

@@ -98,14 +98,14 @@ export default function ProfileEdit() {
     setAvatarPreview(URL.createObjectURL(file));
   };
 
-  // Client-Side Image Compression: max 500 KB WebP
+  // Client-Side Image Compression: high-definition WebP (max 1200px)
   const compressImage = async (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          const maxDim = 600;
+          const maxDim = 1200; // High-definition 1200px max dimension
           let { width, height } = img;
           if (width > maxDim || height > maxDim) {
             if (width > height) {
@@ -120,6 +120,8 @@ export default function ProfileEdit() {
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext("2d");
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
           ctx.drawImage(img, 0, 0, width, height);
           canvas.toBlob(
             (blob) => {
@@ -127,7 +129,7 @@ export default function ProfileEdit() {
               else reject(new Error("Image compression failed"));
             },
             "image/webp",
-            0.82
+            0.92
           );
         };
         img.onerror = () => reject(new Error("Failed to load image"));
@@ -246,7 +248,7 @@ export default function ProfileEdit() {
         <form onSubmit={handleSave} className="space-y-6">
           {/* Avatar Upload */}
           <div className="flex flex-col sm:flex-row items-center gap-5 p-4 bg-slate-50 rounded-2xl border border-slate-200/80">
-            <div className="relative group w-20 h-20 rounded-full overflow-hidden bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center shrink-0">
+            <div className="relative group w-24 h-24 rounded-full overflow-hidden bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center shrink-0">
               <span className="absolute inset-0 flex items-center justify-center text-2xl font-black text-slate-500 bg-gradient-to-br from-slate-100 to-slate-200 select-none">
                 {(displayName || username || "F")[0]?.toUpperCase()}
               </span>
