@@ -36,7 +36,7 @@ import DirectionsModal from "./components/DirectionsModal";
 import NotificationCenter from "./components/NotificationCenter";
 import SplashScreen from "./components/SplashScreen";
 import { GlobalFloatingAndStickyAds } from "./components/AdvertisementSlot";
-import { Home, Compass, PhoneCall, Newspaper, Menu, X, ShieldAlert } from "lucide-react";
+import { Home, Compass, PhoneCall, Newspaper, Menu, X, ShieldAlert, MessageSquare } from "lucide-react";
 import seedPlaces from "./data/places.json";
 
 const MAIN_NAV_ITEMS = [
@@ -323,6 +323,20 @@ export default function App() {
             <div className="hidden sm:flex items-center gap-2.5 shrink-0">
               <NotificationCenter />
 
+              {/* Messages / नगर संवाद */}
+              <Link
+                to="/messages"
+                className={`min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl border flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-[#B8323C]/30 cursor-pointer ${
+                  location.pathname === "/messages"
+                    ? "bg-[#B8323C] text-white border-[#B8323C]"
+                    : "bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 border-slate-200"
+                }`}
+                aria-label="Town Messages"
+                title="Town Messages / नगर संवाद"
+              >
+                <MessageSquare className="w-5 h-5" />
+              </Link>
+
               {/* Admin Review Desk Icon-Only Control (Exactly ONE on desktop) */}
               {isAdmin && (
                 <Link
@@ -380,9 +394,21 @@ export default function App() {
               )}
             </div>
 
-            {/* Mobile Actions: Notification Bell + Review Desk + Add Story (Icon-Only Controls) */}
+            {/* Mobile Actions: Notification Bell + Messages + Review Desk + Add Story (Icon-Only Controls) */}
             <div className="flex sm:hidden items-center gap-1.5">
               <NotificationCenter />
+              <Link
+                to="/messages"
+                className={`min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl border flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-[#B8323C]/30 cursor-pointer ${
+                  location.pathname === "/messages"
+                    ? "bg-[#B8323C] text-white border-[#B8323C]"
+                    : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+                }`}
+                aria-label="Town Messages"
+                title="Town Messages / नगर संवाद"
+              >
+                <MessageSquare className="w-5 h-5 text-slate-700" />
+              </Link>
               {isAdmin && (
                 <Link
                   to="/admin/review"
