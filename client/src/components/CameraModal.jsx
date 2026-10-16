@@ -113,14 +113,14 @@ export default function CameraModal({ isOpen, onClose, onCapture }) {
           console.error("[Camera] All getUserMedia attempts failed:", e4);
           if (e4.name === "NotAllowedError" || e4.name === "PermissionDeniedError") {
             setPermissionError(
-              "Camera permission was blocked. Please click the lock 🔒 or camera icon in your browser address bar to allow camera access, or use the device camera button below."
+              "Camera permission was blocked. Please use the device camera button below."
             );
           } else if (e4.name === "NotFoundError" || e4.name === "DevicesNotFoundError") {
-            setPermissionError("No camera hardware detected on this device. You can capture or upload using the button below.");
+            setPermissionError("No camera hardware detected on this device. You can capture using the device camera button below.");
           } else if (e4.name === "NotReadableError" || e4.name === "TrackStartError") {
-            setPermissionError("Camera is currently in use by another application. Please close other camera apps and try again, or use device camera.");
+            setPermissionError("Camera is currently in use by another application. Please use the device camera button below.");
           } else {
-            setPermissionError("Unable to open camera: " + (e4.message || "Permission or hardware error"));
+            setPermissionError("Unable to open camera. Please use the device camera button below.");
           }
           setIsInitializing(false);
           return;
@@ -137,6 +137,24 @@ export default function CameraModal({ isOpen, onClose, onCapture }) {
         videoRef.current.srcObject = mediaStream;
         videoRef.current.play().catch(() => {});
       }
+    }
+  };
+
+  const isMobile =
+    typeof navigator !== "undefined" &&
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+
+  // Trigger native device camera file capture safely
+  const handleTriggerDeviceCamera = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (nativeFileInputRef.current) {
+      nativeFileInputRef.current.value = "";
+      nativeFileInputRef.current.click();
     }
   };
 
@@ -385,53 +403,38 @@ export default function CameraModal({ isOpen, onClose, onCapture }) {
           </div>
         </div>
 
-        {/* Hidden Native File Input for Fallback / Direct Device Camera */}
+        {/* Native File Input for Direct Device Camera */}
         <input
+          id="native-device-camera-input"
           ref={nativeFileInputRef}
           type="file"
           accept={mode === "video" ? "video/*" : "image/*"}
-          capture={facingMode === "environment" ? "environment" : "user"}
+          {...(isMobile ? { capture: facingMode === "environment" ? "environment" : "user" } : {})}
           onChange={handleNativeFileCapture}
-          className="hidden"
+          className="sr-only"
         />
 
         {/* Viewfinder / Preview Screen */}
         <div className="relative flex-1 min-h-[300px] sm:min-h-[360px] bg-black flex items-center justify-center overflow-hidden">
           {permissionError ? (
-            <div className="p-5 text-center max-w-sm space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 mx-auto flex items-center justify-center">
-                <AlertCircle className="w-6 h-6" />
+            <div className="p-6 text-center max-w-sm space-y-4">
+              <div className="w-14 h-14 rounded-2xl bg-red-500/10 text-red-400 mx-auto flex items-center justify-center">
+                <AlertCircle className="w-7 h-7" />
               </div>
-              <h4 className="text-sm font-bold text-white">Camera Access Required</h4>
-              <p className="text-xs text-slate-300 leading-relaxed">{permissionError}</p>
+              <div className="space-y-1">
+                <h4 className="text-sm sm:text-base font-bold text-white">Camera Access Required</h4>
+                <p className="text-xs text-slate-300 leading-relaxed">{permissionError}</p>
+              </div>
 
-              <div className="flex flex-col gap-2 pt-1">
+              <div className="pt-2">
                 <button
                   type="button"
-                  onClick={() => startCamera(facingMode, mode)}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#B8323C] hover:bg-red-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                  onClick={handleTriggerDeviceCamera}
+                  className="w-full inline-flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl bg-[#B8323C] hover:bg-red-700 active:scale-[0.98] text-white text-xs sm:text-sm font-bold transition shadow-lg cursor-pointer"
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Try Again / पुनः प्रयास करें</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => nativeFileInputRef.current?.click()}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-bold transition cursor-pointer border border-slate-700 hover:border-slate-600 shadow-sm"
-                >
-                  <Camera className="w-4 h-4 text-emerald-400" />
+                  <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   <span>Use Device Camera / डिवाइस कैमरा खोलें</span>
                 </button>
-              </div>
-
-              <div className="bg-slate-800/80 rounded-xl p-3 text-[11px] text-slate-300 text-left border border-slate-700/80 mt-2 space-y-1">
-                <p className="font-bold text-slate-200">💡 Quick permission guide:</p>
-                <p className="text-[10px] text-slate-400">
-                  • <strong>Laptop</strong>: Click the 🔒 lock or camera icon on the left of your URL bar &rarr; Turn Camera to <strong>Allow</strong> &rarr; Click "Try Again".
-                </p>
-                <p className="text-[10px] text-slate-400">
-                  • <strong>Phone</strong>: Tap the lock/tune icon or 'aA' in the search bar &rarr; Site Settings &rarr; Camera &rarr; Allow.
-                </p>
               </div>
             </div>
           ) : capturedPhotoUrl ? (
@@ -541,7 +544,7 @@ export default function CameraModal({ isOpen, onClose, onCapture }) {
                 {mode === "photo" ? (
                   <button
                     type="button"
-                    onClick={permissionError ? () => nativeFileInputRef.current?.click() : handleCapturePhoto}
+                    onClick={permissionError ? handleTriggerDeviceCamera : handleCapturePhoto}
                     disabled={isInitializing && !permissionError}
                     className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center hover:scale-105 active:scale-95 transition cursor-pointer disabled:opacity-40"
                     title={permissionError ? "Open Device Camera / कैमरा खोलें" : "Click to snap photo"}
@@ -560,7 +563,7 @@ export default function CameraModal({ isOpen, onClose, onCapture }) {
                 ) : (
                   <button
                     type="button"
-                    onClick={permissionError ? () => nativeFileInputRef.current?.click() : handleStartRecording}
+                    onClick={permissionError ? handleTriggerDeviceCamera : handleStartRecording}
                     disabled={isInitializing && !permissionError}
                     className="w-16 h-16 rounded-full border-4 border-red-500 flex items-center justify-center hover:scale-105 active:scale-95 transition cursor-pointer disabled:opacity-40"
                     title={permissionError ? "Open Device Camera / कैमरा खोलें" : "Start recording"}

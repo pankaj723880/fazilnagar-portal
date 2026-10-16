@@ -441,3 +441,36 @@ h1, h2, h3, h4, h5, h6, .civic-card, .civic-card * {
     gap: 16px;
   }
 }
+
+/* Regional Connectivity Map Flow Animations */
+@keyframes fazilnagarDashFlow {
+  from {
+    stroke-dashoffset: 28;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.fazilnagar-flow-line {
+  stroke-dasharray: 8 6;
+  animation: fazilnagarDashFlow 0.9s linear infinite;
+  filter: drop-shadow(0 0 6px rgba(184, 50, 60, 0.75));
+}
+
+.fazilnagar-static-line {
+  filter: drop-shadow(0 0 4px rgba(184, 50, 60, 0.5));
+}
+
+.fazilnagar-hub-icon-wrap {
+  background: transparent !important;
+  border: none !important;
+}
+
+.reg-city-icon,
+.reg-town-icon,
+.reg-village-dot-icon,
+.fazilnagar-traveling-dot-wrap {
+  background: transparent !important;
+  border: none !important;
+}

@@ -26,6 +26,7 @@ import {
 
 // Lazy-load Leaflet Map to eliminate render-blocking JS and main-thread freeze
 const TownInteractiveMap = lazy(() => import("../components/TownInteractiveMap"));
+const RegionalConnectivityMap = lazy(() => import("../components/RegionalConnectivityMap"));
 import {
   MapPin,
   ShieldCheck,
@@ -1208,6 +1209,45 @@ export default function TownPortal() {
                 ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* ========================================================
+          SECTION 5B: FAZILNAGAR & NEARBY PLACES (Regional Connectivity Map)
+          ======================================================== */}
+      <section id="regional-connectivity-section" className="py-16 bg-[#18232E] text-white border-y border-slate-800 content-visibility-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">
+                <Compass className="w-3.5 h-3.5" />
+                <span>Geospatial Hub & Network</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight font-heading">
+                Fazilnagar &amp; Nearby Places
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                फाजिलनगर और आसपास के गाँव एवं शहर &bull; Interactive regional hub showing all 126 verified block villages, nearby market towns &amp; connected cities.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-300 bg-slate-800/80 px-3.5 py-1.5 rounded-xl border border-slate-700/60 self-start md:self-auto shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-[#B8323C] animate-ping" />
+              <span>Fazilnagar Hub: 26.6827° N, 84.0498° E</span>
+            </div>
+          </div>
+
+          {/* Regional Map Component */}
+          <Suspense
+            fallback={
+              <div className="w-full h-[460px] sm:h-[540px] bg-slate-900 rounded-3xl border border-slate-800 flex flex-col items-center justify-center text-slate-400 gap-2">
+                <div className="w-8 h-8 border-2 border-slate-700 border-t-[#B8323C] rounded-full animate-spin" />
+                <span className="text-xs font-bold text-slate-300">Loading Regional Connectivity Map…</span>
+              </div>
+            }
+          >
+            <RegionalConnectivityMap />
+          </Suspense>
         </div>
       </section>
 
