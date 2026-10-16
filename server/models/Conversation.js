@@ -23,6 +23,11 @@ const conversationSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    groupDescription: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     groupAvatar: {
       type: String,
       default: "",

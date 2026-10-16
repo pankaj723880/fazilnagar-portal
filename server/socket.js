@@ -7,6 +7,15 @@ import ConversationMember from "./models/ConversationMember.js";
 import Message from "./models/Message.js";
 
 let io = null;
+const onlineUsers = new Map(); // userId -> Set of socket IDs
+
+export function getOnlineUsers() {
+  return Array.from(onlineUsers.keys());
+}
+
+export function isUserOnline(userId) {
+  return onlineUsers.has(String(userId));
+}
 
 export function initSocket(httpServer) {
   io = new SocketIOServer(httpServer, {
@@ -65,7 +74,30 @@ export function initSocket(httpServer) {
     if (userId) {
       // Join personal room for private notifications, requests, and badge updates
       socket.join(`user:${userId}`);
+
+      if (!onlineUsers.has(userId)) {
+        onlineUsers.set(userId, new Set());
+      }
+      const userSockets = onlineUsers.get(userId);
+      userSockets.add(socket.id);
+
+      if (userSockets.size === 1) {
+        io.emit("user_online", { userId });
+      }
+
+      // Update lastSeen in background
+      User.findByIdAndUpdate(userId, { lastSeen: new Date() }).catch(() => {});
     }
+
+    // Client requests list of all active online citizens
+    socket.on("get_online_users", (callback) => {
+      const activeIds = Array.from(onlineUsers.keys());
+      if (typeof callback === "function") {
+        callback({ success: true, onlineUserIds: activeIds });
+      } else {
+        socket.emit("online_users_list", { onlineUserIds: activeIds });
+      }
+    });
 
     // 1. Join Conversation Room (Server validates membership)
     socket.on("join_conversation", async (data, callback) => {
@@ -234,7 +266,17 @@ export function initSocket(httpServer) {
     });
 
     socket.on("disconnect", () => {
-      // socket disconnected
+      if (userId && onlineUsers.has(userId)) {
+        const userSockets = onlineUsers.get(userId);
+        userSockets.delete(socket.id);
+
+        if (userSockets.size === 0) {
+          onlineUsers.delete(userId);
+          const now = new Date();
+          io.emit("user_offline", { userId, lastSeen: now });
+          User.findByIdAndUpdate(userId, { lastSeen: now }).catch(() => {});
+        }
+      }
     });
   });
 

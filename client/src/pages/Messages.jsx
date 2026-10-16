@@ -3,11 +3,12 @@ import { Link } from "react-router-dom";
 import API from "../api";
 import { usePageSEO } from "../utils/seo";
 import { getAuthUser, clearAuthSession } from "../utils/authStorage";
-import { initClientSocket, getSocket } from "../socket";
+import { initClientSocket, getSocket, playMessageChime } from "../socket";
 import { maskEmail } from "./ProfileEdit";
 import UserSearch from "../components/UserSearch";
 import ConversationList from "../components/ConversationList";
 import ChatWindow from "../components/ChatWindow";
+import CreateGroupModal from "../components/CreateGroupModal";
 import {
   MessageSquare,
   Settings,
@@ -34,8 +35,10 @@ export default function Messages() {
   const [activeConversation, setActiveConversation] = useState(null);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [showSearchModal, setShowSearchModal] = useState(false);
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [onlineUserIds, setOnlineUserIds] = useState(new Set());
 
-  // Initialize socket and fetch profile
+  // Initialize socket and fetch profile & presence
   useEffect(() => {
     let isMounted = true;
 
@@ -44,9 +47,10 @@ export default function Messages() {
 
     async function loadData() {
       try {
-        const [profileRes, convRes] = await Promise.all([
+        const [profileRes, convRes, presenceRes] = await Promise.all([
           API.get("/profile/me"),
           API.get("/messages/conversations"),
+          API.get("/messages/presence").catch(() => ({ data: { onlineUserIds: [] } })),
         ]);
 
         if (!isMounted) return;
@@ -57,6 +61,9 @@ export default function Messages() {
         if (convRes.data?.conversations) {
           setConversations(convRes.data.conversations);
         }
+        if (presenceRes.data?.onlineUserIds) {
+          setOnlineUserIds(new Set(presenceRes.data.onlineUserIds.map(String)));
+        }
       } catch (err) {
         console.error("Data load error:", err);
       } finally {
@@ -66,7 +73,7 @@ export default function Messages() {
 
     loadData();
 
-    // Listen for socket events for conversation updates
+    // Listen for socket events
     let socket;
     try {
       socket = getSocket();
@@ -75,7 +82,13 @@ export default function Messages() {
     }
 
     if (socket) {
-      const handleConvUpdated = () => {
+      const handleConvUpdated = (data) => {
+        // Play notification chime for incoming messages not sent by self
+        const senderId = data?.lastMessage?.sender;
+        if (senderId && String(senderId) !== String(currentUserId)) {
+          playMessageChime();
+        }
+
         // Refetch conversation list when an update or message arrives
         API.get("/messages/conversations")
           .then((res) => {
@@ -86,20 +99,57 @@ export default function Messages() {
           .catch(() => {});
       };
 
+      const handleUserOnline = ({ userId }) => {
+        if (!userId) return;
+        setOnlineUserIds((prev) => new Set(prev).add(String(userId)));
+      };
+
+      const handleUserOffline = ({ userId }) => {
+        if (!userId) return;
+        setOnlineUserIds((prev) => {
+          const next = new Set(prev);
+          next.delete(String(userId));
+          return next;
+        });
+      };
+
+      const handleOnlineUsersList = ({ onlineUserIds: list }) => {
+        if (Array.isArray(list)) {
+          setOnlineUserIds(new Set(list.map(String)));
+        }
+      };
+
       socket.on("conversation_updated", handleConvUpdated);
       socket.on("conversation_read", handleConvUpdated);
+      socket.on("conversation_created", handleConvUpdated);
+      socket.on("conversation_left", handleConvUpdated);
+      socket.on("user_online", handleUserOnline);
+      socket.on("user_offline", handleUserOffline);
+      socket.on("online_users_list", handleOnlineUsersList);
+
+      // Query active citizens from socket server
+      socket.emit("get_online_users", (res) => {
+        if (isMounted && res?.success && Array.isArray(res.onlineUserIds)) {
+          setOnlineUserIds(new Set(res.onlineUserIds.map(String)));
+        }
+      });
 
       return () => {
         isMounted = false;
         socket.off("conversation_updated", handleConvUpdated);
         socket.off("conversation_read", handleConvUpdated);
+        socket.off("conversation_created", handleConvUpdated);
+        socket.off("conversation_left", handleConvUpdated);
+        socket.off("user_online", handleUserOnline);
+        socket.off("user_offline", handleUserOffline);
+        socket.off("online_users_list", handleOnlineUsersList);
       };
     }
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [currentUserId]);
 
   const handleSignOut = () => {
     clearAuthSession();
@@ -132,12 +182,22 @@ export default function Messages() {
     }
   };
 
+  const handleGroupCreated = (newGroup) => {
+    setConversations((prev) => [
+      newGroup,
+      ...prev.filter((c) => (c._id || c.id) !== (newGroup._id || newGroup.id)),
+    ]);
+    setActiveConversation(newGroup);
+  };
+
   const handleConversationUpdated = (update) => {
     setConversations((prev) =>
       prev.map((c) => {
-        if ((c.id || c._id) === update.conversationId) {
+        if ((c.id || c._id) === update.conversationId || (c.id || c._id) === update._id) {
           return {
             ...c,
+            groupName: update.groupName || c.groupName,
+            groupDescription: update.groupDescription !== undefined ? update.groupDescription : c.groupDescription,
             status: update.status || c.status,
             lastMessage: update.lastMessage || c.lastMessage,
             lastMessageAt: new Date().toISOString(),
@@ -223,7 +283,9 @@ export default function Messages() {
             selectedId={activeConversation?._id || activeConversation?.id}
             onSelectConversation={(conv) => setActiveConversation(conv)}
             onOpenSearch={() => setShowSearchModal(true)}
+            onOpenNewGroup={() => setShowCreateGroupModal(true)}
             loading={loadingConversations}
+            onlineUserIds={onlineUserIds}
           />
         </div>
 
@@ -239,6 +301,7 @@ export default function Messages() {
               currentUserId={currentUserId}
               onBack={() => setActiveConversation(null)}
               onConversationUpdated={handleConversationUpdated}
+              onlineUserIds={onlineUserIds}
             />
           ) : (
             <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs h-[650px] flex flex-col items-center justify-center p-8 text-center space-y-4">
@@ -281,6 +344,13 @@ export default function Messages() {
           </div>
         </div>
       )}
+
+      {/* Create Group Modal */}
+      <CreateGroupModal
+        isOpen={showCreateGroupModal}
+        onClose={() => setShowCreateGroupModal(false)}
+        onGroupCreated={handleGroupCreated}
+      />
 
       {/* Security Tip Footer */}
       <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200/60 text-amber-900 text-xs flex items-center gap-2.5">

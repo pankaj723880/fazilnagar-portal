@@ -10,7 +10,11 @@
     "test": "node --test tests/locationRegression.test.js tests/notificationRegression.test.js tests/adminReviewDeskSecurity.test.js",
     "test:search": "node --test tests/userSearch.test.js",
     "test:chat": "node --test tests/chatPhase3.test.js",
-    "test:moderation": "node --test tests/moderationPhase4.test.js"
+    "test:moderation": "node --test tests/moderationPhase4.test.js",
+    "test:edit-delete": "node --test tests/editDeletePhase5.test.js",
+    "test:group": "node --test tests/groupMessagingPhase6.test.js",
+    "test:media": "node --test tests/mediaAttachmentsPhase7.test.js",
+    "test:presence": "node --test tests/presenceOfflinePhase8.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
