@@ -1,27 +1,71 @@
 import { useState } from "react";
-import { MessageSquare, UserPlus, ShieldAlert, Clock, Inbox, Sparkles, Users } from "lucide-react";
+import {
+  MessageSquare,
+  UserPlus,
+  ShieldAlert,
+  Clock,
+  Inbox,
+  Sparkles,
+  Users,
+  Search,
+  X,
+  Image as ImageIcon,
+  CheckCheck,
+  Pin,
+  BellOff,
+  Video,
+  Mic,
+  FileText,
+} from "lucide-react";
 
 export default function ConversationList({
-  conversations,
+  conversations = [],
   selectedId,
   onSelectConversation,
   onOpenSearch,
   onOpenNewGroup,
-  loading,
+  loading = false,
   onlineUserIds = new Set(),
 }) {
-  const [filter, setFilter] = useState("all"); // 'all' | 'groups' | 'requests'
+  const [filter, setFilter] = useState("all"); // 'all' | 'direct' | 'groups' | 'unread' | 'requests'
+  const [searchQuery, setSearchQuery] = useState("");
 
   const activeConversations = conversations.filter((c) => c.status === "active");
   const requestConversations = conversations.filter((c) => c.status === "pending" && !c.isInitiator);
   const groupConversations = activeConversations.filter((c) => c.type === "group");
+  const directConversations = activeConversations.filter((c) => c.type === "direct" || !c.type);
+  const unreadConversations = activeConversations.filter((c) => (c.unreadCount || 0) > 0);
 
-  const displayedList =
-    filter === "requests"
-      ? requestConversations
-      : filter === "groups"
-      ? groupConversations
-      : activeConversations;
+  let displayedList = [...activeConversations];
+  if (filter === "requests") displayedList = [...requestConversations];
+  else if (filter === "groups") displayedList = [...groupConversations];
+  else if (filter === "direct") displayedList = [...directConversations];
+  else if (filter === "unread") displayedList = [...unreadConversations];
+
+  // Search query filter
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase();
+    displayedList = displayedList.filter((c) => {
+      const isGrp = c.type === "group";
+      const name = (isGrp ? c.groupName : c.otherUser?.name) || "";
+      const username = c.otherUser?.username || "";
+      const lastMsg = c.lastMessage?.text || "";
+      return (
+        name.toLowerCase().includes(q) ||
+        username.toLowerCase().includes(q) ||
+        lastMsg.toLowerCase().includes(q)
+      );
+    });
+  }
+
+  // Pinned conversations sort to top
+  displayedList.sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    const timeA = new Date(a.lastMessageAt || a.lastMessage?.createdAt || 0).getTime();
+    const timeB = new Date(b.lastMessageAt || b.lastMessage?.createdAt || 0).getTime();
+    return timeB - timeA;
+  });
 
   // Format short timestamp
   const formatTime = (dateStr) => {
@@ -39,14 +83,14 @@ export default function ConversationList({
   return (
     <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs flex flex-col h-[650px] overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-2">
+      <div className="p-3.5 border-b border-slate-100 flex items-center justify-between gap-2 bg-slate-50/40">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-[#B8323C] text-white flex items-center justify-center shadow-2xs">
             <MessageSquare className="w-4 h-4" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-slate-900 leading-tight">Messages / संवाद</h2>
-            <p className="text-[10px] text-slate-400">Fazilnagar Citizens</p>
+            <h2 className="text-xs font-bold text-slate-900 leading-tight">Messages / संवाद</h2>
+            <p className="text-[10px] text-slate-400 font-medium">Fazilnagar Town</p>
           </div>
         </div>
 
@@ -57,79 +101,100 @@ export default function ConversationList({
             title="Create Town Group / नया समूह"
           >
             <Users className="w-3.5 h-3.5 text-[#B8323C]" />
-            <span className="hidden sm:inline">New Group</span>
+            <span className="hidden xl:inline">Group</span>
           </button>
 
           <button
             onClick={onOpenSearch}
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition shadow-2xs cursor-pointer"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#B8323C] hover:bg-red-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
             title="Search Citizens / नया संवाद"
           >
-            <UserPlus className="w-3.5 h-3.5 text-[#B8323C]" />
-            <span>Chat</span>
+            <UserPlus className="w-3.5 h-3.5" />
+            <span>+ Chat</span>
           </button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-slate-100 px-3 pt-2 gap-2 text-xs font-semibold">
-        <button
-          onClick={() => setFilter("all")}
-          className={`pb-2 px-2 border-b-2 transition cursor-pointer ${
-            filter === "all"
-              ? "border-[#B8323C] text-[#B8323C]"
-              : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          All ({activeConversations.length})
-        </button>
+      {/* Instant Search Bar */}
+      <div className="p-2.5 border-b border-slate-100 bg-white">
+        <div className="relative">
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Filter conversations... / खोजें..."
+            className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#B8323C]"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
 
-        {groupConversations.length > 0 && (
+      {/* Filter Chips */}
+      <div className="px-3 py-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none border-b border-slate-100 text-[11px] font-bold bg-slate-50/30">
+        {[
+          { id: "all", label: "All", count: activeConversations.length },
+          { id: "unread", label: "Unread", count: unreadConversations.length },
+          { id: "direct", label: "Direct", count: directConversations.length },
+          { id: "groups", label: "Groups", count: groupConversations.length },
+          { id: "requests", label: "Requests", count: requestConversations.length },
+        ].map((tab) => (
           <button
-            onClick={() => setFilter("groups")}
-            className={`pb-2 px-2 border-b-2 transition cursor-pointer ${
-              filter === "groups"
-                ? "border-[#B8323C] text-[#B8323C]"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+            key={tab.id}
+            onClick={() => setFilter(tab.id)}
+            className={`px-2.5 py-1 rounded-full whitespace-nowrap transition flex items-center gap-1 cursor-pointer ${
+              filter === tab.id
+                ? "bg-[#B8323C] text-white shadow-2xs"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
-            Groups ({groupConversations.length})
+            <span>{tab.label}</span>
+            {tab.count > 0 && (
+              <span
+                className={`text-[9px] px-1 rounded-full font-black ${
+                  filter === tab.id ? "bg-white text-[#B8323C]" : "bg-slate-200 text-slate-700"
+                }`}
+              >
+                {tab.count}
+              </span>
+            )}
           </button>
-        )}
-
-        <button
-          onClick={() => setFilter("requests")}
-          className={`pb-2 px-2 border-b-2 flex items-center gap-1.5 transition ${
-            filter === "requests"
-              ? "border-[#B8323C] text-[#B8323C]"
-              : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          <span>Requests</span>
-          {requestConversations.length > 0 && (
-            <span className="w-4 h-4 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
-              {requestConversations.length}
-            </span>
-          )}
-        </button>
+        ))}
       </div>
 
       {/* Conversation List */}
       <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
         {loading ? (
-          <div className="p-8 text-center text-xs text-slate-400">Loading chats...</div>
+          <div className="p-4 space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center gap-3 animate-pulse">
+                <div className="w-10 h-10 rounded-full bg-slate-100" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3 bg-slate-100 rounded w-2/3" />
+                  <div className="h-2.5 bg-slate-100 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : displayedList.length === 0 ? (
           <div className="p-8 text-center space-y-2">
             <div className="w-10 h-10 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center mx-auto">
               <Inbox className="w-5 h-5" />
             </div>
             <p className="text-xs font-bold text-slate-700">
-              {filter === "requests" ? "No message requests" : "No conversations yet"}
+              {filter === "requests" ? "No message requests" : "No conversations found"}
             </p>
             <p className="text-[11px] text-slate-400 max-w-xs mx-auto">
               {filter === "requests"
                 ? "When citizens with restricted privacy reach out, their requests appear here."
-                : "Find citizens using the search button above to start your first chat."}
+                : "Find citizens using the '+ Chat' button above to start your first conversation."}
             </p>
           </div>
         ) : (
@@ -147,7 +212,7 @@ export default function ConversationList({
                 key={c.id || c._id}
                 onClick={() => onSelectConversation(c)}
                 className={`w-full text-left p-3.5 flex items-start gap-3 transition cursor-pointer ${
-                  isSelected ? "bg-red-50/70 border-r-2 border-[#B8323C]" : "hover:bg-slate-50"
+                  isSelected ? "bg-red-50/70 border-r-3 border-[#B8323C]" : "hover:bg-slate-50"
                 }`}
               >
                 {/* Avatar */}
@@ -191,9 +256,17 @@ export default function ConversationList({
                         </span>
                       )}
                     </div>
-                    <span className="text-[10px] text-slate-400 shrink-0 font-medium">
-                      {formatTime(c.lastMessageAt || c.lastMessage?.createdAt)}
-                    </span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {c.isPinned && (
+                        <Pin className="w-3 h-3 text-[#B8323C] shrink-0" title="Pinned conversation / पिन किया हुआ" />
+                      )}
+                      {c.isMuted && (
+                        <BellOff className="w-3 h-3 text-slate-400 shrink-0" title="Muted / म्यूट" />
+                      )}
+                      <span className="text-[10px] text-slate-400 font-medium">
+                        {formatTime(c.lastMessageAt || c.lastMessage?.createdAt)}
+                      </span>
+                    </div>
                   </div>
 
                   {isGroup ? (
@@ -207,17 +280,24 @@ export default function ConversationList({
                   ) : null}
 
                   <div className="flex items-center justify-between gap-2 mt-1">
-                    <p
-                      className={`text-xs truncate ${
-                        unread > 0 ? "font-bold text-slate-900" : "text-slate-500"
-                      }`}
-                    >
-                      {c.lastMessage?.text || (isGroup ? "Group created" : "Started conversation")}
+                    <p className="text-[11px] text-slate-500 truncate flex items-center gap-1">
+                      {c.lastMessage?.type === "image" ? (
+                        <ImageIcon className="w-3 h-3 text-slate-400 shrink-0" />
+                      ) : c.lastMessage?.type === "video" ? (
+                        <Video className="w-3 h-3 text-slate-400 shrink-0" />
+                      ) : c.lastMessage?.type === "audio" ? (
+                        <Mic className="w-3 h-3 text-slate-400 shrink-0" />
+                      ) : c.lastMessage?.type === "document" ? (
+                        <FileText className="w-3 h-3 text-slate-400 shrink-0" />
+                      ) : null}
+                      <span>
+                        {c.lastMessage?.text ||
+                          (isGroup ? "Group conversation created" : "Started a direct conversation")}
+                      </span>
                     </p>
-
                     {unread > 0 && (
-                      <span className="px-1.5 py-0.2 rounded-full bg-[#B8323C] text-white font-bold text-[10px] shrink-0">
-                        {unread > 9 ? "9+" : unread}
+                      <span className="px-1.5 py-0.2 rounded-full bg-[#B8323C] text-white text-[9px] font-black shrink-0">
+                        {unread}
                       </span>
                     )}
                   </div>

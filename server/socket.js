@@ -265,6 +265,62 @@ export function initSocket(httpServer) {
       }
     });
 
+    // 6. Message Reaction
+    socket.on("message_react", async (data, callback) => {
+      try {
+        const { conversationId, messageId, emoji } = data || {};
+        if (!conversationId || !messageId || !emoji) return;
+
+        const membership = await ConversationMember.findOne({
+          conversation: conversationId,
+          user: userId,
+          status: "active",
+        });
+        if (!membership) return;
+
+        const message = await Message.findOne({ _id: messageId, conversation: conversationId });
+        if (!message || message.isDeletedForEveryone) return;
+
+        if (!Array.isArray(message.reactions)) message.reactions = [];
+
+        const cleanEmoji = emoji.trim();
+        const existingIndex = message.reactions.findIndex(
+          (r) => r.user && r.user.toString() === userId.toString()
+        );
+
+        if (existingIndex > -1) {
+          if (message.reactions[existingIndex].emoji === cleanEmoji) {
+            message.reactions.splice(existingIndex, 1);
+          } else {
+            message.reactions[existingIndex].emoji = cleanEmoji;
+            message.reactions[existingIndex].createdAt = new Date();
+          }
+        } else {
+          message.reactions.push({
+            emoji: cleanEmoji,
+            user: userId,
+            createdAt: new Date(),
+          });
+        }
+
+        await message.save();
+
+        const updated = await Message.findById(messageId)
+          .populate("reactions.user", "_id name username avatar")
+          .lean();
+
+        io.to(`conv:${conversationId}`).emit("message_reaction_updated", {
+          conversationId,
+          messageId,
+          reactions: updated.reactions || [],
+        });
+
+        if (callback) callback({ success: true, reactions: updated.reactions || [] });
+      } catch (err) {
+        console.error("Socket message_react error:", err);
+      }
+    });
+
     socket.on("disconnect", () => {
       if (userId && onlineUsers.has(userId)) {
         const userSockets = onlineUsers.get(userId);

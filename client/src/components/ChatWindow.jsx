@@ -1,8 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import API from "../api";
-import { getSocket } from "../socket";
+import { getSocket, playMessageChime } from "../socket";
 import ReportModal from "./ReportModal";
 import GroupDetailsModal from "./GroupDetailsModal";
+import {
+  getCachedMessages,
+  setCachedMessages,
+  getQueuedMessages,
+  enqueueOutgoingMessage,
+  removeQueuedMessage,
+} from "../utils/offlineChatStorage";
 import {
   Send,
   Loader2,
@@ -27,7 +34,24 @@ import {
   LogOut,
   Image as ImageIcon,
   Download,
+  Menu,
+  Search,
+  Smile,
+  Paperclip,
+  Camera,
+  Mic,
+  FileText,
+  Video,
+  Cloud,
+  RotateCw,
 } from "lucide-react";
+
+const POPULAR_EMOJIS = [
+  "😊", "😂", "🙏", "👍", "❤️", "🔥", "🎉", "👏",
+  "🤝", "🇮🇳", "💐", "🚩", "☕", "✨", "💯", "🤲",
+  "😍", "🥰", "😎", "🥺", "🤔", "😴", "🥳", "✌️",
+  "💪", "👋", "👌", "⭐", "🌹", "🌞", "😇", "🙌"
+];
 
 export default function ChatWindow({
   conversation,
@@ -35,6 +59,9 @@ export default function ChatWindow({
   onBack,
   onConversationUpdated,
   onlineUserIds = new Set(),
+  onOpenMobileMenu,
+  onToggleInfoPanel,
+  showInfoPanel = false,
 }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,16 +79,30 @@ export default function ChatWindow({
   const [isBlocked, setIsBlocked] = useState(conversation?.status === "blocked");
   const [showGroupDetails, setShowGroupDetails] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("image");
   const [filePreview, setFilePreview] = useState(null);
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatusText, setUploadStatusText] = useState("");
   const [lightboxImage, setLightboxImage] = useState(null);
   const [isNetworkOnline, setIsNetworkOnline] = useState(
     typeof navigator !== "undefined" ? navigator.onLine : true
   );
+  const [showChatSearch, setShowChatSearch] = useState(false);
+  const [chatSearchQuery, setChatSearchQuery] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [activeReactionMsgId, setActiveReactionMsgId] = useState(null);
+
+  const abortControllerRef = useRef(null);
 
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
+  const videoInputRef = useRef(null);
+  const audioInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  const docInputRef = useRef(null);
 
   const conversationId = conversation?._id || conversation?.id;
   const isGroup = conversation?.type === "group";
@@ -72,37 +113,39 @@ export default function ChatWindow({
 
   // Flush queued messages when connection is restored
   const flushQueuedMessages = async () => {
-    setMessages((prev) => {
-      const queuedList = prev.filter((m) => m.status === "queued" || m.status === "failed");
-      if (queuedList.length === 0) return prev;
+    if (!conversationId) return;
+    const queuedFromStorage = getQueuedMessages(conversationId);
+    if (!queuedFromStorage || queuedFromStorage.length === 0) return;
 
-      // Asynchronously flush queued messages in order
-      (async () => {
-        for (const msg of queuedList) {
-          try {
-            const res = await API.post(`/messages/conversations/${conversationId}/messages`, {
-              body: msg.body,
-              type: msg.type || "text",
-              replyTo: msg.replyTo?._id,
-              clientMessageId: msg.clientMessageId,
-            });
-            if (res.data?.success) {
-              setMessages((cur) =>
-                cur.map((m) =>
-                  m.clientMessageId === msg.clientMessageId
-                    ? { ...res.data.message, status: "sent" }
-                    : m
-                )
-              );
-            }
-          } catch {
-            // Keep status if still unreachable
-          }
+    let anySent = false;
+    for (const msg of queuedFromStorage) {
+      try {
+        const res = await API.post(`/messages/conversations/${conversationId}/messages`, {
+          body: msg.body,
+          type: msg.type || "text",
+          replyTo: msg.replyTo?._id,
+          clientMessageId: msg.clientMessageId,
+        });
+        if (res.data?.success && res.data.message) {
+          removeQueuedMessage(conversationId, msg.clientMessageId);
+          anySent = true;
+          setMessages((cur) => {
+            const updated = cur.map((m) =>
+              m.clientMessageId === msg.clientMessageId
+                ? { ...res.data.message, status: "sent" }
+                : m
+            );
+            setCachedMessages(conversationId, updated);
+            return updated;
+          });
         }
-      })();
-
-      return prev;
-    });
+      } catch (err) {
+        console.warn("[Offline Sync] Failed to flush queued message:", msg.clientMessageId, err.message);
+      }
+    }
+    if (anySent) {
+      playMessageChime();
+    }
   };
 
   // Online / offline listeners
@@ -129,23 +172,38 @@ export default function ChatWindow({
     messagesEndRef.current?.scrollIntoView({ behavior });
   };
 
-  // Fetch initial message history
+  // Fetch initial message history with instant local cache hydration
   useEffect(() => {
     let isCancelled = false;
     if (!conversationId) return;
 
-    async function fetchMessages() {
+    // 1. Immediately hydrate from local cache to avoid empty screen
+    const cached = getCachedMessages(conversationId);
+    const queued = getQueuedMessages(conversationId);
+    if (cached.length > 0 || queued.length > 0) {
+      setMessages([...cached, ...queued]);
+      setLoading(false);
+      setTimeout(() => scrollToBottom("auto"), 20);
+    } else {
       setLoading(true);
+    }
+
+    async function fetchMessages() {
       try {
         const res = await API.get(`/messages/conversations/${conversationId}/messages`, {
           params: { limit: 30 },
         });
         if (!isCancelled && res.data?.success) {
-          setMessages(res.data.messages || []);
+          const fresh = res.data.messages || [];
+          setCachedMessages(conversationId, fresh);
+
+          // Merge fresh messages with local pending queue
+          const currentQueue = getQueuedMessages(conversationId);
+          setMessages([...fresh, ...currentQueue]);
           setHasMore(Boolean(res.data.hasMore));
         }
       } catch (err) {
-        console.error("Failed to load messages:", err);
+        console.warn("Retained cached messages due to network fetch error:", err.message);
       } finally {
         if (!isCancelled) {
           setLoading(false);
@@ -155,6 +213,10 @@ export default function ChatWindow({
     }
 
     fetchMessages();
+
+    if (typeof navigator !== "undefined" && navigator.onLine) {
+      flushQueuedMessages();
+    }
 
     return () => {
       isCancelled = true;
@@ -256,6 +318,16 @@ export default function ChatWindow({
       }
     };
 
+    const handleReactionUpdated = (data) => {
+      if (data?.conversationId === conversationId && data?.messageId) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            (m._id || m.id) === data.messageId ? { ...m, reactions: data.reactions } : m
+          )
+        );
+      }
+    };
+
     socket.on("new_message", handleNewMessage);
     socket.on("user_typing", handleUserTyping);
     socket.on("user_stop_typing", handleUserStopTyping);
@@ -263,6 +335,7 @@ export default function ChatWindow({
     socket.on("message_deleted", handleMessageDeleted);
     socket.on("group_updated", handleGroupUpdated);
     socket.on("conversation_left", handleConversationLeft);
+    socket.on("message_reaction_updated", handleReactionUpdated);
 
     return () => {
       socket.emit("leave_conversation", { conversationId });
@@ -273,8 +346,58 @@ export default function ChatWindow({
       socket.off("message_deleted", handleMessageDeleted);
       socket.off("group_updated", handleGroupUpdated);
       socket.off("conversation_left", handleConversationLeft);
+      socket.off("message_reaction_updated", handleReactionUpdated);
     };
   }, [conversationId, currentUserId, conversation, onConversationUpdated, onBack]);
+
+  // Toggle emoji reaction on message
+  const handleToggleReaction = async (messageId, emoji) => {
+    setActiveReactionMsgId(null);
+    try {
+      // Optimistic reaction update
+      setMessages((prev) =>
+        prev.map((m) => {
+          if ((m._id || m.id) !== messageId) return m;
+          const currentReactions = [...(m.reactions || [])];
+          const myIndex = currentReactions.findIndex(
+            (r) => (r.user?._id || r.user?.id || r.user) === currentUserId
+          );
+          if (myIndex > -1) {
+            if (currentReactions[myIndex].emoji === emoji) {
+              currentReactions.splice(myIndex, 1);
+            } else {
+              currentReactions[myIndex] = {
+                ...currentReactions[myIndex],
+                emoji,
+                createdAt: new Date().toISOString(),
+              };
+            }
+          } else {
+            currentReactions.push({
+              emoji,
+              user: { _id: currentUserId, name: "You" },
+              createdAt: new Date().toISOString(),
+            });
+          }
+          return { ...m, reactions: currentReactions };
+        })
+      );
+
+      const res = await API.post(
+        `/messages/conversations/${conversationId}/messages/${messageId}/react`,
+        { emoji }
+      );
+      if (res.data?.success && res.data.reactions) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            (m._id || m.id) === messageId ? { ...m, reactions: res.data.reactions } : m
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Reaction failed:", err);
+    }
+  };
 
   // Load older messages (pagination)
   const handleLoadOlder = async () => {
@@ -398,66 +521,208 @@ export default function ChatWindow({
     return `${origin}${url}`;
   };
 
-  // Handle file selection from file input
-  const handleFileSelect = (e) => {
+  const formatFileSize = (bytes) => {
+    if (!bytes || bytes <= 0) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  // Handle file selection from file input (up to 1 GB)
+  const handleFileSelect = (e, explicitCategory = null) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-    if (!allowed.includes(file.type.toLowerCase())) {
-      alert("Only JPEG, PNG, or WebP images are allowed.");
+    const blocked = [".exe", ".bat", ".cmd", ".sh", ".php", ".vbs", ".msi", ".jar", ".scr", ".com", ".pif", ".js", ".bin"];
+    const ext = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+    if (blocked.includes(ext)) {
+      alert("Executable and script files cannot be sent for security reasons.");
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Image size must be under 5 MB.");
+    if (file.size > 1024 * 1024 * 1024) {
+      alert("File size exceeds 1 GB limit. Please select a file under 1 GB.");
       return;
+    }
+
+    let category = explicitCategory;
+    if (!category) {
+      if (file.type.startsWith("image/") || [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"].includes(ext)) {
+        category = "image";
+      } else if (file.type.startsWith("video/") || [".mp4", ".webm", ".mov", ".mkv"].includes(ext)) {
+        category = "video";
+      } else if (file.type.startsWith("audio/") || [".mp3", ".wav", ".m4a", ".ogg"].includes(ext)) {
+        category = "audio";
+      } else {
+        category = "document";
+      }
     }
 
     setSelectedFile(file);
-    setFilePreview(URL.createObjectURL(file));
+    setSelectedCategory(category);
+    if (category === "image") {
+      setFilePreview(URL.createObjectURL(file));
+    } else {
+      setFilePreview(null);
+    }
   };
 
   // Clear selected file
   const handleClearFile = () => {
     if (filePreview) URL.revokeObjectURL(filePreview);
     setSelectedFile(null);
+    setSelectedCategory("image");
     setFilePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
+    if (videoInputRef.current) videoInputRef.current.value = "";
+    if (audioInputRef.current) audioInputRef.current.value = "";
+    if (docInputRef.current) docInputRef.current.value = "";
   };
 
-  // Send photo attachment
+  // Cancel ongoing upload
+  const handleCancelUpload = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setUploadingMedia(false);
+    setUploadProgress(0);
+    setUploadStatusText("");
+  };
+
+  // Send attachment (photo, video, audio, or document) supporting up to 1 GB with chunking & progress
   const handleSendMedia = async () => {
     if (!selectedFile || !conversationId || uploadingMedia) return;
 
     setUploadingMedia(true);
-    const formData = new FormData();
-    formData.append("image", selectedFile);
-    if (inputText.trim()) {
-      formData.append("caption", inputText.trim());
-    }
-    if (replyTarget) {
-      formData.append("replyTo", replyTarget._id);
-    }
+    setUploadProgress(0);
+    setUploadStatusText("Preparing attachment...");
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     const tempId = `temp-media-${Date.now()}`;
-    formData.append("clientMessageId", tempId);
+    const fileSize = selectedFile.size;
+    const CHUNK_THRESHOLD = 10 * 1024 * 1024; // 10 MB threshold for chunking
 
     try {
-      const res = await API.post(`/messages/conversations/${conversationId}/media`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      if (fileSize > CHUNK_THRESHOLD) {
+        // --- CHUNKED UPLOAD PIPELINE FOR LARGE FILES UP TO 1 GB ---
+        setUploadStatusText("Initializing large file session...");
+        const initRes = await API.post(
+          `/messages/conversations/${conversationId}/upload/init`,
+          {
+            fileName: selectedFile.name,
+            fileSize: selectedFile.size,
+            mimeType: selectedFile.type,
+          },
+          { signal: controller.signal }
+        );
 
-      if (res.data?.success && res.data.message) {
-        setMessages((prev) => [...prev, res.data.message]);
-        handleClearFile();
-        setInputText("");
-        setReplyTarget(null);
-        setTimeout(() => scrollToBottom("smooth"), 50);
+        if (!initRes.data?.success || !initRes.data.uploadId) {
+          throw new Error(initRes.data?.message || "Failed to initialize upload session.");
+        }
+
+        const { uploadId } = initRes.data;
+        const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB per chunk
+        const totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
+
+        for (let i = 0; i < totalChunks; i++) {
+          if (controller.signal.aborted) throw new Error("Upload cancelled by user.");
+
+          const start = i * CHUNK_SIZE;
+          const end = Math.min(start + CHUNK_SIZE, fileSize);
+          const chunkBlob = selectedFile.slice(start, end);
+
+          const chunkFormData = new FormData();
+          chunkFormData.append("uploadId", uploadId);
+          chunkFormData.append("chunkIndex", i);
+          chunkFormData.append("totalChunks", totalChunks);
+          chunkFormData.append("chunk", chunkBlob, `chunk_${i}`);
+
+          setUploadStatusText(
+            `Uploading chunk ${i + 1} of ${totalChunks} (${formatFileSize(start)} / ${formatFileSize(fileSize)})...`
+          );
+
+          await API.post(`/messages/conversations/${conversationId}/upload/chunk`, chunkFormData, {
+            headers: { "Content-Type": "multipart/form-data" },
+            signal: controller.signal,
+          });
+
+          const pct = Math.round(((i + 1) / totalChunks) * 100);
+          setUploadProgress(pct);
+        }
+
+        // Finalize and assemble
+        setUploadStatusText("Securing & storing file in Google Drive...");
+        const completeRes = await API.post(
+          `/messages/conversations/${conversationId}/upload/complete`,
+          {
+            uploadId,
+            fileName: selectedFile.name,
+            totalChunks,
+            caption: inputText.trim(),
+            replyTo: replyTarget?._id,
+            clientMessageId: tempId,
+            mimeType: selectedFile.type,
+          },
+          { signal: controller.signal }
+        );
+
+        if (completeRes.data?.success && completeRes.data.message) {
+          setMessages((prev) => [...prev, completeRes.data.message]);
+          handleClearFile();
+          setInputText("");
+          setReplyTarget(null);
+          setTimeout(() => scrollToBottom("smooth"), 50);
+        }
+      } else {
+        // --- DIRECT UPLOAD WITH PROGRESS (< 10 MB) ---
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("image", selectedFile); // backwards compatibility
+        if (inputText.trim()) {
+          formData.append("caption", inputText.trim());
+        }
+        if (replyTarget) {
+          formData.append("replyTo", replyTarget._id);
+        }
+        formData.append("clientMessageId", tempId);
+
+        const res = await API.post(`/messages/conversations/${conversationId}/media`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+          signal: controller.signal,
+          onUploadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              setUploadProgress(pct);
+              setUploadStatusText(
+                `Uploading ${formatFileSize(progressEvent.loaded)} of ${formatFileSize(progressEvent.total)} (${pct}%)...`
+              );
+            }
+          },
+        });
+
+        if (res.data?.success && res.data.message) {
+          setMessages((prev) => [...prev, res.data.message]);
+          handleClearFile();
+          setInputText("");
+          setReplyTarget(null);
+          setTimeout(() => scrollToBottom("smooth"), 50);
+        }
       }
     } catch (err) {
-      alert("Failed to send image: " + (err.response?.data?.message || err.message));
+      if (err.name === "CanceledError" || err.message?.includes("cancelled")) {
+        // User aborted upload intentionally
+      } else {
+        alert("Failed to send attachment: " + (err.response?.data?.message || err.message));
+      }
     } finally {
       setUploadingMedia(false);
+      setUploadProgress(0);
+      setUploadStatusText("");
+      abortControllerRef.current = null;
     }
   };
 
@@ -492,7 +757,13 @@ export default function ChatWindow({
 
     // If offline, queue message immediately without failing
     if (!isNetworkOnline) {
-      setMessages((prev) => [...prev, { ...optimisticMsg, status: "queued" }]);
+      const queuedMsg = { ...optimisticMsg, status: "queued" };
+      enqueueOutgoingMessage(conversationId, queuedMsg);
+      setMessages((prev) => {
+        const nextList = [...prev, queuedMsg];
+        setCachedMessages(conversationId, nextList);
+        return nextList;
+      });
       setInputText("");
       setReplyTarget(null);
       setTimeout(() => scrollToBottom("smooth"), 50);
@@ -524,9 +795,13 @@ export default function ChatWindow({
 
       if (res.data?.success) {
         const savedMsg = res.data.message;
-        setMessages((prev) =>
-          prev.map((m) => (m.clientMessageId === tempId ? { ...savedMsg, status: "sent" } : m))
-        );
+        setMessages((prev) => {
+          const updated = prev.map((m) =>
+            m.clientMessageId === tempId ? { ...savedMsg, status: "sent" } : m
+          );
+          setCachedMessages(conversationId, updated);
+          return updated;
+        });
         if (onConversationUpdated) {
           onConversationUpdated({
             conversationId,
@@ -535,18 +810,25 @@ export default function ChatWindow({
         }
       }
     } catch (err) {
-      console.error("Message send failed:", err);
+      console.warn("Message send failed, persisting locally in offline queue:", err.message);
       const isOffline = (typeof navigator !== "undefined" && !navigator.onLine) || !err.response;
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.clientMessageId === tempId ? { ...m, status: isOffline ? "queued" : "failed" } : m
-        )
-      );
+      const status = isOffline ? "queued" : "failed";
+      const failedMsg = { ...optimisticMsg, status };
+      enqueueOutgoingMessage(conversationId, failedMsg);
+      setMessages((prev) => {
+        const updated = prev.map((m) =>
+          m.clientMessageId === tempId ? failedMsg : m
+        );
+        setCachedMessages(conversationId, updated);
+        return updated;
+      });
     }
   };
 
   // Retry sending failed message
   const handleRetry = async (msg) => {
+    if (!msg || !conversationId) return;
+
     setMessages((prev) =>
       prev.map((m) => (m.clientMessageId === msg.clientMessageId ? { ...m, status: "sending" } : m))
     );
@@ -559,18 +841,35 @@ export default function ChatWindow({
         clientMessageId: msg.clientMessageId,
       });
 
-      if (res.data?.success) {
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.clientMessageId === msg.clientMessageId ? { ...res.data.message, status: "sent" } : m
-          )
-        );
+      if (res.data?.success && res.data.message) {
+        removeQueuedMessage(conversationId, msg.clientMessageId);
+        setMessages((prev) => {
+          const updated = prev.map((m) =>
+            m.clientMessageId === msg.clientMessageId
+              ? { ...res.data.message, status: "sent" }
+              : m
+          );
+          setCachedMessages(conversationId, updated);
+          return updated;
+        });
+        playMessageChime();
       }
     } catch {
       setMessages((prev) =>
         prev.map((m) => (m.clientMessageId === msg.clientMessageId ? { ...m, status: "failed" } : m))
       );
     }
+  };
+
+  // Discard a queued or failed message
+  const handleDiscardQueued = (msg) => {
+    if (!msg || !conversationId) return;
+    removeQueuedMessage(conversationId, msg.clientMessageId);
+    setMessages((prev) => {
+      const remaining = prev.filter((m) => m.clientMessageId !== msg.clientMessageId);
+      setCachedMessages(conversationId, remaining);
+      return remaining;
+    });
   };
 
   // Handle Request Response (Accept, Decline, Block)
@@ -630,21 +929,81 @@ export default function ChatWindow({
     }
   };
 
+  const displayedMessages = chatSearchQuery.trim()
+    ? messages.filter((m) =>
+        (m.body || "").toLowerCase().includes(chatSearchQuery.trim().toLowerCase())
+      )
+    : messages;
+
+  const getMessageDateLabel = (dateStr) => {
+    if (!dateStr) return "";
+    const msgDate = new Date(dateStr);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    if (msgDate.toDateString() === today.toDateString()) {
+      return "Today / आज";
+    }
+    if (msgDate.toDateString() === yesterday.toDateString()) {
+      return "Yesterday / कल";
+    }
+    return msgDate.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: msgDate.getFullYear() !== today.getFullYear() ? "numeric" : undefined,
+    });
+  };
+
+  const renderHighlightedBody = (bodyText) => {
+    if (!chatSearchQuery.trim() || !bodyText) {
+      return bodyText;
+    }
+    const q = chatSearchQuery.trim();
+    const parts = bodyText.split(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"));
+    return parts.map((part, i) =>
+      part.toLowerCase() === q.toLowerCase() ? (
+        <mark key={i} className="bg-amber-300 text-slate-900 rounded-xs px-0.5 font-bold">
+          {part}
+        </mark>
+      ) : (
+        part
+      )
+    );
+  };
+
   return (
     <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs flex flex-col h-[650px] overflow-hidden">
       {/* Chat Header */}
       <div className="p-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          {/* Hamburger button on mobile to open MobileMessagingDrawer */}
+          {onOpenMobileMenu && (
+            <button
+              type="button"
+              onClick={onOpenMobileMenu}
+              className="p-1.5 -ml-1 text-slate-700 hover:text-slate-900 hover:bg-slate-200/60 rounded-xl transition md:hidden cursor-pointer"
+              title="Open Navigation Menu / मेन्यू"
+              aria-label="Open Navigation Menu"
+            >
+              <Menu className="w-5 h-5 text-slate-800" />
+            </button>
+          )}
+
           {onBack && (
             <button
               onClick={onBack}
-              className="p-1.5 -ml-1 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition md:hidden"
+              className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition hidden sm:block md:hidden cursor-pointer"
+              title="Back"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
           )}
 
-          <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden shrink-0">
+          <div
+            className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden shrink-0 cursor-pointer relative"
+            onClick={onToggleInfoPanel || (() => { if (isGroup) setShowGroupDetails(true); })}
+          >
             {isGroup ? (
               conversation.groupAvatar ? (
                 <img src={conversation.groupAvatar} alt={conversation.groupName} className="w-full h-full object-cover" />
@@ -660,13 +1019,17 @@ export default function ChatWindow({
                 {(otherUser.name || "C")[0]?.toUpperCase()}
               </div>
             )}
+            {isPartnerOnline && (
+              <span
+                className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full ring-1 ring-white"
+                title="Online"
+              />
+            )}
           </div>
 
           <div
-            className={`min-w-0 ${isGroup ? "cursor-pointer" : ""}`}
-            onClick={() => {
-              if (isGroup) setShowGroupDetails(true);
-            }}
+            className="min-w-0 cursor-pointer"
+            onClick={onToggleInfoPanel || (() => { if (isGroup) setShowGroupDetails(true); })}
           >
             <div className="flex items-center gap-1.5">
               <h3 className="text-xs font-bold text-slate-900 truncate">
@@ -694,7 +1057,7 @@ export default function ChatWindow({
                     <span className="text-slate-400">Offline</span>
                   )}
                   {otherUser.username && <span className="font-mono">• @{otherUser.username}</span>}
-                  {otherUser.area && <span>• {otherUser.area}</span>}
+                  {otherUser.area && <span className="hidden sm:inline">• {otherUser.area}</span>}
                   {isBlocked && <span className="text-red-500 font-bold">• Blocked</span>}
                 </>
               )}
@@ -702,12 +1065,44 @@ export default function ChatWindow({
           </div>
         </div>
 
-        {/* Status indicator and actions menu */}
-        <div className="flex items-center gap-2">
+        {/* Actions bar: typing indicator, in-chat search, info toggle, options */}
+        <div className="flex items-center gap-1 sm:gap-2">
           {isTyping && (
-            <span className="text-[11px] text-[#B8323C] font-semibold animate-pulse">
+            <span className="text-[11px] text-[#B8323C] font-semibold animate-pulse mr-1 hidden sm:inline">
               typing...
             </span>
+          )}
+
+          {/* Search within conversation */}
+          <button
+            type="button"
+            onClick={() => setShowChatSearch((prev) => !prev)}
+            className={`p-1.5 rounded-xl transition cursor-pointer ${
+              showChatSearch
+                ? "bg-red-50 text-[#B8323C]"
+                : "hover:bg-slate-200/60 text-slate-500 hover:text-slate-800"
+            }`}
+            title="Search in conversation / बातचीत में खोजें"
+            aria-label="Search within conversation"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+
+          {/* Toggle Info Panel */}
+          {onToggleInfoPanel && (
+            <button
+              type="button"
+              onClick={onToggleInfoPanel}
+              className={`p-1.5 rounded-xl transition cursor-pointer ${
+                showInfoPanel
+                  ? "bg-red-50 text-[#B8323C]"
+                  : "hover:bg-slate-200/60 text-slate-500 hover:text-slate-800"
+              }`}
+              title="Conversation details & Shared Photos / विवरण"
+              aria-label="Conversation details"
+            >
+              <Info className="w-4 h-4" />
+            </button>
           )}
 
           <div className="relative">
@@ -829,6 +1224,46 @@ export default function ChatWindow({
         </div>
       )}
 
+      {/* In-Chat Search Bar */}
+      {showChatSearch && (
+        <div className="bg-slate-50 border-b border-slate-200/80 px-3.5 py-2 flex items-center gap-2 animate-in fade-in">
+          <Search className="w-4 h-4 text-slate-400 shrink-0" />
+          <input
+            type="text"
+            value={chatSearchQuery}
+            onChange={(e) => setChatSearchQuery(e.target.value)}
+            placeholder="Search messages in this conversation... / संदेश खोजें"
+            className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#B8323C]"
+            autoFocus
+          />
+          {chatSearchQuery && (
+            <span className="text-[11px] text-slate-500 font-bold shrink-0">
+              {displayedMessages.length} {displayedMessages.length === 1 ? "match" : "matches"}
+            </span>
+          )}
+          {chatSearchQuery && (
+            <button
+              type="button"
+              onClick={() => setChatSearchQuery("")}
+              className="text-slate-400 hover:text-slate-600 text-xs px-1 cursor-pointer font-medium"
+            >
+              Clear
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setShowChatSearch(false);
+              setChatSearchQuery("");
+            }}
+            className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-lg cursor-pointer"
+            aria-label="Close search"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Message Thread List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {hasMore && (
@@ -848,36 +1283,75 @@ export default function ChatWindow({
             <Loader2 className="w-4 h-4 animate-spin text-[#B8323C]" />
             <span>Loading message history...</span>
           </div>
-        ) : messages.length === 0 ? (
+        ) : displayedMessages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-400 text-center space-y-2 p-6">
             <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400">
               <CheckCircle2 className="w-6 h-6 text-emerald-500" />
             </div>
-            <p className="text-xs font-bold text-slate-700">No messages in this chat yet</p>
+            <p className="text-xs font-bold text-slate-700">
+              {chatSearchQuery ? "No matching messages found" : "No messages in this chat yet"}
+            </p>
             <p className="text-[11px] text-slate-400 max-w-xs">
-              Say hello to {otherUser.name || "citizen"}! All messages are authenticated and private.
+              {chatSearchQuery
+                ? `No messages in this conversation match "${chatSearchQuery}".`
+                : `Say hello to ${otherUser.name || "citizen"}! All messages are authenticated and private.`}
             </p>
           </div>
         ) : (
-          messages.map((m) => {
+          displayedMessages.map((m, index) => {
+            const prevMsg = displayedMessages[index - 1];
+            const prevDateLabel = prevMsg ? getMessageDateLabel(prevMsg.createdAt) : null;
+            const currentDateLabel = getMessageDateLabel(m.createdAt);
+            const isNewDay = !prevDateLabel || prevDateLabel !== currentDateLabel;
+
             const isMe = (m.sender?._id || m.sender?.id || m.sender) === currentUserId;
             const isSystem = m.type === "system";
 
+            // Unread divider marker before first unread incoming message
+            const unreadCount = conversation?.unreadCount || 0;
+            const isFirstUnread =
+              unreadCount > 0 &&
+              !isMe &&
+              index === displayedMessages.length - unreadCount;
+
             if (isSystem) {
               return (
-                <div key={m._id || m.id} className="text-center my-2">
-                  <span className="text-[10px] text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
-                    {m.body}
-                  </span>
+                <div key={m._id || m.id || m.clientMessageId || index}>
+                  {isNewDay && (
+                    <div className="flex justify-center my-3 select-none">
+                      <span className="px-3 py-1 bg-slate-100/90 text-slate-600 text-[10px] font-bold rounded-full shadow-2xs border border-slate-200/80">
+                        {currentDateLabel}
+                      </span>
+                    </div>
+                  )}
+                  <div className="text-center my-2">
+                    <span className="text-[10px] text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+                      {m.body}
+                    </span>
+                  </div>
                 </div>
               );
             }
 
             return (
-              <div
-                key={m._id || m.id}
-                className={`flex flex-col group ${isMe ? "items-end" : "items-start"}`}
-              >
+              <div key={m._id || m.id || m.clientMessageId || index} className="space-y-2">
+                {isNewDay && (
+                  <div className="flex justify-center my-3 select-none">
+                    <span className="px-3 py-1 bg-slate-100/90 text-slate-600 text-[10px] font-bold rounded-full shadow-2xs border border-slate-200/80">
+                      {currentDateLabel}
+                    </span>
+                  </div>
+                )}
+                {isFirstUnread && (
+                  <div className="flex items-center gap-2 my-3 select-none animate-in fade-in">
+                    <div className="flex-1 h-px bg-red-200"></div>
+                    <span className="text-[10px] font-bold text-[#B8323C] bg-red-50 border border-red-200/80 px-2.5 py-0.5 rounded-full shadow-2xs">
+                      New Messages / नए संदेश
+                    </span>
+                    <div className="flex-1 h-px bg-red-200"></div>
+                  </div>
+                )}
+                <div className={`flex flex-col group ${isMe ? "items-end" : "items-start"}`}>
                 {/* Group sender name tag */}
                 {isGroup && !isMe && m.sender?.name && (
                   <span className="text-[10px] font-bold text-slate-500 mb-0.5 ml-1 select-none">
@@ -906,143 +1380,384 @@ export default function ChatWindow({
                     Date.now() - new Date(m.createdAt).getTime() < 15 * 60 * 1000;
 
                   return (
-                    <div className="flex items-end gap-1.5 max-w-[80%]">
-                      {/* Action buttons on hover for incoming messages */}
-                      {!isMe && !m.isDeletedForEveryone && (
-                        <div className="flex items-center opacity-0 group-hover:opacity-100 transition">
-                          <button
-                            type="button"
-                            onClick={() => setReplyTarget(m)}
-                            className="text-slate-400 hover:text-slate-600 p-1 transition cursor-pointer"
-                            title="Reply"
-                          >
-                            <Reply className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setReportTarget({ user: otherUser, message: m })}
-                            className="text-slate-400 hover:text-amber-600 p-1 transition cursor-pointer"
-                            title="Report message"
-                          >
-                            <Flag className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteTarget(m)}
-                            className="text-slate-400 hover:text-red-600 p-1 transition cursor-pointer"
-                            title="Delete for me"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Message Bubble */}
-                      <div
-                        className={`px-3.5 py-2.5 rounded-2xl text-xs break-words shadow-2xs leading-relaxed ${
-                          isMe
-                            ? "bg-[#B8323C] text-white rounded-br-xs"
-                            : "bg-slate-100 text-slate-900 rounded-bl-xs"
-                        }`}
-                      >
-                        {m.isDeletedForEveryone ? (
-                          <span className="italic flex items-center gap-1.5 opacity-80 py-0.5">
-                            <Ban className="w-3.5 h-3.5 shrink-0" />
-                            <span>This message was deleted</span>
-                          </span>
-                        ) : (
-                          <>
-                            {m.type === "image" && m.mediaUrl && (
-                              <div
-                                className="mb-1.5 cursor-pointer overflow-hidden rounded-xl"
-                                onClick={() => setLightboxImage(getFullMediaUrl(m.mediaUrl))}
-                                title="Click to view full photo / बड़ी तस्वीर देखें"
-                              >
-                                <img
-                                  src={getFullMediaUrl(m.mediaUrl)}
-                                  alt={m.body || "Chat attachment"}
-                                  className="rounded-xl max-h-60 max-w-full sm:max-w-xs object-cover hover:opacity-95 transition"
-                                  loading="lazy"
-                                />
-                              </div>
-                            )}
-                            {m.body && <p>{m.body}</p>}
-                          </>
-                        )}
-
-                        <div
-                          className={`flex items-center justify-end gap-1 text-[9px] mt-1 select-none ${
-                            isMe ? "text-white/80" : "text-slate-400"
-                          }`}
-                        >
-                          {m.isEdited && !m.isDeletedForEveryone && (
-                            <span className="italic font-medium opacity-80">(edited)</span>
-                          )}
-                          <span>
-                            {new Date(m.createdAt).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-
-                          {/* Delivery Status Indicator */}
-                          {isMe && (
-                            <span>
-                              {m.status === "sending" ? (
-                                <Clock className="w-2.5 h-2.5 inline animate-spin" />
-                              ) : m.status === "queued" ? (
-                                <span className="text-amber-200 inline-flex items-center gap-0.5" title="Queued (Offline)">
-                                  <Clock className="w-2.5 h-2.5 inline" /> Queued
-                                </span>
-                              ) : m.status === "failed" ? (
-                                <button
-                                  onClick={() => handleRetry(m)}
-                                  className="text-amber-200 hover:underline flex items-center gap-0.5"
-                                >
-                                  <AlertCircle className="w-2.5 h-2.5 inline" /> Retry
-                                </button>
-                              ) : (
-                                <CheckCheck className="w-3 h-3 inline text-white/90" />
-                              )}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Action buttons on hover for outgoing messages */}
-                      {isMe && !m.isDeletedForEveryone && (
-                        <div className="flex items-center opacity-0 group-hover:opacity-100 transition">
-                          {canEdit && (
+                    <div className="flex flex-col">
+                      <div className="flex items-end gap-1.5 max-w-[80%]">
+                        {/* Action buttons on hover for incoming messages */}
+                        {!isMe && !m.isDeletedForEveryone && (
+                          <div className="flex items-center opacity-0 group-hover:opacity-100 transition">
                             <button
                               type="button"
-                              onClick={() => handleStartEdit(m)}
-                              className="text-slate-400 hover:text-slate-600 p-1 transition cursor-pointer"
-                              title="Edit message (within 15m)"
+                              onClick={() =>
+                                setActiveReactionMsgId(
+                                  activeReactionMsgId === (m._id || m.id) ? null : (m._id || m.id)
+                                )
+                              }
+                              className="text-slate-400 hover:text-amber-500 p-1 transition cursor-pointer"
+                              title="React / प्रतिक्रिया दें"
                             >
-                              <Pencil className="w-3.5 h-3.5" />
+                              <Smile className="w-3.5 h-3.5" />
                             </button>
+                            <button
+                              type="button"
+                              onClick={() => setReplyTarget(m)}
+                              className="text-slate-400 hover:text-slate-600 p-1 transition cursor-pointer"
+                              title="Reply"
+                            >
+                              <Reply className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setReportTarget({ user: otherUser, message: m })}
+                              className="text-slate-400 hover:text-amber-600 p-1 transition cursor-pointer"
+                              title="Report message"
+                            >
+                              <Flag className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeleteTarget(m)}
+                              className="text-slate-400 hover:text-red-600 p-1 transition cursor-pointer"
+                              title="Delete for me"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+
+                        <div className="relative">
+                          {/* Floating Reaction Bar */}
+                          {activeReactionMsgId === (m._id || m.id) && (
+                            <div
+                              className={`absolute bottom-full mb-1.5 bg-white rounded-full shadow-lg border border-slate-200 px-2 py-1 flex items-center gap-1.5 z-30 animate-in fade-in zoom-in-95 ${
+                                isMe ? "right-0" : "left-0"
+                              }`}
+                            >
+                              {["👍", "❤️", "😂", "😮", "😢", "🙏", "🔥"].map((emoji) => (
+                                <button
+                                  key={emoji}
+                                  type="button"
+                                  onClick={() => handleToggleReaction(m._id || m.id, emoji)}
+                                  className="p-1 hover:scale-130 transition text-base cursor-pointer transform active:scale-90"
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                              <button
+                                type="button"
+                                onClick={() => setActiveReactionMsgId(null)}
+                                className="p-0.5 text-slate-400 hover:text-slate-600 rounded-full cursor-pointer ml-0.5"
+                                title="Close"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
                           )}
-                          <button
-                            type="button"
-                            onClick={() => setDeleteTarget(m)}
-                            className="text-slate-400 hover:text-red-600 p-1 transition cursor-pointer"
-                            title="Delete message"
+
+                          {/* Message Bubble */}
+                          <div
+                            className={`px-3.5 py-2.5 rounded-2xl text-xs break-words shadow-2xs leading-relaxed ${
+                              isMe
+                                ? "bg-[#B8323C] text-white rounded-br-xs"
+                                : "bg-slate-100 text-slate-900 rounded-bl-xs"
+                            }`}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setReplyTarget(m)}
-                            className="text-slate-400 hover:text-slate-600 p-1 transition cursor-pointer"
-                            title="Reply"
-                          >
-                            <Reply className="w-3.5 h-3.5" />
-                          </button>
+                            {m.isDeletedForEveryone ? (
+                              <span className="italic flex items-center gap-1.5 opacity-80 py-0.5">
+                                <Ban className="w-3.5 h-3.5 shrink-0" />
+                                <span>This message was deleted</span>
+                              </span>
+                            ) : (
+                              <>
+                                {/* Photo / Image attachment */}
+                                {m.type === "image" && m.mediaUrl && (
+                                  <div
+                                    className="mb-1.5 cursor-pointer overflow-hidden rounded-xl relative group"
+                                    onClick={() => setLightboxImage(getFullMediaUrl(m.mediaUrl))}
+                                    title="Click to view full photo / बड़ी तस्वीर देखें"
+                                  >
+                                    <img
+                                      src={getFullMediaUrl(m.mediaUrl)}
+                                      alt={m.body || m.fileName || "Chat attachment"}
+                                      className="rounded-xl max-h-60 max-w-full sm:max-w-xs object-cover hover:opacity-95 transition"
+                                      loading="lazy"
+                                    />
+                                    <a
+                                      href={getFullMediaUrl(m.mediaUrl)}
+                                      download={m.fileName || "photo.jpg"}
+                                      onClick={(e) => e.stopPropagation()}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-white opacity-0 group-hover:opacity-100 transition shadow hover:bg-black/80"
+                                      title="Download photo / डाउनलोड करें"
+                                    >
+                                      <Download className="w-3.5 h-3.5" />
+                                    </a>
+                                  </div>
+                                )}
+
+                                {/* Video attachment */}
+                                {m.type === "video" && m.mediaUrl && (
+                                  <div className="mb-1.5 rounded-xl overflow-hidden bg-black/10">
+                                    <video
+                                      controls
+                                      preload="metadata"
+                                      className="rounded-xl max-h-64 max-w-full sm:max-w-xs bg-black"
+                                      src={getFullMediaUrl(m.mediaUrl)}
+                                    />
+                                    <div className="flex items-center justify-between px-1 pt-1 text-[10px] opacity-75">
+                                      <span className="truncate max-w-[180px]">{m.fileName || "Video clip"}</span>
+                                      <div className="flex items-center gap-1.5">
+                                        {m.fileSize > 0 && <span>{formatFileSize(m.fileSize)}</span>}
+                                        <a
+                                          href={getFullMediaUrl(m.mediaUrl)}
+                                          download={m.fileName || "video.mp4"}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="hover:underline flex items-center gap-0.5 font-bold"
+                                        >
+                                          <Download className="w-3 h-3" />
+                                        </a>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Audio / Voice Note attachment */}
+                                {m.type === "audio" && m.mediaUrl && (
+                                  <div className="mb-1.5 p-2 rounded-xl bg-black/5 flex flex-col gap-1.5">
+                                    <div className="flex items-center justify-between text-[11px] font-bold">
+                                      <span className="flex items-center gap-1">
+                                        <Mic className="w-3.5 h-3.5 text-amber-600" />
+                                        <span>Voice / Audio Note</span>
+                                      </span>
+                                      {m.fileSize > 0 && (
+                                        <span className="text-[10px] opacity-70 font-mono">
+                                          {formatFileSize(m.fileSize)}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <audio
+                                      controls
+                                      preload="metadata"
+                                      className="w-full max-w-[260px] h-8"
+                                      src={getFullMediaUrl(m.mediaUrl)}
+                                    />
+                                  </div>
+                                )}
+
+                                {/* Document attachment */}
+                                {m.type === "document" && m.mediaUrl && (
+                                  <div
+                                    className={`mb-1.5 p-2.5 rounded-xl border flex items-center justify-between gap-3 ${
+                                      isMe ? "bg-white/10 border-white/20 text-white" : "bg-white border-slate-200 text-slate-800"
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                      <div
+                                        className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                                          isMe ? "bg-white/20 text-white" : "bg-red-50 text-[#B8323C]"
+                                        }`}
+                                      >
+                                        <FileText className="w-5 h-5" />
+                                      </div>
+                                      <div className="min-w-0">
+                                        <p className="text-xs font-bold truncate max-w-[160px] sm:max-w-[200px]" title={m.fileName}>
+                                          {m.fileName || "Document attachment"}
+                                        </p>
+                                        <p className="text-[10px] opacity-75 font-mono">
+                                          {m.fileSize > 0 ? formatFileSize(m.fileSize) : "Document"}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <a
+                                      href={getFullMediaUrl(m.mediaUrl)}
+                                      download={m.fileName || "document"}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className={`p-2 rounded-xl transition shrink-0 ${
+                                        isMe ? "bg-white/20 hover:bg-white/30 text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                                      }`}
+                                      title="Download file / फ़ाइल डाउनलोड करें"
+                                    >
+                                      <Download className="w-4 h-4" />
+                                    </a>
+                                  </div>
+                                )}
+
+                                {m.body && (
+                                  <p className="whitespace-pre-wrap break-words">
+                                    {renderHighlightedBody(m.body)}
+                                  </p>
+                                )}
+                              </>
+                            )}
+
+                            <div
+                              className={`flex items-center justify-end gap-1 text-[9px] mt-1 select-none ${
+                                isMe ? "text-white/80" : "text-slate-400"
+                              }`}
+                            >
+                              {(m.storageProvider === "google_drive" || m.driveFileId) && (
+                                <span
+                                  className="inline-flex items-center gap-0.5 opacity-80"
+                                  title="Google Drive Cloud Secured / सुरक्षित गूगल ड्राइव"
+                                >
+                                  <Cloud className="w-2.5 h-2.5 inline" />
+                                </span>
+                              )}
+                              {m.isEdited && !m.isDeletedForEveryone && (
+                                <span className="italic font-medium opacity-80">(edited)</span>
+                              )}
+                              <span>
+                                {new Date(m.createdAt).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+
+                              {/* Delivery Status Indicator */}
+                              {isMe && (
+                                <span className="inline-flex items-center gap-1">
+                                  {m.status === "sending" ? (
+                                    <Clock className="w-2.5 h-2.5 inline animate-spin" />
+                                  ) : m.status === "queued" ? (
+                                    <span className="text-amber-200 inline-flex items-center gap-1" title="Queued (Offline)">
+                                      <Clock className="w-2.5 h-2.5 inline" />
+                                      <span>Queued</span>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDiscardQueued(m);
+                                        }}
+                                        className="hover:text-red-300 ml-0.5 cursor-pointer"
+                                        title="Cancel queued message"
+                                      >
+                                        <X className="w-2.5 h-2.5 inline" />
+                                      </button>
+                                    </span>
+                                  ) : m.status === "failed" ? (
+                                    <span className="text-amber-200 inline-flex items-center gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleRetry(m);
+                                        }}
+                                        className="hover:underline flex items-center gap-0.5 cursor-pointer font-bold"
+                                        title="Retry sending"
+                                      >
+                                        <RotateCw className="w-2.5 h-2.5 inline" /> Retry
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDiscardQueued(m);
+                                        }}
+                                        className="hover:text-red-300 ml-0.5 cursor-pointer"
+                                        title="Discard failed message"
+                                      >
+                                        <X className="w-2.5 h-2.5 inline" />
+                                      </button>
+                                    </span>
+                                  ) : (
+                                    <CheckCheck className="w-3 h-3 inline text-white/90" />
+                                  )}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Action buttons on hover for outgoing messages */}
+                        {isMe && !m.isDeletedForEveryone && (
+                          <div className="flex items-center opacity-0 group-hover:opacity-100 transition">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setActiveReactionMsgId(
+                                  activeReactionMsgId === (m._id || m.id) ? null : (m._id || m.id)
+                                )
+                              }
+                              className="text-slate-400 hover:text-amber-500 p-1 transition cursor-pointer"
+                              title="React / प्रतिक्रिया दें"
+                            >
+                              <Smile className="w-3.5 h-3.5" />
+                            </button>
+                            {canEdit && (
+                              <button
+                                type="button"
+                                onClick={() => handleStartEdit(m)}
+                                className="text-slate-400 hover:text-slate-600 p-1 transition cursor-pointer"
+                                title="Edit message (within 15m)"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setDeleteTarget(m)}
+                              className="text-slate-400 hover:text-red-600 p-1 transition cursor-pointer"
+                              title="Delete message"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setReplyTarget(m)}
+                              className="text-slate-400 hover:text-slate-600 p-1 transition cursor-pointer"
+                              title="Reply"
+                            >
+                              <Reply className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Reactions Badges List */}
+                      {m.reactions && m.reactions.length > 0 && (
+                        <div
+                          className={`flex flex-wrap gap-1 mt-1 ${
+                            isMe ? "justify-end mr-1" : "justify-start ml-1"
+                          }`}
+                        >
+                          {Object.entries(
+                            m.reactions.reduce((acc, r) => {
+                              acc[r.emoji] = acc[r.emoji] || [];
+                              acc[r.emoji].push(r);
+                              return acc;
+                            }, {})
+                          ).map(([emoji, rList]) => {
+                            const hasReacted = rList.some(
+                              (r) => (r.user?._id || r.user?.id || r.user) === currentUserId
+                            );
+                            const reactorNames = rList
+                              .map((r) => r.user?.name || "Citizen")
+                              .join(", ");
+                            return (
+                              <button
+                                key={emoji}
+                                type="button"
+                                onClick={() => handleToggleReaction(m._id || m.id, emoji)}
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border transition cursor-pointer shadow-2xs ${
+                                  hasReacted
+                                    ? "bg-red-50 border-red-200 text-[#B8323C]"
+                                    : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                                }`}
+                                title={reactorNames}
+                              >
+                                <span>{emoji}</span>
+                                <span className="text-[10px] font-semibold">{rList.length}</span>
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
                   );
                 })()}
+                </div>
               </div>
             );
           })
@@ -1087,32 +1802,73 @@ export default function ChatWindow({
         </div>
       )}
 
-      {/* Media Attachment Preview Tray */}
+      {/* Media & Document Attachment Preview Tray */}
       {selectedFile && (
-        <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs">
+        <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs animate-in fade-in">
           <div className="flex items-center gap-2.5 min-w-0">
-            {filePreview && (
+            {filePreview ? (
               <img
                 src={filePreview}
                 alt="Upload preview"
-                className="w-10 h-10 object-cover rounded-xl border border-slate-200 shrink-0"
+                className="w-11 h-11 object-cover rounded-xl border border-slate-200 shrink-0"
               />
+            ) : selectedCategory === "video" ? (
+              <div className="w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 border border-blue-200">
+                <Video className="w-5 h-5" />
+              </div>
+            ) : selectedCategory === "audio" ? (
+              <div className="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200">
+                <Mic className="w-5 h-5" />
+              </div>
+            ) : (
+              <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200">
+                <FileText className="w-5 h-5" />
+              </div>
             )}
             <div className="min-w-0">
               <p className="font-bold text-slate-800 truncate">{selectedFile.name}</p>
-              <p className="text-[10px] text-slate-400 font-mono">
-                {(selectedFile.size / 1024).toFixed(1)} KB • Add optional caption below
+              <p className="text-[10px] text-slate-500 font-mono">
+                {formatFileSize(selectedFile.size)} • {selectedCategory.toUpperCase()} • Add optional caption below
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={handleClearFile}
-            className="p-1 text-slate-400 hover:text-slate-700 rounded-full transition cursor-pointer"
-            title="Remove photo"
+            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-full transition cursor-pointer"
+            title="Remove attachment / हटाएँ"
           >
             <X className="w-4 h-4" />
           </button>
+        </div>
+      )}
+
+      {/* Uploading Progress Bar for Large Files / Attachments */}
+      {uploadingMedia && (
+        <div className="px-4 py-2 bg-slate-900 text-white text-xs border-t border-slate-800 animate-in fade-in">
+          <div className="flex items-center justify-between gap-3 mb-1.5 font-medium">
+            <span className="flex items-center gap-2 truncate">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#B8323C] shrink-0" />
+              <span className="truncate">{uploadStatusText || "Uploading..."}</span>
+            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="font-mono text-xs font-bold text-emerald-400">{uploadProgress}%</span>
+              <button
+                type="button"
+                onClick={handleCancelUpload}
+                className="px-2 py-0.5 rounded-lg bg-red-500/20 hover:bg-red-500/40 text-red-200 text-[10px] font-bold transition cursor-pointer"
+                title="Cancel upload / रद्द करें"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+          <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-[#B8323C] to-red-500 h-full transition-all duration-200 rounded-full"
+              style={{ width: `${Math.max(2, uploadProgress)}%` }}
+            />
+          </div>
         </div>
       )}
 
@@ -1132,59 +1888,266 @@ export default function ChatWindow({
           </button>
         </div>
       ) : (
-        <form
-          onSubmit={handleSendMessage}
-          className="p-3 border-t border-slate-100 bg-white flex items-center gap-2"
-        >
-          {/* Hidden File Input */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileSelect}
-            accept="image/jpeg,image/png,image/webp"
-            className="hidden"
-          />
+        <div className="relative">
+          {/* Emoji Picker Tray */}
+          {showEmojiPicker && (
+            <div className="absolute bottom-full mb-2 left-3 z-30 bg-white rounded-2xl shadow-xl border border-slate-200 p-3 w-72 animate-in fade-in zoom-in-95">
+              <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 text-xs">
+                <span className="font-bold text-slate-700">Quick Emojis / इमोजी</span>
+                <button
+                  type="button"
+                  onClick={() => setShowEmojiPicker(false)}
+                  className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-8 gap-1 text-xl max-h-40 overflow-y-auto p-0.5">
+                {POPULAR_EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => {
+                      setInputText((prev) => prev + emoji);
+                    }}
+                    className="p-1.5 hover:bg-slate-100 rounded-lg transition transform hover:scale-115 active:scale-95 cursor-pointer text-center"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
-          {/* Attach Photo Button */}
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={Boolean(editingMessage) || uploadingMedia}
-            className="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition cursor-pointer disabled:opacity-40"
-            title="Attach Photo / फोटो भेजें"
+          {/* Attachment Menu Popover */}
+          {showAttachMenu && (
+            <div className="absolute bottom-full mb-2 left-10 z-30 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 w-60 animate-in fade-in zoom-in-95 text-xs font-semibold">
+              <div className="flex items-center justify-between pb-1.5 mb-1.5 px-2 border-b border-slate-100 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
+                <span>Attach / फ़ाइल जोड़ें</span>
+                <button
+                  type="button"
+                  onClick={() => setShowAttachMenu(false)}
+                  className="p-0.5 text-slate-400 hover:text-slate-600 rounded cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+              <div className="space-y-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAttachMenu(false);
+                    fileInputRef.current?.click();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 transition cursor-pointer text-left"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-red-50 text-[#B8323C] flex items-center justify-center shrink-0">
+                    <ImageIcon className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-slate-800 font-bold">Photos & Images</div>
+                    <div className="text-[10px] text-slate-400 font-normal">JPG, PNG, WebP, GIF</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAttachMenu(false);
+                    videoInputRef.current?.click();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 transition cursor-pointer text-left"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <Video className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-slate-800 font-bold">Video Clips</div>
+                    <div className="text-[10px] text-slate-400 font-normal">MP4, WebM, MOV</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAttachMenu(false);
+                    audioInputRef.current?.click();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 transition cursor-pointer text-left"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                    <Mic className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-slate-800 font-bold">Audio & Voice</div>
+                    <div className="text-[10px] text-slate-400 font-normal">MP3, WAV, M4A, OGG</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAttachMenu(false);
+                    docInputRef.current?.click();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 transition cursor-pointer text-left"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-slate-800 font-bold">Documents & Files</div>
+                    <div className="text-[10px] text-slate-400 font-normal">PDF, DOC, XLS, PPT, ZIP</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAttachMenu(false);
+                    cameraInputRef.current?.click();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 transition cursor-pointer text-left"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                    <Camera className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-slate-800 font-bold">Live Camera</div>
+                    <div className="text-[10px] text-slate-400 font-normal">Take instant photo</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
+
+          <form
+            onSubmit={handleSendMessage}
+            className="p-2.5 sm:p-3 border-t border-slate-100 bg-white flex items-center gap-1.5 sm:gap-2"
           >
-            <ImageIcon className="w-4 h-4 text-slate-600" />
-          </button>
+            {/* Hidden File Inputs for All Supported Media Types */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={(e) => handleFileSelect(e, "image")}
+              accept="image/*"
+              className="hidden"
+            />
+            <input
+              type="file"
+              ref={videoInputRef}
+              onChange={(e) => handleFileSelect(e, "video")}
+              accept="video/*"
+              className="hidden"
+            />
+            <input
+              type="file"
+              ref={audioInputRef}
+              onChange={(e) => handleFileSelect(e, "audio")}
+              accept="audio/*"
+              className="hidden"
+            />
+            <input
+              type="file"
+              ref={docInputRef}
+              onChange={(e) => handleFileSelect(e, "document")}
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,application/pdf"
+              className="hidden"
+            />
+            <input
+              type="file"
+              ref={cameraInputRef}
+              onChange={(e) => handleFileSelect(e, "image")}
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+            />
 
-          <input
-            type="text"
-            value={inputText}
-            onChange={handleInputChange}
-            placeholder={
-              editingMessage
-                ? "Edit your message... / संदेश संपादित करें..."
-                : selectedFile
-                ? "Add a caption for this photo (optional)..."
-                : "Type a message... / संदेश लिखें..."
-            }
-            className="flex-1 px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#B8323C]/20 focus:border-[#B8323C] transition"
-          />
+            {/* Emoji Trigger */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowEmojiPicker((p) => !p);
+                setShowAttachMenu(false);
+              }}
+              className={`p-2 rounded-xl transition cursor-pointer ${
+                showEmojiPicker
+                  ? "bg-amber-50 text-amber-600"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+              }`}
+              title="Emoji / इमोजी"
+              aria-label="Toggle emoji picker"
+            >
+              <Smile className="w-5 h-5" />
+            </button>
 
-          <button
-            type="submit"
-            disabled={(!inputText.trim() && !selectedFile) || uploadingMedia}
-            className="p-2.5 rounded-2xl bg-[#B8323C] hover:bg-red-700 disabled:opacity-40 disabled:hover:bg-[#B8323C] text-white transition shadow-2xs cursor-pointer flex items-center justify-center"
-            title={editingMessage ? "Save edit" : selectedFile ? "Send photo" : "Send message"}
-          >
-            {uploadingMedia ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : editingMessage ? (
-              <Check className="w-4 h-4" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
-          </button>
-        </form>
+            {/* Attachment Menu Trigger */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowAttachMenu((p) => !p);
+                setShowEmojiPicker(false);
+              }}
+              disabled={Boolean(editingMessage) || uploadingMedia}
+              className={`p-2 rounded-xl transition cursor-pointer disabled:opacity-40 ${
+                showAttachMenu
+                  ? "bg-red-50 text-[#B8323C]"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+              }`}
+              title="Attach media or document / मीडिया जोड़ें"
+              aria-label="Attach file"
+            >
+              <Paperclip className="w-5 h-5" />
+            </button>
+
+            {/* Quick Camera Trigger on Mobile */}
+            <button
+              type="button"
+              onClick={() => cameraInputRef.current?.click()}
+              disabled={Boolean(editingMessage) || uploadingMedia}
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer disabled:opacity-40 sm:hidden"
+              title="Take Photo / कैमरा"
+              aria-label="Open camera"
+            >
+              <Camera className="w-5 h-5" />
+            </button>
+
+            {/* Input Field */}
+            <input
+              type="text"
+              value={inputText}
+              onChange={handleInputChange}
+              onFocus={() => {
+                setShowEmojiPicker(false);
+                setShowAttachMenu(false);
+              }}
+              placeholder={
+                editingMessage
+                  ? "Edit your message... / संदेश संपादित करें..."
+                  : selectedFile
+                  ? `Add a caption for this ${selectedCategory} (optional)...`
+                  : "Type a message... / संदेश लिखें..."
+              }
+              className="flex-1 px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#B8323C]/20 focus:border-[#B8323C] transition"
+            />
+
+            {/* Send / Save Button */}
+            <button
+              type="submit"
+              disabled={(!inputText.trim() && !selectedFile) || uploadingMedia}
+              className="p-2.5 rounded-2xl bg-[#B8323C] hover:bg-red-700 disabled:opacity-40 disabled:hover:bg-[#B8323C] text-white transition shadow-2xs cursor-pointer flex items-center justify-center shrink-0"
+              title={editingMessage ? "Save edit" : selectedFile ? "Send attachment" : "Send message"}
+            >
+              {uploadingMedia ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : editingMessage ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </button>
+          </form>
+        </div>
       )}
 
       {/* Report Modal */}

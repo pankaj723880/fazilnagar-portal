@@ -36,7 +36,7 @@ describe("Phase 7: Media & Attachments Test Suite", () => {
   let createdFilePath;
 
   // Helper for multipart/form-data upload using Node native http
-  const uploadMultipart = ({ path: reqPath, token, fileBuffer, fileName, mimeType, fields = {} }) => {
+  const uploadMultipart = ({ path: reqPath, token, fileBuffer, fileName, mimeType, fields = {}, fieldName = "image" }) => {
     return new Promise((resolve, reject) => {
       const boundary = "----WebKitFormBoundary" + Math.random().toString(36).substring(2);
       const headers = {
@@ -60,7 +60,7 @@ describe("Phase 7: Media & Attachments Test Suite", () => {
       if (fileBuffer) {
         bodyParts.push(
           Buffer.from(
-            `--${boundary}\r\nContent-Disposition: form-data; name="image"; filename="${fileName}"\r\nContent-Type: ${mimeType}\r\n\r\n`
+            `--${boundary}\r\nContent-Disposition: form-data; name="${fieldName}"; filename="${fileName}"\r\nContent-Type: ${mimeType}\r\n\r\n`
           )
         );
         bodyParts.push(fileBuffer);
@@ -233,15 +233,16 @@ describe("Phase 7: Media & Attachments Test Suite", () => {
     assert.equal(res.body.success, false);
   });
 
-  it("2. Reject non-image file attachment (400 Bad Request)", async () => {
-    const textBuffer = Buffer.from("This is a plain text file pretending to be image");
+  it("2. Reject dangerous executable/script file (.exe) (400 Bad Request)", async () => {
+    const exeBuffer = Buffer.from("MZP_FAKE_EXE_BINARY_CONTENT");
     const res = await uploadMultipart({
       path: `/api/messages/conversations/${conversationId}/media`,
       token: tokenA,
-      fileBuffer: textBuffer,
-      fileName: "document.txt",
-      mimeType: "text/plain",
-      fields: { caption: "Invalid file" },
+      fileBuffer: exeBuffer,
+      fileName: "malicious.exe",
+      mimeType: "application/x-msdownload",
+      fields: { caption: "Run this" },
+      fieldName: "file",
     });
 
     assert.equal(res.status, 400);
@@ -249,7 +250,6 @@ describe("Phase 7: Media & Attachments Test Suite", () => {
   });
 
   it("3. Reject upload from non-member citizen (403 Forbidden)", async () => {
-    // 1x1 1-pixel transparent PNG buffer
     const pngBuffer = Buffer.from(
       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
       "base64"
@@ -287,7 +287,7 @@ describe("Phase 7: Media & Attachments Test Suite", () => {
     assert.equal(res.body.success, true);
     assert.equal(res.body.message.type, "image");
     assert.equal(res.body.message.body, "Fazilnagar Weekly Market Fresh Produce");
-    assert.match(res.body.message.mediaUrl, /^\/uploads\/messages\/media-/);
+    assert.match(res.body.message.mediaUrl, /^\/uploads\/messages\//);
 
     uploadedMessageId = res.body.message._id;
 
@@ -301,7 +301,85 @@ describe("Phase 7: Media & Attachments Test Suite", () => {
     assert.match(conv.lastMessage.text, /📷 Fazilnagar Weekly Market/);
   });
 
-  it("5. Image message can be retrieved via conversation message history", async () => {
+  it("5. Active member can upload document attachment with metadata", async () => {
+    const docBuffer = Buffer.from("%PDF-1.4 Fake PDF Content for Civic Notice in Fazilnagar");
+
+    const res = await uploadMultipart({
+      path: `/api/messages/conversations/${conversationId}/media`,
+      token: tokenA,
+      fileBuffer: docBuffer,
+      fileName: "town-notice.pdf",
+      mimeType: "application/pdf",
+      fields: { caption: "Official Nagar Panchayat Circular" },
+      fieldName: "file",
+    });
+
+    assert.equal(res.status, 201);
+    assert.equal(res.body.success, true);
+    assert.equal(res.body.message.type, "document");
+    assert.equal(res.body.message.fileName, "town-notice.pdf");
+    assert.ok(res.body.message.fileSize > 0);
+    assert.equal(res.body.message.mimeType, "application/pdf");
+    assert.match(res.body.message.mediaUrl, /^\/uploads\/messages\//);
+
+    // Verify disk file cleanup tracking
+    const filePath = path.join(__dirname, "..", res.body.message.mediaUrl);
+    if (fs.existsSync(filePath)) {
+      try { fs.unlinkSync(filePath); } catch (_) {}
+    }
+  });
+
+  it("6. Active member can upload audio note attachment", async () => {
+    const audioBuffer = Buffer.from("ID3_FAKE_MP3_AUDIO_HEADER_FAZILNAGAR_TOWN");
+
+    const res = await uploadMultipart({
+      path: `/api/messages/conversations/${conversationId}/media`,
+      token: tokenB,
+      fileBuffer: audioBuffer,
+      fileName: "voice-message.mp3",
+      mimeType: "audio/mpeg",
+      fields: { caption: "Audio report from Ward 2" },
+      fieldName: "file",
+    });
+
+    assert.equal(res.status, 201);
+    assert.equal(res.body.success, true);
+    assert.equal(res.body.message.type, "audio");
+    assert.equal(res.body.message.fileName, "voice-message.mp3");
+
+    // Verify disk file cleanup
+    const filePath = path.join(__dirname, "..", res.body.message.mediaUrl);
+    if (fs.existsSync(filePath)) {
+      try { fs.unlinkSync(filePath); } catch (_) {}
+    }
+  });
+
+  it("7. Active member can upload video clip attachment", async () => {
+    const videoBuffer = Buffer.from("ftypisom_FAKE_MP4_HEADER_FAZILNAGAR");
+
+    const res = await uploadMultipart({
+      path: `/api/messages/conversations/${conversationId}/media`,
+      token: tokenA,
+      fileBuffer: videoBuffer,
+      fileName: "road-work.mp4",
+      mimeType: "video/mp4",
+      fields: { caption: "NH-28 Overbridge Progress Video" },
+      fieldName: "file",
+    });
+
+    assert.equal(res.status, 201);
+    assert.equal(res.body.success, true);
+    assert.equal(res.body.message.type, "video");
+    assert.equal(res.body.message.fileName, "road-work.mp4");
+
+    // Verify disk file cleanup
+    const filePath = path.join(__dirname, "..", res.body.message.mediaUrl);
+    if (fs.existsSync(filePath)) {
+      try { fs.unlinkSync(filePath); } catch (_) {}
+    }
+  });
+
+  it("8. Image message can be retrieved via conversation message history", async () => {
     const res = await makeJsonRequest({
       path: `/api/messages/conversations/${conversationId}/messages`,
       method: "GET",
@@ -318,7 +396,7 @@ describe("Phase 7: Media & Attachments Test Suite", () => {
     assert.equal(imgMsg.body, "Fazilnagar Weekly Market Fresh Produce");
   });
 
-  it("6. Deleting image for everyone removes body and resets preview", async () => {
+  it("9. Deleting image for everyone removes body and resets preview", async () => {
     const res = await makeJsonRequest({
       path: `/api/messages/conversations/${conversationId}/messages/${uploadedMessageId}`,
       method: "DELETE",

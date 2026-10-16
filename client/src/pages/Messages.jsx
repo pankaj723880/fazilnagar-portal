@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import API from "../api";
 import { usePageSEO } from "../utils/seo";
 import { getAuthUser, clearAuthSession } from "../utils/authStorage";
@@ -9,6 +9,12 @@ import UserSearch from "../components/UserSearch";
 import ConversationList from "../components/ConversationList";
 import ChatWindow from "../components/ChatWindow";
 import CreateGroupModal from "../components/CreateGroupModal";
+import MobileMessagingDrawer from "../components/MobileMessagingDrawer";
+import ConversationInfoPanel from "../components/ConversationInfoPanel";
+import {
+  getCachedConversations,
+  setCachedConversations,
+} from "../utils/offlineChatStorage";
 import {
   MessageSquare,
   Settings,
@@ -17,9 +23,16 @@ import {
   X,
   MessageCircle,
   Sparkles,
+  Menu,
+  WifiOff,
+  CheckCircle2,
+  RefreshCw,
 } from "lucide-react";
 
 export default function Messages() {
+  const [searchParams] = useSearchParams();
+  const convParam = searchParams.get("conv") || searchParams.get("conversationId");
+
   usePageSEO({
     title: "Messages | Fazilnagar Town Portal",
     description: "Private user-to-user town messaging and community communications in Fazilnagar.",
@@ -31,12 +44,43 @@ export default function Messages() {
   const currentUserId = portalUser?._id || portalUser?.id;
 
   const [profile, setProfile] = useState(null);
-  const [conversations, setConversations] = useState([]);
+  const [conversations, setConversations] = useState(() => getCachedConversations());
   const [activeConversation, setActiveConversation] = useState(null);
-  const [loadingConversations, setLoadingConversations] = useState(true);
+  const [loadingConversations, setLoadingConversations] = useState(
+    () => getCachedConversations().length === 0
+  );
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [onlineUserIds, setOnlineUserIds] = useState(new Set());
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [showInfoPanel, setShowInfoPanel] = useState(false);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine : true
+  );
+  const [reconnectFlash, setReconnectFlash] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
+
+  // Dynamic Browser Tab Badge for total unread town messages
+  const totalUnreadCount = conversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
+  useEffect(() => {
+    if (totalUnreadCount > 0) {
+      document.title = `(${totalUnreadCount}) Messages | Fazilnagar Town Portal`;
+    } else {
+      document.title = "Messages | Fazilnagar Town Portal";
+    }
+  }, [totalUnreadCount]);
+
+  // Handle URL deep-link (?conv=...)
+  useEffect(() => {
+    if (convParam && conversations.length > 0) {
+      const match = conversations.find(
+        (c) => String(c._id || c.id) === String(convParam)
+      );
+      if (match) {
+        setActiveConversation(match);
+      }
+    }
+  }, [convParam, conversations]);
 
   // Initialize socket and fetch profile & presence
   useEffect(() => {
@@ -60,6 +104,7 @@ export default function Messages() {
         }
         if (convRes.data?.conversations) {
           setConversations(convRes.data.conversations);
+          setCachedConversations(convRes.data.conversations);
         }
         if (presenceRes.data?.onlineUserIds) {
           setOnlineUserIds(new Set(presenceRes.data.onlineUserIds.map(String)));
@@ -72,6 +117,22 @@ export default function Messages() {
     }
 
     loadData();
+
+    // Online / Offline window listeners
+    const handleOnline = () => {
+      setIsOnline(true);
+      setReconnectFlash(true);
+      setTimeout(() => setReconnectFlash(false), 3500);
+      initClientSocket();
+      loadData();
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     // Listen for socket events
     let socket;
@@ -151,6 +212,31 @@ export default function Messages() {
     };
   }, [currentUserId]);
 
+  const handleManualReconnect = async () => {
+    setReconnecting(true);
+    try {
+      initClientSocket();
+      const [convRes, presenceRes] = await Promise.all([
+        API.get("/messages/conversations"),
+        API.get("/messages/presence").catch(() => ({ data: { onlineUserIds: [] } })),
+      ]);
+      if (convRes.data?.conversations) {
+        setConversations(convRes.data.conversations);
+        setCachedConversations(convRes.data.conversations);
+      }
+      if (presenceRes.data?.onlineUserIds) {
+        setOnlineUserIds(new Set(presenceRes.data.onlineUserIds.map(String)));
+      }
+      setIsOnline(true);
+      setReconnectFlash(true);
+      setTimeout(() => setReconnectFlash(false), 3000);
+    } catch {
+      // Still unreachable
+    } finally {
+      setReconnecting(false);
+    }
+  };
+
   const handleSignOut = () => {
     clearAuthSession();
     window.location.href = "/login";
@@ -218,7 +304,18 @@ export default function Messages() {
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
       {/* Top Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
-        <div>
+        <div className="flex items-center gap-2">
+          {/* Mobile Hamburger Drawer Trigger */}
+          <button
+            type="button"
+            onClick={() => setMobileDrawerOpen(true)}
+            className="p-2 -ml-1 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition md:hidden cursor-pointer"
+            title="Navigation Menu / मेन्यू"
+            aria-label="Open Mobile Navigation Menu"
+          >
+            <Menu className="w-5 h-5 text-slate-800" />
+          </button>
+
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-[#B8323C] text-white flex items-center justify-center shadow-xs">
               <MessageSquare className="w-5 h-5" />
@@ -270,13 +367,52 @@ export default function Messages() {
         </div>
       </div>
 
+      {/* Offline / Reconnect Banner */}
+      {!isOnline && (
+        <div className="mb-4 bg-amber-500/10 border border-amber-300/80 rounded-2xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-900 shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-2.5">
+            <span className="p-1.5 rounded-xl bg-amber-100 text-amber-700 shrink-0">
+              <WifiOff className="w-4 h-4" />
+            </span>
+            <div>
+              <p className="font-bold">You are currently offline / आप ऑफ़लाइन हैं</p>
+              <p className="text-[11px] text-amber-800/80">
+                Browsing cached conversations. Outgoing messages will queue and send automatically when connection recovers.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleManualReconnect}
+            disabled={reconnecting}
+            className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${reconnecting ? "animate-spin" : ""}`} />
+            <span>{reconnecting ? "Reconnecting..." : "Retry Connection"}</span>
+          </button>
+        </div>
+      )}
+
+      {reconnectFlash && (
+        <div className="mb-4 bg-emerald-50 border border-emerald-300 rounded-2xl p-3 flex items-center justify-between gap-3 text-xs text-emerald-900 shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-2.5">
+            <span className="p-1.5 rounded-xl bg-emerald-100 text-emerald-700 shrink-0">
+              <CheckCircle2 className="w-4 h-4" />
+            </span>
+            <p className="font-bold">
+              Connected! Town messages are synchronized. / कनेक्शन पुनः स्थापित हुआ।
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Main Messaging Interface */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
         {/* Left Column: Conversations List */}
         <div
-          className={`md:col-span-5 lg:col-span-4 ${
-            activeConversation ? "hidden md:block" : "block"
-          }`}
+          className={`md:col-span-5 ${
+            showInfoPanel && activeConversation ? "lg:col-span-4 xl:col-span-3" : "lg:col-span-4"
+          } ${activeConversation ? "hidden md:block" : "block"}`}
         >
           <ConversationList
             conversations={conversations}
@@ -289,11 +425,13 @@ export default function Messages() {
           />
         </div>
 
-        {/* Right Column: Chat Window or Empty State */}
+        {/* Center Column: Chat Window or Empty State */}
         <div
-          className={`md:col-span-7 lg:col-span-8 ${
-            activeConversation ? "block" : "hidden md:block"
-          }`}
+          className={`md:col-span-7 ${
+            showInfoPanel && activeConversation
+              ? "lg:col-span-5 xl:col-span-6"
+              : "lg:col-span-8"
+          } ${activeConversation ? "block" : "hidden md:block"}`}
         >
           {activeConversation ? (
             <ChatWindow
@@ -302,6 +440,9 @@ export default function Messages() {
               onBack={() => setActiveConversation(null)}
               onConversationUpdated={handleConversationUpdated}
               onlineUserIds={onlineUserIds}
+              onOpenMobileMenu={() => setMobileDrawerOpen(true)}
+              onToggleInfoPanel={() => setShowInfoPanel((p) => !p)}
+              showInfoPanel={showInfoPanel}
             />
           ) : (
             <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs h-[650px] flex flex-col items-center justify-center p-8 text-center space-y-4">
@@ -327,7 +468,52 @@ export default function Messages() {
             </div>
           )}
         </div>
+
+        {/* Right Column: Conversation Information Panel on larger screens */}
+        {showInfoPanel && activeConversation && (
+          <div className="hidden lg:block lg:col-span-3 xl:col-span-3">
+            <ConversationInfoPanel
+              conversation={activeConversation}
+              currentUserId={currentUserId}
+              onlineUserIds={onlineUserIds}
+              onClose={() => setShowInfoPanel(false)}
+              onConversationUpdated={handleConversationUpdated}
+              onLeftGroup={() => {
+                setActiveConversation(null);
+                setShowInfoPanel(false);
+              }}
+            />
+          </div>
+        )}
       </div>
+
+      {/* Mandatory Mobile Slide-in Drawer */}
+      <MobileMessagingDrawer
+        isOpen={mobileDrawerOpen}
+        onClose={() => setMobileDrawerOpen(false)}
+        conversations={conversations}
+        selectedId={activeConversation?._id || activeConversation?.id}
+        onSelectConversation={(conv) => {
+          setActiveConversation(conv);
+          setMobileDrawerOpen(false);
+        }}
+        onOpenNewChat={() => {
+          setMobileDrawerOpen(false);
+          setShowSearchModal(true);
+        }}
+        onOpenCreateGroup={() => {
+          setMobileDrawerOpen(false);
+          setShowCreateGroupModal(true);
+        }}
+        profile={profile}
+        portalUser={portalUser}
+        onlineUserIds={onlineUserIds}
+        currentUserId={currentUserId}
+        onStartChatWithCitizen={(citizen) => {
+          setMobileDrawerOpen(false);
+          handleSelectCitizenFromSearch(citizen);
+        }}
+      />
 
       {/* Citizen Search Modal */}
       {showSearchModal && (

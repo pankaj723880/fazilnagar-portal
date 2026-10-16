@@ -21,12 +21,33 @@ const messageSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["text", "image", "system"],
+      enum: ["text", "image", "video", "audio", "document", "system"],
       default: "text",
     },
     mediaUrl: {
       type: String,
       default: "",
+    },
+    fileName: {
+      type: String,
+      default: "",
+    },
+    fileSize: {
+      type: Number,
+      default: 0,
+    },
+    mimeType: {
+      type: String,
+      default: "",
+    },
+    driveFileId: {
+      type: String,
+      default: "",
+    },
+    storageProvider: {
+      type: String,
+      enum: ["local", "google_drive"],
+      default: "local",
     },
     replyTo: {
       type: mongoose.Schema.Types.ObjectId,
@@ -54,6 +75,13 @@ const messageSchema = new mongoose.Schema(
       index: true,
       default: null,
     },
+    reactions: [
+      {
+        emoji: { type: String, required: true },
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );

@@ -15,6 +15,9 @@ import verifyToken, { requireAdmin } from "../middleware/auth.js";
 import { writeLimiter } from "../middleware/rateLimiter.js";
 import { getIO, getOnlineUsers } from "../socket.js";
 
+import { getAuthenticatedDriveClient, getOrCreateAppFolder } from "./googleDrive.js";
+import GoogleDriveMedia from "../models/GoogleDriveMedia.js";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -23,29 +26,114 @@ if (!fs.existsSync(messagesUploadDir)) {
   fs.mkdirSync(messagesUploadDir, { recursive: true });
 }
 
+const BLOCKED_EXTENSIONS = [
+  ".exe", ".bat", ".cmd", ".sh", ".php", ".vbs", ".msi", ".jar", ".scr", ".com", ".pif", ".js", ".bin"
+];
+
+function getMediaCategory(mimetype, originalname) {
+  const mime = (mimetype || "").toLowerCase();
+  const ext = path.extname(originalname || "").toLowerCase();
+
+  if (mime.startsWith("image/") || [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"].includes(ext)) {
+    return "image";
+  }
+  if (mime.startsWith("video/") || [".mp4", ".webm", ".mov", ".mkv", ".ogg"].includes(ext)) {
+    return "video";
+  }
+  if (mime.startsWith("audio/") || [".mp3", ".wav", ".m4a", ".ogg", ".aac", ".flac"].includes(ext)) {
+    return "audio";
+  }
+  return "document";
+}
+
 const mediaStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, messagesUploadDir);
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase() || ".webp";
+    const ext = path.extname(file.originalname).toLowerCase() || "";
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, `media-${req.user?.id || "anon"}-${uniqueSuffix}${ext}`);
+    cb(null, `attachment-${req.user?.id || "anon"}-${uniqueSuffix}${ext}`);
   },
 });
 
 const mediaUpload = multer({
   storage: mediaStorage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max
+  limits: { fileSize: 1024 * 1024 * 1024 }, // 1 GB max direct upload
   fileFilter: (req, file, cb) => {
-    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-    if (allowed.includes(file.mimetype.toLowerCase())) {
-      cb(null, true);
-    } else {
-      cb(new Error("Only JPEG, PNG, or WebP images under 5 MB are allowed."));
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    if (BLOCKED_EXTENSIONS.includes(ext)) {
+      return cb(new Error("Executable or script files are not allowed for security reasons."));
     }
+    cb(null, true);
   },
 });
+
+const chunkUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB per chunk
+});
+
+// Helper to stream file to Google Drive dedicated folder if configured
+async function tryUploadToGoogleDrive({ filePath, originalName, mimeType, user }) {
+  try {
+    const hasDriveConfig =
+      process.env.GOOGLE_CLIENT_ID &&
+      process.env.GOOGLE_CLIENT_SECRET &&
+      (process.env.GOOGLE_DRIVE_REFRESH_TOKEN || (await mongoose.model("GoogleDriveToken").findOne({ key: "default_drive_account" })));
+    if (!hasDriveConfig) {
+      return null;
+    }
+
+    const { drive, accountEmail, tokenDoc } = await getAuthenticatedDriveClient();
+    const folderId = await getOrCreateAppFolder(drive, tokenDoc, "Fazilnagar Messaging Attachments");
+
+    const cleanName = `chat_${Date.now()}_${originalName.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const fileStream = fs.createReadStream(filePath);
+
+    const driveRes = await drive.files.create({
+      requestBody: {
+        name: cleanName,
+        parents: [folderId],
+      },
+      media: {
+        mimeType: mimeType || "application/octet-stream",
+        body: fileStream,
+      },
+      fields: "id, name, mimeType, size, webViewLink, webContentLink",
+    });
+
+    const driveFileId = driveRes.data?.id;
+    if (!driveFileId) return null;
+
+    const stats = fs.existsSync(filePath) ? fs.statSync(filePath) : { size: 0 };
+    const mediaDoc = await GoogleDriveMedia.create({
+      driveFileId,
+      fileName: cleanName,
+      mimeType,
+      fileSize: Number(driveRes.data.size) || stats.size,
+      owner: accountEmail,
+      folderId,
+      isTest: false,
+      uploadedBy: user?.id || null,
+    });
+
+    const backendBase = (process.env.BACKEND_URL || "").replace(/\/+$/, "");
+    mediaDoc.deliveryUrl = `${backendBase}/api/google-drive/media/${mediaDoc._id}`;
+    await mediaDoc.save();
+
+    return {
+      driveFileId,
+      mediaDocId: mediaDoc._id,
+      deliveryUrl: mediaDoc.deliveryUrl,
+      webViewLink: driveRes.data.webViewLink,
+      webContentLink: driveRes.data.webContentLink,
+    };
+  } catch (err) {
+    console.warn("[Messages Drive] Google Drive upload failed or not connected, falling back to local storage:", err.message);
+    return null;
+  }
+}
 
 const router = express.Router();
 
@@ -768,6 +856,7 @@ router.get("/conversations/:id/messages", verifyToken, async (req, res) => {
       .limit(limit)
       .populate("sender", "_id name username avatar")
       .populate("replyTo", "_id body sender isDeletedForEveryone type")
+      .populate("reactions.user", "_id name username avatar")
       .lean();
 
     // Reverse to chronological order for client display
@@ -790,6 +879,7 @@ router.get("/conversations/:id/messages", verifyToken, async (req, res) => {
         editedAt: m.editedAt,
         isDeletedForEveryone: m.isDeletedForEveryone,
         clientMessageId: m.clientMessageId,
+        reactions: m.reactions || [],
         createdAt: m.createdAt,
       };
     });
@@ -913,16 +1003,26 @@ router.post("/conversations/:id/messages", verifyToken, writeLimiter, async (req
 });
 
 // @route   POST /api/messages/conversations/:id/media
-// @desc    Upload media (photo) attachment and send message in conversation
+// @desc    Upload media or document attachment and send message in conversation
 // @access  Private
 router.post(
   "/conversations/:id/media",
   verifyToken,
   writeLimiter,
   (req, res, next) => {
-    mediaUpload.single("image")(req, res, (err) => {
+    const uploadSingle = mediaUpload.fields([
+      { name: "file", maxCount: 1 },
+      { name: "image", maxCount: 1 },
+      { name: "media", maxCount: 1 },
+    ]);
+    uploadSingle(req, res, (err) => {
       if (err) {
         return res.status(400).json({ success: false, message: err.message || "File upload failed." });
+      }
+      if (!req.file) {
+        if (req.files?.file?.[0]) req.file = req.files.file[0];
+        else if (req.files?.image?.[0]) req.file = req.files.image[0];
+        else if (req.files?.media?.[0]) req.file = req.files.media[0];
       }
       next();
     });
@@ -936,7 +1036,7 @@ router.post(
       const clientMessageId = req.body.clientMessageId;
 
       if (!req.file) {
-        return res.status(400).json({ success: false, message: "No image file provided." });
+        return res.status(400).json({ success: false, message: "No file provided for upload." });
       }
 
       // Verify active membership
@@ -968,24 +1068,63 @@ router.post(
         if (replyMsg) verifiedReplyId = replyMsg._id;
       }
 
-      const mediaUrl = `/uploads/messages/${req.file.filename}`;
+      const rawCategory = getMediaCategory(req.file.mimetype, req.file.originalname);
+      const mediaType = ["image", "video", "audio", "document"].includes(rawCategory) ? rawCategory : "document";
+      const originalName = req.file.originalname || "attachment";
+      const fileSize = req.file.size || 0;
+      const mimeType = req.file.mimetype || "";
+      let mediaUrl = `/uploads/messages/${req.file.filename}`;
+      let storageProvider = "local";
+      let driveFileId = "";
+
+      // Stream file to Google Drive if connected and available
+      const driveResult = await tryUploadToGoogleDrive({
+        filePath: req.file.path,
+        originalName,
+        mimeType,
+        user: req.user,
+      });
+
+      if (driveResult?.deliveryUrl) {
+        mediaUrl = driveResult.deliveryUrl;
+        storageProvider = "google_drive";
+        driveFileId = driveResult.driveFileId;
+      }
 
       const newMsg = await Message.create({
         conversation: conversationId,
         sender: currentUserId,
         body: caption,
-        type: "image",
+        type: mediaType,
         mediaUrl,
+        fileName: originalName,
+        fileSize,
+        mimeType,
+        driveFileId,
+        storageProvider,
         replyTo: verifiedReplyId,
         clientMessageId: clientMessageId || null,
       });
 
-      // Update conversation preview
+      // Update conversation preview with appropriate icon
+      let previewText = caption;
+      if (!previewText) {
+        if (mediaType === "image") previewText = "📷 Photo";
+        else if (mediaType === "video") previewText = "🎥 Video";
+        else if (mediaType === "audio") previewText = "🎵 Audio Note";
+        else previewText = `📄 ${originalName}`;
+      } else {
+        if (mediaType === "image") previewText = `📷 ${caption}`;
+        else if (mediaType === "video") previewText = `🎥 ${caption}`;
+        else if (mediaType === "audio") previewText = `🎵 ${caption}`;
+        else previewText = `📄 ${caption}`;
+      }
+
       conversation.lastMessage = {
-        text: caption ? `📷 ${caption}` : "📷 Photo",
+        text: previewText,
         sender: currentUserId,
         createdAt: newMsg.createdAt,
-        type: "image",
+        type: mediaType,
       };
       conversation.lastMessageAt = newMsg.createdAt;
       await conversation.save();
@@ -1019,6 +1158,244 @@ router.post(
     }
   }
 );
+
+// @route   POST /api/messages/conversations/:id/upload/init
+// @desc    Initialize chunked upload for large attachments (up to 1 GB)
+// @access  Private
+router.post("/conversations/:id/upload/init", verifyToken, writeLimiter, async (req, res) => {
+  try {
+    const conversationId = req.params.id;
+    const currentUserId = req.user.id;
+    const { fileName, fileSize } = req.body;
+
+    const membership = await ConversationMember.findOne({
+      conversation: conversationId,
+      user: currentUserId,
+      status: "active",
+    });
+    if (!membership) {
+      return res.status(403).json({ success: false, message: "Cannot send files to this conversation." });
+    }
+
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation || conversation.status === "declined" || conversation.status === "blocked") {
+      return res.status(403).json({ success: false, message: "Conversation is no longer active." });
+    }
+
+    const ext = path.extname(fileName || "").toLowerCase();
+    if (BLOCKED_EXTENSIONS.includes(ext)) {
+      return res.status(400).json({ success: false, message: "This file type is not allowed for security reasons." });
+    }
+
+    if (fileSize > 1024 * 1024 * 1024) {
+      return res.status(400).json({ success: false, message: "File exceeds the 1 GB maximum limit." });
+    }
+
+    const uploadId = `upload_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    const uploadDir = path.join(messagesUploadDir, "chunks", uploadId);
+    fs.mkdirSync(uploadDir, { recursive: true });
+
+    const chunkSize = 5 * 1024 * 1024; // 5 MB recommended chunk
+    const totalChunks = fileSize ? Math.ceil(fileSize / chunkSize) : 1;
+
+    res.json({
+      success: true,
+      uploadId,
+      chunkSize,
+      totalChunks,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to initialize upload: " + err.message });
+  }
+});
+
+// @route   POST /api/messages/conversations/:id/upload/chunk
+// @desc    Upload an individual binary chunk
+// @access  Private
+router.post(
+  "/conversations/:id/upload/chunk",
+  verifyToken,
+  (req, res, next) => {
+    chunkUpload.single("chunk")(req, res, (err) => {
+      if (err) return res.status(400).json({ success: false, message: err.message });
+      next();
+    });
+  },
+  async (req, res) => {
+    try {
+      const { uploadId, chunkIndex } = req.body;
+      if (!uploadId || chunkIndex === undefined || !req.file) {
+        return res.status(400).json({ success: false, message: "Missing chunk data or uploadId." });
+      }
+
+      const uploadDir = path.join(messagesUploadDir, "chunks", uploadId);
+      if (!fs.existsSync(uploadDir)) {
+        return res.status(404).json({ success: false, message: "Upload session not found or expired." });
+      }
+
+      const chunkPath = path.join(uploadDir, `chunk_${String(chunkIndex).padStart(5, "0")}`);
+      fs.writeFileSync(chunkPath, req.file.buffer);
+
+      res.json({ success: true, chunkIndex: Number(chunkIndex) });
+    } catch (err) {
+      res.status(500).json({ success: false, message: "Failed to save chunk: " + err.message });
+    }
+  }
+);
+
+// @route   POST /api/messages/conversations/:id/upload/complete
+// @desc    Assemble all chunks into final file, stream to Google Drive, and create message
+// @access  Private
+router.post("/conversations/:id/upload/complete", verifyToken, writeLimiter, async (req, res) => {
+  try {
+    const conversationId = req.params.id;
+    const currentUserId = req.user.id;
+    const { uploadId, fileName, totalChunks, caption, replyTo, clientMessageId, mimeType: providedMime } = req.body;
+
+    const membership = await ConversationMember.findOne({
+      conversation: conversationId,
+      user: currentUserId,
+      status: "active",
+    });
+    if (!membership) {
+      return res.status(403).json({ success: false, message: "Cannot send files to this conversation." });
+    }
+
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation || conversation.status === "declined" || conversation.status === "blocked") {
+      return res.status(403).json({ success: false, message: "Conversation is no longer active." });
+    }
+
+    const uploadDir = path.join(messagesUploadDir, "chunks", uploadId);
+    if (!fs.existsSync(uploadDir)) {
+      return res.status(404).json({ success: false, message: "Upload session not found or already completed." });
+    }
+
+    const ext = path.extname(fileName || "").toLowerCase();
+    if (BLOCKED_EXTENSIONS.includes(ext)) {
+      try { fs.rmSync(uploadDir, { recursive: true, force: true }); } catch (_) {}
+      return res.status(400).json({ success: false, message: "This file type is not allowed for security reasons." });
+    }
+
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const finalFilename = `attachment-${currentUserId}-${uniqueSuffix}${ext}`;
+    const finalFilePath = path.join(messagesUploadDir, finalFilename);
+
+    await new Promise((resolve, reject) => {
+      const writeStream = fs.createWriteStream(finalFilePath);
+      writeStream.on("error", reject);
+      writeStream.on("finish", resolve);
+
+      for (let i = 0; i < Number(totalChunks); i++) {
+        const chunkPath = path.join(uploadDir, `chunk_${String(i).padStart(5, "0")}`);
+        if (!fs.existsSync(chunkPath)) {
+          writeStream.destroy();
+          try { fs.unlinkSync(finalFilePath); } catch (_) {}
+          return reject(new Error(`Missing chunk ${i}. Please retry.`));
+        }
+        const data = fs.readFileSync(chunkPath);
+        writeStream.write(data);
+      }
+      writeStream.end();
+    });
+
+    // Clean up temporary chunks
+    try { fs.rmSync(uploadDir, { recursive: true, force: true }); } catch (_) {}
+
+    const fileStats = fs.statSync(finalFilePath);
+    const mimeType = providedMime || "application/octet-stream";
+    const rawCategory = getMediaCategory(mimeType, fileName);
+    const mediaType = ["image", "video", "audio", "document"].includes(rawCategory) ? rawCategory : "document";
+
+    let mediaUrl = `/uploads/messages/${finalFilename}`;
+    let storageProvider = "local";
+    let driveFileId = "";
+
+    // Stream file to Google Drive if available
+    const driveResult = await tryUploadToGoogleDrive({
+      filePath: finalFilePath,
+      originalName: fileName,
+      mimeType,
+      user: req.user,
+    });
+
+    if (driveResult?.deliveryUrl) {
+      mediaUrl = driveResult.deliveryUrl;
+      storageProvider = "google_drive";
+      driveFileId = driveResult.driveFileId;
+    }
+
+    let verifiedReplyId = null;
+    if (replyTo && mongoose.Types.ObjectId.isValid(replyTo)) {
+      const replyMsg = await Message.findOne({ _id: replyTo, conversation: conversationId });
+      if (replyMsg) verifiedReplyId = replyMsg._id;
+    }
+
+    const newMsg = await Message.create({
+      conversation: conversationId,
+      sender: currentUserId,
+      body: (caption || "").trim().slice(0, 500),
+      type: mediaType,
+      mediaUrl,
+      fileName: fileName || "file",
+      fileSize: fileStats.size,
+      mimeType,
+      driveFileId,
+      storageProvider,
+      replyTo: verifiedReplyId,
+      clientMessageId: clientMessageId || null,
+    });
+
+    // Update conversation preview with appropriate icon
+    let previewText = caption;
+    if (!previewText) {
+      if (mediaType === "image") previewText = "📷 Photo";
+      else if (mediaType === "video") previewText = "🎥 Video";
+      else if (mediaType === "audio") previewText = "🎵 Audio Note";
+      else previewText = `📄 ${fileName || "Document"}`;
+    } else {
+      if (mediaType === "image") previewText = `📷 ${caption}`;
+      else if (mediaType === "video") previewText = `🎥 ${caption}`;
+      else if (mediaType === "audio") previewText = `🎵 ${caption}`;
+      else previewText = `📄 ${caption}`;
+    }
+
+    conversation.lastMessage = {
+      text: previewText,
+      sender: currentUserId,
+      createdAt: newMsg.createdAt,
+      type: mediaType,
+    };
+    conversation.lastMessageAt = newMsg.createdAt;
+    await conversation.save();
+
+    await ConversationMember.updateMany(
+      { conversation: conversationId, user: { $ne: currentUserId }, status: "active" },
+      { $inc: { unreadCount: 1 } }
+    );
+
+    const populated = await Message.findById(newMsg._id)
+      .populate("sender", "_id name username avatar")
+      .populate("replyTo", "_id body sender isDeletedForEveryone type")
+      .lean();
+
+    const otherMemberIds = await ConversationMember.find({
+      conversation: conversationId,
+      user: { $ne: currentUserId },
+      status: "active",
+    }).distinct("user");
+
+    broadcastNewMessage(conversationId, populated, otherMemberIds, conversation);
+
+    res.status(201).json({
+      success: true,
+      message: populated,
+    });
+  } catch (err) {
+    console.error("Complete Upload Error:", err);
+    res.status(500).json({ success: false, message: "Failed to assemble and complete upload: " + err.message });
+  }
+});
 
 // @route   PATCH /api/messages/conversations/:id/messages/:messageId
 // @desc    Edit a previously sent message within 15 minutes
@@ -1199,6 +1576,175 @@ router.delete("/conversations/:id/messages/:messageId", verifyToken, writeLimite
   } catch (err) {
     console.error("Delete Message Error:", err);
     res.status(500).json({ success: false, message: "Failed to delete message." });
+  }
+});
+
+// @route   POST /api/messages/conversations/:id/messages/:messageId/react
+// @desc    Add, toggle, or change an emoji reaction on a message
+// @access  Private
+router.post("/conversations/:id/messages/:messageId/react", verifyToken, writeLimiter, async (req, res) => {
+  try {
+    const { id: conversationId, messageId } = req.params;
+    const currentUserId = req.user.id;
+    const { emoji } = req.body;
+
+    if (!emoji || typeof emoji !== "string" || !emoji.trim()) {
+      return res.status(400).json({ success: false, message: "Valid emoji string is required." });
+    }
+
+    const cleanEmoji = emoji.trim();
+
+    // Verify conversation membership
+    const membership = await ConversationMember.findOne({
+      conversation: conversationId,
+      user: currentUserId,
+      status: "active",
+    });
+
+    if (!membership) {
+      return res.status(403).json({ success: false, message: "Cannot react to messages in this conversation." });
+    }
+
+    const message = await Message.findOne({ _id: messageId, conversation: conversationId });
+    if (!message) {
+      return res.status(404).json({ success: false, message: "Message not found." });
+    }
+
+    if (message.isDeletedForEveryone) {
+      return res.status(400).json({ success: false, message: "Cannot react to a deleted message." });
+    }
+
+    if (!Array.isArray(message.reactions)) {
+      message.reactions = [];
+    }
+
+    // Check if user already reacted
+    const existingIndex = message.reactions.findIndex(
+      (r) => r.user && r.user.toString() === currentUserId.toString()
+    );
+
+    if (existingIndex > -1) {
+      const existingReaction = message.reactions[existingIndex];
+      if (existingReaction.emoji === cleanEmoji) {
+        // Toggle off / remove reaction
+        message.reactions.splice(existingIndex, 1);
+      } else {
+        // Change reaction to new emoji
+        message.reactions[existingIndex].emoji = cleanEmoji;
+        message.reactions[existingIndex].createdAt = new Date();
+      }
+    } else {
+      // Add new reaction
+      message.reactions.push({
+        emoji: cleanEmoji,
+        user: currentUserId,
+        createdAt: new Date(),
+      });
+    }
+
+    await message.save();
+
+    // Populate user info on reactions
+    const updated = await Message.findById(messageId)
+      .populate("reactions.user", "_id name username avatar")
+      .lean();
+
+    const io = getIO();
+    try {
+      io.to(`conv:${conversationId}`).emit("message_reaction_updated", {
+        conversationId,
+        messageId,
+        reactions: updated.reactions || [],
+      });
+    } catch (e) {
+      console.warn("Socket reaction emit error:", e.message);
+    }
+
+    res.json({
+      success: true,
+      messageId,
+      reactions: updated.reactions || [],
+    });
+  } catch (err) {
+    console.error("React to message error:", err);
+    res.status(500).json({ success: false, message: "Failed to update reaction." });
+  }
+});
+
+// @route   PATCH /api/messages/conversations/:id/preferences
+// @desc    Update conversation preferences (pin, mute, archive) for the caller
+// @access  Private
+router.patch("/conversations/:id/preferences", verifyToken, async (req, res) => {
+  try {
+    const conversationId = req.params.id;
+    const currentUserId = req.user.id;
+    const { isPinned, isMuted, isArchived } = req.body;
+
+    const membership = await ConversationMember.findOne({
+      conversation: conversationId,
+      user: currentUserId,
+      status: "active",
+    });
+
+    if (!membership) {
+      return res.status(403).json({ success: false, message: "You are not a member of this conversation." });
+    }
+
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) {
+      return res.status(404).json({ success: false, message: "Conversation not found." });
+    }
+
+    if (!Array.isArray(conversation.pinnedBy)) conversation.pinnedBy = [];
+    if (!Array.isArray(conversation.mutedBy)) conversation.mutedBy = [];
+    if (!Array.isArray(conversation.archivedBy)) conversation.archivedBy = [];
+
+    // Update pinnedBy
+    if (typeof isPinned === "boolean") {
+      if (isPinned) {
+        if (!conversation.pinnedBy.some((uid) => uid.toString() === currentUserId)) {
+          conversation.pinnedBy.push(currentUserId);
+        }
+      } else {
+        conversation.pinnedBy = conversation.pinnedBy.filter((uid) => uid.toString() !== currentUserId);
+      }
+    }
+
+    // Update mutedBy
+    if (typeof isMuted === "boolean") {
+      if (isMuted) {
+        if (!conversation.mutedBy.some((uid) => uid.toString() === currentUserId)) {
+          conversation.mutedBy.push(currentUserId);
+        }
+      } else {
+        conversation.mutedBy = conversation.mutedBy.filter((uid) => uid.toString() !== currentUserId);
+      }
+    }
+
+    // Update archivedBy
+    if (typeof isArchived === "boolean") {
+      if (isArchived) {
+        if (!conversation.archivedBy.some((uid) => uid.toString() === currentUserId)) {
+          conversation.archivedBy.push(currentUserId);
+        }
+      } else {
+        conversation.archivedBy = conversation.archivedBy.filter((uid) => uid.toString() !== currentUserId);
+      }
+    }
+
+    await conversation.save();
+
+    res.json({
+      success: true,
+      preferences: {
+        isPinned: conversation.pinnedBy.some((uid) => uid.toString() === currentUserId),
+        isMuted: conversation.mutedBy.some((uid) => uid.toString() === currentUserId),
+        isArchived: conversation.archivedBy.some((uid) => uid.toString() === currentUserId),
+      },
+    });
+  } catch (err) {
+    console.error("Preferences Update Error:", err);
+    res.status(500).json({ success: false, message: "Failed to update conversation preferences." });
   }
 });
 
