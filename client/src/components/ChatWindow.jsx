@@ -987,15 +987,15 @@ export default function ChatWindow({
 
   return (
     <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs flex flex-col h-full min-h-0 overflow-hidden">
-      {/* Chat Header */}
-      <div className="p-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      {/* Pinned Top Name Bar Header */}
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-3.5 sm:px-4 py-2.5 sm:py-3 shrink-0 flex items-center justify-between shadow-2xs">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           {/* Hamburger button on mobile to open MobileMessagingDrawer */}
           {onOpenMobileMenu && (
             <button
               type="button"
               onClick={onOpenMobileMenu}
-              className="p-1.5 -ml-1 text-slate-700 hover:text-slate-900 hover:bg-slate-200/60 rounded-xl transition md:hidden cursor-pointer"
+              className="p-1.5 -ml-1 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition md:hidden cursor-pointer"
               title="Open Navigation Menu / मेन्यू"
               aria-label="Open Navigation Menu"
             >
@@ -1014,27 +1014,27 @@ export default function ChatWindow({
           )}
 
           <div
-            className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden shrink-0 cursor-pointer relative"
+            className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden shrink-0 cursor-pointer relative border border-slate-200/80 shadow-2xs group"
             onClick={onToggleInfoPanel || (() => { if (isGroup) setShowGroupDetails(true); })}
           >
             {isGroup ? (
               conversation.groupAvatar ? (
-                <img src={conversation.groupAvatar} alt={conversation.groupName} className="w-full h-full object-cover" />
+                <img src={conversation.groupAvatar} alt={conversation.groupName} className="w-full h-full object-cover group-hover:scale-105 transition" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center font-bold text-xs text-[#B8323C] bg-red-50">
                   <Users className="w-5 h-5" />
                 </div>
               )
             ) : otherUser.avatar ? (
-              <img src={otherUser.avatar} alt={otherUser.name} className="w-full h-full object-cover" />
+              <img src={otherUser.avatar} alt={otherUser.name} className="w-full h-full object-cover group-hover:scale-105 transition" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-600 bg-slate-100">
+              <div className="w-full h-full flex items-center justify-center font-bold text-sm text-slate-700 bg-gradient-to-br from-slate-100 to-slate-200">
                 {(otherUser.name || "C")[0]?.toUpperCase()}
               </div>
             )}
             {isPartnerOnline && (
               <span
-                className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full ring-1 ring-white"
+                className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full ring-1 ring-emerald-500/20"
                 title="Online"
               />
             )}
@@ -1045,32 +1045,35 @@ export default function ChatWindow({
             onClick={onToggleInfoPanel || (() => { if (isGroup) setShowGroupDetails(true); })}
           >
             <div className="flex items-center gap-1.5">
-              <h3 className="text-xs font-bold text-slate-900 truncate">
+              <h3 className="text-sm font-black text-slate-900 truncate tracking-tight hover:text-[#B8323C] transition">
                 {isGroup ? conversation.groupName || "Town Group" : otherUser.name || "Citizen"}
               </h3>
               {isGroup && (
-                <span className="px-1.5 py-0.2 rounded-md bg-slate-100 text-slate-600 font-bold text-[9px] shrink-0">
+                <span className="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 font-bold text-[9px] shrink-0">
                   Group
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2 text-[10px] text-slate-400 font-medium">
+            <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium">
               {isGroup ? (
                 <span className="text-[#B8323C] hover:underline font-semibold">
-                  Tap for group info & members
+                  Tap for group info &amp; members
                 </span>
               ) : (
                 <>
                   {isPartnerOnline ? (
                     <span className="inline-flex items-center gap-1 font-bold text-emerald-600">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                       Online
                     </span>
                   ) : (
-                    <span className="text-slate-400">Offline</span>
+                    <span className="inline-flex items-center gap-1 text-slate-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                      Offline
+                    </span>
                   )}
-                  {otherUser.username && <span className="font-mono">• @{otherUser.username}</span>}
-                  {otherUser.area && <span className="hidden sm:inline">• {otherUser.area}</span>}
+                  {otherUser.username && <span className="font-mono text-slate-400 hidden xs:inline">• @{otherUser.username}</span>}
+                  {otherUser.area && <span className="hidden sm:inline text-slate-400">• {otherUser.area}</span>}
                   {isBlocked && <span className="text-red-500 font-bold">• Blocked</span>}
                 </>
               )}
@@ -1079,9 +1082,9 @@ export default function ChatWindow({
         </div>
 
         {/* Actions bar: typing indicator, in-chat search, info toggle, options */}
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           {isTyping && (
-            <span className="text-[11px] text-[#B8323C] font-semibold animate-pulse mr-1 hidden sm:inline">
+            <span className="text-xs text-[#B8323C] font-semibold animate-pulse mr-1.5 hidden sm:inline">
               typing...
             </span>
           )}
@@ -1090,10 +1093,10 @@ export default function ChatWindow({
           <button
             type="button"
             onClick={() => setShowChatSearch((prev) => !prev)}
-            className={`p-1.5 rounded-xl transition cursor-pointer ${
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition cursor-pointer ${
               showChatSearch
-                ? "bg-red-50 text-[#B8323C]"
-                : "hover:bg-slate-200/60 text-slate-500 hover:text-slate-800"
+                ? "bg-red-50 text-[#B8323C] ring-1 ring-red-200"
+                : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
             }`}
             title="Search in conversation / बातचीत में खोजें"
             aria-label="Search within conversation"
@@ -1106,10 +1109,10 @@ export default function ChatWindow({
             <button
               type="button"
               onClick={onToggleInfoPanel}
-              className={`p-1.5 rounded-xl transition cursor-pointer ${
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition cursor-pointer ${
                 showInfoPanel
-                  ? "bg-red-50 text-[#B8323C]"
-                  : "hover:bg-slate-200/60 text-slate-500 hover:text-slate-800"
+                  ? "bg-red-50 text-[#B8323C] ring-1 ring-red-200"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
               }`}
               title="Conversation details & Shared Photos / विवरण"
               aria-label="Conversation details"
@@ -1122,7 +1125,7 @@ export default function ChatWindow({
             <button
               type="button"
               onClick={() => setShowActionsDropdown((prev) => !prev)}
-              className="p-1.5 rounded-xl hover:bg-slate-200/60 text-slate-500 hover:text-slate-800 transition cursor-pointer"
+              className="w-9 h-9 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
               title="Options"
             >
               <MoreVertical className="w-4 h-4" />
@@ -1908,7 +1911,7 @@ export default function ChatWindow({
           </button>
         </div>
       ) : (
-        <div className="relative shrink-0">
+        <div className="sticky bottom-0 z-20 shrink-0 bg-white border-t border-slate-200/90 shadow-[0_-4px_16px_rgba(0,0,0,0.04)]">
           {/* Emoji Picker Tray */}
           {showEmojiPicker && (
             <div className="absolute bottom-full mb-2 left-3 z-30 bg-white rounded-2xl shadow-xl border border-slate-200 p-3 w-72 animate-in fade-in zoom-in-95">
@@ -2043,7 +2046,7 @@ export default function ChatWindow({
 
           <form
             onSubmit={handleSendMessage}
-            className="p-2.5 sm:p-3 border-t border-slate-100 bg-white flex items-center gap-1.5 sm:gap-2 shrink-0"
+            className="p-2 sm:p-2.5 bg-white flex items-center gap-1.5 sm:gap-2 shrink-0"
           >
             {/* Hidden File Inputs for All Supported Media Types */}
             <input
@@ -2090,9 +2093,9 @@ export default function ChatWindow({
                 setShowEmojiPicker((p) => !p);
                 setShowAttachMenu(false);
               }}
-              className={`p-2 rounded-xl transition cursor-pointer ${
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition cursor-pointer shrink-0 ${
                 showEmojiPicker
-                  ? "bg-amber-50 text-amber-600"
+                  ? "bg-amber-100 text-amber-700"
                   : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
               }`}
               title="Emoji / इमोजी"
@@ -2109,9 +2112,9 @@ export default function ChatWindow({
                 setShowEmojiPicker(false);
               }}
               disabled={Boolean(editingMessage) || uploadingMedia}
-              className={`p-2 rounded-xl transition cursor-pointer disabled:opacity-40 ${
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition cursor-pointer shrink-0 disabled:opacity-40 ${
                 showAttachMenu
-                  ? "bg-red-50 text-[#B8323C]"
+                  ? "bg-red-50 text-[#B8323C] ring-1 ring-red-200"
                   : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
               }`}
               title="Attach media or document / मीडिया जोड़ें"
@@ -2120,19 +2123,23 @@ export default function ChatWindow({
               <Paperclip className="w-5 h-5" />
             </button>
 
-            {/* Quick Camera Trigger on Mobile */}
+            {/* Quick Live Camera Snap / Record Trigger */}
             <button
               type="button"
-              onClick={() => cameraInputRef.current?.click()}
+              onClick={() => {
+                setShowAttachMenu(false);
+                setShowEmojiPicker(false);
+                setShowCameraModal(true);
+              }}
               disabled={Boolean(editingMessage) || uploadingMedia}
-              className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer disabled:opacity-40 sm:hidden"
-              title="Take Photo / कैमरा"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-slate-500 hover:text-[#B8323C] hover:bg-red-50 transition cursor-pointer shrink-0 disabled:opacity-40"
+              title="Live Camera Photo & Video / लाइव कैमरा"
               aria-label="Open camera"
             >
               <Camera className="w-5 h-5" />
             </button>
 
-            {/* Input Field */}
+            {/* Message Input Field */}
             <input
               type="text"
               value={inputText}
@@ -2148,14 +2155,18 @@ export default function ChatWindow({
                   ? `Add a caption for this ${selectedCategory} (optional)...`
                   : "Type a message... / संदेश लिखें..."
               }
-              className="flex-1 px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#B8323C]/20 focus:border-[#B8323C] transition"
+              className="flex-1 px-4 py-2.5 rounded-full bg-slate-100/90 hover:bg-slate-100 focus:bg-white border border-slate-200/80 focus:border-[#B8323C] text-xs sm:text-sm font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#B8323C]/20 transition shadow-inner"
             />
 
             {/* Send / Save Button */}
             <button
               type="submit"
               disabled={(!inputText.trim() && !selectedFile) || uploadingMedia}
-              className="p-2.5 rounded-2xl bg-[#B8323C] hover:bg-red-700 disabled:opacity-40 disabled:hover:bg-[#B8323C] text-white transition shadow-2xs cursor-pointer flex items-center justify-center shrink-0"
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition shadow-sm shrink-0 cursor-pointer ${
+                (!inputText.trim() && !selectedFile) || uploadingMedia
+                  ? "bg-slate-100 text-slate-300 cursor-not-allowed shadow-none"
+                  : "bg-[#B8323C] hover:bg-red-700 text-white shadow-md active:scale-95"
+              }`}
               title={editingMessage ? "Save edit" : selectedFile ? "Send attachment" : "Send message"}
             >
               {uploadingMedia ? (

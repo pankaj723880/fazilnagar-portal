@@ -223,6 +223,8 @@ export function GlobalFloatingAndStickyAds() {
     location.pathname === "/local-updates" ||
     location.pathname === "/directory/news";
 
+  const isMessagesPage = location.pathname.startsWith("/messages");
+
   useEffect(() => {
     let isMounted = true;
 
@@ -279,14 +281,16 @@ export function GlobalFloatingAndStickyAds() {
     return () => clearInterval(interval);
   }, [floatingAds.length]);
 
+  // On Reels full-screen feed or Messages chat page, suppress sticky banners & floating overlays
   const floatingAd =
-    floatingAds.length > 0 ? floatingAds[activeFloatingIndex % floatingAds.length] : null;
+    !isMessagesPage && floatingAds.length > 0
+      ? floatingAds[activeFloatingIndex % floatingAds.length]
+      : null;
 
-  // On Reels full-screen feed, suppress sticky banners so video controls are unobstructed
-  const stickyBottomAd = !isReelsPage
+  const stickyBottomAd = !isReelsPage && !isMessagesPage
     ? ads.find((a) => a.format === "sticky-bottom" && isVisible(a))
     : null;
-  const stickyTopAd = !isReelsPage
+  const stickyTopAd = !isReelsPage && !isMessagesPage
     ? ads.find((a) => a.format === "sticky-top" && isVisible(a))
     : null;
 

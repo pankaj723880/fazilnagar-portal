@@ -922,14 +922,6 @@ export default function Messages() {
         onClose={() => setShowCreateGroupModal(false)}
         onGroupCreated={handleGroupCreated}
       />
-
-      {/* Security Tip Footer */}
-      <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200/60 text-amber-900 text-xs flex items-center gap-2.5">
-        <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
-        <span>
-          <strong>Citizen Safety Notice:</strong> Never share your one-time passwords (OTP), banking details, or passwords with anyone on the portal. Messages are stored securely in MongoDB Atlas.
-        </span>
-      </div>
     </div>
   );
 }
