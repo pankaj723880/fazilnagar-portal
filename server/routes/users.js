@@ -1,7 +1,9 @@
 import express from "express";
 import User from "../models/User.js";
+import Block from "../models/Block.js";
 import Submission from "../models/Submission.js";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
+import { searchLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
@@ -84,6 +86,111 @@ router.get("/", verifyToken, requireAdmin, async (req, res) => {
   } catch (err) {
     console.error("Fetch Users Error:", err);
     res.status(500).json({ message: "Failed to fetch registered users list." });
+  }
+});
+
+// Helper to mask email address: ra****@gmail.com
+function maskEmail(email) {
+  if (!email || typeof email !== "string" || !email.includes("@")) return "";
+  const [local, domain] = email.split("@");
+  if (local.length <= 2) {
+    return `${local[0]}****@${domain}`;
+  }
+  return `${local.slice(0, 2)}****@${domain}`;
+}
+
+// Safely escape regex characters for search queries (supports Hindi/Devanagari characters)
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// @route   GET /api/users/search
+// @desc    Search active users by name or username; exact email only if findByEmail is true
+// @access  Private (Authenticated Citizen)
+router.get("/search", verifyToken, searchLimiter, async (req, res) => {
+  try {
+    const rawQuery = (req.query.q || req.query.query || "").trim();
+    if (!rawQuery || rawQuery.length < 2) {
+      return res.status(200).json({
+        success: true,
+        users: [],
+        pagination: { total: 0, page: 1, limit: 20, totalPages: 0 },
+        message: "Search query must be at least 2 characters long.",
+      });
+    }
+
+    const currentUserId = req.user.id;
+
+    // Filter out users involved in blocks (either blocked by caller or blocker of caller)
+    const [blockedByMe, blockedMe] = await Promise.all([
+      Block.find({ blocker: currentUserId }).distinct("blocked"),
+      Block.find({ blocked: currentUserId }).distinct("blocker"),
+    ]);
+
+    const excludedIds = [currentUserId, ...blockedByMe, ...blockedMe];
+
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
+    const skip = (page - 1) * limit;
+
+    const escaped = escapeRegex(rawQuery);
+    const searchRegex = new RegExp(escaped, "i");
+
+    // Match conditions: name, username, or exact email if opted-in
+    const searchConditions = [
+      { name: searchRegex },
+      { username: searchRegex },
+    ];
+
+    if (rawQuery.includes("@")) {
+      searchConditions.push({
+        email: rawQuery.toLowerCase(),
+        findByEmail: true,
+      });
+    }
+
+    const filter = {
+      _id: { $nin: excludedIds },
+      status: "active",
+      $or: searchConditions,
+    };
+
+    const [total, matchedUsers] = await Promise.all([
+      User.countDocuments(filter),
+      User.find(filter)
+        .select("_id name username avatar area bio showEmail email whoCanMessage lastSeenVisible lastSeen")
+        .sort({ name: 1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+    ]);
+
+    const results = matchedUsers.map((u) => ({
+      _id: u._id,
+      id: u._id,
+      name: u.name,
+      username: u.username || "",
+      avatar: u.avatar || "",
+      area: u.area || "",
+      bio: u.bio || "",
+      whoCanMessage: u.whoCanMessage || "everyone",
+      maskedEmail: u.showEmail && u.email ? maskEmail(u.email) : null,
+      lastSeen: u.lastSeenVisible ? u.lastSeen : null,
+    }));
+
+    res.status(200).json({
+      success: true,
+      users: results,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 0,
+      },
+    });
+  } catch (err) {
+    console.error("User Search Error:", err);
+    res.status(500).json({ success: false, message: "Failed to search users." });
   }
 });
 

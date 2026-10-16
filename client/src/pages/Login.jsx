@@ -29,14 +29,10 @@ export default function Login({ setUser }) {
 
     try {
       const res = await API.post("/auth/login", { email, password });
-
-      // Save credentials & user info isolated to this browser tab
       const userData = res.data.user || { email, name: email.split("@")[0] };
       setAuthSession(res.data.token, userData);
-      
       if (setUser) setUser(userData);
 
-      // Navigate dynamically based on where user came from
       navigate(redirectPath, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || "Invalid credentials or server offline.");
@@ -83,7 +79,7 @@ export default function Login({ setUser }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-red-700 hover:bg-red-800 text-white font-bold rounded-xl transition-colors shadow-md"
+          className="w-full py-3 bg-red-700 hover:bg-red-800 text-white font-bold rounded-xl transition-colors shadow-md disabled:opacity-50"
         >
           {loading ? "Signing in..." : "Sign In / लॉगिन"}
         </button>

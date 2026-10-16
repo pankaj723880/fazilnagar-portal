@@ -1,3 +1,4 @@
+import http from "http";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -8,6 +9,9 @@ import connectDB, { dbConnectionError, detectedUriSource } from "./config/db.js"
 import authRoutes from "./routes/auth.js";
 import newsRoutes from "./routes/news.js";
 import placesRoutes from "./routes/places.js";
+import profileRoutes from "./routes/profile.js";
+import messagesRoutes from "./routes/messages.js";
+import { initSocket } from "./socket.js";
 
 dotenv.config();
 const app = express();
@@ -196,6 +200,8 @@ app.use("/api/heritage", heritageRoutes);
 app.use("/api/media", mediaRoutes);
 app.use("/api/audit", auditRoutes);
 app.use("/api/civic-directory", civicDirectoryRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/messages", messagesRoutes);
 
 // Fallback mounts in case client calls without /api prefix
 app.use("/auth", authRoutes);
@@ -213,6 +219,11 @@ app.use("/heritage", heritageRoutes);
 app.use("/media", mediaRoutes);
 app.use("/audit", auditRoutes);
 app.use("/civic-directory", civicDirectoryRoutes);
+app.use("/profile", profileRoutes);
+app.use("/messages", messagesRoutes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const server = http.createServer(app);
+initSocket(server);
+
+server.listen(PORT, () => console.log(`Server running with Socket.IO on port ${PORT}`));

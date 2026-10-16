@@ -25,6 +25,7 @@ import AdminDriveStorage from "../components/AdminDriveStorage";       // Google
 import AdminHomepageCMS from "../components/AdminHomepageCMS";         // Module 12: Homepage CMS
 import AdminCustomNotifications from "../components/admin/AdminCustomNotifications"; // Module 13: Notifications & Alerts
 import AdminCivicDirectoryCMS from "../components/AdminCivicDirectoryCMS"; // Civic Directory Index CMS
+import AdminModerationCMS from "../components/admin/AdminModerationCMS"; // Citizen Messaging Moderation CMS
 
 import {
   ShieldCheck,
@@ -330,6 +331,10 @@ export default function AdminReview({ user: propUser }) {
       case "notifications":
       case "alerts":
         return <AdminCustomNotifications token={getAuthToken()} currentAdminUser={currentUser} />;
+
+      case "moderation-reports":
+      case "moderation":
+        return <AdminModerationCMS />;
 
       case "cms-audit":
       case "audit":

@@ -27,7 +27,10 @@ const Contact = lazy(() => import("./pages/Contact"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const AdminReview = lazy(() => import("./pages/AdminReview"));
+const Messages = lazy(() => import("./pages/Messages"));
+const ProfileEdit = lazy(() => import("./pages/ProfileEdit"));
 import AdminRoute from "./components/AdminRoute";
+import RequireMessagingAuth from "./components/RequireMessagingAuth";
 import InstallButton from "./components/InstallButton";
 import DirectionsModal from "./components/DirectionsModal";
 import NotificationCenter from "./components/NotificationCenter";
@@ -520,6 +523,31 @@ export default function App() {
                   </AdminRoute>
                 }
               />
+              {/* Town Messaging & Profile Routes (Protected, noindex) */}
+              <Route
+                path="/messages"
+                element={
+                  <RequireMessagingAuth>
+                    <Messages />
+                  </RequireMessagingAuth>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <RequireMessagingAuth>
+                    <ProfileEdit />
+                  </RequireMessagingAuth>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <RequireMessagingAuth>
+                    <ProfileEdit />
+                  </RequireMessagingAuth>
+                }
+              />
             </Routes>
           </Suspense>
         </div>
@@ -820,6 +848,14 @@ export default function App() {
                     <span>📍</span>
                     <span>Town Map</span>
                   </a>
+                  <Link
+                    to="/messages"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-emerald-50 text-emerald-950 hover:bg-emerald-100 border border-emerald-200/80 active:scale-95 transition"
+                  >
+                    <span>💬</span>
+                    <span>Chat / संवाद</span>
+                  </Link>
                 </div>
 
                 {/* Highlighted Banner: Admin Dashboard 🛡️ ADMIN DESK (Strictly Admin-Only) */}

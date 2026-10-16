@@ -21,6 +21,7 @@ import {
   X,
   ExternalLink,
   Globe,
+  Flag,
 } from "lucide-react";
 
 export default function AdminSidebar({
@@ -148,6 +149,11 @@ export default function AdminSidebar({
           icon: Bell,
           badge: "New",
           badgeColor: "bg-blue-900 text-blue-300 border border-blue-700/60 font-bold",
+        },
+        {
+          id: "moderation-reports",
+          label: "Citizen Moderation",
+          icon: Flag,
         },
         {
           id: "cms-audit",
