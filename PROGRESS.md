@@ -274,6 +274,29 @@ The Fazilnagar Town Portal messaging architecture is fully implemented and opera
     - **Total: 53/53 tests passing across all test suites.**
   - Client production build: `npm run build` completed cleanly in 13.06s with 0 errors across 2,112 transformed modules.
 
+- **Phase 10: Town Messaging UI — Mobile + Desktop Layout and Profile Avatar Fixes**
+  - **Fixed Message Composer Anchoring**:
+    - Replaced `sticky bottom-0` with non-scrolling flex footer child (`shrink-0 z-20 bg-white border-t border-slate-200/90 shadow-[0_-4px_16px_rgba(0,0,0,0.04)] pb-[max(0.5rem,env(safe-area-inset-bottom))]`).
+    - Fixed outer layout bounds in `client/src/App.jsx` and `client/src/pages/Messages.jsx` so chat panel fits within available viewport height without triggering outer page window scroll.
+    - Isolated scroll to message history (`flex-1 min-h-0 overflow-y-auto overscroll-y-contain`), keeping composer permanently anchored at the bottom on both mobile and laptop.
+  - **Fixed Active Chat Header**:
+    - Header is permanently anchored at the top of the chat panel as a `shrink-0` flex child outside the scrollable message list. Old messages scroll smoothly underneath without displacing the header.
+  - **Removed Redundant Mobile Hamburger**:
+    - Removed redundant hamburger menu button from active chat header in `ChatWindow.jsx`.
+    - Maintained single hamburger trigger beside "Town Messaging / नगर संवाद" heading in `Messages.jsx` (`md:hidden`), opening `MobileMessagingDrawer.jsx`.
+    - Retained mobile `<ArrowLeft>` Back button in `ChatWindow.jsx` to return to conversations.
+  - **Cleaned Desktop Sidebar Heading**:
+    - Removed redundant "Messages / संवाद" heading and duplicate message icon from `ConversationList.jsx`.
+    - Positioned "+ New Chat" and "New Group" buttons neatly at the top of the sidebar.
+    - Preserved instant search and conversation category filter pills.
+  - **Fixed Profile Photo / Avatar Rendering**:
+    - Updated `server/routes/auth.js` (`POST /login` and `GET /me`) to return `avatar` and `username`.
+    - Updated `client/src/utils/authStorage.js` (`getAuthUser`) to parse and return `avatar` and `username`.
+    - Updated `client/src/pages/Messages.jsx` top-right profile button to render `resolveMediaUrl(profile?.avatar || portalUser?.avatar)` with circular clipping, `object-fit: cover`, and resilient fallback initials (`absolute inset-0`).
+    - Synchronized `authStorage` on profile load and updates in both `Messages.jsx` and `ProfileEdit.jsx`.
+    - Added Cross-Origin Resource Policy header (`Cross-Origin-Resource-Policy: cross-origin`) on `/uploads` in `server/server.js`.
+    - Applied resilient absolute-stacked avatar fallback to `ConversationList.jsx`, `ChatWindow.jsx`, `MobileMessagingDrawer.jsx`, `ConversationInfoPanel.jsx`, and `UserSearch.jsx`.
+
 ## Key File Paths
 - Redesigned Chat Window: `client/src/components/ChatWindow.jsx`
 - Redesigned Conversation List: `client/src/components/ConversationList.jsx`

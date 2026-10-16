@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import API from "../api";
 import { usePageSEO } from "../utils/seo";
-import { getAuthUser, clearAuthSession } from "../utils/authStorage";
+import { getAuthUser, getAuthToken, setAuthSession, clearAuthSession } from "../utils/authStorage";
 import { initClientSocket, getSocket, playMessageChime } from "../socket";
 import { maskEmail } from "./ProfileEdit";
 import UserSearch from "../components/UserSearch";
@@ -161,6 +161,15 @@ export default function Messages() {
           setEditName(p.name || "");
           setEditPhone(p.phone || "");
           setEditAvatarPreview(p.avatar || "");
+          const currentToken = getAuthToken();
+          if (currentToken) {
+            setAuthSession(currentToken, {
+              ...portalUser,
+              ...p,
+              avatar: p.avatar || portalUser?.avatar || "",
+              username: p.username || portalUser?.username || "",
+            });
+          }
         }
         if (convRes.data?.conversations) {
           // Normalize: if user is currently looking at active conversation, keep its unreadCount = 0
@@ -508,6 +517,13 @@ export default function Messages() {
         setEditPhone(updated.phone || "");
         setEditAvatarPreview(updated.avatar || "");
         setEditAvatarFile(null);
+        const currentToken = getAuthToken();
+        if (currentToken) {
+          setAuthSession(currentToken, {
+            ...portalUser,
+            ...updated,
+          });
+        }
         setProfileSuccessMsg("Profile and mobile number updated! / प्रोफ़ाइल सुरक्षित हुई।");
         setTimeout(() => {
           setShowProfileModal(false);
@@ -523,12 +539,13 @@ export default function Messages() {
 
   const displayName = profile?.name || portalUser?.name || portalUser?.email || "Citizen";
   const userEmail = profile?.email || portalUser?.email || "";
+  const displayAvatar = profile?.avatar || portalUser?.avatar || "";
   const username =
     profile?.username ||
     (userEmail ? userEmail.split("@")[0].replace(/[^a-z0-9_]/g, "_").slice(0, 15) : "citizen");
 
   return (
-    <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 h-full flex flex-col py-2 md:py-3 overflow-hidden">
+    <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6 flex-1 min-h-0 flex flex-col py-1.5 sm:py-2 md:py-2.5 overflow-hidden">
       {/* Top Bar */}
       <div className="flex items-center justify-between gap-3 pb-2.5 mb-2 border-b border-slate-200 shrink-0">
         <div className="flex items-center gap-2">
@@ -566,21 +583,20 @@ export default function Messages() {
             className="flex items-center gap-2 px-2.5 py-1 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 shadow-2xs transition cursor-pointer text-left group"
             title="Update Profile Picture & Mobile / प्रोफ़ाइल बदलें"
           >
-            <div className="w-7 h-7 rounded-full bg-slate-200 overflow-hidden shrink-0 relative">
-              {profile?.avatar ? (
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-200 overflow-hidden shrink-0 relative flex items-center justify-center border border-slate-200/90 shadow-2xs">
+              <div className="absolute inset-0 flex items-center justify-center font-bold text-xs text-slate-700 bg-gradient-to-br from-slate-100 to-slate-200 select-none">
+                {(displayName || "C")[0]?.toUpperCase()}
+              </div>
+              {displayAvatar ? (
                 <img
-                  src={resolveMediaUrl(profile.avatar)}
+                  src={resolveMediaUrl(displayAvatar)}
                   alt={displayName}
-                  className="w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
                   }}
                 />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-600">
-                  {(displayName || "C")[0]?.toUpperCase()}
-                </div>
-              )}
+              ) : null}
             </div>
             <div className="text-left hidden sm:block">
               <span className="text-xs font-bold text-slate-800 block leading-tight group-hover:text-[#B8323C] transition">
@@ -687,7 +703,6 @@ export default function Messages() {
               }}
               onConversationUpdated={handleConversationUpdated}
               onlineUserIds={onlineUserIds}
-              onOpenMobileMenu={() => setMobileDrawerOpen(true)}
               onToggleInfoPanel={() => setShowInfoPanel((p) => !p)}
               showInfoPanel={showInfoPanel}
             />

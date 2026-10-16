@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import API from "../api";
-import { getAuthUser } from "../utils/authStorage";
+import { getAuthUser, getAuthToken, setAuthSession } from "../utils/authStorage";
 import { usePageSEO } from "../utils/seo";
 import { Camera, Save, ArrowLeft, Shield, Lock, CheckCircle2, AlertCircle, Phone } from "lucide-react";
 import { resolveMediaUrl } from "../utils/mediaUtils";
@@ -60,6 +60,14 @@ export default function ProfileEdit() {
           setWhoCanMessage(p.whoCanMessage || "everyone");
           setLastSeenVisible(p.lastSeenVisible ?? true);
           setAvatarPreview(p.avatar || "");
+          const currentToken = getAuthToken();
+          if (currentToken) {
+            setAuthSession(currentToken, {
+              ...portalUser,
+              ...p,
+              avatar: p.avatar || portalUser?.avatar || "",
+            });
+          }
           return;
         }
       } catch (err) {
@@ -175,6 +183,14 @@ export default function ProfileEdit() {
         setUsername(p.username);
         setDisplayName(p.name);
         setPhone(p.phone || "");
+        const currentToken = getAuthToken();
+        if (currentToken) {
+          setAuthSession(currentToken, {
+            ...portalUser,
+            ...p,
+            avatar: uploadedAvatarUrl || p.avatar || portalUser?.avatar || "",
+          });
+        }
       }
 
       setSuccessMsg("Profile and privacy settings saved successfully! / प्रोफ़ाइल सुरक्षित हो गई।");
@@ -231,18 +247,17 @@ export default function ProfileEdit() {
           {/* Avatar Upload */}
           <div className="flex flex-col sm:flex-row items-center gap-5 p-4 bg-slate-50 rounded-2xl border border-slate-200/80">
             <div className="relative group w-20 h-20 rounded-full overflow-hidden bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center shrink-0">
+              <span className="absolute inset-0 flex items-center justify-center text-2xl font-black text-slate-500 bg-gradient-to-br from-slate-100 to-slate-200 select-none">
+                {(displayName || username || "F")[0]?.toUpperCase()}
+              </span>
               {avatarPreview ? (
                 <img
                   src={resolveMediaUrl(avatarPreview)}
                   alt={displayName || "Avatar"}
-                  className="w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
                   onError={(e) => { e.currentTarget.style.display = "none"; }}
                 />
-              ) : (
-                <span className="text-2xl font-black text-slate-500">
-                  {(displayName || username || "F")[0]?.toUpperCase()}
-                </span>
-              )}
+              ) : null}
               <label
                 htmlFor="avatar-input"
                 className="absolute inset-0 bg-black/40 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition"

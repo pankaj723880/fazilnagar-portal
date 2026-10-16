@@ -81,8 +81,15 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// Serve uploaded media files publicly
-app.use("/uploads", express.static(uploadsDir));
+// Serve uploaded media files publicly with cross-origin resource policy enabled
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    next();
+  },
+  express.static(uploadsDir)
+);
 
 // Root health check endpoint
 app.get(["/", "/health", "/api/health"], (req, res) => {

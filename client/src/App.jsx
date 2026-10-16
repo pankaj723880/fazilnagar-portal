@@ -484,7 +484,7 @@ export default function App() {
             : isNewsPage
             ? "pt-16 sm:pt-[96px] pb-14 sm:pb-0 p-0 m-0 overflow-hidden"
             : isMessagesPage
-            ? "pt-16 sm:pt-[96px] pb-0 p-0 m-0 overflow-hidden h-[100dvh] flex flex-col"
+            ? "pt-16 sm:pt-[96px] pb-0 p-0 m-0 overflow-hidden h-[100dvh] max-h-[100dvh] box-border flex flex-col"
             : isPortalPage
             ? (isMobilePreview ? "pt-0 pb-16" : "pt-0 md:pt-[96px] pb-16 sm:pb-8")
             : hasSubNav
@@ -492,7 +492,7 @@ export default function App() {
             : "pt-[76px] sm:pt-[112px] pb-24 sm:pb-8 max-w-7xl mx-auto px-3 sm:px-6"
         }`}
       >
-        <div key={location.pathname} className={isNewsPage || isMessagesPage ? "h-full w-full flex-1 min-h-0 flex flex-col" : isPortalPage ? "w-full" : "animate-page-enter"}>
+        <div key={location.pathname} className={isNewsPage || isMessagesPage ? "w-full flex-1 min-h-0 flex flex-col overflow-hidden" : isPortalPage ? "w-full" : "animate-page-enter"}>
           <Suspense
             fallback={
               <div className="min-h-[40vh] flex flex-col items-center justify-center p-8 gap-3">

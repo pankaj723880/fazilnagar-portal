@@ -343,40 +343,45 @@ export default function MobileMessagingDrawer({
                       }`}
                     >
                       {/* Avatar */}
-                      <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden shrink-0 relative">
+                      <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden shrink-0 relative flex items-center justify-center">
+                        <div
+                          className={`absolute inset-0 flex items-center justify-center font-bold text-xs ${
+                            isGroup
+                              ? "text-[#B8323C] bg-red-50"
+                              : "text-slate-600 bg-slate-100"
+                          }`}
+                        >
+                          {isGroup ? (
+                            <Users className="w-5 h-5" />
+                          ) : (
+                            (other.name || "C")[0]?.toUpperCase()
+                          )}
+                        </div>
                         {isGroup ? (
                           c.groupAvatar ? (
                             <img
                               src={resolveMediaUrl(c.groupAvatar)}
                               alt={itemTitle}
-                              className="w-full h-full object-cover"
+                              className="absolute inset-0 w-full h-full object-cover"
                               onError={(e) => { e.currentTarget.style.display = "none"; }}
                             />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center font-bold text-xs text-[#B8323C] bg-red-50">
-                              <Users className="w-5 h-5" />
-                            </div>
-                          )
+                          ) : null
                         ) : other.avatar ? (
                           <img
                             src={resolveMediaUrl(other.avatar)}
                             alt={other.name}
-                            className="w-full h-full object-cover"
+                            className="absolute inset-0 w-full h-full object-cover"
                             onError={(e) => { e.currentTarget.style.display = "none"; }}
                           />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-600 bg-slate-100">
-                            {(other.name || "C")[0]?.toUpperCase()}
-                          </div>
-                        )}
+                        ) : null}
                         {isOnline && (
                           <span
-                            className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full ring-1 ring-white"
+                            className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full ring-1 ring-white z-10"
                             title="Online"
                           />
                         )}
                         {unread > 0 && (
-                          <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-[#B8323C] border-2 border-white rounded-full" />
+                          <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-[#B8323C] border-2 border-white rounded-full z-10" />
                         )}
                       </div>
 
@@ -457,17 +462,18 @@ export default function MobileMessagingDrawer({
                     className="p-2.5 flex items-center justify-between hover:bg-slate-50 rounded-xl transition cursor-pointer"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden shrink-0 flex items-center justify-center text-xs font-bold text-slate-600">
+                      <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden shrink-0 relative flex items-center justify-center text-xs font-bold text-slate-600">
+                        <div className="absolute inset-0 flex items-center justify-center font-bold text-xs text-slate-600 bg-slate-100">
+                          {(u.name || "C")[0]?.toUpperCase()}
+                        </div>
                         {u.avatar ? (
                           <img
                             src={resolveMediaUrl(u.avatar)}
                             alt={u.name}
-                            className="w-full h-full object-cover"
+                            className="absolute inset-0 w-full h-full object-cover"
                             onError={(e) => { e.currentTarget.style.display = "none"; }}
                           />
-                        ) : (
-                          (u.name || "C")[0]?.toUpperCase()
-                        )}
+                        ) : null}
                       </div>
                       <div className="min-w-0">
                         <span className="text-xs font-bold text-slate-800 block truncate leading-tight">

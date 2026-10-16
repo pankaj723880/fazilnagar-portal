@@ -93,6 +93,8 @@ export function getAuthUser() {
     name,
     email,
     role: verifiedRole,
+    username: cachedUser?.username || "",
+    avatar: cachedUser?.avatar || "",
     phone: cachedUser?.phone || "",
     status: cachedUser?.status || "active",
   };

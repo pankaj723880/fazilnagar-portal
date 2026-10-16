@@ -83,37 +83,27 @@ export default function ConversationList({
 
   return (
     <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs flex flex-col h-full min-h-0 overflow-hidden">
-      {/* Header */}
-      <div className="p-3.5 border-b border-slate-100 flex items-center justify-between gap-2 bg-slate-50/40 shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-[#B8323C] text-white flex items-center justify-center shadow-2xs">
-            <MessageSquare className="w-4 h-4" />
-          </div>
-          <div>
-            <h2 className="text-xs font-bold text-slate-900 leading-tight">Messages / संवाद</h2>
-            <p className="text-[10px] text-slate-400 font-medium">Fazilnagar Town</p>
-          </div>
-        </div>
+      {/* Top Sidebar Action Bar: New Group & New Chat (Clean header without duplicate title) */}
+      <div className="p-2.5 sm:p-3 border-b border-slate-100 flex items-center gap-2 bg-slate-50/50 shrink-0">
+        <button
+          type="button"
+          onClick={onOpenNewGroup}
+          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/90 text-xs font-bold transition shadow-2xs cursor-pointer"
+          title="Create Town Group / नया समूह"
+        >
+          <Users className="w-3.5 h-3.5 text-[#B8323C]" />
+          <span>New Group</span>
+        </button>
 
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={onOpenNewGroup}
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition shadow-2xs cursor-pointer"
-            title="Create Town Group / नया समूह"
-          >
-            <Users className="w-3.5 h-3.5 text-[#B8323C]" />
-            <span className="hidden xl:inline">Group</span>
-          </button>
-
-          <button
-            onClick={onOpenSearch}
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#B8323C] hover:bg-red-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
-            title="Search Citizens / नया संवाद"
-          >
-            <UserPlus className="w-3.5 h-3.5" />
-            <span>+ Chat</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onOpenSearch}
+          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#B8323C] hover:bg-red-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
+          title="Search Citizens / नया संवाद शुरू करें"
+        >
+          <UserPlus className="w-3.5 h-3.5" />
+          <span>+ New Chat</span>
+        </button>
       </div>
 
       {/* Instant Search Bar */}
@@ -217,44 +207,45 @@ export default function ConversationList({
                 }`}
               >
                 {/* Avatar */}
-                <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden shrink-0 relative border border-slate-200/80 shadow-2xs">
+                <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden shrink-0 relative border border-slate-200/80 shadow-2xs flex items-center justify-center">
+                  <div
+                    className={`absolute inset-0 flex items-center justify-center font-bold text-xs ${
+                      isGroup
+                        ? "text-[#B8323C] bg-red-50"
+                        : "text-slate-700 bg-gradient-to-br from-slate-100 to-slate-200"
+                    }`}
+                  >
+                    {isGroup ? <Users className="w-5 h-5" /> : (other.name || "C")[0]?.toUpperCase()}
+                  </div>
                   {isGroup ? (
                     c.groupAvatar ? (
                       <img
                         src={resolveMediaUrl(c.groupAvatar)}
                         alt={displayName}
-                        className="w-full h-full object-cover"
+                        className="absolute inset-0 w-full h-full object-cover"
                         onError={(e) => {
                           e.currentTarget.style.display = "none";
                         }}
                       />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center font-bold text-xs text-[#B8323C] bg-red-50">
-                        <Users className="w-5 h-5" />
-                      </div>
-                    )
+                    ) : null
                   ) : other.avatar ? (
                     <img
                       src={resolveMediaUrl(other.avatar)}
                       alt={other.name}
-                      className="w-full h-full object-cover"
+                      className="absolute inset-0 w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
                       }}
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-700 bg-gradient-to-br from-slate-100 to-slate-200">
-                      {(other.name || "C")[0]?.toUpperCase()}
-                    </div>
-                  )}
+                  ) : null}
                   {isOnline && (
                     <span
-                      className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full ring-1 ring-white"
+                      className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full ring-1 ring-white z-10"
                       title="Online"
                     />
                   )}
                   {unread > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-[#B8323C] border-2 border-white rounded-full" />
+                    <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-[#B8323C] border-2 border-white rounded-full z-10" />
                   )}
                 </div>
 

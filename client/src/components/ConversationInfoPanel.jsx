@@ -222,36 +222,41 @@ export default function ConversationInfoPanel({
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain divide-y divide-slate-100">
         <div className="p-5 flex flex-col items-center text-center space-y-3">
           {/* Large Avatar */}
-          <div className="w-20 h-20 rounded-3xl bg-slate-100 border-2 border-slate-200/80 overflow-hidden shadow-xs relative">
+          <div className="w-20 h-20 rounded-3xl bg-slate-100 border-2 border-slate-200/80 overflow-hidden shadow-xs relative flex items-center justify-center">
+            <div
+              className={`absolute inset-0 flex items-center justify-center font-bold text-2xl ${
+                isGroup
+                  ? "text-[#B8323C] bg-red-50"
+                  : "text-slate-600 bg-slate-100"
+              }`}
+            >
+              {isGroup ? (
+                <Users className="w-10 h-10" />
+              ) : (
+                (displayName || "C")[0]?.toUpperCase()
+              )}
+            </div>
             {isGroup ? (
               conversation.groupAvatar ? (
                 <img
                   src={resolveMediaUrl(conversation.groupAvatar)}
                   alt={displayName}
-                  className="w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
                   }}
                 />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center font-bold text-2xl text-[#B8323C] bg-red-50">
-                  <Users className="w-10 h-10" />
-                </div>
-              )
+              ) : null
             ) : otherUser.avatar ? (
               <img
                 src={resolveMediaUrl(otherUser.avatar)}
                 alt={displayName}
-                className="w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
                 onError={(e) => {
                   e.currentTarget.style.display = "none";
                 }}
               />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center font-bold text-2xl text-slate-600 bg-slate-100">
-                {(displayName || "C")[0]?.toUpperCase()}
-              </div>
-            )}
+            ) : null}
           </div>
 
           {/* Name and Tags */}

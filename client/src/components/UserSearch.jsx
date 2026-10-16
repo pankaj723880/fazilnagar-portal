@@ -170,19 +170,18 @@ export default function UserSearch({ onSelectUser }) {
                 className="p-3 hover:bg-slate-50 flex items-center justify-between gap-3 transition"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-full bg-slate-200 overflow-hidden shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-slate-200 overflow-hidden shrink-0 relative flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center justify-center font-bold text-xs text-slate-600 bg-slate-100">
+                      {(u.name || "C")[0]?.toUpperCase()}
+                    </div>
                     {u.avatar ? (
                       <img
                         src={resolveMediaUrl(u.avatar)}
                         alt={u.name}
-                        className="w-full h-full object-cover"
+                        className="absolute inset-0 w-full h-full object-cover"
                         onError={(e) => { e.currentTarget.style.display = "none"; }}
                       />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-600 bg-slate-100">
-                        {(u.name || "C")[0]?.toUpperCase()}
-                      </div>
-                    )}
+                    ) : null}
                   </div>
 
                   <div className="min-w-0">
