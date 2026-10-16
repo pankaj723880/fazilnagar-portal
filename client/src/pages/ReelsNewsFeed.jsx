@@ -27,7 +27,11 @@ import {
   UserPlus,
   Play,
   Pause,
+  RotateCcw,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
+import { resolveStoryMedia, resolveMediaUrl } from "../utils/mediaUtils";
 
 const FALLBACK_COVER_IMAGE =
   "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1200&auto=format&fit=crop";
@@ -41,82 +45,32 @@ const CATEGORY_FALLBACK_IMAGES = {
   General: "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?q=80&w=1200&auto=format&fit=crop",
 };
 
-// Robust Story Media Cover: Shows user's uploaded photo/video or clean civic poster
+// Robust Story Media Cover: Plays user's uploaded video/photo with buffering, error retry, and civic poster fallback
 function StoryMediaCover({ story, active, muted, isPaused = false }) {
   const [imgFailed, setImgFailed] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef(null);
 
-  const backendBase = (API.defaults.baseURL || "").replace(/\/api\/?$/, "");
+  const { videoUrl, imageUrl, mimeType, hasVideo: detectedHasVideo } = useMemo(() => {
+    return resolveStoryMedia(story);
+  }, [story]);
 
-  const normalizeUrl = (u) => {
-    if (!u || typeof u !== "string") return "";
-    const trimmed = u.trim();
-    if (trimmed.startsWith("blob:")) return "";
-    if (trimmed.startsWith("/")) return `${backendBase}${trimmed}`;
-    if (trimmed.includes("localhost:") || trimmed.includes("127.0.0.1:")) {
-      const uploadsIdx = trimmed.indexOf("/uploads/");
-      if (uploadsIdx !== -1) return `${backendBase}${trimmed.substring(uploadsIdx)}`;
-      const driveIdx = trimmed.indexOf("/api/google-drive/");
-      if (driveIdx !== -1) return `${backendBase}${trimmed.substring(driveIdx)}`;
-    }
-    return trimmed;
-  };
+  const hasVideo = detectedHasVideo && Boolean(videoUrl);
+  const hasUserImage = Boolean(imageUrl) && !imgFailed;
 
-  const isVideoExt = (url) => /\.(mp4|webm|mov|ogg|avi|m4v)($|\?)/i.test(url);
-  const isImageExt = (url) => /\.(png|jpe?g|webp|gif|svg|bmp)($|\?)/i.test(url);
+  // Reset video error state on story transition
+  useEffect(() => {
+    setVideoFailed(false);
+    setIsBuffering(false);
+    setIsPlaying(false);
+  }, [videoUrl]);
 
-  const normVideo = normalizeUrl(story.video);
-  const normImage = normalizeUrl(story.image);
-  const normMedia = normalizeUrl(story.mediaUrl);
-
-  let detectedVideo = "";
-  let detectedImage = "";
-
-  // 1. Analyze video candidate
-  if (normVideo) {
-    if (isImageExt(normVideo)) {
-      detectedImage = normVideo;
-    } else {
-      detectedVideo = normVideo;
-    }
-  }
-
-  // 2. Analyze image candidate
-  if (normImage) {
-    if (isVideoExt(normImage)) {
-      if (!detectedVideo) detectedVideo = normImage;
-    } else {
-      if (!detectedImage) detectedImage = normImage;
-    }
-  }
-
-  // 3. Analyze generic mediaUrl candidate
-  if (normMedia) {
-    if (isVideoExt(normMedia) && !detectedVideo) {
-      detectedVideo = normMedia;
-    } else if (isImageExt(normMedia) && !detectedImage) {
-      detectedImage = normMedia;
-    } else if (!detectedVideo && !detectedImage) {
-      if (story.mediaType === "video") detectedVideo = normMedia;
-      else detectedImage = normMedia;
-    }
-  }
-
-  // 4. Fallback: If video failed or error fired, automatically attempt to display as photo
-  if (videoFailed && detectedVideo && !detectedImage) {
-    detectedImage = detectedVideo;
-    detectedVideo = "";
-  }
-
-  const hasVideo = !!detectedVideo && !videoFailed;
-  const hasUserImage = !!detectedImage && !imgFailed;
-
-  // Strict video playback lifecycle: Play ONLY when active AND not paused; immediately pause otherwise!
+  // Video playback lifecycle
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !hasVideo) return;
+    if (!video || !hasVideo || videoFailed) return;
 
     video.muted = muted;
 
@@ -126,14 +80,17 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
         playPromise
           .then(() => {
             setIsPlaying(true);
+            setIsBuffering(false);
           })
-          .catch((err) => {
-            // Autoplay with audio was blocked by browser; retry muted
+          .catch(() => {
             if (!video.muted) {
               video.muted = true;
               video
                 .play()
-                .then(() => setIsPlaying(true))
+                .then(() => {
+                  setIsPlaying(true);
+                  setIsBuffering(false);
+                })
                 .catch(() => setIsPlaying(false));
             } else {
               setIsPlaying(false);
@@ -141,15 +98,12 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
           });
       }
     } else {
-      // Immediately stop playback and reset frame when navigating away
       video.pause();
       setIsPlaying(false);
       if (!active) {
         try {
           video.currentTime = 0;
-        } catch {
-          // Ignore seek errors on unloaded streams
-        }
+        } catch {}
       }
     }
 
@@ -157,7 +111,7 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
       video.pause();
       setIsPlaying(false);
     };
-  }, [active, muted, isPaused, hasVideo, detectedVideo]);
+  }, [active, muted, isPaused, hasVideo, videoUrl, videoFailed]);
 
   const handleTogglePlay = (e) => {
     e.stopPropagation();
@@ -168,7 +122,10 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
       video.muted = muted;
       video
         .play()
-        .then(() => setIsPlaying(true))
+        .then(() => {
+          setIsPlaying(true);
+          setIsBuffering(false);
+        })
         .catch(() => {
           video.muted = true;
           video.play().then(() => setIsPlaying(true)).catch(() => {});
@@ -176,6 +133,26 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
     } else {
       video.pause();
       setIsPlaying(false);
+    }
+  };
+
+  const handleRetryVideo = (e) => {
+    e.stopPropagation();
+    setVideoFailed(false);
+    setIsBuffering(true);
+    const video = videoRef.current;
+    if (video) {
+      video.load();
+      video
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+          setIsBuffering(false);
+        })
+        .catch(() => {
+          setIsPlaying(false);
+          setIsBuffering(false);
+        });
     }
   };
 
@@ -206,20 +183,41 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
       </div>
 
       {/* Video layer if present */}
-      {hasVideo && (
+      {hasVideo && !videoFailed && (
         <video
+          key={videoUrl}
           ref={videoRef}
-          src={detectedVideo}
+          src={videoUrl}
           loop
           muted={muted}
           playsInline
+          preload="metadata"
           className="absolute inset-0 w-full h-full object-cover z-10"
-          onError={() => setVideoFailed(true)}
-        />
+          onWaiting={() => setIsBuffering(true)}
+          onPlaying={() => {
+            setIsBuffering(false);
+            setIsPlaying(true);
+          }}
+          onCanPlay={() => setIsBuffering(false)}
+          onError={() => {
+            console.warn("Story video playback error:", videoUrl);
+            setVideoFailed(true);
+            setIsBuffering(false);
+          }}
+        >
+          <source src={videoUrl} type={mimeType || "video/mp4"} />
+        </video>
+      )}
+
+      {/* Buffering Spinner */}
+      {hasVideo && active && isBuffering && !videoFailed && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none bg-black/20">
+          <Loader2 className="w-10 h-10 text-white animate-spin drop-shadow-lg" />
+        </div>
       )}
 
       {/* Center Tap-to-Play Overlay if video is active but paused */}
-      {hasVideo && active && !isPlaying && (
+      {hasVideo && active && !isPlaying && !videoFailed && (
         <button
           type="button"
           onClick={handleTogglePlay}
@@ -232,10 +230,31 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
         </button>
       )}
 
-      {/* Photo Layer: Render ONLY if story has an actual user-uploaded image */}
+      {/* Video Error Banner with Actionable Retry Button */}
+      {hasVideo && videoFailed && (
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-black/75 backdrop-blur-xs">
+          <div className="w-12 h-12 rounded-2xl bg-red-950/80 border border-red-500/40 flex items-center justify-center text-red-400 mb-3 shadow-lg">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <p className="text-sm font-bold text-white mb-1">Video playback failed</p>
+          <p className="text-xs text-slate-300 max-w-xs mb-4">
+            Could not stream video. Please check connection and retry.
+          </p>
+          <button
+            type="button"
+            onClick={handleRetryVideo}
+            className="px-4 py-2 rounded-xl bg-[#B8323C] hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1.5 transition shadow-lg cursor-pointer active:scale-95"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Retry Video / पुनः प्रयास</span>
+          </button>
+        </div>
+      )}
+
+      {/* Photo Layer: Render ONLY if story has an actual user-uploaded image and no active video */}
       {!hasVideo && hasUserImage && (
         <img
-          src={detectedImage}
+          src={imageUrl}
           alt={story.title || "Story Media"}
           className="absolute inset-0 w-full h-full object-cover object-center z-10"
           loading={active ? "eager" : "lazy"}
@@ -1464,45 +1483,22 @@ export default function ReelsNewsFeed() {
             {/* Modal Body */}
             <div className="overflow-y-auto p-5 sm:p-6 space-y-4 flex-1">
               {(() => {
-                const isVideoExt = (url) => /\.(mp4|webm|mov|ogg|avi|m4v)($|\?)/i.test(url);
-                const isImageExt = (url) => /\.(png|jpe?g|webp|gif|svg|bmp)($|\?)/i.test(url);
-
-                const vidUrl = readingStory.video || "";
-                const imgUrl = readingStory.image || "";
-                const medUrl = readingStory.mediaUrl || "";
-
-                let resolvedVideo = "";
-                let resolvedImage = "";
-
-                if (vidUrl) {
-                  if (isImageExt(vidUrl)) resolvedImage = vidUrl;
-                  else resolvedVideo = vidUrl;
-                }
-                if (imgUrl) {
-                  if (isVideoExt(imgUrl)) {
-                    if (!resolvedVideo) resolvedVideo = imgUrl;
-                  } else {
-                    if (!resolvedImage) resolvedImage = imgUrl;
-                  }
-                }
-                if (medUrl) {
-                  if (isVideoExt(medUrl) && !resolvedVideo) resolvedVideo = medUrl;
-                  else if (isImageExt(medUrl) && !resolvedImage) resolvedImage = medUrl;
-                  else if (!resolvedVideo && !resolvedImage) {
-                    if (readingStory.mediaType === "video") resolvedVideo = medUrl;
-                    else resolvedImage = medUrl;
-                  }
-                }
+                const { videoUrl: resolvedVideo, imageUrl: resolvedImage, mimeType: resolvedMime } = resolveStoryMedia(readingStory);
 
                 if (resolvedVideo) {
                   return (
                     <div className="w-full rounded-2xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center">
                       <video
+                        key={resolvedVideo}
                         src={resolvedVideo}
                         controls
                         playsInline
+                        preload="metadata"
                         className="w-full h-full object-contain"
-                      />
+                      >
+                        <source src={resolvedVideo} type={resolvedMime || "video/mp4"} />
+                        Your browser does not support video playback.
+                      </video>
                     </div>
                   );
                 }

@@ -472,11 +472,15 @@ export default function UploadForm() {
               <div className="relative rounded-xl overflow-hidden bg-black/90 aspect-video flex items-center justify-center">
                 {mediaType === "video" ? (
                   <video
+                    key={mediaPreviewUrl}
                     src={mediaPreviewUrl}
                     controls
                     playsInline
+                    preload="metadata"
                     className="w-full h-full object-contain"
-                  />
+                  >
+                    <source src={mediaPreviewUrl} type={selectedFile?.type || "video/mp4"} />
+                  </video>
                 ) : (
                   <img
                     src={mediaPreviewUrl}

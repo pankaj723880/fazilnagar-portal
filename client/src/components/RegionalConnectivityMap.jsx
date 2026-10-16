@@ -37,10 +37,34 @@ export default function RegionalConnectivityMap() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [hoveredLocation, setHoveredLocation] = useState(null);
-  const [isMapActive, setIsMapActive] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentZoom, setCurrentZoom] = useState(11);
   const [isBrowseOpen, setIsBrowseOpen] = useState(false);
+  const [showTouchHint, setShowTouchHint] = useState(false);
+  const touchHintTimeoutRef = useRef(null);
+  const touchStartPosRef = useRef(null);
+  const twoFingerCenterRef = useRef(null);
+
+  // Geographic Straight-Line Distance Calculation via Haversine Formula
+  const getHaversineDistance = useCallback((loc) => {
+    if (loc?.distanceKm !== undefined && loc?.distanceKm !== null && !isNaN(loc.distanceKm)) {
+      return Number(loc.distanceKm);
+    }
+    if (loc?.lat != null && loc?.lng != null && FAZILNAGAR_CENTRE?.lat != null && FAZILNAGAR_CENTRE?.lng != null) {
+      const R = 6371; // Earth radius in km
+      const dLat = ((loc.lat - FAZILNAGAR_CENTRE.lat) * Math.PI) / 180;
+      const dLon = ((loc.lng - FAZILNAGAR_CENTRE.lng) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((FAZILNAGAR_CENTRE.lat * Math.PI) / 180) *
+          Math.cos((loc.lat * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return Math.round(R * c * 10) / 10;
+    }
+    return null;
+  }, []);
 
   // The location currently highlighted (hovered has transient priority, fallback to selected)
   const currentHighlight = hoveredLocation || selectedLocation;
@@ -207,24 +231,26 @@ export default function RegionalConnectivityMap() {
     });
   };
 
-  // Initialize Map
+  // Initialize Map with 2-finger mobile gestures and desktop dragging
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    const container = mapContainerRef.current;
+    if (!container) return;
 
-    if (mapContainerRef.current._leaflet_id && !mapInstanceRef.current) {
-      delete mapContainerRef.current._leaflet_id;
+    if (container._leaflet_id && !mapInstanceRef.current) {
+      delete container._leaflet_id;
     }
 
     if (!mapInstanceRef.current) {
-      const map = L.map(mapContainerRef.current, {
+      const map = L.map(container, {
         center: [FAZILNAGAR_CENTRE.lat, FAZILNAGAR_CENTRE.lng],
         zoom: 11,
         minZoom: 9,
         maxZoom: 16,
         zoomControl: false,
-        dragging: false,
-        touchZoom: false,
+        dragging: true,
+        touchZoom: true,
         scrollWheelZoom: false,
+        tap: true,
       });
 
       // CartoDB Voyager Basemap with CARTO API key
@@ -252,6 +278,90 @@ export default function RegionalConnectivityMap() {
       setIsLoading(false);
     }
 
+    // Touch event listeners for 1-finger page scroll vs 2-finger map pan
+    const handleTouchStart = (e) => {
+      if (e.touches.length === 1) {
+        // 1 finger: allow normal page scrolling, record initial point
+        touchStartPosRef.current = {
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY,
+        };
+        twoFingerCenterRef.current = null;
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.dragging.disable();
+        }
+      } else if (e.touches.length >= 2) {
+        // 2 fingers: prepare for 2-finger map panning and pinch zooming
+        touchStartPosRef.current = null;
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        twoFingerCenterRef.current = {
+          x: (t1.clientX + t2.clientX) / 2,
+          y: (t1.clientY + t2.clientY) / 2,
+        };
+        if (touchHintTimeoutRef.current) clearTimeout(touchHintTimeoutRef.current);
+        setShowTouchHint(false);
+      }
+    };
+
+    const handleTouchMove = (e) => {
+      if (e.touches.length === 1) {
+        // Single finger moving: check if user is attempting to drag the map
+        if (touchStartPosRef.current) {
+          const dx = Math.abs(e.touches[0].clientX - touchStartPosRef.current.x);
+          const dy = Math.abs(e.touches[0].clientY - touchStartPosRef.current.y);
+          if (dx > 12 || dy > 12) {
+            setShowTouchHint(true);
+            if (touchHintTimeoutRef.current) clearTimeout(touchHintTimeoutRef.current);
+            touchHintTimeoutRef.current = setTimeout(() => {
+              setShowTouchHint(false);
+            }, 2500);
+          }
+        }
+        // Do NOT call e.preventDefault(); normal page scroll continues
+      } else if (e.touches.length >= 2) {
+        // 2 fingers: prevent page scrolling and pan the map
+        if (e.cancelable) e.preventDefault();
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        const curCenter = {
+          x: (t1.clientX + t2.clientX) / 2,
+          y: (t1.clientY + t2.clientY) / 2,
+        };
+
+        if (twoFingerCenterRef.current && mapInstanceRef.current) {
+          const deltaX = curCenter.x - twoFingerCenterRef.current.x;
+          const deltaY = curCenter.y - twoFingerCenterRef.current.y;
+          if (Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
+            mapInstanceRef.current.panBy([-deltaX, -deltaY], { animate: false });
+          }
+        }
+        twoFingerCenterRef.current = curCenter;
+      }
+    };
+
+    const handleTouchEnd = (e) => {
+      if (e.touches.length < 2) {
+        twoFingerCenterRef.current = null;
+      }
+      if (e.touches.length === 0) {
+        touchStartPosRef.current = null;
+      }
+    };
+
+    const handleMouseDown = () => {
+      // Re-enable dragging for desktop mouse interaction
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.dragging.enable();
+      }
+    };
+
+    container.addEventListener("touchstart", handleTouchStart, { passive: true });
+    container.addEventListener("touchmove", handleTouchMove, { passive: false });
+    container.addEventListener("touchend", handleTouchEnd, { passive: true });
+    container.addEventListener("touchcancel", handleTouchEnd, { passive: true });
+    container.addEventListener("mousedown", handleMouseDown);
+
     const t = setTimeout(() => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.invalidateSize();
@@ -260,6 +370,12 @@ export default function RegionalConnectivityMap() {
 
     return () => {
       clearTimeout(t);
+      if (touchHintTimeoutRef.current) clearTimeout(touchHintTimeoutRef.current);
+      container.removeEventListener("touchstart", handleTouchStart);
+      container.removeEventListener("touchmove", handleTouchMove);
+      container.removeEventListener("touchend", handleTouchEnd);
+      container.removeEventListener("touchcancel", handleTouchEnd);
+      container.removeEventListener("mousedown", handleMouseDown);
       if (animFrameRef.current) {
         cancelAnimationFrame(animFrameRef.current);
       }
@@ -269,21 +385,6 @@ export default function RegionalConnectivityMap() {
       }
     };
   }, []);
-
-  // Update map interactive state (prevent accidental scroll hijack)
-  useEffect(() => {
-    const map = mapInstanceRef.current;
-    if (!map) return;
-    if (isMapActive) {
-      map.dragging.enable();
-      map.touchZoom.enable();
-      map.scrollWheelZoom.enable();
-    } else {
-      map.dragging.disable();
-      map.touchZoom.disable();
-      map.scrollWheelZoom.disable();
-    }
-  }, [isMapActive]);
 
   // Render markers when filteredLocations, highlighted location, or zoom changes
   useEffect(() => {
@@ -306,16 +407,35 @@ export default function RegionalConnectivityMap() {
         zIndexOffset: isHub ? 1000 : isHighlighted ? 800 : loc.type === "city" ? 500 : loc.type === "town" ? 400 : 100,
       });
 
-      // Tooltip for quick context
+      // Animated Preview Tooltip on Hover / Focus with Haversine distance
       if (!isHub) {
-        marker.bindTooltip(
-          `<strong>${loc.name}</strong>${loc.hindiName ? ` (${loc.hindiName})` : ""}<br/><span style="font-size:10px;color:#94A3B8;">${loc.distanceKm} km from Fazilnagar Hub (${loc.compassDirection})</span>`,
-          {
-            direction: "top",
-            offset: [0, -10],
-            opacity: 0.95,
-          }
-        );
+        const dist = getHaversineDistance(loc);
+        const distText = dist !== null ? `${dist} km from Fazilnagar Centre` : "";
+        const typeBadge = loc.type === "city" ? "City / शहर" : loc.type === "town" ? "Town / कस्बा" : "Village / गाँव";
+        const badgeColor = loc.type === "city" ? "#6366F1" : loc.type === "town" ? "#10B981" : "#64748B";
+
+        const tooltipHtml = `
+          <div style="font-family: inherit; min-width: 140px; text-align: left;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
+              <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; background: ${badgeColor}; color: #fff;">
+                ${typeBadge}
+              </span>
+              ${dist !== null ? `<span style="font-size: 11px; font-weight: 800; color: #FBBF24; font-family: monospace;">${dist} km</span>` : ""}
+            </div>
+            <div style="font-size: 12px; font-weight: 800; color: #FFFFFF; line-height: 1.25;">
+              ${loc.name}
+            </div>
+            ${loc.hindiName ? `<div style="font-size: 10px; color: #94A3B8; margin-top: 1px;">${loc.hindiName}</div>` : ""}
+            ${distText ? `<div style="font-size: 9px; color: #CBD5E1; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 3px;">📍 ${distText}</div>` : ""}
+          </div>
+        `;
+
+        marker.bindTooltip(tooltipHtml, {
+          direction: "top",
+          offset: [0, -12],
+          opacity: 1,
+          className: "custom-location-preview-tooltip",
+        });
       }
 
       // Click / Tap Handler
@@ -339,7 +459,7 @@ export default function RegionalConnectivityMap() {
 
       marker.addTo(layer);
     });
-  }, [filteredLocations, currentHighlight, currentZoom]);
+  }, [filteredLocations, currentHighlight, currentZoom, getHaversineDistance]);
 
   // Select location and smoothly frame connection
   const handleSelectLocation = useCallback((loc) => {
@@ -635,24 +755,53 @@ export default function RegionalConnectivityMap() {
 
       {/* Map Viewport Area */}
       <div className="relative w-full h-[460px] sm:h-[540px] lg:h-[580px] bg-slate-950">
+        <style>{`
+          .custom-location-preview-tooltip {
+            background: rgba(15, 23, 42, 0.96) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.16) !important;
+            border-radius: 12px !important;
+            padding: 8px 12px !important;
+            color: #fff !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.6) !important;
+            animation: previewTooltipFadeScale 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+            pointer-events: none !important;
+          }
+          .custom-location-preview-tooltip::before {
+            border-top-color: rgba(15, 23, 42, 0.96) !important;
+          }
+          @keyframes previewTooltipFadeScale {
+            0% {
+              opacity: 0;
+              transform: translateY(4px) scale(0.94);
+            }
+            100% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+        `}</style>
+
         <div
           ref={mapContainerRef}
           className="w-full h-full z-0 cursor-crosshair"
           onClick={() => {
-            if (!isMapActive) setIsMapActive(true);
             if (showSuggestions) setShowSuggestions(false);
           }}
         />
 
-        {/* Scroll Protection Overlay (Click to Activate) */}
-        {!isMapActive && (
-          <div
-            onClick={() => setIsMapActive(true)}
-            className="absolute inset-0 z-10 bg-slate-950/20 backdrop-blur-[0.5px] flex items-center justify-center cursor-pointer transition hover:bg-slate-950/10 group"
-          >
-            <div className="bg-slate-900/90 border border-slate-700 text-white text-xs font-bold px-4 py-2 rounded-2xl shadow-xl flex items-center gap-2 group-hover:scale-105 transition">
-              <Navigation className="w-4 h-4 text-[#B8323C] animate-pulse" />
-              <span>Tap or Click to Interact with Map / नेविगेट करें</span>
+        {/* Phase 1: Bilingual Touch Hint Overlay */}
+        {showTouchHint && (
+          <div className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-slate-950/95 text-white border border-slate-700/80 shadow-2xl px-5 py-3 rounded-2xl flex items-center gap-3.5 max-w-sm text-left backdrop-blur-md">
+              <div className="w-9 h-9 rounded-xl bg-[#B8323C]/20 border border-[#B8323C] text-white flex items-center justify-center shrink-0 text-lg">
+                ✌️
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white">Use two fingers to move the map</p>
+                <p className="text-[11px] text-slate-300 mt-0.5">मैप चलाने के लिए दो उंगलियों का उपयोग करें</p>
+              </div>
             </div>
           </div>
         )}

@@ -67,8 +67,16 @@ app.use(
       "X-Requested-With",
       "Accept",
       "Origin",
+      "Range",
+      "range",
     ],
-    exposedHeaders: ["Cache-Control", "Content-Length"],
+    exposedHeaders: [
+      "Cache-Control",
+      "Content-Length",
+      "Content-Range",
+      "Accept-Ranges",
+      "Content-Type",
+    ],
   })
 );
 

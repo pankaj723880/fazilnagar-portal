@@ -162,6 +162,7 @@ export default function TownPortal() {
   const [modalType, setModalType] = useState(null); // "business" | "correction" | "event" | null
   const [communityModalOpen, setCommunityModalOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [liveNews, setLiveNews] = useState([]);
@@ -490,17 +491,22 @@ export default function TownPortal() {
       },
     };
 
+    setIsSubmitting(true);
     try {
-      await API.post("/submissions", payload);
+      const res = await API.post("/submissions", payload);
       setModalType(null);
-      let msg = "Establishment submitted to town admin review queue!";
-      if (type === "correction") msg = "Thank you! Information correction submitted for Admin review.";
-      if (type === "event") msg = "Event announcement submitted for Admin approval!";
+      const refId = res.data?.referenceId ? ` (Ref: ${res.data.referenceId})` : "";
+      let msg = `Establishment submitted to town admin review queue!${refId}`;
+      if (type === "correction") msg = `Thank you! Information correction submitted for Admin review.${refId}`;
+      if (type === "event") msg = `Event announcement submitted for Admin approval!${refId}`;
       showToast(msg);
       form.reset();
     } catch (err) {
       console.error("Submission error:", err);
-      showToast("Submission failed. Please check connection and try again.");
+      const errMsg = err.response?.data?.message || "Submission failed. Please check connection and try again.";
+      showToast(errMsg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -517,6 +523,7 @@ export default function TownPortal() {
       <div className={isMobilePreview ? "block py-6 bg-slate-200/70 min-h-screen" : "block md:hidden"}>
         <div className={isMobilePreview ? "max-w-[420px] mx-auto shadow-2xl rounded-3xl overflow-hidden border border-slate-300 bg-slate-50" : "w-full"}>
           <MobileHomePortal
+            onOpenAddListing={() => setModalType("business")}
             onOpenAddPlace={() => setCommunityModalOpen(true)}
             onOpenCorrection={() => setModalType("correction")}
             onOpenEvent={() => setModalType("event")}
@@ -2203,6 +2210,19 @@ export default function TownPortal() {
         </>
       )}
 
+      {/* Desktop Floating Action Button (FAB): [+ Add Place] */}
+      <button
+        type="button"
+        onClick={() => setCommunityModalOpen(true)}
+        className="hidden md:flex fixed right-6 bottom-6 z-40 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs py-3 px-4 rounded-full shadow-2xl border border-emerald-600 hover:shadow-emerald-900/40 active:scale-95 transition-all items-center gap-2 cursor-pointer"
+        aria-label="Add Place to Directory"
+        title="Add Place to Directory (4-Step Community Wizard)"
+      >
+        <Plus className="w-4 h-4" />
+        <span>Add Place</span>
+      </button>
+    </div>
+
       {/* ========================================================
           INTERACTIVE MODALS: SUGGESTION, CORRECTION & EVENT
           ======================================================== */}
@@ -2306,9 +2326,10 @@ export default function TownPortal() {
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-[#18232E] hover:bg-[#B8323C] text-white font-bold py-2.5 rounded-xl transition mt-2 shadow-xs cursor-pointer"
+                    disabled={isSubmitting}
+                    className="w-full bg-[#18232E] hover:bg-[#B8323C] text-white font-bold py-2.5 rounded-xl transition mt-2 shadow-xs cursor-pointer disabled:opacity-50"
                   >
-                    Submit Place for Moderation
+                    {isSubmitting ? "Submitting for Moderation..." : "Submit Place for Moderation"}
                   </button>
                 </form>
               </>
@@ -2349,9 +2370,10 @@ export default function TownPortal() {
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-[#18232E] hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl transition shadow-xs cursor-pointer"
+                    disabled={isSubmitting}
+                    className="w-full bg-[#18232E] hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl transition shadow-xs cursor-pointer disabled:opacity-50"
                   >
-                    Send Correction Report
+                    {isSubmitting ? "Sending Report..." : "Send Correction Report"}
                   </button>
                 </form>
               </>
@@ -2413,9 +2435,10 @@ export default function TownPortal() {
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-[#0D5E49] hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition shadow-xs cursor-pointer"
+                    disabled={isSubmitting}
+                    className="w-full bg-[#0D5E49] hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition shadow-xs cursor-pointer disabled:opacity-50"
                   >
-                    Broadcast Event
+                    {isSubmitting ? "Broadcasting Event..." : "Broadcast Event"}
                   </button>
                 </form>
               </>
@@ -2442,7 +2465,6 @@ export default function TownPortal() {
           <span>{toastMsg}</span>
         </div>
       )}
-      </div>
     </>
   );
 }

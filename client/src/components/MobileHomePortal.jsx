@@ -320,6 +320,7 @@ export default function MobileHomePortal({
   onOpenAddPlace,
   onOpenCorrection,
   onOpenEvent,
+  onOpenAddListing,
 }) {
   const navigate = useNavigate();
 
@@ -1401,7 +1402,8 @@ export default function MobileHomePortal({
             <button
               type="button"
               onClick={() => {
-                if (onOpenAddPlace) onOpenAddPlace();
+                if (onOpenAddListing) onOpenAddListing();
+                else if (onOpenAddPlace) onOpenAddPlace();
               }}
               className="mt-3.5 h-12 w-full rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold active:scale-95 transition shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
             >

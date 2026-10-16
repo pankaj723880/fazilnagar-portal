@@ -1660,6 +1660,8 @@ export default function ChatWindow({
                                       </div>
                                     ) : (
                                       <video
+                                        key={getFullMediaUrl(m.mediaUrl)}
+                                        src={getFullMediaUrl(m.mediaUrl)}
                                         controls
                                         playsInline
                                         preload="metadata"

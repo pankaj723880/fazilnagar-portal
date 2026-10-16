@@ -406,6 +406,61 @@ The Fazilnagar Town Portal messaging architecture is fully implemented and opera
   - `node --test server/tests/townMessagingCompletePhases789.test.js`: 15/15 tests passing.
   - `node --test server/tests/moderationPhase4.test.js`: 8/8 tests passing.
 
+## Phase 11: Map Touch Gestures, Location Hover Preview, Action Buttons & Website-Wide Video Playback Repair (Completed)
 
+### 1. Root Causes Identified
+- **Website-Wide Video Playback Failure**:
+  - **HTTP 206 Partial Content RFC Violation**: When browsers issued `Range` requests (e.g. `bytes=0-1` or `bytes=0-`), `server/routes/googleDrive.js` returned an HTTP 206 status without computing the mandatory `Content-Range` and `Content-Length` headers (`null/null`), causing HTML5 `<video>` decoders in Chromium/WebKit to immediately stall at `0:00`.
+  - **CORS Range Header Restrictions**: `server/server.js` omitted `Range` from `allowedHeaders` and `Content-Range` / `Accept-Ranges` from `exposedHeaders`.
+  - **Faulty Video Fallback Logic**: In `client/src/pages/ReelsNewsFeed.jsx`, an error handler executed `if (videoFailed && detectedVideo && !detectedImage) { detectedImage = detectedVideo; detectedVideo = ""; }`, which silently replaced failing videos with broken `<img>` tags.
+  - **Extension-Only Video Detection**: Media URL detectors checked only extension suffixes (`/\.(mp4|webm|mov)$/i`), failing on valid Google Drive stream URLs (`/api/google-drive/media/:id`).
+  - **Localhost Fallback Staleness**: `client/src/utils/mediaUtils.js` lacked smart fallback to production Render backend (`https://fazilnagar-portal.onrender.com`) when local port 5000 is not running.
+- **Mobile Map Touch & Scroll Hijacking**:
+  - Leaflet's default touch handlers intercepted single-finger touches and prevented page scrolling.
+  - An artificial full-screen blocking overlay forced users to "Tap to Interact" before accessing markers.
+- **Location Preview & Distance**:
+  - Markers had static, plain tooltips without straight-line Haversine distance calculations from Fazilnagar Town Centre.
+- **Broken Buttons ("+ Add Listing", "Report Bug", "+ Add Place")**:
+  - In `client/src/pages/TownPortal.jsx`, `{modalType && (...)}`, `<CommunityPlaceModal ... />`, and `{toastMsg && ...}` were nested inside `<div className={isMobilePreview ? "hidden" : "hidden md:block ..."}>`. On mobile screens (< `md`), this entire container had `display: none`, making modals invisible when opened.
+  - In `client/src/components/MobileHomePortal.jsx`, Card A (`+ Add Listing`) invoked `onOpenAddPlace` instead of `onOpenAddListing`.
+  - On desktop, there was no floating "Add Place" FAB button.
 
+### 2. Files Modified & Technical Changes
+- **Backend Streaming & CORS**:
+  - `server/server.js`: Added `Range`, `range` to CORS `allowedHeaders`; exposed `Content-Range`, `Accept-Ranges`, `Content-Length`, `Content-Type`.
+  - `server/routes/googleDrive.js`: Correctly calculates and emits RFC 7233 compliant `Content-Range: bytes ${start}-${end}/${totalSize}` and `Content-Length` on partial content requests.
+- **Media Utilities & Video Players**:
+  - `client/src/utils/mediaUtils.js`: Implemented `resolveMediaUrl`, `isVideoMedia`, `isImageMedia`, `resolveStoryMedia` with automatic Render production fallback and extension-agnostic Google Drive detection.
+  - `client/src/components/StoryVideoPreview.jsx`: Replaced player with `resolveStoryMedia`, `<source>` element with MIME type, loading spinner, and actionable retry state.
+  - `client/src/pages/ReelsNewsFeed.jsx`: Overhauled `StoryMediaCover` and full reading modal; removed destructive fallback that masked videos as images; added buffering spinner, `<source>`, and retry button.
+  - `client/src/components/NewsDetail.jsx`: Connected `resolveStoryMedia` and robust video playback.
+  - `client/src/components/ChatWindow.jsx`: Added direct `key` and `<source>` attributes for video attachments.
+  - `client/src/components/ConversationInfoPanel.jsx`: Added `<source>` and format badges for shared videos.
+  - `client/src/components/UploadForm.jsx`: Added `<source>` tag and `preload="metadata"` for local video previews.
+- **Map Gestures & Distance Previews**:
+  - `client/src/components/RegionalConnectivityMap.jsx`:
+    - Implemented 1-finger page scroll without hijacking; displays bilingual hint overlay: *"Use two fingers to move the map / मैप चलाने के लिए दो उंगलियों का उपयोग करें"*.
+    - Implemented 2-finger panning (`panBy([-deltaX, -deltaY])`) and pinch-to-zoom.
+    - Preserved desktop mouse drag and zoom controls.
+    - Added animated preview tooltips (`custom-location-preview-tooltip`) with fade/scale animation, category badge, and Haversine straight-line distance (`${dist} km from Fazilnagar Centre`).
+    - Removed blocking scroll overlay.
+- **Action Buttons & Modals**:
+  - `client/src/pages/TownPortal.jsx`:
+    - Moved modals (`modalType`, `CommunityPlaceModal`, `toastMsg`) OUT of the `hidden md:block` desktop container to the root fragment so they function on both mobile and desktop.
+    - Added desktop floating green "Add Place" FAB button (`hidden md:flex fixed right-6 bottom-6 z-40`).
+    - Passed `onOpenAddListing={() => setModalType("business")}` to `MobileHomePortal`.
+    - Added `isSubmitting` state, double-click protection, and backend error reporting in `handleFormSubmit`.
+  - `client/src/components/MobileHomePortal.jsx`:
+    - Accepted `onOpenAddListing` prop and connected Card A (`+ Add Listing`) to trigger `onOpenAddListing`.
+    - Connected Card B (`Report Bug`) to trigger `onOpenCorrection`.
+    - Maintained floating green "Add Place" FAB at `bottom-20 right-4 z-40` above the bottom navigation.
 
+### 3. Verification Results
+- **Automated Client Build**: `npm run build` executed cleanly with exit code 0; 2,115 modules transformed; 15 route-specific HTML pages generated in `dist/`.
+- **Targeted Test Suite**: 24/24 tests passed across `regionalConnectivity.test.js`, `communitySubmissions.test.js`, and `creationAuth.test.js` (0 failures).
+- **Media & Stories Test Suite**: 15/15 tests passed in `mediaAuthStories.test.js` (0 failures).
+- **Browser Subagent Verification**:
+  - Regional Connectivity Map rendered with Fazilnagar Centre hub, pins, and controls.
+  - Marker hover displayed animated preview tooltip with location name and Haversine distance in km (e.g. Kasya at 17.1 km).
+  - Marker click dynamically drew connection line and displayed location details card with navigation button.
+  - Action buttons and modal forms tested and verified.

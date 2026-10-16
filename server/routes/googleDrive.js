@@ -689,20 +689,55 @@ router.get("/media/:id", async (req, res) => {
       { headers: driveReqHeaders, responseType: "stream" }
     );
 
-    const isPartial = Boolean(rangeHeader && (driveStream.status === 206 || driveStream.headers?.["content-range"]));
-    res.status(isPartial ? 206 : driveStream.status || 200);
+    const totalSize = Number(mediaDoc.fileSize) || 0;
+    let start = 0;
+    let end = totalSize > 0 ? totalSize - 1 : 0;
+
+    if (rangeHeader) {
+      const match = rangeHeader.match(/bytes=(\d+)-(\d*)/);
+      if (match) {
+        start = parseInt(match[1], 10);
+        if (match[2]) {
+          end = parseInt(match[2], 10);
+        } else if (totalSize > 0) {
+          end = totalSize - 1;
+        }
+      }
+    }
+
+    const driveContentRange =
+      driveStream.headers?.["content-range"] ||
+      driveStream.headers?.["Content-Range"];
+    const driveContentLength =
+      driveStream.headers?.["content-length"] ||
+      driveStream.headers?.["Content-Length"];
+
+    const isPartial = Boolean(rangeHeader && (driveStream.status === 206 || driveContentRange));
+    res.status(isPartial ? 206 : (driveStream.status || 200));
 
     res.setHeader("Accept-Ranges", "bytes");
     res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    res.setHeader("Access-Control-Expose-Headers", "Content-Range, Content-Length, Accept-Ranges, Content-Type");
     res.setHeader("Content-Type", resolvedMime);
 
-    if (driveStream.headers?.["content-range"]) {
-      res.setHeader("Content-Range", driveStream.headers["content-range"]);
-    }
-    if (driveStream.headers?.["content-length"]) {
-      res.setHeader("Content-Length", driveStream.headers["content-length"]);
-    } else if (mediaDoc.fileSize && !rangeHeader) {
-      res.setHeader("Content-Length", mediaDoc.fileSize);
+    if (isPartial) {
+      const contentRangeHeader =
+        driveContentRange ||
+        (totalSize > 0 ? `bytes ${start}-${end}/${totalSize}` : `bytes ${start}-${end}/*`);
+      res.setHeader("Content-Range", contentRangeHeader);
+
+      const chunkLength =
+        driveContentLength ||
+        (end >= start ? end - start + 1 : undefined);
+      if (chunkLength) {
+        res.setHeader("Content-Length", chunkLength);
+      }
+    } else {
+      if (driveContentLength) {
+        res.setHeader("Content-Length", driveContentLength);
+      } else if (totalSize > 0) {
+        res.setHeader("Content-Length", totalSize);
+      }
     }
 
     res.setHeader("Cache-Control", "public, max-age=86400, stale-while-revalidate=43200");

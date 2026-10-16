@@ -480,12 +480,15 @@ export default function ConversationInfoPanel({
                   >
                     <div className="relative aspect-video max-h-32 bg-black flex items-center justify-center">
                       <video
+                        key={fullUrl}
                         src={fullUrl}
                         preload="metadata"
                         playsInline
                         controls
                         className="w-full h-full object-contain"
-                      />
+                      >
+                        <source src={fullUrl} type={m.mimeType || "video/mp4"} />
+                      </video>
                     </div>
                     <div className="p-2 bg-slate-800/95 flex items-center justify-between text-white text-[11px] gap-2">
                       <div className="min-w-0 flex-1">

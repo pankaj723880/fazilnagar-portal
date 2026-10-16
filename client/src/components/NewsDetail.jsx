@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { fetchNewsById } from "../api";
+import { resolveStoryMedia } from "../utils/mediaUtils";
 
 export default function NewsDetail() {
   const { id } = useParams();
@@ -66,23 +67,37 @@ export default function NewsDetail() {
         )}
       </div>
 
-      {(article.video || article.mediaType === "video") && (
-        <video controls playsInline className="w-full max-h-96 object-contain bg-black rounded-2xl">
-          <source src={article.video || article.mediaUrl} />
-          Your browser does not support the video tag.
-        </video>
-      )}
-
-      {!(article.video || article.mediaType === "video") && (article.image || article.mediaUrl) && (
-        <img
-          src={article.image || article.mediaUrl}
-          alt={article.title}
-          className="w-full h-80 object-cover rounded-2xl"
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
-        />
-      )}
+      {(() => {
+        const { videoUrl, imageUrl, mimeType, hasVideo } = resolveStoryMedia(article);
+        if (hasVideo && videoUrl) {
+          return (
+            <video
+              key={videoUrl}
+              src={videoUrl}
+              controls
+              playsInline
+              preload="metadata"
+              className="w-full max-h-96 object-contain bg-black rounded-2xl"
+            >
+              <source src={videoUrl} type={mimeType || "video/mp4"} />
+              Your browser does not support the video tag.
+            </video>
+          );
+        }
+        if (imageUrl) {
+          return (
+            <img
+              src={imageUrl}
+              alt={article.title}
+              className="w-full h-80 object-cover rounded-2xl"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          );
+        }
+        return null;
+      })()}
 
       <div className="flex items-center justify-between text-xs text-slate-400 border-y border-slate-100 py-3">
         <span>By {article.author?.name || "Local Reporter"}</span>

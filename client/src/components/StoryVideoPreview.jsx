@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Play, Pause, Film } from "lucide-react";
-import API from "../api";
+import { Play, Pause, Film, RotateCcw, Loader2 } from "lucide-react";
+import { resolveStoryMedia } from "../utils/mediaUtils";
 
 export default function StoryVideoPreview({
   story,
@@ -13,55 +13,17 @@ export default function StoryVideoPreview({
 }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
   const [isFailed, setIsFailed] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
 
   const containerRef = useRef(null);
   const videoRef = useRef(null);
 
-  const backendBase = (API.defaults.baseURL || "").replace(/\/api\/?$/, "");
+  const { videoUrl, imageUrl, mimeType } = resolveStoryMedia(story);
+  const posterUrl = imageUrl || fallbackPoster || "";
 
-  const normalizeUrl = (u) => {
-    if (!u || typeof u !== "string") return "";
-    const trimmed = u.trim();
-    if (trimmed.startsWith("blob:")) return "";
-    if (trimmed.startsWith("/")) return `${backendBase}${trimmed}`;
-    if (trimmed.includes("localhost:") || trimmed.includes("127.0.0.1:")) {
-      const uploadsIdx = trimmed.indexOf("/uploads/");
-      if (uploadsIdx !== -1) return `${backendBase}${trimmed.substring(uploadsIdx)}`;
-      const driveIdx = trimmed.indexOf("/api/google-drive/");
-      if (driveIdx !== -1) return `${backendBase}${trimmed.substring(driveIdx)}`;
-    }
-    return trimmed;
-  };
-
-  const isVideoExt = (url) => /\.(mp4|webm|mov|ogg|avi|m4v)($|\?)/i.test(url);
-  const isImageExt = (url) => /\.(png|jpe?g|webp|gif|svg|bmp)($|\?)/i.test(url);
-
-  const normVideo = normalizeUrl(story?.video);
-  const normImage = normalizeUrl(story?.image);
-  const normMedia = normalizeUrl(story?.mediaUrl);
-
-  let videoUrl = "";
-  let posterUrl = "";
-
-  if (normVideo && !isImageExt(normVideo)) {
-    videoUrl = normVideo;
-  }
-  if (normImage && !isVideoExt(normImage)) {
-    posterUrl = normImage;
-  }
-  if (!videoUrl && normMedia && (isVideoExt(normMedia) || story?.mediaType === "video")) {
-    videoUrl = normMedia;
-  }
-  if (!posterUrl && normMedia && isImageExt(normMedia)) {
-    posterUrl = normMedia;
-  }
-  if (!posterUrl && fallbackPoster) {
-    posterUrl = fallbackPoster;
-  }
-
-  // IntersectionObserver: Only play when visible in the mobile or desktop viewport (>40% visible)
+  // IntersectionObserver: Play when visible in the viewport (>35% visible)
   useEffect(() => {
     const el = containerRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
@@ -69,9 +31,9 @@ export default function StoryVideoPreview({
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        setIsVisible(Boolean(entry && entry.isIntersecting && entry.intersectionRatio >= 0.4));
+        setIsVisible(Boolean(entry && entry.isIntersecting && entry.intersectionRatio >= 0.35));
       },
-      { threshold: [0.1, 0.4, 0.7] }
+      { threshold: [0.1, 0.35, 0.7] }
     );
 
     observer.observe(el);
@@ -80,7 +42,7 @@ export default function StoryVideoPreview({
     };
   }, []);
 
-  // Manage playback lifecycle strictly with refs and safe Promise handling
+  // Manage playback lifecycle with safe Promise handling
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !videoUrl || isFailed) return;
@@ -94,9 +56,10 @@ export default function StoryVideoPreview({
         playPromise
           .then(() => {
             setIsPlaying(true);
+            setIsBuffering(false);
           })
-          .catch((err) => {
-            // Autoplay rejected by mobile browser policy
+          .catch(() => {
+            // Autoplay restricted by browser policy
             setIsPlaying(false);
           });
       }
@@ -123,8 +86,22 @@ export default function StoryVideoPreview({
       video.muted = true;
       const p = video.play();
       if (p !== undefined) {
-        p.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+        p.then(() => {
+          setIsPlaying(true);
+          setIsFailed(false);
+        }).catch(() => setIsPlaying(false));
       }
+    }
+  };
+
+  const handleRetry = (e) => {
+    e.stopPropagation();
+    setIsFailed(false);
+    setIsBuffering(true);
+    const video = videoRef.current;
+    if (video) {
+      video.load();
+      video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
     }
   };
 
@@ -137,6 +114,7 @@ export default function StoryVideoPreview({
     >
       {videoUrl && !isFailed ? (
         <video
+          key={videoUrl}
           ref={videoRef}
           src={videoUrl}
           poster={posterUrl || undefined}
@@ -145,9 +123,34 @@ export default function StoryVideoPreview({
           loop
           preload="metadata"
           className="w-full h-full object-cover pointer-events-none"
+          onWaiting={() => setIsBuffering(true)}
+          onPlaying={() => {
+            setIsBuffering(false);
+            setIsPlaying(true);
+          }}
+          onCanPlay={() => setIsBuffering(false)}
           onEnded={() => setIsPlaying(false)}
-          onError={() => setIsFailed(true)}
-        />
+          onError={() => {
+            console.warn("Story video preview error:", videoUrl);
+            setIsFailed(true);
+            setIsBuffering(false);
+          }}
+        >
+          <source src={videoUrl} type={mimeType || "video/mp4"} />
+        </video>
+      ) : isFailed ? (
+        <div className="w-full h-full bg-slate-900/95 flex flex-col items-center justify-center text-slate-400 p-4 text-center space-y-2 z-10">
+          <Film className="w-7 h-7 text-red-400/80" />
+          <span className="text-[11px] font-semibold text-slate-300">Video preview unavailable</span>
+          <button
+            type="button"
+            onClick={handleRetry}
+            className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer transition"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>Retry</span>
+          </button>
+        </div>
       ) : posterUrl ? (
         <img
           src={posterUrl}
@@ -157,6 +160,13 @@ export default function StoryVideoPreview({
       ) : (
         <div className="w-full h-full bg-slate-900 flex items-center justify-center text-slate-500">
           <Film className="w-8 h-8 opacity-40" />
+        </div>
+      )}
+
+      {/* Buffering Indicator */}
+      {isBuffering && !isFailed && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none z-10">
+          <Loader2 className="w-7 h-7 text-white animate-spin drop-shadow-md" />
         </div>
       )}
 
@@ -172,24 +182,26 @@ export default function StoryVideoPreview({
       )}
 
       {/* Center Interactive Play / Pause Control Button */}
-      <div className="absolute inset-0 flex items-center justify-center z-10">
-        <button
-          type="button"
-          onClick={toggleManualPlay}
-          className={`w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 shadow-xl cursor-pointer ${
-            isPlaying
-              ? "bg-black/30 text-white/80 opacity-0 group-hover:opacity-100"
-              : "bg-red-600/90 hover:bg-red-600 text-white scale-105 shadow-red-900/50"
-          }`}
-          aria-label={isPlaying ? "Pause video preview" : "Play video preview"}
-        >
-          {isPlaying ? (
-            <Pause className="w-5 h-5 fill-current" />
-          ) : (
-            <Play className="w-5 h-5 fill-current ml-0.5" />
-          )}
-        </button>
-      </div>
+      {!isFailed && (
+        <div className="absolute inset-0 flex items-center justify-center z-10">
+          <button
+            type="button"
+            onClick={toggleManualPlay}
+            className={`w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 shadow-xl cursor-pointer ${
+              isPlaying
+                ? "bg-black/30 text-white/80 opacity-0 group-hover:opacity-100"
+                : "bg-red-600/90 hover:bg-red-600 text-white scale-105 shadow-red-900/50"
+            }`}
+            aria-label={isPlaying ? "Pause video preview" : "Play video preview"}
+          >
+            {isPlaying ? (
+              <Pause className="w-5 h-5 fill-current" />
+            ) : (
+              <Play className="w-5 h-5 fill-current ml-0.5" />
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Bottom Link to Full-Screen Story Viewer */}
       {linkToViewer && (
