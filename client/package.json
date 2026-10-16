@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/generateStaticRoutes.js",
     "lint": "eslint .",
     "test": "node --test ../server/tests/locationRegression.test.js",
     "preview": "vite preview"

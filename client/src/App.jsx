@@ -23,6 +23,9 @@ const Register = lazy(() => import("./pages/Register"));
 const CreateNews = lazy(() => import("./pages/CreateNews"));
 const Directory = lazy(() => import("./pages/Directory"));
 const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const AdminReview = lazy(() => import("./pages/AdminReview"));
 import AdminRoute from "./components/AdminRoute";
 import InstallButton from "./components/InstallButton";
@@ -31,11 +34,12 @@ import NotificationCenter from "./components/NotificationCenter";
 import SplashScreen from "./components/SplashScreen";
 import { GlobalFloatingAndStickyAds } from "./components/AdvertisementSlot";
 import { Home, Compass, PhoneCall, Newspaper, Menu, X, ShieldAlert } from "lucide-react";
+import seedPlaces from "./data/places.json";
 
 const MAIN_NAV_ITEMS = [
   { path: "/", label: "Home" },
   { path: "/#explore-categories", label: "Explore", isHash: true },
-  { path: "/directory", label: "Directory", count: "37" },
+  { path: "/directory", label: "Directory", count: String(seedPlaces?.length || 19) },
   { path: "/#town-map-section", label: "Map", isHash: true },
   { path: "/news", label: "Local Updates" },
 ];
@@ -210,6 +214,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#F5F7F8] text-[#18232E] flex flex-col font-sans selection:bg-[#B8323C] selection:text-white">
+      {/* Skip to Main Content Link for WCAG 2.2 AA Keyboard Accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2.5 focus:bg-[#18232E] focus:text-white focus:rounded-xl focus:shadow-2xl focus:ring-2 focus:ring-[#B8323C] text-xs font-bold"
+      >
+        Skip to main content / मुख्य सामग्री पर जाएं
+      </a>
+
       {/* Native App-Style Ultra-Premium Mobile Splash Screen */}
       {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
 
@@ -434,7 +446,9 @@ export default function App() {
           WITH SMOOTH ROUTE TRANSITIONS (animate-page-enter)
           ======================================================== */}
       <main
-        className={`flex-1 w-full ${
+        id="main-content"
+        tabIndex="-1"
+        className={`flex-1 w-full outline-none ${
           isAdminPage
             ? "pt-0 pb-0 p-0 m-0 w-full max-w-full"
             : isNewsPage
@@ -477,6 +491,13 @@ export default function App() {
               <Route path="/transport" element={<Transportation />} />
               <Route path="/govt" element={<GovtServices />} />
               <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/report" element={<Contact />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/disclaimer" element={<TermsOfService />} />
 
               {/* Auth & Admin Routes */}
               <Route path="/login" element={<Login setUser={setUser} />} />
@@ -636,11 +657,11 @@ export default function App() {
                 FAZIL<span className="text-[#B8323C]">NAGAR</span> Civic Portal
               </h3>
               <p className="text-slate-400 text-xs leading-relaxed">
-                Fazilnagar's civic digital platform offering verified town directory, emergency helplines, public utilities, and community updates (PIN 274401, Kushinagar, UP).
+                An independent, community-operated civic digital directory offering verified local listings, emergency helplines, public utilities, and town news (PIN 274401, Kushinagar, UP).
               </p>
               <div className="flex items-center gap-2 pt-1">
-                <span className="inline-block w-2 h-2 rounded-full bg-[#168568] animate-pulse"></span>
-                <span className="text-[11px] font-semibold text-[#168568]">Verified Town Directory System</span>
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-[11px] font-semibold text-emerald-400">Unofficial, Community-Run Resource</span>
               </div>
             </div>
 
@@ -651,33 +672,41 @@ export default function App() {
                 <li><Link to="/news" className="hover:text-white">Town News</Link></li>
                 <li><Link to="/emergency" className="hover:text-white">Emergency Helplines</Link></li>
                 <li><Link to="/healthcare" className="hover:text-white">Hospitals & Clinics</Link></li>
-                <li><Link to="/jobs" className="hover:text-white">Local Jobs & Trade</Link></li>
+                <li><Link to="/education" className="hover:text-white">Schools & Colleges</Link></li>
                 <li><Link to="/govt" className="hover:text-white">Government Services</Link></li>
               </ul>
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">Community Actions</h3>
+              <h3 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">Trust & Community</h3>
               <ul className="space-y-1.5">
-                <li><Link to="/create-news" className="hover:text-white">Submit Local News</Link></li>
-                <li><Link to="/login" className="hover:text-white">Citizen / Reporter Login</Link></li>
-                <li><Link to="/register" className="hover:text-white">Register Resident Account</Link></li>
+                <li><Link to="/about" className="hover:text-white">About Fazilnagar</Link></li>
+                <li><Link to="/about#verification-criteria" className="hover:text-white">How We Verify Listings</Link></li>
+                <li><Link to="/contact" className="hover:text-white text-amber-300 font-semibold">🚨 Report Wrong Information</Link></li>
+                <li><Link to="/privacy" className="hover:text-white">Privacy Policy</Link></li>
+                <li><Link to="/terms" className="hover:text-white">Terms & Disclaimer</Link></li>
+                <li><Link to="/create-news" className="hover:text-white">Submit Local Story</Link></li>
                 {isAdmin && (
-                  <li><Link to="/admin/review" className="hover:text-amber-400 text-amber-300 font-bold flex items-center gap-1"><span>🛡️</span> Admin dashboard</Link></li>
+                  <li><Link to="/admin/review" className="hover:text-amber-400 text-amber-300 font-bold flex items-center gap-1"><span>🛡️</span> Admin Dashboard</Link></li>
                 )}
               </ul>
             </div>
 
             <div className="space-y-2">
               <h3 className="text-white font-bold uppercase tracking-wider text-[11px] font-heading">Emergency Hotline</h3>
-              <p className="text-xs text-slate-300">Police Outpost: <strong className="text-[#B8323C]">112</strong></p>
-              <p className="text-xs text-slate-300">Ambulance Emergency: <strong className="text-[#0D5E49]">108</strong></p>
-              <p className="text-xs text-slate-300">Women Helpline: <strong className="text-amber-400">1090</strong></p>
+              <p className="text-xs text-slate-300">National Emergency: <a href="tel:112" className="text-[#B8323C] font-bold">112</a></p>
+              <p className="text-xs text-slate-300">Ambulance Emergency: <a href="tel:108" className="text-[#0D5E49] font-bold">108</a></p>
+              <p className="text-xs text-slate-300">Women Helpline: <a href="tel:1090" className="text-amber-400 font-bold">1090</a></p>
+              <p className="text-xs text-slate-300">Child Helpline: <a href="tel:1098" className="text-blue-400 font-bold">1098</a></p>
+              <div className="pt-2">
+                <Link to="/contact" className="text-[11px] text-slate-400 hover:text-white underline">Contact Portal Volunteers</Link>
+              </div>
             </div>
           </div>
 
-          <div className="border-t border-slate-800 py-4 text-center text-[11px] text-slate-400">
-            © {new Date().getFullYear()} Fazilnagar Town Portal • Modern Civic & Editorial System. All rights reserved.
+          <div className="border-t border-slate-800 py-4 px-4 text-center text-[11px] text-slate-400 space-y-1">
+            <p>© {new Date().getFullYear()} Fazilnagar Town Portal • Unofficial, Community-Operated Civic Resource (PIN 274401).</p>
+            <p className="text-[10px] text-slate-500">Notice: This independent portal is not affiliated with, operated by, or authorized by Nagar Panchayat Fazilnagar or any government body.</p>
           </div>
         </footer>
       )}
@@ -754,7 +783,7 @@ export default function App() {
                     className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-[#B8323C] text-white shadow-xs active:scale-95 transition"
                   >
                     <span>🗺️</span>
-                    <span>Directory (37)</span>
+                    <span>Directory ({seedPlaces?.length || 19})</span>
                   </Link>
                   <Link
                     to="/emergency"

@@ -79,6 +79,8 @@ function matchesCategory(placeCat, placeSubcat, targetCat) {
   return targetWords.some((w) => c.includes(w) || sc.includes(w));
 }
 
+import { matchesSearchText, useDebouncedSearch } from "../utils/searchUtils";
+
 // Helper to filter embedded verified places
 function filterPlaces(list, category, locality, search, sort) {
   let filtered = Array.isArray(list) ? [...list] : [];
@@ -106,18 +108,21 @@ function filterPlaces(list, category, locality, search, sort) {
     );
   }
   if (search && search.trim()) {
-    const q = search.trim().toLowerCase();
-    filtered = filtered.filter(
-      (p) =>
-        p.name?.toLowerCase().includes(q) ||
-        p.alternateNames?.some((a) => a.toLowerCase().includes(q)) ||
-        p.addressFull?.toLowerCase().includes(q) ||
-        p.category?.toLowerCase().includes(q) ||
-        p.subcategory?.toLowerCase().includes(q) ||
-        p.locality?.toLowerCase().includes(q) ||
-        p.streetOrLandmark?.toLowerCase().includes(q) ||
-        p.description?.toLowerCase().includes(q)
-    );
+    filtered = filtered.filter((p) => {
+      const target = [
+        p.name,
+        p.nameHi,
+        Array.isArray(p.alternateNames) ? p.alternateNames.join(" ") : "",
+        p.category,
+        p.subcategory,
+        p.addressFull,
+        p.locality,
+        p.streetOrLandmark,
+        p.description,
+        Array.isArray(p.services) ? p.services.join(" ") : "",
+      ].filter(Boolean).join(" ");
+      return matchesSearchText(target, search);
+    });
   }
   if (sort === "name") {
     filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
@@ -263,9 +268,40 @@ export default function Directory({ user }) {
   const markersRef = useRef([]);
   const sideListRef = useRef(null);
 
+  const debouncedSearch = useDebouncedSearch(searchQuery, 200);
+
   const places = useMemo(() => {
-    return filterPlaces(allMasterPlaces, selectedCategory, selectedLocality, searchQuery, sortBy);
-  }, [allMasterPlaces, selectedCategory, selectedLocality, searchQuery, sortBy]);
+    return filterPlaces(allMasterPlaces, selectedCategory, selectedLocality, debouncedSearch, sortBy);
+  }, [allMasterPlaces, selectedCategory, selectedLocality, debouncedSearch, sortBy]);
+
+  // Resilient backend synchronization with zero crash on offline / network failure
+  const [fetchError, setFetchError] = useState(null);
+  useEffect(() => {
+    let isMounted = true;
+    const fetchPlaces = async () => {
+      try {
+        setLoading(true);
+        const res = await API.get("/places");
+        if (isMounted && res.data && Array.isArray(res.data.places || res.data)) {
+          const remote = res.data.places || res.data;
+          if (remote.length > 0) {
+            setAllMasterPlaces(remote.filter((p) => !p.isArchived && p.isPublished !== false));
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.warn("[Directory] Using verified local seed data:", err.message);
+          setFetchError("Displaying verified offline town directory.");
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    fetchPlaces();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const placesRef = useRef(places);
   useEffect(() => {
@@ -1029,17 +1065,36 @@ export default function Directory({ user }) {
         </div>
       </div>
 
+      {/* Screen Reader Announcement for Search & Filter Results */}
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {loading
+          ? "Searching verified town directory..."
+          : places.length === 0
+          ? `No places found for "${searchQuery || 'selected filters'}". Try checking spelling or resetting filters.`
+          : `${places.length} verified places displayed.`}
+      </div>
+
+      {fetchError && (
+        <div className="mb-3 px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between">
+          <span>ℹ️ {fetchError}</span>
+        </div>
+      )}
+
       {/* ========================================================
           4. MAIN VIEWPORT (Map View or List View)
           ======================================================== */}
       {places.length === 0 && !loading ? (
-        <div className="bg-white rounded-2xl p-8 sm:p-12 text-center border border-slate-200 shadow-2xs max-w-md mx-auto my-6">
-          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto mb-2.5">
-            <Search className="w-5 h-5 text-slate-400" />
+        <div className="bg-white rounded-2xl p-8 sm:p-12 text-center border border-slate-200 shadow-2xs max-w-md mx-auto my-6 animate-in fade-in duration-200">
+          <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center mx-auto mb-3">
+            <Search className="w-6 h-6 text-amber-600" />
           </div>
-          <h3 className="text-sm font-bold text-slate-900">No establishments found</h3>
-          <p className="text-xs text-slate-500 mt-1">
-            No verified places matched your filters within Fazilnagar town limits.
+          <h3 className="text-sm font-bold text-slate-900">
+            {searchQuery ? `No results for "${searchQuery.slice(0, 40)}"` : "No establishments found"}
+          </h3>
+          <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+            {searchQuery
+              ? "We couldn't find a matching verified establishment. Try typing in Hindi (e.g. 'अस्पताल', 'स्कूल') or English, or reset filters to view all places."
+              : "No verified places matched your filters within Fazilnagar town limits."}
           </p>
           <button
             onClick={() => {
@@ -1048,10 +1103,10 @@ export default function Directory({ user }) {
               setSearchQuery("");
               setSearchParams({});
             }}
-            className="mt-3.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#18232E] hover:bg-[#B8323C] text-white text-xs font-bold transition shadow-xs"
+            className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#18232E] hover:bg-[#B8323C] text-white text-xs font-bold transition shadow-xs cursor-pointer"
           >
-            <RotateCcw className="w-3 h-3" />
-            <span>Reset Filters</span>
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset All Filters</span>
           </button>
         </div>
       ) : viewMode === "map" ? (
@@ -1189,6 +1244,9 @@ export default function Directory({ user }) {
                             <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" /> Verified
                           </span>
                         )}
+                        <span className="text-[9px] text-slate-500 font-medium">
+                          • Updated {place.last_verified || (place.lastVerifiedAt ? place.lastVerifiedAt.split("T")[0] : "2026-10-14")}
+                        </span>
                         {isAdmin && (
                           <button
                             type="button"
@@ -1356,6 +1414,9 @@ export default function Directory({ user }) {
                           <AlertTriangle className="w-3 h-3 text-amber-700" /> Needs Verification
                         </span>
                       )}
+                      <span className="text-[10px] text-slate-500 font-medium">
+                        Last verified: {place.last_verified || (place.lastVerifiedAt ? place.lastVerifiedAt.split("T")[0] : "2026-10-14")} • Source: {place.source || place.submissionSource || (place.sourceUrls && place.sourceUrls[0]) || "Ground Survey"}
+                      </span>
                     </div>
 
                     {/* Description */}

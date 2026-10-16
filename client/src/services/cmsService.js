@@ -3,6 +3,7 @@
  * Fetches dynamic website content, hero slides, settings, public services, events, and heritage sites with graceful caching and offline fallbacks.
  */
 import API from "../api";
+import seedPlaces from "../data/places.json";
 
 const CACHE_TTL_MS = 4 * 1000; // 4 seconds in-memory cache to ensure near-instant live updates
 
@@ -58,14 +59,14 @@ const memoryCache = {
 };
 
 export const DEFAULT_SITE_SETTINGS = {
-  siteName: "Fazilnagar Town Official Civic & Local Directory Portal",
+  siteName: "Fazilnagar Town Civic & Local Directory Portal (Unofficial, Community-Run)",
   shortName: "Fazilnagar Portal",
-  tagline: "Municipal Nagar Panchayat • Kushinagar, Uttar Pradesh",
-  taglineHindi: "नगर पंचायत फाजिलनगर • कुशीनगर, उत्तर प्रदेश",
+  tagline: "Independent Civic & Local Directory • Kushinagar, Uttar Pradesh",
+  taglineHindi: "स्वतंत्र नागरिक एवं स्थानीय निर्देशिका • कुशीनगर, उत्तर प्रदेश",
   logoUrl: "/icon-192.svg",
   announcement: {
     enabled: true,
-    text: "Welcome to Official Fazilnagar Town Portal — Verified Civic Directory, Healthcare & Public Services",
+    text: "Welcome to Fazilnagar Town Portal — Unofficial, Community-Run Civic Directory & Local Guide",
     link: "/directory",
     bgColor: "#0D5E49",
     textColor: "#FFFFFF",
@@ -74,8 +75,8 @@ export const DEFAULT_SITE_SETTINGS = {
     officialPhone: "+91 5564 222102",
     emergencyPhone: "112 / 108",
     chcPhone: "+91 94520 89540",
-    email: "contact@fazilnagar.com",
-    officeAddress: "Nagar Panchayat Office, Main Market Road, Fazilnagar, Kushinagar - 274401",
+    email: "contact@fazilnagar.vercel.app",
+    officeAddress: "Fazilnagar Town, Kushinagar - 274401 (Community Desk)",
     workingHours: "10:00 AM – 05:00 PM (Mon-Sat)",
   },
   socialLinks: {
@@ -86,9 +87,9 @@ export const DEFAULT_SITE_SETTINGS = {
     whatsappGroup: "",
   },
   seo: {
-    metaTitle: "Fazilnagar Town Portal | Official Civic & Local Directory",
-    metaDescription: "Official digital civic portal for Fazilnagar town. Verified schools, colleges, hospitals, emergency aid, local news, and community directory in Kushinagar, UP.",
-    ogImageUrl: "https://images.unsplash.com/photo-1541888946425-d0fbb18f15f7?auto=format&fit=crop&w=1200&q=80",
+    metaTitle: "Fazilnagar Town Portal | Civic Directory & Local Guide (Unofficial)",
+    metaDescription: "Unofficial, community-operated civic and local directory portal for Fazilnagar town (PIN 274401, Kushinagar, UP). Verified schools, hospitals, emergency aid, local news, and community directory.",
+    ogImageUrl: "https://fazilnagar.vercel.app/og-image.jpg",
   },
   heroSettings: {
     animationSpeed: 5000,
@@ -136,18 +137,18 @@ export const DEFAULT_SITE_SETTINGS = {
     navItems: [
       { id: "home", label: "Home", path: "/", badge: "", isExternal: false, isActive: true, displayOrder: 1 },
       { id: "explore", label: "Explore", path: "/#explore-categories", badge: "", isExternal: false, isActive: true, displayOrder: 2 },
-      { id: "directory", label: "Directory", path: "/directory", badge: "37", isExternal: false, isActive: true, displayOrder: 3 },
+      { id: "directory", label: "Directory", path: "/directory", badge: String(seedPlaces?.length || 19), isExternal: false, isActive: true, displayOrder: 3 },
       { id: "map", label: "Map", path: "/#town-map-section", badge: "", isExternal: false, isActive: true, displayOrder: 4 },
       { id: "news", label: "Local Updates", path: "/news", badge: "", isExternal: false, isActive: true, displayOrder: 5 },
     ],
   },
   heroContent: {
     badgeLocation: "Kushinagar",
-    badgeText: "Official Civic Portal",
-    badgeSubtext: "Nagar Panchayat Fazilnagar • Kushinagar (PIN 274401)",
+    badgeText: "Community Civic Portal",
+    badgeSubtext: "Community Directory • Fazilnagar, Kushinagar (PIN 274401)",
     heading: "",
     subheadingHindi: "",
-    description: "Official digital civic portal for Fazilnagar town. Verified schools, colleges, hospitals, emergency aid, local news, and community directory in Kushinagar, UP.",
+    description: "Unofficial, community-operated digital civic portal for Fazilnagar town. Verified schools, colleges, hospitals, emergency aid, local news, and community directory in Kushinagar, UP.",
     searchPlaceholder: "Search schools, hospitals, medical stores, sweet shops…",
     searchButtonText: "Search",
     trustBadges: [

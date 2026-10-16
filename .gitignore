@@ -7,7 +7,8 @@ server/node_modules/
 client/.env
 server/.env
 !.env.example
-client/.env.example
+!client/.env.example
+!server/.env.example
 dist/
 client/dist/
 server/uploads/*

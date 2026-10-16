@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 export const SITE_NAME = "Fazilnagar Town Portal";
 export const BASE_URL = "https://fazilnagar.vercel.app";
-export const DEFAULT_OG_IMAGE = "https://fazilnagar.vercel.app/icon-512.svg";
+export const DEFAULT_OG_IMAGE = "https://fazilnagar.vercel.app/og-image.jpg";
 
 /**
  * Custom Hook for dynamic route-specific SEO metadata:

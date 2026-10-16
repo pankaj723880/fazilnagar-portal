@@ -35,7 +35,9 @@
     "isPublished": true,
     "reviewNotes": "Ground truth reference school location verified on Hospital Road. Coordinates preserved as authoritative.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "Ground Verification Reference",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-edu-03",
@@ -74,7 +76,9 @@
     "isPublished": true,
     "reviewNotes": "Verified at physical campus coordinates from OpenStreetMap Way 1178295200 on Baghauch / College Road.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "OpenStreetMap Way 1178295200",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-queue-01",
@@ -112,7 +116,9 @@
     "isPublished": true,
     "reviewNotes": "Verified at physical school grounds from OpenStreetMap Way 1434897072 along Baghauch Road.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "OpenStreetMap Way 1434897072",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-edu-01",
@@ -151,7 +157,9 @@
     "isPublished": true,
     "reviewNotes": "Verified at Durga Bhawan on College Road.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "CBSE Affiliation 2132925",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-edu-07",
@@ -190,7 +198,9 @@
     "isPublished": true,
     "reviewNotes": "Higher education campus verified on College Road heading to Pawanagar Tirth.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "University Affiliation Registry",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-edu-06",
@@ -229,7 +239,9 @@
     "isPublished": true,
     "reviewNotes": "Verified near Block Road town campus.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "Basic Shiksha Parishad UP",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-edu-04",
@@ -266,7 +278,9 @@
     "isPublished": true,
     "reviewNotes": "Flagged for admin physical gate verification in Kishun Das Patti corridor.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "State Board Registry",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-edu-05",
@@ -303,7 +317,9 @@
     "isPublished": true,
     "reviewNotes": "Flagged for admin physical gate verification in Ahladpur town basti road sector.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "UP Board Registry",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-queue-02",
@@ -341,7 +357,9 @@
     "isPublished": true,
     "reviewNotes": "Flagged for admin physical gate verification on Block outskirts.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "KDPS Institutional Records",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-health-01",
@@ -382,7 +400,9 @@
     "isPublished": true,
     "reviewNotes": "Verified government health center campus on Hospital Road.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "National Health Mission UP",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-queue-04",
@@ -421,7 +441,9 @@
     "isPublished": true,
     "reviewNotes": "Verified via OpenStreetMap Node 7025175554 along NH-27 Chauhan Patti sector.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "OpenStreetMap Node 7025175554",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-health-05",
@@ -460,7 +482,9 @@
     "isPublished": true,
     "reviewNotes": "Verified via OpenStreetMap Node 7031697479 on NH-27 at Pawanagar Marg.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "OpenStreetMap Node 7031697479",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-health-02",
@@ -499,7 +523,9 @@
     "isPublished": true,
     "reviewNotes": "Verified at Garahiya More on NH-28 / Block Road.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "Hospital Registry",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-health-03",
@@ -536,7 +562,9 @@
     "isPublished": true,
     "reviewNotes": "Verified near College Road / Central Bank.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "College Road Medical Survey",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-health-04",
@@ -574,7 +602,9 @@
     "isPublished": true,
     "reviewNotes": "Verified on NH-28 highway corridor.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "NH-28 Directory Listing",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-health-06",
@@ -612,7 +642,9 @@
     "isPublished": true,
     "reviewNotes": "Verified at Main Chowk.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "Main Chowk Commercial Registry",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-health-07",
@@ -649,7 +681,9 @@
     "isPublished": true,
     "reviewNotes": "Verified on Hospital Road near CHC.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "Hospital Road Diagnostic Registry",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-health-08",
@@ -686,7 +720,9 @@
     "isPublished": true,
     "reviewNotes": "Verified on College Road.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "Medical Practitioners Registry",
+    "last_verified": "2026-10-13"
   },
   {
     "id": "fz-health-09",
@@ -723,6 +759,8 @@
     "isPublished": true,
     "reviewNotes": "Verified in Main Market sector.",
     "isArchived": false,
-    "submissionSource": "official"
+    "submissionSource": "official",
+    "source": "Town Dental Practitioners Survey",
+    "last_verified": "2026-10-13"
   }
 ]

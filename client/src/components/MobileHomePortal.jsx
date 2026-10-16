@@ -39,6 +39,7 @@ import {
   getCachedCivicDirectory,
   subscribeToCMSLiveUpdates,
 } from "../services/cmsService";
+import seedPlaces from "../data/places.json";
 
 // Authoritative verified places for Fazilnagar Mobile Portal
 const VERIFIED_CAROUSEL_PLACES = [
@@ -724,7 +725,7 @@ export default function MobileHomePortal({
             to="/directory"
             className="text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-0.5"
           >
-            <span>View All (37)</span>
+            <span>View All ({seedPlaces?.length || 19})</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>

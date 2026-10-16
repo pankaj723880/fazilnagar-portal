@@ -1,89 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { usePageSEO } from "../utils/seo";
-import { Phone, ShieldAlert, HeartPulse, Flame, Zap, Droplets, ArrowLeft, Bell } from "lucide-react";
+import { Phone, ShieldAlert, HeartPulse, Flame, Zap, Droplets, ArrowLeft, Bell, CheckCircle2, AlertTriangle } from "lucide-react";
+import { EMERGENCY_SERVICES, EMERGENCY_CATEGORIES as CATEGORIES } from "../data/emergencyContacts";
 
-const EMERGENCY_SERVICES = [
-  {
-    category: "Police",
-    title: "Thana Fazilnagar & Highway Patrol",
-    number: "112",
-    altNumber: "+91 5564 222111",
-    icon: "👮",
-    badge: "Police / 112",
-    color: "border-rose-200 bg-rose-50/50 text-slate-900",
-    btnColor: "bg-rose-600 hover:bg-rose-700 active:scale-95 text-white shadow-md shadow-rose-600/20",
-    desc: "24/7 Emergency response, Highway Patrol NH-27, and town outpost.",
-  },
-  {
-    category: "Ambulance",
-    title: "Emergency Medical & CHC Ambulance",
-    number: "108",
-    altNumber: "102 (Maternity)",
-    icon: "🚑",
-    badge: "Medical / 108",
-    color: "border-emerald-200 bg-emerald-50/50 text-slate-900",
-    btnColor: "bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white shadow-md shadow-emerald-600/20",
-    desc: "Free 24/7 Govt Ambulance service for critical emergencies & hospital transfer.",
-  },
-  {
-    category: "Fire",
-    title: "Kushinagar & Fazilnagar Fire Station",
-    number: "101",
-    altNumber: "+91 94152 99101",
-    icon: "🚒",
-    badge: "Fire Brigade / 101",
-    color: "border-amber-200 bg-amber-50/50 text-slate-900",
-    btnColor: "bg-amber-600 hover:bg-amber-700 active:scale-95 text-white shadow-md shadow-amber-600/20",
-    desc: "Fire response unit, civil protection & rescue operations.",
-  },
-  {
-    category: "Hospitals",
-    title: "Community Health Centre (CHC) Emergency",
-    number: "+91 5564 222100",
-    altNumber: "05564222102",
-    icon: "🏥",
-    badge: "24/7 Casualty",
-    color: "border-blue-200 bg-blue-50/50 text-slate-900",
-    btnColor: "bg-blue-600 hover:bg-blue-700 active:scale-95 text-white shadow-md shadow-blue-600/20",
-    desc: "24/7 Emergency casualty ward, trauma doctor on-duty, and ambulance point.",
-  },
-  {
-    category: "Women & Child",
-    title: "Women Power Line & Childline 1098",
-    number: "1090",
-    altNumber: "1098 (Childline)",
-    icon: "🚨",
-    badge: "Women & Child",
-    color: "border-purple-200 bg-purple-50/50 text-slate-900",
-    btnColor: "bg-purple-600 hover:bg-purple-700 active:scale-95 text-white shadow-md shadow-purple-600/20",
-    desc: "Confidential 24/7 support for women distress, domestic alerts, and child rights.",
-  },
-  {
-    category: "Electricity",
-    title: "Fazilnagar Power Substation Desk",
-    number: "1912",
-    altNumber: "+91 94152 00191",
-    icon: "⚡",
-    badge: "Power (1912)",
-    color: "border-amber-200 bg-amber-50/40 text-slate-900",
-    btnColor: "bg-amber-600 hover:bg-amber-700 active:scale-95 text-white shadow-md shadow-amber-600/20",
-    desc: "Transformer breakdown, live wire hazards, and line breakdown reporting.",
-  },
-  {
-    category: "Electricity",
-    title: "Municipal Water Supply Helpline",
-    number: "+91 5564 222188",
-    altNumber: "1800 180 0101",
-    icon: "💧",
-    badge: "Water Supply",
-    color: "border-cyan-200 bg-cyan-50/50 text-slate-900",
-    btnColor: "bg-cyan-600 hover:bg-cyan-700 active:scale-95 text-white shadow-md shadow-cyan-600/20",
-    desc: "Town pipeline leakage alerts, tube-well fault, and tanker dispatch.",
-  },
-];
-
-const CATEGORIES = ["All", "Police", "Ambulance", "Fire", "Hospitals", "Women & Child", "Electricity"];
 
 export default function EmergencyHub() {
   usePageSEO({
@@ -167,32 +87,63 @@ export default function EmergencyHub() {
 
         {/* 3.2 Standard High-Priority Dialing Cards */}
         <div className="space-y-3">
-          {filteredServices.map((item, idx) => (
+          {filteredServices.map((item) => (
             <div
-              key={idx}
+              key={item.id}
               className={`p-4 rounded-2xl border shadow-2xs flex flex-col justify-between space-y-3 bg-white ${item.color}`}
             >
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">{item.icon}</span>
+                    <span className="text-2xl" role="img" aria-label={item.badge}>
+                      {item.icon}
+                    </span>
                     <span className="text-[10px] font-black uppercase tracking-wider bg-white/90 px-2 py-0.5 rounded-md border border-slate-200/60 text-slate-700">
                       {item.badge}
                     </span>
                   </div>
-                  <span className="text-[10px] font-extrabold text-slate-500">
-                    Alt: {item.altNumber}
-                  </span>
+                  {item.altNumber && (
+                    <a
+                      href={`tel:${item.altNumberTel}`}
+                      className="text-[11px] font-bold text-slate-600 hover:text-slate-950 underline decoration-slate-300 underline-offset-2 flex items-center gap-1 cursor-pointer"
+                      title={`Call alternate number ${item.altNumber}`}
+                    >
+                      <Phone className="w-2.5 h-2.5" />
+                      <span>Alt: {item.altNumber}</span>
+                    </a>
+                  )}
                 </div>
+
                 <h3 className="text-sm font-extrabold text-slate-900 pt-1">{item.title}</h3>
                 <p className="text-xs text-slate-600 leading-relaxed font-normal">{item.desc}</p>
+
+                {/* Verification & Source Badges */}
+                <div className="pt-1.5 border-t border-slate-100 space-y-1 text-[10px] text-slate-500 font-medium">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1 text-slate-600">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600 inline" />
+                      <span>Last verified: <strong>{item.lastVerified}</strong></span>
+                    </span>
+                    <span className="text-slate-400 truncate max-w-[170px]" title={item.source}>
+                      Src: {item.source}
+                    </span>
+                  </div>
+
+                  {!item.isVerified && (
+                    <div className="p-1.5 rounded-md bg-amber-50 border border-amber-200 text-amber-900 text-[10px] flex items-start gap-1 font-semibold">
+                      <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0 mt-0.5" />
+                      <span>{item.verificationNote || "TODO: Contact unverified with local authority."}</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Solid Block Call Button */}
+              {/* Solid Block Primary Call Button */}
               <div className="pt-1">
                 <a
-                  href={`tel:${item.number.replace(/\s+/g, "")}`}
+                  href={`tel:${item.numberTel}`}
                   className={`w-full py-3 px-4 rounded-xl text-center font-black text-xs tracking-wider flex items-center justify-center gap-2 transition cursor-pointer ${item.btnColor}`}
+                  aria-label={`Call emergency number ${item.number} for ${item.title}`}
                 >
                   <Phone className="w-3.5 h-3.5 fill-current" />
                   <span>CALL NOW ({item.number})</span>

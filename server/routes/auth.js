@@ -4,12 +4,23 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import RevokedToken from "../models/RevokedToken.js";
 import verifyToken from "../middleware/auth.js";
+import { validateLoginInput, validateRegisterInput } from "../middleware/validator.js";
 
 const router = express.Router();
 
+// Helper to set secure auth cookie
+const setAuthCookie = (res, token) => {
+  res.cookie("fazilnagar_auth_token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+};
+
 // @route   POST /api/auth/register
 // @desc    Register a new user
-router.post("/register", async (req, res) => {
+router.post("/register", validateRegisterInput, async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
@@ -47,6 +58,8 @@ router.post("/register", async (req, res) => {
       { expiresIn: "7d" }
     );
 
+    setAuthCookie(res, token);
+
     res.status(201).json({
       message: "User registered successfully.",
       token,
@@ -73,7 +86,7 @@ router.post("/register", async (req, res) => {
 
 // @route   POST /api/auth/login
 // @desc    Authenticate user & get token
-router.post("/login", async (req, res) => {
+router.post("/login", validateLoginInput, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -113,6 +126,8 @@ router.post("/login", async (req, res) => {
       process.env.JWT_SECRET || "fallback_secret_key",
       { expiresIn: "7d" }
     );
+
+    setAuthCookie(res, token);
 
     res.status(200).json({
       message: "Login successful.",
@@ -158,6 +173,12 @@ router.post("/logout", async (req, res) => {
         );
       }
     }
+
+    res.clearCookie("fazilnagar_auth_token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
 
     res.status(200).json({
       success: true,

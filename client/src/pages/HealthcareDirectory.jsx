@@ -65,6 +65,8 @@ const HEALTHCARE_PLACES = [
   },
 ];
 
+import { matchesSearchText, useDebouncedSearch } from "../utils/searchUtils";
+
 export default function HealthcareDirectory() {
   usePageSEO({
     title: "Fazilnagar Healthcare Directory | Hospitals, Doctors, Clinics & Pharmacies",
@@ -73,15 +75,14 @@ export default function HealthcareDirectory() {
   });
   const [activeType, setActiveType] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebouncedSearch(searchQuery, 200);
 
   const types = ["All", "Hospital", "Clinic", "Pharmacy", "Diagnostic Center"];
 
   const filteredHealthcare = HEALTHCARE_PLACES.filter((item) => {
     const matchesType = activeType === "All" || item.type === activeType;
-    const matchesSearch =
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.specialization.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.location.toLowerCase().includes(searchQuery.toLowerCase());
+    const target = `${item.name} ${item.specialization} ${item.location} ${item.addressFull || ""}`;
+    const matchesSearch = matchesSearchText(target, debouncedSearch);
     return matchesType && matchesSearch;
   });
 
@@ -126,6 +127,28 @@ export default function HealthcareDirectory() {
           </button>
         ))}
       </div>
+
+      {/* Screen Reader Announcement */}
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {filteredHealthcare.length === 0
+          ? `No healthcare facilities found for "${searchQuery}".`
+          : `${filteredHealthcare.length} healthcare facilities available.`}
+      </div>
+
+      {filteredHealthcare.length === 0 && (
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 text-center max-w-md mx-auto my-6">
+          <p className="text-sm font-bold text-slate-800">No medical facilities found</p>
+          <p className="text-xs text-slate-500 mt-1">
+            {searchQuery ? `No healthcare results matching "${searchQuery}". Try searching in Hindi (e.g. 'अस्पताल', 'दवा') or reset filters.` : "No facilities found in this category."}
+          </p>
+          <button
+            onClick={() => { setActiveType("All"); setSearchQuery(""); }}
+            className="mt-3 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold"
+          >
+            Reset Filters
+          </button>
+        </div>
+      )}
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

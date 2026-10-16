@@ -25,6 +25,21 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  /* WCAG 2.2 AA Visible Keyboard Focus Rings */
+  :focus-visible {
+    outline: 2px solid #B8323C !important;
+    outline-offset: 2px !important;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid #B8323C !important;
+    outline-offset: 2px !important;
+  }
+
   body {
     overflow-x: hidden;
     max-width: 100vw;
@@ -66,16 +81,35 @@
   }
 }
 
-/* Mobile Safe-Area Utilities */
+/* Mobile Safe-Area & Touch Target Standards (WCAG 2.2 AA - min 44x44px) */
 .pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
 }
 .pt-safe {
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
 }
 .touch-target {
   min-height: 44px;
   min-width: 44px;
+}
+
+/* Prevent text overflow on 360px and 390px viewports */
+h1, h2, h3, h4, h5, h6, .civic-card, .civic-card * {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* Forms & inputs sizing on mobile */
+@media screen and (max-width: 640px) {
+  input[type="text"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="email"],
+  input[type="password"],
+  select {
+    min-height: 44px;
+    box-sizing: border-box;
+  }
 }
 
 /* Modern Civic & Editorial Custom Color Utilities */

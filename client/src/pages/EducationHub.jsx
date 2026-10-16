@@ -52,6 +52,8 @@ const INSTITUTES = [
   },
 ];
 
+import { matchesSearchText, useDebouncedSearch } from "../utils/searchUtils";
+
 export default function EducationHub() {
   usePageSEO({
     title: "Fazilnagar Education Guide | Schools, Degree Colleges & Coaching Institutes",
@@ -59,6 +61,8 @@ export default function EducationHub() {
     canonicalPath: "/education",
   });
   const [activeCategory, setActiveCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebouncedSearch(searchQuery, 200);
 
   const categories = [
     "All",
@@ -70,22 +74,42 @@ export default function EducationHub() {
     "Competitive-exam institutes",
   ];
 
-  const filtered =
-    activeCategory === "All"
-      ? INSTITUTES
-      : INSTITUTES.filter((item) => item.category === activeCategory);
+  const filtered = INSTITUTES.filter((item) => {
+    const matchesCat = activeCategory === "All" || item.category === activeCategory;
+    const target = `${item.name} ${item.category} ${item.courses} ${item.location}`;
+    const matchesSearch = matchesSearchText(target, debouncedSearch);
+    return matchesCat && matchesSearch;
+  });
 
   return (
     <div className="space-y-6 pb-12">
       {/* Banner */}
-      <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-2">
-        <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-          Student & Academic Portal
-        </span>
-        <h1 className="text-2xl sm:text-4xl font-extrabold">🎓 Fazilnagar Education Guide &amp; Colleges</h1>
-        <p className="text-slate-300 text-sm">
-          Discover schools, colleges, competitive exam centers, computer academies, and courses in Fazilnagar.
-        </p>
+      <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+            Student & Academic Portal
+          </span>
+          <h1 className="text-2xl sm:text-4xl font-extrabold mt-2">🎓 Fazilnagar Education Guide &amp; Colleges</h1>
+          <p className="text-slate-300 text-sm mt-1">
+            Discover schools, colleges, competitive exam centers, computer academies, and courses in Fazilnagar.
+          </p>
+        </div>
+
+        <input
+          type="text"
+          placeholder="Search school, college, course..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full md:w-80 bg-slate-800 text-white placeholder-slate-400 px-4 py-3 rounded-2xl text-sm border border-slate-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+          aria-label="Search educational institutions"
+        />
+      </div>
+
+      {/* Screen Reader Announcement */}
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {filtered.length === 0
+          ? `No educational institutions found for "${searchQuery}".`
+          : `${filtered.length} institutions available.`}
       </div>
 
       {/* Category Pills */}
@@ -114,6 +138,21 @@ export default function EducationHub() {
           </p>
         </div>
       </div>
+
+      {filtered.length === 0 && (
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 text-center max-w-md mx-auto my-6">
+          <p className="text-sm font-bold text-slate-800">No educational institutions found</p>
+          <p className="text-xs text-slate-500 mt-1">
+            {searchQuery ? `No schools or colleges match "${searchQuery}". Try searching in Hindi (e.g. 'स्कूल', 'कॉलेज') or resetting filters.` : "No institutions found in this category."}
+          </p>
+          <button
+            onClick={() => { setActiveCategory("All"); setSearchQuery(""); }}
+            className="mt-3 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold"
+          >
+            Reset Filters
+          </button>
+        </div>
+      )}
 
       {/* List of Educational Institutions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

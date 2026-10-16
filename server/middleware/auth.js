@@ -40,17 +40,16 @@ export const requireAdmin = async (req, res, next) => {
   try {
     if (req.user.id) {
       const dbUser = await User.findById(req.user.id).select("role status");
-      if (dbUser) {
-        if (dbUser.role !== "admin") {
-          return res.status(403).json({ message: "Access denied. Admin privileges required." });
-        }
-        if (dbUser.status === "inactive" || dbUser.status === "suspended") {
-          return res.status(403).json({ message: "Access denied. Account is inactive or suspended." });
-        }
+      if (!dbUser || dbUser.role !== "admin") {
+        return res.status(403).json({ message: "Access denied. Admin privileges required." });
+      }
+      if (dbUser.status === "inactive" || dbUser.status === "suspended") {
+        return res.status(403).json({ message: "Access denied. Account is inactive or suspended." });
       }
     }
   } catch (err) {
     console.error("requireAdmin user database verification error:", err);
+    return res.status(403).json({ message: "Access denied. Verification failed." });
   }
 
   next();

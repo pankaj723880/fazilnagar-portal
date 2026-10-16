@@ -21,9 +21,31 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+const allowedOrigins = [
+  "https://fazilnagar.vercel.app",
+  process.env.CLIENT_URL,
+  ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(",") : []),
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:5000",
+  "http://127.0.0.1:5173",
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: "*",
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const isAllowed =
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app") ||
+        /^https?:\/\/localhost(:\d+)?$/.test(origin) ||
+        /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
+      if (isAllowed) {
+        return callback(null, true);
+      }
+      return callback(new Error("CORS policy violation: Access denied from this origin"));
+    },
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: [
       "Content-Type",
@@ -45,7 +67,14 @@ app.use(
     exposedHeaders: ["Cache-Control", "Content-Length"],
   })
 );
-app.options("*", cors());
+
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  next();
+});
+
 app.use(express.json());
 
 // Serve uploaded media files publicly
@@ -144,6 +173,7 @@ import heritageRoutes from "./routes/heritage.js";
 import mediaRoutes from "./routes/media.js";
 import auditRoutes from "./routes/audit.js";
 import civicDirectoryRoutes from "./routes/civicDirectory.js";
+import { authLimiter, writeLimiter, searchLimiter } from "./middleware/rateLimiter.js";
 
 // Connect DB & Routes
 connectDB().then(() => {
@@ -151,10 +181,10 @@ connectDB().then(() => {
   seedAdminUser();
 });
 
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/news", newsRoutes);
-app.use("/api/places", placesRoutes);
-app.use("/api/submissions", submissionsRoutes);
+app.use("/api/places", searchLimiter, placesRoutes);
+app.use("/api/submissions", writeLimiter, submissionsRoutes);
 app.use("/api/advertisements", advertisementsRoutes);
 app.use("/api/google-drive", googleDriveRoutes);
 app.use("/api/users", usersRoutes);

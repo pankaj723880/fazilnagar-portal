@@ -32,7 +32,9 @@ router.get("/", async (req, res) => {
     }
 
     if (search && search.trim()) {
-      const regex = new RegExp(search.trim(), "i");
+      const sanitized = String(search).trim().slice(0, 100);
+      const escaped = sanitized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(escaped, "i");
       query.$or = [
         { name: regex },
         { alternateNames: { $in: [regex] } },
