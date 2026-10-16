@@ -38,8 +38,6 @@ const userSchema = new mongoose.Schema(
     // Town Messaging & Profile Fields (Phase 1)
     username: {
       type: String,
-      unique: true,
-      sparse: true,
       trim: true,
       lowercase: true,
       match: [/^[a-z0-9_]{3,20}$/, "Username must be 3-20 lowercase alphanumeric or underscore characters."],
@@ -87,6 +85,14 @@ const userSchema = new mongoose.Schema(
 
 userSchema.index({ name: 1 });
 userSchema.index({ findByEmail: 1, email: 1 });
+userSchema.index(
+  { username: 1 },
+  { unique: true, partialFilterExpression: { username: { $type: "string", $gt: "" } } }
+);
+userSchema.index(
+  { phone: 1 },
+  { unique: true, partialFilterExpression: { phone: { $type: "string", $gt: "" } } }
+);
 
 const User = mongoose.model("User", userSchema);
 

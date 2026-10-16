@@ -11,6 +11,7 @@ import ChatWindow from "../components/ChatWindow";
 import CreateGroupModal from "../components/CreateGroupModal";
 import MobileMessagingDrawer from "../components/MobileMessagingDrawer";
 import ConversationInfoPanel from "../components/ConversationInfoPanel";
+import { resolveMediaUrl } from "../utils/mediaUtils";
 import {
   getCachedConversations,
   setCachedConversations,
@@ -567,7 +568,14 @@ export default function Messages() {
           >
             <div className="w-7 h-7 rounded-full bg-slate-200 overflow-hidden shrink-0 relative">
               {profile?.avatar ? (
-                <img src={profile.avatar} alt={displayName} className="w-full h-full object-cover" />
+                <img
+                  src={resolveMediaUrl(profile.avatar)}
+                  alt={displayName}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-600">
                   {(displayName || "C")[0]?.toUpperCase()}
@@ -815,7 +823,14 @@ export default function Messages() {
               <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-200">
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-slate-200 border-2 border-white shadow-xs shrink-0 flex items-center justify-center relative">
                   {editAvatarPreview ? (
-                    <img src={editAvatarPreview} alt="Preview" className="w-full h-full object-cover" />
+                    <img
+                      src={resolveMediaUrl(editAvatarPreview)}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
                   ) : (
                     <span className="text-xl font-bold text-slate-600">
                       {(editName || displayName || "C")[0]?.toUpperCase()}

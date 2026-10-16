@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { resolveMediaUrl } from "../utils/mediaUtils";
 import {
   MessageSquare,
   UserPlus,
@@ -216,19 +217,33 @@ export default function ConversationList({
                 }`}
               >
                 {/* Avatar */}
-                <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden shrink-0 relative">
+                <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden shrink-0 relative border border-slate-200/80 shadow-2xs">
                   {isGroup ? (
                     c.groupAvatar ? (
-                      <img src={c.groupAvatar} alt={displayName} className="w-full h-full object-cover" />
+                      <img
+                        src={resolveMediaUrl(c.groupAvatar)}
+                        alt={displayName}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center font-bold text-xs text-[#B8323C] bg-red-50">
                         <Users className="w-5 h-5" />
                       </div>
                     )
                   ) : other.avatar ? (
-                    <img src={other.avatar} alt={other.name} className="w-full h-full object-cover" />
+                    <img
+                      src={resolveMediaUrl(other.avatar)}
+                      alt={other.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-600 bg-slate-100">
+                    <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-700 bg-gradient-to-br from-slate-100 to-slate-200">
                       {(other.name || "C")[0]?.toUpperCase()}
                     </div>
                   )}

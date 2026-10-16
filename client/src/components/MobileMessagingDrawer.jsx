@@ -14,6 +14,7 @@ import {
   Loader2,
   Filter,
 } from "lucide-react";
+import { resolveMediaUrl } from "../utils/mediaUtils";
 
 export default function MobileMessagingDrawer({
   isOpen,
@@ -156,7 +157,12 @@ export default function MobileMessagingDrawer({
           >
             <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden shrink-0 border border-slate-300/80">
               {profile?.avatar ? (
-                <img src={profile.avatar} alt={displayName} className="w-full h-full object-cover" />
+                <img
+                  src={resolveMediaUrl(profile.avatar)}
+                  alt={displayName}
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.currentTarget.style.display = "none"; }}
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-600">
                   {(displayName || "C")[0]?.toUpperCase()}
@@ -340,14 +346,24 @@ export default function MobileMessagingDrawer({
                       <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden shrink-0 relative">
                         {isGroup ? (
                           c.groupAvatar ? (
-                            <img src={c.groupAvatar} alt={itemTitle} className="w-full h-full object-cover" />
+                            <img
+                              src={resolveMediaUrl(c.groupAvatar)}
+                              alt={itemTitle}
+                              className="w-full h-full object-cover"
+                              onError={(e) => { e.currentTarget.style.display = "none"; }}
+                            />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center font-bold text-xs text-[#B8323C] bg-red-50">
                               <Users className="w-5 h-5" />
                             </div>
                           )
                         ) : other.avatar ? (
-                          <img src={other.avatar} alt={other.name} className="w-full h-full object-cover" />
+                          <img
+                            src={resolveMediaUrl(other.avatar)}
+                            alt={other.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => { e.currentTarget.style.display = "none"; }}
+                          />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-600 bg-slate-100">
                             {(other.name || "C")[0]?.toUpperCase()}
@@ -443,7 +459,12 @@ export default function MobileMessagingDrawer({
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden shrink-0 flex items-center justify-center text-xs font-bold text-slate-600">
                         {u.avatar ? (
-                          <img src={u.avatar} alt={u.name} className="w-full h-full object-cover" />
+                          <img
+                            src={resolveMediaUrl(u.avatar)}
+                            alt={u.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => { e.currentTarget.style.display = "none"; }}
+                          />
                         ) : (
                           (u.name || "C")[0]?.toUpperCase()
                         )}

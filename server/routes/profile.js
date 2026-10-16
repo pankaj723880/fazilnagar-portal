@@ -5,6 +5,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import User from "../models/User.js";
 import verifyToken from "../middleware/auth.js";
+import { normalizePhone } from "../utils/submissionUtils.js";
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -124,7 +125,31 @@ router.patch("/me", verifyToken, async (req, res) => {
     }
 
     if (name && typeof name === "string") user.name = name.trim().slice(0, 100);
-    if (phone !== undefined) user.phone = String(phone).trim().slice(0, 20);
+    if (phone !== undefined) {
+      const rawPhone = String(phone).trim();
+      if (rawPhone) {
+        const cleanPhone = normalizePhone(rawPhone);
+        if (cleanPhone.length < 10) {
+          return res.status(400).json({
+            success: false,
+            message: "Please enter a valid 10-digit mobile number.",
+          });
+        }
+        const existingPhone = await User.findOne({
+          phone: cleanPhone,
+          _id: { $ne: user._id },
+        });
+        if (existingPhone) {
+          return res.status(400).json({
+            success: false,
+            message: "This mobile number is already registered with another account.",
+          });
+        }
+        user.phone = cleanPhone;
+      } else {
+        user.phone = "";
+      }
+    }
     if (area !== undefined) user.area = String(area).trim().slice(0, 60);
     if (bio !== undefined) user.bio = String(bio).trim().slice(0, 250);
     if (showEmail !== undefined) user.showEmail = Boolean(showEmail);
@@ -158,6 +183,14 @@ router.patch("/me", verifyToken, async (req, res) => {
     });
   } catch (err) {
     console.error("Update Profile Error:", err);
+    if (err.code === 11000) {
+      if (err.keyPattern?.username || String(err.message).includes("username")) {
+        return res.status(400).json({ success: false, message: "This username is already taken. Please choose another." });
+      }
+      if (err.keyPattern?.phone || String(err.message).includes("phone")) {
+        return res.status(400).json({ success: false, message: "This mobile number is already registered with another account." });
+      }
+    }
     res.status(500).json({ success: false, message: "Failed to update profile." });
   }
 });

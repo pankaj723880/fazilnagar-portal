@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import API from "../api";
 import { Search, X, Loader2, UserPlus, MapPin, Shield, MessageCircle } from "lucide-react";
+import { resolveMediaUrl } from "../utils/mediaUtils";
 
 export default function UserSearch({ onSelectUser }) {
   const [query, setQuery] = useState("");
@@ -171,7 +172,12 @@ export default function UserSearch({ onSelectUser }) {
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-full bg-slate-200 overflow-hidden shrink-0">
                     {u.avatar ? (
-                      <img src={u.avatar} alt={u.name} className="w-full h-full object-cover" />
+                      <img
+                        src={resolveMediaUrl(u.avatar)}
+                        alt={u.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.style.display = "none"; }}
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-600 bg-slate-100">
                         {(u.name || "C")[0]?.toUpperCase()}

@@ -13,6 +13,7 @@ import {
   Sparkles,
   ShieldCheck,
 } from "lucide-react";
+import { resolveMediaUrl } from "../utils/mediaUtils";
 
 export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
   const [groupName, setGroupName] = useState("");
@@ -398,7 +399,12 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
                   >
                     <span className="w-4 h-4 rounded-full bg-slate-200 overflow-hidden shrink-0 text-[9px] flex items-center justify-center font-bold text-slate-600">
                       {c.avatar ? (
-                        <img src={c.avatar} alt="" className="w-full h-full object-cover" />
+                        <img
+                          src={resolveMediaUrl(c.avatar)}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.currentTarget.style.display = "none"; }}
+                        />
                       ) : (
                         (c.name || "C")[0]?.toUpperCase()
                       )}
@@ -474,9 +480,10 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
                         <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden shrink-0">
                           {user.avatar ? (
                             <img
-                              src={user.avatar}
+                              src={resolveMediaUrl(user.avatar)}
                               alt={user.name}
                               className="w-full h-full object-cover"
+                              onError={(e) => { e.currentTarget.style.display = "none"; }}
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-600">

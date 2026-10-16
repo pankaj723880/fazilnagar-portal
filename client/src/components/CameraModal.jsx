@@ -69,6 +69,7 @@ export default function CameraModal({ isOpen, onClose, onCapture }) {
       }
 
       setStream(mediaStream);
+      setIsInitializing(false);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         videoRef.current.play().catch(() => {});
@@ -86,6 +87,16 @@ export default function CameraModal({ isOpen, onClose, onCapture }) {
       setIsInitializing(false);
     }
   };
+
+  // Bind media stream to video whenever stream updates or preview is cleared
+  useEffect(() => {
+    if (videoRef.current && stream && !capturedPhotoUrl && !recordedVideoUrl) {
+      if (videoRef.current.srcObject !== stream) {
+        videoRef.current.srcObject = stream;
+      }
+      videoRef.current.play().catch(() => {});
+    }
+  }, [stream, capturedPhotoUrl, recordedVideoUrl, facingMode]);
 
   useEffect(() => {
     if (isOpen) {
@@ -319,11 +330,6 @@ export default function CameraModal({ isOpen, onClose, onCapture }) {
                 <span>Try Again / पुनः प्रयास करें</span>
               </button>
             </div>
-          ) : isInitializing ? (
-            <div className="flex flex-col items-center justify-center gap-2 text-xs text-slate-400">
-              <RefreshCw className="w-6 h-6 animate-spin text-[#B8323C]" />
-              <span>Starting camera stream...</span>
-            </div>
           ) : capturedPhotoUrl ? (
             <img
               src={capturedPhotoUrl}
@@ -345,14 +351,27 @@ export default function CameraModal({ isOpen, onClose, onCapture }) {
                 autoPlay
                 playsInline
                 muted
+                onLoadedMetadata={() => {
+                  videoRef.current?.play().catch(() => {});
+                  setIsInitializing(false);
+                }}
+                onCanPlay={() => setIsInitializing(false)}
                 className={`w-full h-full object-cover max-h-[55vh] ${
                   facingMode === "user" ? "-scale-x-100" : ""
                 }`}
               />
 
+              {/* Loading Stream Overlay */}
+              {isInitializing && (
+                <div className="absolute inset-0 bg-black/75 flex flex-col items-center justify-center gap-2 text-xs text-slate-300 z-10">
+                  <RefreshCw className="w-6 h-6 animate-spin text-[#B8323C]" />
+                  <span>Starting camera stream... / कैमरा शुरू हो रहा है...</span>
+                </div>
+              )}
+
               {/* Recording indicator */}
               {isRecording && (
-                <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-600/90 text-white px-3 py-1.5 rounded-full text-xs font-mono font-bold shadow-lg animate-pulse">
+                <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-red-600/90 text-white px-3 py-1.5 rounded-full text-xs font-mono font-bold shadow-lg animate-pulse">
                   <span className="w-2.5 h-2.5 rounded-full bg-white" />
                   <span>REC {formatTimer(recordingSeconds)}</span>
                 </div>

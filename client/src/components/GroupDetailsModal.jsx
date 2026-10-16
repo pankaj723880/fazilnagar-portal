@@ -15,6 +15,7 @@ import {
   Save,
   Crown,
 } from "lucide-react";
+import { resolveMediaUrl } from "../utils/mediaUtils";
 
 export default function GroupDetailsModal({
   isOpen,
@@ -486,7 +487,12 @@ export default function GroupDetailsModal({
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden shrink-0">
                           {u.avatar ? (
-                            <img src={u.avatar} alt={u.name} className="w-full h-full object-cover" />
+                            <img
+                              src={resolveMediaUrl(u.avatar)}
+                              alt={u.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => { e.currentTarget.style.display = "none"; }}
+                            />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-600 bg-slate-100">
                               {(u.name || "C")[0]?.toUpperCase()}

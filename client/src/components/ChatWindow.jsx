@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import API from "../api";
 import { getSocket, playMessageChime } from "../socket";
+import { resolveMediaUrl } from "../utils/mediaUtils";
 import ReportModal from "./ReportModal";
 import GroupDetailsModal from "./GroupDetailsModal";
 import CameraModal from "./CameraModal";
@@ -1019,14 +1020,28 @@ export default function ChatWindow({
           >
             {isGroup ? (
               conversation.groupAvatar ? (
-                <img src={conversation.groupAvatar} alt={conversation.groupName} className="w-full h-full object-cover group-hover:scale-105 transition" />
+                <img
+                  src={resolveMediaUrl(conversation.groupAvatar)}
+                  alt={conversation.groupName}
+                  className="w-full h-full object-cover group-hover:scale-105 transition"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center font-bold text-xs text-[#B8323C] bg-red-50">
                   <Users className="w-5 h-5" />
                 </div>
               )
             ) : otherUser.avatar ? (
-              <img src={otherUser.avatar} alt={otherUser.name} className="w-full h-full object-cover group-hover:scale-105 transition" />
+              <img
+                src={resolveMediaUrl(otherUser.avatar)}
+                alt={otherUser.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center font-bold text-sm text-slate-700 bg-gradient-to-br from-slate-100 to-slate-200">
                 {(otherUser.name || "C")[0]?.toUpperCase()}
@@ -1371,13 +1386,41 @@ export default function ChatWindow({
                     <div className="flex-1 h-px bg-red-200"></div>
                   </div>
                 )}
-                <div className={`flex flex-col group ${isMe ? "items-end" : "items-start"}`}>
-                {/* Group sender name tag */}
-                {isGroup && !isMe && m.sender?.name && (
-                  <span className="text-[10px] font-bold text-slate-500 mb-0.5 ml-1 select-none">
-                    {m.sender.name}
-                  </span>
-                )}
+                <div className={`flex group ${isMe ? "justify-end" : "justify-start items-start gap-2.5"}`}>
+                  {/* Sender Avatar Circle for Incoming Messages */}
+                  {!isMe && (
+                    <div
+                      className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden shrink-0 mt-1 border border-slate-200/90 shadow-2xs relative select-none"
+                      title={m.sender?.name || otherUser.name || "Citizen"}
+                    >
+                      {(m.sender?.avatar || (!isGroup && otherUser.avatar)) ? (
+                        <img
+                          src={resolveMediaUrl(m.sender?.avatar || (!isGroup && otherUser.avatar))}
+                          alt={m.sender?.name || otherUser.name || "Citizen"}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : null}
+                      <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-700 bg-gradient-to-br from-slate-100 to-slate-200">
+                        {((m.sender?.name || otherUser.name || "C")[0] || "C").toUpperCase()}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                    {/* Group / user sender name tag */}
+                    {!isMe && (
+                      <span className="text-[11px] font-bold text-slate-700 mb-0.5 ml-1 select-none flex items-center gap-1">
+                        <span>{isGroup ? m.sender?.name || "Citizen" : otherUser.name || "Citizen"}</span>
+                        {((isGroup ? m.sender?.username : otherUser.username)) && (
+                          <span className="text-[9px] font-mono text-slate-400 font-normal">
+                            @{isGroup ? m.sender?.username : otherUser.username}
+                          </span>
+                        )}
+                      </span>
+                    )}
 
                 {/* Reply quote reference */}
                 {m.replyTo && (
@@ -1780,6 +1823,7 @@ export default function ChatWindow({
                     </div>
                   );
                 })()}
+                  </div>
                 </div>
               </div>
             );

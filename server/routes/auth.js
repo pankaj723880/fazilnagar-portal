@@ -5,6 +5,7 @@ import User from "../models/User.js";
 import RevokedToken from "../models/RevokedToken.js";
 import verifyToken from "../middleware/auth.js";
 import { validateLoginInput, validateRegisterInput } from "../middleware/validator.js";
+import { normalizePhone } from "../utils/submissionUtils.js";
 
 const router = express.Router();
 
@@ -22,19 +23,47 @@ const setAuthCookie = (res, token) => {
 // @desc    Register a new user
 router.post("/register", validateRegisterInput, async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, username, phone } = req.body;
 
     // Validate required fields
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Please fill in all required fields." });
     }
 
-    // Check if user already exists
+    // Check if user already exists with email
     const normalizedEmail = email.trim().toLowerCase();
-    const existingUser = await User.findOne({ email: normalizedEmail });
+    const existingEmail = await User.findOne({ email: normalizedEmail });
 
-    if (existingUser) {
+    if (existingEmail) {
       return res.status(400).json({ message: "User already exists with this email." });
+    }
+
+    // Validate and check username uniqueness
+    let cleanUsername = undefined;
+    if (username && typeof username === "string" && username.trim()) {
+      cleanUsername = username.trim().toLowerCase();
+      if (!/^[a-z0-9_]{3,20}$/.test(cleanUsername)) {
+        return res.status(400).json({
+          message: "Username must be 3-20 characters long and contain only lowercase letters, numbers, and underscores.",
+        });
+      }
+      const existingUserByUsername = await User.findOne({ username: cleanUsername });
+      if (existingUserByUsername) {
+        return res.status(400).json({ message: "This username is already taken. Please choose another." });
+      }
+    }
+
+    // Validate and check phone uniqueness
+    let cleanPhone = "";
+    if (phone && String(phone).trim()) {
+      cleanPhone = normalizePhone(phone);
+      if (cleanPhone.length < 10) {
+        return res.status(400).json({ message: "Please enter a valid 10-digit mobile number." });
+      }
+      const existingUserByPhone = await User.findOne({ phone: cleanPhone });
+      if (existingUserByPhone) {
+        return res.status(400).json({ message: "This mobile number is already registered with another account." });
+      }
     }
 
     // Hash password
@@ -42,14 +71,19 @@ router.post("/register", validateRegisterInput, async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Save new user
-    const newUser = await User.create({
+    const userData = {
       name: name.trim(),
       email: normalizedEmail,
       password: hashedPassword,
-      phone: req.body.phone ? req.body.phone.trim() : "",
+      phone: cleanPhone,
       status: "active",
       lastLogin: new Date(),
-    });
+    };
+    if (cleanUsername) {
+      userData.username = cleanUsername;
+    }
+
+    const newUser = await User.create(userData);
 
     // Create JWT Token
     const token = jwt.sign(
@@ -67,6 +101,7 @@ router.post("/register", validateRegisterInput, async (req, res) => {
         id: newUser._id,
         name: newUser.name,
         email: newUser.email,
+        username: newUser.username || "",
         phone: newUser.phone,
         role: newUser.role || "user",
         status: newUser.status,
@@ -75,6 +110,12 @@ router.post("/register", validateRegisterInput, async (req, res) => {
   } catch (err) {
     console.error("Register Error:", err);
     if (err.code === 11000) {
+      if (err.keyPattern?.username || String(err.message).includes("username")) {
+        return res.status(400).json({ message: "This username is already taken. Please choose another." });
+      }
+      if (err.keyPattern?.phone || String(err.message).includes("phone")) {
+        return res.status(400).json({ message: "This mobile number is already registered with another account." });
+      }
       return res.status(400).json({ message: "User already exists with this email." });
     }
     res.status(500).json({

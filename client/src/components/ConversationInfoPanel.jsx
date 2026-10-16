@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import API from "../api";
+import { resolveMediaUrl } from "../utils/mediaUtils";
 import {
   X,
   Shield,
@@ -224,14 +225,28 @@ export default function ConversationInfoPanel({
           <div className="w-20 h-20 rounded-3xl bg-slate-100 border-2 border-slate-200/80 overflow-hidden shadow-xs relative">
             {isGroup ? (
               conversation.groupAvatar ? (
-                <img src={conversation.groupAvatar} alt={displayName} className="w-full h-full object-cover" />
+                <img
+                  src={resolveMediaUrl(conversation.groupAvatar)}
+                  alt={displayName}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center font-bold text-2xl text-[#B8323C] bg-red-50">
                   <Users className="w-10 h-10" />
                 </div>
               )
             ) : otherUser.avatar ? (
-              <img src={otherUser.avatar} alt={displayName} className="w-full h-full object-cover" />
+              <img
+                src={resolveMediaUrl(otherUser.avatar)}
+                alt={displayName}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center font-bold text-2xl text-slate-600 bg-slate-100">
                 {(displayName || "C")[0]?.toUpperCase()}

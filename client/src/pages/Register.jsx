@@ -13,6 +13,7 @@ export default function Register({ setUser }) {
   });
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -28,17 +29,18 @@ export default function Register({ setUser }) {
     setError("");
     setLoading(true);
 
-    const cleanUsername = username.toLowerCase().trim() || email.split("@")[0].replace(/[^a-z0-9_]/g, "_").slice(0, 15);
+    const cleanUsername = username.toLowerCase().trim();
 
     try {
       const res = await API.post("/auth/register", {
-        name,
-        username: cleanUsername,
-        email,
+        name: name.trim(),
+        username: cleanUsername || undefined,
+        phone: phone.trim() || undefined,
+        email: email.trim(),
         password,
       });
 
-      const userData = res.data.user || { name, username: cleanUsername, email };
+      const userData = res.data.user || { name, username: cleanUsername, email, phone };
       setAuthSession(res.data.token, userData);
       if (setUser) setUser(userData);
 
@@ -90,6 +92,23 @@ export default function Register({ setUser }) {
             />
           </div>
           <span className="text-[10px] text-slate-400">Used for Fazilnagar town messaging handle.</span>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 mb-1">Mobile Number / मोबाइल नंबर</label>
+          <div className="relative">
+            <span className="absolute left-3.5 top-2.5 text-xs text-slate-400 font-mono">+91</span>
+            <input
+              type="tel"
+              value={phone}
+              autoComplete="tel"
+              maxLength={15}
+              placeholder="9876543210"
+              onChange={(e) => setPhone(e.target.value.replace(/[^0-9+\s-]/g, ""))}
+              className="w-full pl-12 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-red-600 text-sm font-mono"
+            />
+          </div>
+          <span className="text-[10px] text-slate-400">Must be unique to your account.</span>
         </div>
 
         <div>

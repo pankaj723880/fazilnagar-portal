@@ -4,6 +4,7 @@ import API from "../api";
 import { getAuthUser } from "../utils/authStorage";
 import { usePageSEO } from "../utils/seo";
 import { Camera, Save, ArrowLeft, Shield, Lock, CheckCircle2, AlertCircle, Phone } from "lucide-react";
+import { resolveMediaUrl } from "../utils/mediaUtils";
 
 // Mask email utility (ra****@gmail.com)
 export function maskEmail(email) {
@@ -232,9 +233,10 @@ export default function ProfileEdit() {
             <div className="relative group w-20 h-20 rounded-full overflow-hidden bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center shrink-0">
               {avatarPreview ? (
                 <img
-                  src={avatarPreview}
+                  src={resolveMediaUrl(avatarPreview)}
                   alt={displayName || "Avatar"}
                   className="w-full h-full object-cover"
+                  onError={(e) => { e.currentTarget.style.display = "none"; }}
                 />
               ) : (
                 <span className="text-2xl font-black text-slate-500">
