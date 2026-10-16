@@ -15,6 +15,7 @@ import SiteSettings, {
   DEFAULT_ACTION_BUTTONS,
   DEFAULT_TRUST_BADGES,
 } from "../models/SiteSettings.js";
+import User from "../models/User.js";
 import settingsRoutes from "../routes/settings.js";
 
 const TEST_PORT = 5055;
@@ -25,6 +26,8 @@ describe("Settings Persistence & Live Version Endpoint Verification", () => {
   let server;
   let adminToken;
   let citizenToken;
+  let testAdminUser;
+  let testCitizenUser;
 
   before(async () => {
     // Connect to test database
@@ -35,14 +38,34 @@ describe("Settings Persistence & Live Version Endpoint Verification", () => {
     // Reset settings in database for clean test
     await SiteSettings.deleteOne({ key: "primary_settings" });
 
+    // Clean up any existing test users
+    await User.deleteMany({ email: { $in: ["admin-settings@fazilnagar.com", "citizen-settings@fazilnagar.com"] } });
+
+    // Create real test users in database so requireAdmin DB check succeeds
+    testAdminUser = await User.create({
+      name: "Admin Settings Tester",
+      email: "admin-settings@fazilnagar.com",
+      password: "hashedpassword123",
+      role: "admin",
+      status: "active",
+    });
+
+    testCitizenUser = await User.create({
+      name: "Citizen Settings Tester",
+      email: "citizen-settings@fazilnagar.com",
+      password: "hashedpassword123",
+      role: "user",
+      status: "active",
+    });
+
     // Generate JWT tokens
     adminToken = jwt.sign(
-      { id: new mongoose.Types.ObjectId().toString(), email: "admin@fazilnagar.com", role: "admin" },
+      { id: testAdminUser._id.toString(), email: testAdminUser.email, role: "admin" },
       JWT_SECRET,
       { expiresIn: "1h" }
     );
     citizenToken = jwt.sign(
-      { id: "test-citizen-id", email: "citizen@fazilnagar.com", role: "citizen" },
+      { id: testCitizenUser._id.toString(), email: testCitizenUser.email, role: "user" },
       JWT_SECRET,
       { expiresIn: "1h" }
     );
@@ -62,6 +85,7 @@ describe("Settings Persistence & Live Version Endpoint Verification", () => {
     if (server) {
       await new Promise((resolve) => server.close(resolve));
     }
+    await User.deleteMany({ email: { $in: ["admin-settings@fazilnagar.com", "citizen-settings@fazilnagar.com"] } });
   });
 
   function makeRequest(method, path, body = null, token = null) {
