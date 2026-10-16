@@ -404,7 +404,7 @@ export default function ProfileEdit() {
                   <span className="text-[11px] text-slate-500">
                     Your full email is NEVER made public. When enabled, it displays as:{" "}
                     <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-700">
-                      {activeUser?.email ? maskEmail(activeUser.email) : "ra****@gmail.com"}
+                      {portalUser?.email ? maskEmail(portalUser.email) : "ra****@gmail.com"}
                     </code>
                   </span>
                 </div>
