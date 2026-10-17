@@ -9,12 +9,13 @@ import ContributionForm from "../models/ContributionForm.js";
 import Place from "../models/Place.js";
 import AuditLog from "../models/AuditLog.js";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
-import { invalidatePlacesCache } from "./places.js";
+import { invalidatePlacesCache, syncJsonPlaces } from "./places.js";
 import {
   buildGoogleMapsCoordinateUrl,
   calculateHaversineDistanceKm,
 } from "../utils/googleMapsValidator.js";
 import { uploadMediaToDrive } from "./googleDrive.js";
+import { writeLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -55,6 +56,7 @@ const upload = multer({
 // @access  Public
 router.post(
   "/upload",
+  writeLimiter,
   (req, res, next) => {
     upload.array("attachments", 5)(req, res, (err) => {
       if (err instanceof multer.MulterError) {
@@ -397,14 +399,23 @@ router.patch("/:id/review", verifyToken, requireAdmin, async (req, res) => {
           afterSnapshot[k] = v;
         }
 
-        // Synchronize Google Maps search URL if coordinates updated
+        // Synchronize Google Maps search URL & distance if coordinates updated
         if (patchData.latitude !== undefined || patchData.longitude !== undefined) {
           const newLat = Number(existingPlace.latitude);
           const newLng = Number(existingPlace.longitude);
           if (!isNaN(newLat) && !isNaN(newLng)) {
             existingPlace.mapsUrl = buildGoogleMapsCoordinateUrl(newLat, newLng);
+            existingPlace.googleMapsUrl = existingPlace.mapsUrl;
+            existingPlace.calculatedDistanceKm = calculateHaversineDistanceKm(newLat, newLng, 26.6804068, 84.046655);
             afterSnapshot.mapsUrl = existingPlace.mapsUrl;
+            afterSnapshot.googleMapsUrl = existingPlace.googleMapsUrl;
+            afterSnapshot.calculatedDistanceKm = existingPlace.calculatedDistanceKm;
           }
+        } else if (patchData.googleMapsUrl) {
+          existingPlace.mapsUrl = patchData.googleMapsUrl;
+          existingPlace.googleMapsUrl = patchData.googleMapsUrl;
+          afterSnapshot.mapsUrl = existingPlace.mapsUrl;
+          afterSnapshot.googleMapsUrl = existingPlace.googleMapsUrl;
         }
 
         existingPlace.lastVerifiedAt = new Date();
@@ -412,10 +423,30 @@ router.patch("/:id/review", verifyToken, requireAdmin, async (req, res) => {
 
         await existingPlace.save();
         appliedPlace = existingPlace;
+
+        // Keep local JSON files in sync
+        syncJsonPlaces((list) => {
+          const targetId = existingPlace.id || String(existingPlace._id);
+          const idx = list.findIndex(
+            (p) =>
+              String(p.id) === String(targetId) ||
+              String(p._id) === String(targetId) ||
+              p.slug === existingPlace.slug ||
+              p.name === existingPlace.name
+          );
+          if (idx >= 0) {
+            list[idx] = {
+              ...list[idx],
+              ...existingPlace.toObject(),
+            };
+          }
+          return list;
+        });
       } else {
         // Create brand new entity record from approved proposal
         const lat = parseFloat(patchData.latitude);
         const lng = parseFloat(patchData.longitude);
+        const validCoords = !isNaN(lat) && !isNaN(lng);
 
         const newDoc = {
           name: patchData.name || submission.targetEntityName || "New Contributed Place",
@@ -438,9 +469,11 @@ router.patch("/:id/review", verifyToken, requireAdmin, async (req, res) => {
           description: patchData.description || "",
           imageUrl: patchData.imageUrl || (submission.attachments?.[0] || ""),
           galleryUrls: submission.attachments || [],
-          latitude: !isNaN(lat) ? lat : null,
-          longitude: !isNaN(lng) ? lng : null,
-          mapsUrl: !isNaN(lat) && !isNaN(lng) ? buildGoogleMapsCoordinateUrl(lat, lng) : (patchData.googleMapsUrl || ""),
+          latitude: validCoords ? lat : null,
+          longitude: validCoords ? lng : null,
+          calculatedDistanceKm: validCoords ? calculateHaversineDistanceKm(lat, lng, 26.6804068, 84.046655) : null,
+          mapsUrl: validCoords ? buildGoogleMapsCoordinateUrl(lat, lng) : (patchData.googleMapsUrl || ""),
+          googleMapsUrl: patchData.googleMapsUrl || (validCoords ? buildGoogleMapsCoordinateUrl(lat, lng) : ""),
           verificationStatus: "verified",
           isPublished: true,
           isArchived: false,
@@ -450,6 +483,12 @@ router.patch("/:id/review", verifyToken, requireAdmin, async (req, res) => {
 
         appliedPlace = await Place.create(newDoc);
         Object.assign(afterSnapshot, newDoc);
+
+        // Keep local JSON files in sync
+        syncJsonPlaces((list) => {
+          list.push(appliedPlace.toObject());
+          return list;
+        });
       }
 
       // Invalidate relevant in-memory caches so map and directory display updated data immediately

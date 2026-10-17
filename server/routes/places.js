@@ -423,7 +423,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // Helper to synchronize local places.json files
-function syncJsonPlaces(mutator) {
+export function syncJsonPlaces(mutator) {
   try {
     const paths = [
       path.join(__dirname, "../data/places.json"),

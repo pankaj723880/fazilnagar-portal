@@ -150,6 +150,7 @@ describe("Dynamic Form Builder & Public Contribution Approval System", () => {
     await ContributionForm.deleteMany({ slug: { $in: ["test-map-correction", "test-dir-correction", "test-new-entity"] } });
     await ContributionSubmission.deleteMany({ evidenceNotes: /Test Suite/ });
     await Place.deleteMany({ slug: { $in: ["test-target-establishment", "test-new-village-proposal"] } });
+    await mongoose.disconnect();
   });
 
   // =========================================================================
@@ -259,7 +260,7 @@ describe("Dynamic Form Builder & Public Contribution Approval System", () => {
           {
             name: "googleMapsUrl",
             label: "Google Maps Pin Link",
-            type: "url",
+            type: "googleMapsUrl",
             required: true,
             isEditableInCorrection: true,
             order: 4,
@@ -278,6 +279,9 @@ describe("Dynamic Form Builder & Public Contribution Approval System", () => {
       assert.equal(res.status, 201, "Admin form creation should return 201 Created");
       assert.equal(res.data.form.slug, "test-map-correction");
       assert.equal(res.data.form.fields.length, 4);
+      assert.equal(res.data.form.fields[1].type, "latitude");
+      assert.equal(res.data.form.fields[2].type, "longitude");
+      assert.equal(res.data.form.fields[3].type, "googleMapsUrl");
     });
 
     it("Allows authorized admin to create a Directory form with contact fields", async () => {
@@ -398,6 +402,141 @@ describe("Dynamic Form Builder & Public Contribution Approval System", () => {
 
       assert.equal(res.status, 400, "Invalid coordinates and URLs must be rejected with 400");
     });
+
+    it("Strictly validates Latitude bounds: rejects latitude > 90 and latitude < -90", async () => {
+      // Test latitude > 90
+      const resHigh = await makeRequest({
+        path: "/api/forms/public/test-map-correction/submit",
+        method: "POST",
+        body: {
+          proposedValues: {
+            name: "Out of Bounds High",
+            latitude: 91.5,
+            longitude: 84.0485,
+            googleMapsUrl: "https://www.google.com/maps?q=26.6835,84.0485",
+          },
+          evidenceNotes: "Test Suite: Bounds test",
+        },
+      });
+      assert.equal(resHigh.status, 400);
+      assert.ok(resHigh.data.errors?.latitude?.includes("between -90 and 90"));
+
+      // Test latitude < -90
+      const resLow = await makeRequest({
+        path: "/api/forms/public/test-map-correction/submit",
+        method: "POST",
+        body: {
+          proposedValues: {
+            name: "Out of Bounds Low",
+            latitude: -95.0,
+            longitude: 84.0485,
+            googleMapsUrl: "https://www.google.com/maps?q=26.6835,84.0485",
+          },
+          evidenceNotes: "Test Suite: Bounds test",
+        },
+      });
+      assert.equal(resLow.status, 400);
+      assert.ok(resLow.data.errors?.latitude?.includes("between -90 and 90"));
+    });
+
+    it("Strictly validates Longitude bounds: rejects longitude > 180 and longitude < -180", async () => {
+      // Test longitude > 180
+      const resHigh = await makeRequest({
+        path: "/api/forms/public/test-map-correction/submit",
+        method: "POST",
+        body: {
+          proposedValues: {
+            name: "Out of Bounds Longitude High",
+            latitude: 26.6835,
+            longitude: 185.2,
+            googleMapsUrl: "https://www.google.com/maps?q=26.6835,84.0485",
+          },
+          evidenceNotes: "Test Suite: Bounds test",
+        },
+      });
+      assert.equal(resHigh.status, 400);
+      assert.ok(resHigh.data.errors?.longitude?.includes("between -180 and 180"));
+
+      // Test longitude < -180
+      const resLow = await makeRequest({
+        path: "/api/forms/public/test-map-correction/submit",
+        method: "POST",
+        body: {
+          proposedValues: {
+            name: "Out of Bounds Longitude Low",
+            latitude: 26.6835,
+            longitude: -182.0,
+            googleMapsUrl: "https://www.google.com/maps?q=26.6835,84.0485",
+          },
+          evidenceNotes: "Test Suite: Bounds test",
+        },
+      });
+      assert.equal(resLow.status, 400);
+      assert.ok(resLow.data.errors?.longitude?.includes("between -180 and 180"));
+    });
+
+    it("Rejects non-Google Maps location sources (e.g. OpenStreetMap, Bing, Apple Maps)", async () => {
+      const resOsm = await makeRequest({
+        path: "/api/forms/public/test-map-correction/submit",
+        method: "POST",
+        body: {
+          proposedValues: {
+            name: "OSM Location Link",
+            latitude: 26.6835,
+            longitude: 84.0485,
+            googleMapsUrl: "https://www.openstreetmap.org/#map=16/26.68/84.04",
+          },
+          evidenceNotes: "Test Suite: Non-Google Maps",
+        },
+      });
+      assert.equal(resOsm.status, 400);
+      assert.ok(resOsm.data.errors?.googleMapsUrl?.includes("Only Google Maps"));
+
+      const resBing = await makeRequest({
+        path: "/api/forms/public/test-map-correction/submit",
+        method: "POST",
+        body: {
+          proposedValues: {
+            name: "Bing Location Link",
+            latitude: 26.6835,
+            longitude: 84.0485,
+            googleMapsUrl: "https://www.bing.com/maps?cp=26.68~84.04",
+          },
+          evidenceNotes: "Test Suite: Non-Google Maps",
+        },
+      });
+      assert.equal(resBing.status, 400);
+      assert.ok(resBing.data.errors?.googleMapsUrl?.includes("Only Google Maps"));
+    });
+
+    it("Allows admin to edit, reorder, and remove fields via PUT /api/forms/:id", async () => {
+      const formDoc = await ContributionForm.findOne({ slug: "test-map-correction" });
+      assert.ok(formDoc, "Form must exist");
+
+      // Reorder fields: Put googleMapsUrl first, latitude second, longitude third, name fourth
+      const reorderedFields = [
+        { ...formDoc.fields[3].toObject(), order: 0 },
+        { ...formDoc.fields[1].toObject(), order: 1 },
+        { ...formDoc.fields[2].toObject(), order: 2 },
+        { ...formDoc.fields[0].toObject(), order: 3 },
+      ];
+
+      const resUpdate = await makeRequest({
+        path: `/api/forms/${formDoc._id}`,
+        method: "PUT",
+        token: adminToken,
+        body: {
+          ...formDoc.toObject(),
+          title: "Reordered Map Village Correction Form",
+          fields: reorderedFields,
+        },
+      });
+
+      assert.equal(resUpdate.status, 200, "Updating form should return 200");
+      assert.equal(resUpdate.data.form.fields[0].name, "googleMapsUrl");
+      assert.equal(resUpdate.data.form.fields[1].name, "latitude");
+      assert.equal(resUpdate.data.form.fields[2].name, "longitude");
+    });
   });
 
   // =========================================================================
@@ -461,6 +600,9 @@ describe("Dynamic Form Builder & Public Contribution Approval System", () => {
         );
         assert.equal(updatedPlace.latitude, 26.6835, "Approved latitude must update live record");
         assert.equal(updatedPlace.longitude, 84.0485, "Approved longitude must update live record");
+        assert.ok(updatedPlace.mapsUrl.includes("26.6835"), "Approved coordinates must update live Google Maps search URL");
+        assert.ok(updatedPlace.mapsUrl.includes("84.0485"), "Approved coordinates must update live Google Maps search URL");
+        assert.ok(typeof updatedPlace.calculatedDistanceKm === "number", "Calculated distance from Fazilnagar centre must be computed");
 
         // Verify AuditLog entry was created
         const audit = await AuditLog.findOne({ changesSummary: new RegExp(pendingSubmission.referenceId) });

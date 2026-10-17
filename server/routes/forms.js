@@ -14,6 +14,7 @@ import {
   compareLocationCoordinates,
   buildGoogleMapsCoordinateUrl,
 } from "../utils/googleMapsValidator.js";
+import { writeLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
@@ -107,7 +108,7 @@ router.get("/public/:slug", async (req, res) => {
 // @route   POST /api/forms/public/:slug/submit
 // @desc    Public citizen submission for a contribution form
 // @access  Public
-router.post("/public/:slug/submit", async (req, res) => {
+router.post("/public/:slug/submit", writeLimiter, async (req, res) => {
   try {
     const { slug } = req.params;
     const form = await ContributionForm.findOne({ slug: slug.toLowerCase() });
@@ -189,17 +190,17 @@ router.post("/public/:slug/submit", async (req, res) => {
       }
 
       // Type-specific validations
-      if (field.type === "latitude") {
+      if (field.type === "latitude" || field.name === "latitude") {
         const num = parseFloat(val);
         if (isNaN(num) || num < -90 || num > 90) {
-          validationErrors[field.name] = "Latitude must be a valid number between -90 and 90.";
+          validationErrors[field.name] = "Latitude must be a valid decimal coordinate between -90 and 90.";
         } else {
           proposedValues[field.name] = num;
         }
-      } else if (field.type === "longitude") {
+      } else if (field.type === "longitude" || field.name === "longitude") {
         const num = parseFloat(val);
         if (isNaN(num) || num < -180 || num > 180) {
-          validationErrors[field.name] = "Longitude must be a valid number between -180 and 180.";
+          validationErrors[field.name] = "Longitude must be a valid decimal coordinate between -180 and 180.";
         } else {
           proposedValues[field.name] = num;
         }
@@ -210,21 +211,23 @@ router.post("/public/:slug/submit", async (req, res) => {
         } else {
           proposedValues[field.name] = num;
         }
-      } else if (field.name === "googleMapsUrl" || field.type === "url") {
+      } else if (field.name === "googleMapsUrl" || field.type === "googleMapsUrl") {
         const trimmedUrl = String(val).trim();
-        if (field.name === "googleMapsUrl") {
-          const check = validateGoogleMapsUrl(trimmedUrl);
-          if (!check.isValid) {
-            validationErrors[field.name] = check.error || "Must be a valid Google Maps location link.";
-          } else {
-            proposedValues[field.name] = trimmedUrl;
-          }
+        const check = validateGoogleMapsUrl(trimmedUrl);
+        if (!check.isValid) {
+          validationErrors[field.name] = check.error || "Must be an authentic Google Maps location link.";
         } else {
-          if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
-            validationErrors[field.name] = "URL must start with http:// or https://";
-          } else {
-            proposedValues[field.name] = trimmedUrl;
+          proposedValues[field.name] = trimmedUrl;
+          if (!proposedValues.googleMapsUrl) {
+            proposedValues.googleMapsUrl = trimmedUrl;
           }
+        }
+      } else if (field.type === "url") {
+        const trimmedUrl = String(val).trim();
+        if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
+          validationErrors[field.name] = "URL must start with http:// or https://";
+        } else {
+          proposedValues[field.name] = trimmedUrl;
         }
       } else {
         proposedValues[field.name] = typeof val === "string" ? val.trim() : val;
@@ -251,7 +254,13 @@ router.post("/public/:slug/submit", async (req, res) => {
 
     const hasLat = proposedValues.latitude !== undefined;
     const hasLng = proposedValues.longitude !== undefined;
-    const mapsLink = proposedValues.googleMapsUrl || "";
+    const mapsLink =
+      proposedValues.googleMapsUrl ||
+      Object.entries(proposedValues).find(([k]) => {
+        const fDef = form.fields.find((f) => f.name === k);
+        return fDef?.type === "googleMapsUrl";
+      })?.[1] ||
+      "";
 
     if (mapsLink) {
       locationComparison = compareLocationCoordinates(
@@ -297,6 +306,29 @@ router.post("/public/:slug/submit", async (req, res) => {
       req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
       req.socket?.remoteAddress ||
       "";
+
+    // Detect likely duplicate submissions within 10 minutes from same IP or contact
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    const recentDuplicate = await ContributionSubmission.findOne({
+      formSlug: form.slug,
+      createdAt: { $gte: tenMinutesAgo },
+      $or: [
+        { "submitterInfo.ipAddress": clientIp },
+        ...(submitterContact ? [{ "submitterInfo.contact": String(submitterContact).trim() }] : []),
+      ],
+      "proposedValues.name": proposedValues.name || { $exists: false },
+      status: "pending",
+    }).lean();
+
+    if (recentDuplicate && proposedValues.name && recentDuplicate.proposedValues?.name === proposedValues.name) {
+      duplicateWarnings.push({
+        entityId: recentDuplicate._id.toString(),
+        name: proposedValues.name,
+        category: form.entityType,
+        proximityKm: null,
+        similarity: "Recent duplicate submission detected from this device/contact within the last 10 minutes",
+      });
+    }
 
     // Create pending submission record (never updates live Place directly!)
     const submission = new ContributionSubmission({

@@ -89,20 +89,22 @@ export const ALLOWED_FIELDS_BY_MODULE = {
       name: "latitude",
       label: "Latitude (North)",
       type: "latitude",
-      description: "Decimal latitude coordinate (e.g. 26.7095)",
+      description: "Decimal latitude coordinate (-90 to 90, e.g. 26.7095)",
       required: true,
+      defaultValidation: { min: -90, max: 90 },
     },
     {
       name: "longitude",
       label: "Longitude (East)",
       type: "longitude",
-      description: "Decimal longitude coordinate (e.g. 84.0507)",
+      description: "Decimal longitude coordinate (-180 to 180, e.g. 84.0507)",
       required: true,
+      defaultValidation: { min: -180, max: 180 },
     },
     {
       name: "googleMapsUrl",
       label: "Google Maps Location Link",
-      type: "url",
+      type: "googleMapsUrl",
       description: "Open place in Google Maps, tap Share -> Copy Link and paste here",
       required: true,
     },
@@ -225,20 +227,22 @@ export const ALLOWED_FIELDS_BY_MODULE = {
       name: "latitude",
       label: "Latitude Coordinate",
       type: "latitude",
-      description: "GPS latitude (required if proposing location change)",
+      description: "Decimal latitude coordinate (-90 to 90, e.g. 26.6850)",
       required: false,
+      defaultValidation: { min: -90, max: 90 },
     },
     {
       name: "longitude",
       label: "Longitude Coordinate",
       type: "longitude",
-      description: "GPS longitude (required if proposing location change)",
+      description: "Decimal longitude coordinate (-180 to 180, e.g. 84.0490)",
       required: false,
+      defaultValidation: { min: -180, max: 180 },
     },
     {
       name: "googleMapsUrl",
       label: "Google Maps Location Link",
-      type: "url",
+      type: "googleMapsUrl",
       description: "Google Maps share link for this establishment (required for address/location changes)",
       required: false,
     },
@@ -301,31 +305,46 @@ export function sanitizeAndValidateFormFields(module, fields = []) {
 
     const catalogDef = allowedMap.get(fieldName);
 
+    let resolvedType = catalogDef.type;
+    if (raw.type && [
+      "text",
+      "textarea",
+      "number",
+      "select",
+      "checkbox",
+      "phone",
+      "url",
+      "latitude",
+      "longitude",
+      "googleMapsUrl",
+      "address",
+      "image",
+    ].includes(raw.type)) {
+      resolvedType = raw.type;
+    }
+
+    // Default min/max boundaries for latitude (-90 to 90) and longitude (-180 to 180)
+    let minBound = typeof raw.validation?.min === "number" ? raw.validation.min : catalogDef.defaultValidation?.min ?? null;
+    let maxBound = typeof raw.validation?.max === "number" ? raw.validation.max : catalogDef.defaultValidation?.max ?? null;
+    if (resolvedType === "latitude") {
+      minBound = minBound !== null ? Math.max(-90, minBound) : -90;
+      maxBound = maxBound !== null ? Math.min(90, maxBound) : 90;
+    } else if (resolvedType === "longitude") {
+      minBound = minBound !== null ? Math.max(-180, minBound) : -180;
+      maxBound = maxBound !== null ? Math.min(180, maxBound) : 180;
+    }
+
     sanitized.push({
       name: fieldName,
       label: String(raw.label || catalogDef.label).trim(),
-      type: raw.type && [
-        "text",
-        "textarea",
-        "number",
-        "select",
-        "checkbox",
-        "phone",
-        "url",
-        "latitude",
-        "longitude",
-        "address",
-        "image",
-      ].includes(raw.type)
-        ? raw.type
-        : catalogDef.type,
+      type: resolvedType,
       description: String(raw.description ?? catalogDef.description ?? "").trim(),
       required: Boolean(raw.required),
       defaultValue: raw.defaultValue !== undefined ? raw.defaultValue : catalogDef.defaultValue || "",
       options: Array.isArray(raw.options) && raw.options.length > 0 ? raw.options : catalogDef.options || [],
       validation: {
-        min: typeof raw.validation?.min === "number" ? raw.validation.min : null,
-        max: typeof raw.validation?.max === "number" ? raw.validation.max : null,
+        min: minBound,
+        max: maxBound,
         pattern: String(raw.validation?.pattern || "").trim(),
         customError: String(raw.validation?.customError || "").trim(),
       },

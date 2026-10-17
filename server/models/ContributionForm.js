@@ -24,6 +24,7 @@ const fieldConfigSchema = new mongoose.Schema(
         "url",
         "latitude",
         "longitude",
+        "googleMapsUrl",
         "address",
         "image",
       ],

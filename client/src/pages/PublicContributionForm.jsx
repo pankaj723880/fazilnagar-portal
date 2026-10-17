@@ -16,6 +16,7 @@ import {
   Info,
   Check,
   Compass,
+  Globe,
 } from "lucide-react";
 
 export default function PublicContributionForm() {
@@ -99,7 +100,8 @@ export default function PublicContributionForm() {
 
   // Google Maps coordinate extraction helper
   const handleExtractCoordsFromMapsLink = () => {
-    const mapsUrl = formData.googleMapsUrl || "";
+    const mapsField = form?.fields?.find((f) => f.type === "googleMapsUrl" || f.name === "googleMapsUrl")?.name || "googleMapsUrl";
+    const mapsUrl = formData[mapsField] || "";
     if (!mapsUrl.trim()) return;
 
     // Pattern 1: /@26.7095,84.0507,17z
@@ -125,10 +127,12 @@ export default function PublicContributionForm() {
     }
 
     if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
+      const latField = form?.fields?.find((f) => f.type === "latitude" || f.name === "latitude")?.name || "latitude";
+      const lngField = form?.fields?.find((f) => f.type === "longitude" || f.name === "longitude")?.name || "longitude";
       setFormData((prev) => ({
         ...prev,
-        latitude: lat,
-        longitude: lng,
+        [latField]: lat,
+        [lngField]: lng,
       }));
       setExtractSuccess(true);
       setTimeout(() => setExtractSuccess(false), 3000);
@@ -193,27 +197,46 @@ export default function PublicContributionForm() {
       }
 
       if (val !== undefined && val !== null && String(val).trim() !== "") {
-        if (field.type === "latitude") {
+        if (field.type === "latitude" || field.name === "latitude") {
           const num = parseFloat(val);
           if (isNaN(num) || num < -90 || num > 90) {
-            errors[field.name] = "Latitude must be a valid number between -90 and 90.";
+            errors[field.name] = "Latitude must be a valid decimal coordinate between -90 and 90.";
           }
-        } else if (field.type === "longitude") {
+        } else if (field.type === "longitude" || field.name === "longitude") {
           const num = parseFloat(val);
           if (isNaN(num) || num < -180 || num > 180) {
-            errors[field.name] = "Longitude must be a valid number between -180 and 180.";
+            errors[field.name] = "Longitude must be a valid decimal coordinate between -180 and 180.";
           }
-        } else if (field.name === "googleMapsUrl") {
+        } else if (field.name === "googleMapsUrl" || field.type === "googleMapsUrl") {
           const trimmed = String(val).trim();
-          if (
-            !trimmed.startsWith("https://www.google.com/maps") &&
-            !trimmed.startsWith("https://maps.google.com") &&
-            !trimmed.startsWith("https://maps.app.goo.gl") &&
-            !trimmed.startsWith("https://goo.gl/maps") &&
-            !trimmed.startsWith("http://") &&
-            !trimmed.startsWith("https://")
-          ) {
-            errors[field.name] = "Please enter a valid Google Maps location URL.";
+          const disallowed = [
+            /openstreetmap\.org/i,
+            /osm\.org/i,
+            /bing\.com\/maps/i,
+            /maps\.apple\.com/i,
+            /here\.com/i,
+            /mapbox\.com/i,
+            /yandex\.[a-z.]+\/maps/i,
+            /mapquest\.com/i,
+          ];
+          let isDisallowed = false;
+          for (const pat of disallowed) {
+            if (pat.test(trimmed)) {
+              errors[field.name] = "Alternative map providers (like OpenStreetMap, Bing, or Apple Maps) are not permitted. Only Google Maps links are accepted.";
+              isDisallowed = true;
+              break;
+            }
+          }
+          if (!isDisallowed) {
+            const isGoogleMaps = [
+              /^https?:\/\/(?:www\.)?google\.[a-z.]+\/maps/i,
+              /^https?:\/\/maps\.google\.[a-z.]+/i,
+              /^https?:\/\/maps\.app\.goo\.gl\/[a-zA-Z0-9_\-]+/i,
+              /^https?:\/\/goo\.gl\/maps\/[a-zA-Z0-9_\-]+/i,
+            ].some((pat) => pat.test(trimmed));
+            if (!isGoogleMaps) {
+              errors[field.name] = "Please enter an authentic Google Maps location link (e.g. https://www.google.com/maps/... or https://maps.app.goo.gl/...).";
+            }
           }
         }
       }
@@ -418,24 +441,48 @@ export default function PublicContributionForm() {
               <div className="space-y-4">
                 {form.fields.map((field) => {
                   const errorMsg = formErrors[field.name];
-                  const isLocationField = field.name === "googleMapsUrl" || field.type === "latitude" || field.type === "longitude";
+                  const isLatitude = field.type === "latitude" || field.name === "latitude";
+                  const isLongitude = field.type === "longitude" || field.name === "longitude";
+                  const isGoogleMaps = field.type === "googleMapsUrl" || field.name === "googleMapsUrl";
+                  const isLocationField = isLatitude || isLongitude || isGoogleMaps;
 
                   return (
                     <div
                       key={field.name}
                       className={
                         isLocationField
-                          ? "p-4 bg-slate-50/80 rounded-2xl border border-slate-200 space-y-2"
+                          ? `p-4 rounded-2xl border space-y-2.5 transition ${
+                              isLatitude
+                                ? "bg-emerald-50/50 border-emerald-200"
+                                : isLongitude
+                                ? "bg-blue-50/50 border-blue-200"
+                                : "bg-rose-50/40 border-rose-200"
+                            }`
                           : "space-y-1"
                       }
                     >
-                      <div className="flex items-center justify-between">
-                        <label className="block text-xs font-bold text-slate-800">
-                          {field.label} {field.required && <span className="text-red-500">*</span>}
+                      <div className="flex items-center justify-between flex-wrap gap-1">
+                        <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                          {isLatitude && <Globe className="w-3.5 h-3.5 text-emerald-600" />}
+                          {isLongitude && <Compass className="w-3.5 h-3.5 text-blue-600" />}
+                          {isGoogleMaps && <MapPin className="w-3.5 h-3.5 text-rose-600" />}
+                          <span>{field.label}</span>
+                          {field.required && <span className="text-red-500 font-bold">*</span>}
                         </label>
-                        {field.name === "googleMapsUrl" && (
-                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
-                            Google Maps Link
+
+                        {isGoogleMaps && (
+                          <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full border border-rose-200">
+                            📍 Google Maps Only
+                          </span>
+                        )}
+                        {isLatitude && (
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                            🌐 Range: -90° to 90°
+                          </span>
+                        )}
+                        {isLongitude && (
+                          <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full border border-blue-200">
+                            🧭 Range: -180° to 180°
                           </span>
                         )}
                       </div>
@@ -445,16 +492,19 @@ export default function PublicContributionForm() {
                       )}
 
                       {/* Location Helper Instructions for Google Maps URL */}
-                      {field.name === "googleMapsUrl" && (
-                        <div className="p-2.5 bg-blue-50/80 border border-blue-200 rounded-xl text-[11px] text-blue-900 space-y-1">
-                          <p className="font-bold flex items-center gap-1">
-                            <span>🧭 How to get your Google Maps Link:</span>
+                      {isGoogleMaps && (
+                        <div className="p-3 bg-white/90 border border-rose-200 rounded-xl text-[11px] text-slate-700 space-y-1 shadow-2xs">
+                          <p className="font-bold flex items-center gap-1 text-rose-900">
+                            <span>🧭 How to get your Google Maps Share Link:</span>
                           </p>
-                          <ol className="list-decimal pl-4 space-y-0.5 text-blue-800">
-                            <li>Open Google Maps on your phone or computer.</li>
-                            <li>Find the exact place or pin the location.</li>
-                            <li>Tap <strong>Share</strong> &rarr; <strong>Copy Link</strong> and paste it below.</li>
+                          <ol className="list-decimal pl-4 space-y-0.5 text-slate-600">
+                            <li>Open Google Maps on your phone or web browser.</li>
+                            <li>Search or drop a pin at the exact location.</li>
+                            <li>Tap <strong>Share</strong> &rarr; <strong>Copy Link</strong> and paste the link below.</li>
                           </ol>
+                          <p className="text-[10px] text-amber-800 font-semibold bg-amber-50 px-2 py-1 rounded border border-amber-200/80 mt-1">
+                            Note: Google Maps is strictly the only permitted location source. Links from other map services are rejected.
+                          </p>
                         </div>
                       )}
 
@@ -487,16 +537,19 @@ export default function PublicContributionForm() {
                       ) : (
                         <div className="space-y-1.5">
                           <input
-                            type={field.type === "number" || field.type === "latitude" || field.type === "longitude" ? "text" : "text"}
+                            type={isLatitude || isLongitude ? "number" : "text"}
+                            step={isLatitude || isLongitude ? "any" : undefined}
+                            min={isLatitude ? -90 : isLongitude ? -180 : undefined}
+                            max={isLatitude ? 90 : isLongitude ? 180 : undefined}
                             value={formData[field.name] || ""}
                             onChange={(e) => handleInputChange(field.name, e.target.value)}
                             placeholder={
-                              field.name === "googleMapsUrl"
+                              isGoogleMaps
                                 ? "https://maps.app.goo.gl/... or https://www.google.com/maps/..."
-                                : field.type === "latitude"
-                                ? "e.g. 26.7095"
-                                : field.type === "longitude"
-                                ? "e.g. 84.0507"
+                                : isLatitude
+                                ? "e.g. 26.7095 (between -90 and 90)"
+                                : isLongitude
+                                ? "e.g. 84.0507 (between -180 and 180)"
                                 : `Enter ${field.label.toLowerCase()}...`
                             }
                             className={`w-full px-3.5 py-2.5 bg-white border ${
@@ -505,22 +558,25 @@ export default function PublicContributionForm() {
                           />
 
                           {/* Quick helper button under Google Maps link */}
-                          {field.name === "googleMapsUrl" && formData.googleMapsUrl && (
+                          {isGoogleMaps && formData[field.name] && (
                             <button
                               type="button"
                               onClick={handleExtractCoordsFromMapsLink}
-                              className="text-[11px] font-bold text-[#0D5E49] hover:underline flex items-center gap-1 cursor-pointer"
+                              className="text-[11px] font-bold text-[#0D5E49] hover:underline flex items-center gap-1 cursor-pointer pt-0.5"
                             >
                               <Compass className="w-3.5 h-3.5" />
-                              <span>Auto-extract Latitude &amp; Longitude from this link</span>
-                              {extractSuccess && <span className="text-emerald-600 font-extrabold">✓ Extracted!</span>}
+                              <span>Auto-extract Latitude &amp; Longitude coordinates from this link</span>
+                              {extractSuccess && <span className="text-emerald-600 font-extrabold">✓ Coordinates Extracted!</span>}
                             </button>
                           )}
                         </div>
                       )}
 
                       {errorMsg && (
-                        <p className="text-[11px] font-semibold text-red-600 mt-1">{errorMsg}</p>
+                        <p className="text-[11px] font-semibold text-red-600 mt-1 flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{errorMsg}</span>
+                        </p>
                       )}
                     </div>
                   );

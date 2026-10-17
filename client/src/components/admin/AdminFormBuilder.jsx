@@ -27,6 +27,10 @@ import {
   MessageCircle,
   Globe,
   Upload,
+  Smartphone,
+  RotateCcw,
+  Sparkles,
+  Compass,
 } from "lucide-react";
 
 export default function AdminFormBuilder({ onStatsChange = () => {} }) {
@@ -73,7 +77,12 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
 
   // Share Modal State
   const [shareForm, setShareForm] = useState(null);
-  const [copiedSlug, setCopiedSlug] = useState(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedMessage, setCopiedMessage] = useState(false);
+  const [copiedInstagram, setCopiedInstagram] = useState(false);
+  const [customInviteMessage, setCustomInviteMessage] = useState("");
+  const [nativeShareSuccess, setNativeShareSuccess] = useState(false);
+  const [nativeShareNotification, setNativeShareNotification] = useState("");
 
   const token = getAuthToken();
   const authHeaders = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
@@ -190,9 +199,38 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
 
   // Field manipulation helpers
   const handleAddField = (fieldName) => {
-    if (!catalog) return;
-    const catalogFields = catalog.allowedFields[formData.targetModule] || [];
-    const fieldDef = catalogFields.find((f) => f.name === fieldName);
+    let fieldDef = null;
+    if (catalog?.allowedFields?.[formData.targetModule]) {
+      fieldDef = catalog.allowedFields[formData.targetModule].find((f) => f.name === fieldName);
+    }
+    // Dedicated geospatial field definitions for rapid admin configuration
+    if (!fieldDef) {
+      if (fieldName === "latitude") {
+        fieldDef = {
+          name: "latitude",
+          label: "Latitude (North)",
+          type: "latitude",
+          description: "Decimal latitude coordinate between -90 and 90 (e.g. 26.7095)",
+          required: true,
+        };
+      } else if (fieldName === "longitude") {
+        fieldDef = {
+          name: "longitude",
+          label: "Longitude (East)",
+          type: "longitude",
+          description: "Decimal longitude coordinate between -180 and 180 (e.g. 84.0507)",
+          required: true,
+        };
+      } else if (fieldName === "googleMapsUrl") {
+        fieldDef = {
+          name: "googleMapsUrl",
+          label: "Google Maps Location Link",
+          type: "googleMapsUrl",
+          description: "Authentic Google Maps location or share link (Google Maps only)",
+          required: true,
+        };
+      }
+    }
     if (!fieldDef) return;
 
     if (formData.fields.some((f) => f.name === fieldName)) {
@@ -306,17 +344,102 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
     }
   };
 
-  // Copy share URL
+  // Copy & Share URL helpers
   const getPublicFormUrl = (slug) => {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     return `${origin}/contribute/${slug}`;
   };
 
-  const handleCopyUrl = (slug) => {
-    const url = getPublicFormUrl(slug);
-    navigator.clipboard.writeText(url);
-    setCopiedSlug(slug);
-    setTimeout(() => setCopiedSlug(null), 2500);
+  const getInitialInviteMessage = (form) => {
+    if (!form) return "";
+    const url = getPublicFormUrl(form.slug);
+    const purposeText =
+      form.purpose === "new_entity"
+        ? "proposing new records"
+        : form.purpose === "correction"
+        ? `suggesting updates & corrections for ${form.targetEntityName || "records"}`
+        : "contributing verified town records and corrections";
+    return `Fazilnagar Town Portal — Community Contribution Request\n\nForm: ${form.title}\nPurpose: We are gathering verified information for ${purposeText} on the official Fazilnagar map & directory.\n\nPlease open this public link to contribute directly (no account or login required):\n${url}\n\nYour participation helps maintain accurate local information for our community!`;
+  };
+
+  const handleOpenShare = (form) => {
+    setShareForm(form);
+    setCopiedLink(false);
+    setCopiedMessage(false);
+    setCopiedInstagram(false);
+    setNativeShareSuccess(false);
+    setNativeShareNotification("");
+    setCustomInviteMessage(getInitialInviteMessage(form));
+  };
+
+  const handleResetInviteMessage = () => {
+    if (shareForm) {
+      setCustomInviteMessage(getInitialInviteMessage(shareForm));
+    }
+  };
+
+  const handleCopyLinkOnly = async () => {
+    if (!shareForm) return;
+    const url = getPublicFormUrl(shareForm.slug);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    } catch {
+      // fallback
+    }
+  };
+
+  const handleCopyInviteMessage = async () => {
+    if (!customInviteMessage) return;
+    try {
+      await navigator.clipboard.writeText(customInviteMessage);
+      setCopiedMessage(true);
+      setTimeout(() => setCopiedMessage(false), 2500);
+    } catch {
+      // fallback
+    }
+  };
+
+  const handleCopyInstagramLink = async () => {
+    if (!shareForm) return;
+    const url = getPublicFormUrl(shareForm.slug);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedInstagram(true);
+      setTimeout(() => setCopiedInstagram(false), 2500);
+    } catch {
+      // fallback
+    }
+  };
+
+  const handleNativeShare = async () => {
+    if (!shareForm) return;
+    const url = getPublicFormUrl(shareForm.slug);
+    setNativeShareNotification("");
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareForm.title,
+          text: customInviteMessage,
+          url: url,
+        });
+        setNativeShareSuccess(true);
+        setTimeout(() => setNativeShareSuccess(false), 3000);
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          // Gracefully fallback to copying the invitation message
+          await handleCopyInviteMessage();
+          setNativeShareNotification("Native share was not completed. The invitation message was copied to your clipboard!");
+          setTimeout(() => setNativeShareNotification(""), 4500);
+        }
+      }
+    } else {
+      // Graceful fallback for browsers without Web Share API
+      await handleCopyInviteMessage();
+      setNativeShareNotification("Native device sharing is not supported on this browser. The full invitation message has been copied to your clipboard!");
+      setTimeout(() => setNativeShareNotification(""), 5000);
+    }
   };
 
   // Filtered forms list
@@ -504,7 +627,17 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
                 </div>
 
                 <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenShare(form)}
+                      title="Share Form via WhatsApp, Instagram, or Device"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-[#0D5E49] text-xs font-bold rounded-xl transition border border-emerald-200/90 cursor-pointer shadow-2xs"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span>Share Form</span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => setPreviewForm(form)}
@@ -512,14 +645,6 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
                       className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition cursor-pointer"
                     >
                       <Eye className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShareForm(form)}
-                      title="Share Link"
-                      className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition cursor-pointer"
-                    >
-                      <Share2 className="w-4 h-4" />
                     </button>
                     <button
                       type="button"
@@ -746,11 +871,11 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
 
               {/* Dynamic Field Builder */}
               <div className="space-y-4 pt-4 border-t border-slate-200">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
                     <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">3. Configured Fields</h4>
                     <p className="text-[11px] text-slate-500">
-                      Add and order fields allowed by the {formData.targetModule} schema.
+                      Configure field types, labels, decimal boundaries, and ordering for {formData.targetModule}.
                     </p>
                   </div>
 
@@ -779,34 +904,125 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
                   </div>
                 </div>
 
+                {/* Dedicated Geospatial Field Quick-Add Toolbar */}
+                <div className="p-3 bg-gradient-to-r from-emerald-50/60 via-blue-50/40 to-rose-50/50 rounded-xl border border-slate-200/80 flex flex-wrap items-center gap-2 text-xs">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-[#0D5E49]" />
+                    <span>Quick-Add Location Fields:</span>
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => handleAddField("latitude")}
+                    disabled={formData.fields.some((f) => f.name === "latitude")}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg font-bold text-[11px] shadow-2xs transition disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="Add Latitude field (-90 to 90 degrees)"
+                  >
+                    <Globe className="w-3 h-3 text-emerald-600" />
+                    <span>+ Latitude (-90 to 90)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleAddField("longitude")}
+                    disabled={formData.fields.some((f) => f.name === "longitude")}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-blue-50 text-blue-800 border border-blue-200 rounded-lg font-bold text-[11px] shadow-2xs transition disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="Add Longitude field (-180 to 180 degrees)"
+                  >
+                    <Compass className="w-3 h-3 text-blue-600" />
+                    <span>+ Longitude (-180 to 180)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleAddField("googleMapsUrl")}
+                    disabled={formData.fields.some((f) => f.name === "googleMapsUrl")}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-rose-50 text-rose-800 border border-rose-200 rounded-lg font-bold text-[11px] shadow-2xs transition disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="Add Google Maps Location Link field (Google Maps only)"
+                  >
+                    <MapPin className="w-3 h-3 text-rose-600" />
+                    <span>+ Google Maps Location Link</span>
+                  </button>
+                </div>
+
                 <div className="space-y-2.5">
                   {formData.fields.map((field, idx) => (
                     <div
                       key={field.name}
-                      className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                      className={`p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs transition ${
+                        field.type === "latitude"
+                          ? "bg-emerald-50/40 border-emerald-200"
+                          : field.type === "longitude"
+                          ? "bg-blue-50/40 border-blue-200"
+                          : field.type === "googleMapsUrl"
+                          ? "bg-rose-50/40 border-rose-200"
+                          : "bg-slate-50 border-slate-200"
+                      }`}
                     >
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-700">
+                      <div className="flex-1 space-y-1.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-700 font-bold">
                             #{idx + 1}
                           </span>
                           <input
                             type="text"
                             value={field.label}
                             onChange={(e) => handleFieldChange(idx, "label", e.target.value)}
-                            className="font-bold text-slate-800 bg-white border border-slate-300 rounded px-2 py-0.5 text-xs w-48"
+                            className="font-bold text-slate-800 bg-white border border-slate-300 rounded px-2 py-0.5 text-xs w-44 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                            placeholder="Field Label"
                           />
                           <span className="text-[10px] text-slate-500 font-mono">({field.name})</span>
-                          <span className="text-[10px] bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded">
-                            {field.type}
-                          </span>
+
+                          {/* Configurable Field Type Selector */}
+                          <select
+                            value={field.type}
+                            onChange={(e) => handleFieldChange(idx, "type", e.target.value)}
+                            className={`text-[11px] font-bold px-2 py-0.5 rounded border focus:outline-none cursor-pointer ${
+                              field.type === "latitude"
+                                ? "bg-emerald-100/80 text-emerald-900 border-emerald-300"
+                                : field.type === "longitude"
+                                ? "bg-blue-100/80 text-blue-900 border-blue-300"
+                                : field.type === "googleMapsUrl"
+                                ? "bg-rose-100/80 text-rose-900 border-rose-300"
+                                : "bg-white text-slate-700 border-slate-300"
+                            }`}
+                          >
+                            <option value="text">Text Input</option>
+                            <option value="textarea">Multi-line Text</option>
+                            <option value="number">Numeric</option>
+                            <option value="latitude">🌐 Latitude (-90 to 90)</option>
+                            <option value="longitude">🧭 Longitude (-180 to 180)</option>
+                            <option value="googleMapsUrl">📍 Google Maps Link (Strict)</option>
+                            <option value="select">Dropdown Select</option>
+                            <option value="phone">Phone Number</option>
+                            <option value="url">Website URL</option>
+                            <option value="address">Address</option>
+                            <option value="image">Image Attachment</option>
+                          </select>
+
+                          {field.type === "latitude" && (
+                            <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded">
+                              Bounds: -90° to 90°
+                            </span>
+                          )}
+                          {field.type === "longitude" && (
+                            <span className="text-[10px] font-semibold text-blue-800 bg-blue-100 px-1.5 py-0.5 rounded">
+                              Bounds: -180° to 180°
+                            </span>
+                          )}
+                          {field.type === "googleMapsUrl" && (
+                            <span className="text-[10px] font-semibold text-rose-800 bg-rose-100 px-1.5 py-0.5 rounded">
+                              Google Maps Only
+                            </span>
+                          )}
                         </div>
+
                         <input
                           type="text"
                           value={field.description}
                           onChange={(e) => handleFieldChange(idx, "description", e.target.value)}
-                          placeholder="Field help text / instructions"
-                          className="w-full text-[11px] text-slate-600 bg-white border border-slate-200 rounded px-2 py-0.5"
+                          placeholder="Field help text / instructions for contributors"
+                          className="w-full text-[11px] text-slate-600 bg-white border border-slate-200 rounded px-2 py-0.5 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                         />
                       </div>
 
@@ -824,24 +1040,27 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
+                            title="Move Field Up"
                             disabled={idx === 0}
                             onClick={() => handleMoveField(idx, -1)}
-                            className="p-1 rounded bg-white border border-slate-200 text-slate-600 disabled:opacity-30"
+                            className="p-1 rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
                           >
                             <ArrowUp className="w-3.5 h-3.5" />
                           </button>
                           <button
                             type="button"
+                            title="Move Field Down"
                             disabled={idx === formData.fields.length - 1}
                             onClick={() => handleMoveField(idx, 1)}
-                            className="p-1 rounded bg-white border border-slate-200 text-slate-600 disabled:opacity-30"
+                            className="p-1 rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
                           >
                             <ArrowDown className="w-3.5 h-3.5" />
                           </button>
                           <button
                             type="button"
+                            title="Remove Field"
                             onClick={() => handleRemoveField(idx)}
-                            className="p-1 rounded bg-white border border-red-200 text-red-600 hover:bg-red-50"
+                            className="p-1 rounded bg-white border border-red-200 text-red-600 hover:bg-red-50 cursor-pointer"
                           >
                             <X className="w-3.5 h-3.5" />
                           </button>
@@ -966,74 +1185,257 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
         </div>
       )}
 
-      {/* Share Modal */}
+      {/* Comprehensive Public Form Share Modal */}
       {shareForm && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 animate-in fade-in duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <Share2 className="w-4 h-4 text-emerald-600" />
-                <span>Share Public Contribution Form</span>
-              </h3>
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 animate-in fade-in zoom-in-95 duration-150 max-h-[92vh] overflow-y-auto space-y-4">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="p-1 rounded-lg bg-emerald-100 text-emerald-800">
+                    <Share2 className="w-4 h-4" />
+                  </span>
+                  <h3 className="text-sm font-extrabold text-slate-900">
+                    Share Public Contribution Form
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-500 mt-1 line-clamp-1">
+                  {shareForm.title} &bull; <span className="font-semibold capitalize">{shareForm.targetModule}</span> ({shareForm.entityType})
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setShareForm(null)}
-                className="text-slate-400 hover:text-slate-700"
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                title="Close"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-600 mb-3">
-              Share this link with citizens, village representatives, or business owners to gather verified details:
-            </p>
+            {/* Warning Banner if form is not published */}
+            {shareForm.status !== "published" && (
+              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-bold">Form Submissions Closed ({shareForm.status.toUpperCase()})</p>
+                  <p className="text-[11px] text-amber-700 mt-0.5">
+                    Visitors opening this link will see that this form is not currently accepting entries. Enable submissions by publishing the form.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await handleToggleStatus(shareForm);
+                      setShareForm((prev) => (prev ? { ...prev, status: "published" } : null));
+                    }}
+                    className="mt-2 px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold rounded-lg transition shadow-2xs cursor-pointer inline-flex items-center gap-1.5"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Publish Form Now</span>
+                  </button>
+                </div>
+              </div>
+            )}
 
-            <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200 mb-4">
-              <input
-                type="text"
-                readOnly
-                value={getPublicFormUrl(shareForm.slug)}
-                className="w-full bg-transparent text-xs font-mono text-slate-800 outline-none truncate"
-              />
-              <button
-                type="button"
-                onClick={() => handleCopyUrl(shareForm.slug)}
-                className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition shrink-0"
-              >
-                {copiedSlug === shareForm.slug ? (
-                  <Check className="w-4 h-4 text-emerald-600" />
-                ) : (
-                  <Copy className="w-4 h-4" />
-                )}
-              </button>
+            {/* Native Share Notification / Feedback Alert */}
+            {nativeShareNotification && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+                <span>{nativeShareNotification}</span>
+              </div>
+            )}
+
+            {/* Section 1: Permanent Public Form Link */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-800">
+                1. Permanent Public Form URL
+              </label>
+              <div className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                <input
+                  type="text"
+                  readOnly
+                  value={getPublicFormUrl(shareForm.slug)}
+                  className="w-full bg-transparent text-xs font-mono text-slate-800 outline-none select-all truncate"
+                />
+                <button
+                  type="button"
+                  onClick={handleCopyLinkOnly}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition shrink-0 cursor-pointer ${
+                    copiedLink
+                      ? "bg-emerald-600 text-white"
+                      : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-100"
+                  }`}
+                  title="Copy permanent link"
+                >
+                  {copiedLink ? (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Link Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy Link</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">
+                <span>Direct, login-free citizen access</span>
+                <a
+                  href={getPublicFormUrl(shareForm.slug)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 font-bold hover:underline"
+                >
+                  <span>Open Public Form in New Tab</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <a
-                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                  `Fazilnagar Town Portal — Please submit details for "${shareForm.title}": ${getPublicFormUrl(
-                    shareForm.slug
-                  )}`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>Share via WhatsApp</span>
-              </a>
+            {/* Section 2: Editable Invitation Message */}
+            <div className="space-y-2 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-slate-800">
+                  2. Ready-to-Share Invitation Message
+                </label>
+                <button
+                  type="button"
+                  onClick={handleResetInviteMessage}
+                  className="text-[11px] text-slate-500 hover:text-slate-800 inline-flex items-center gap-1 cursor-pointer"
+                  title="Reset to default template"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Reset Default</span>
+                </button>
+              </div>
 
-              <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                  getPublicFormUrl(shareForm.slug)
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition"
-              >
-                <Globe className="w-4 h-4" />
-                <span>Share on Facebook</span>
-              </a>
+              <textarea
+                rows={5}
+                value={customInviteMessage}
+                onChange={(e) => setCustomInviteMessage(e.target.value)}
+                placeholder="Edit your personalized community message..."
+                className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition leading-relaxed"
+              />
+
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] text-slate-400">
+                  {customInviteMessage.length} characters &bull; Editable for WhatsApp, SMS or Instagram DMs
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyInviteMessage}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition shrink-0 cursor-pointer ${
+                    copiedMessage
+                      ? "bg-emerald-600 text-white"
+                      : "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300"
+                  }`}
+                >
+                  {copiedMessage ? (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Message Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy Invitation Message</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Section 3: Direct Sharing Actions */}
+            <div className="space-y-2 pt-2 border-t border-slate-100">
+              <label className="block text-xs font-bold text-slate-800">
+                3. Instant Social & Device Sharing
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* WhatsApp Share */}
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(customInviteMessage)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-xs cursor-pointer"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Share via WhatsApp</span>
+                </a>
+
+                {/* Native Device Web Share API */}
+                <button
+                  type="button"
+                  onClick={handleNativeShare}
+                  className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-xs cursor-pointer ${
+                    nativeShareSuccess
+                      ? "bg-emerald-800 text-white"
+                      : "bg-[#0D5E49] hover:bg-emerald-900 text-white"
+                  }`}
+                  title="Share using native mobile sheet (iOS, Android, Chrome)"
+                >
+                  <Smartphone className="w-4 h-4" />
+                  <span>{nativeShareSuccess ? "Shared Successfully!" : "Share via Device (Sheet)"}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Section 4: Instagram & Facebook Community Guidance */}
+            <div className="space-y-2 pt-2 border-t border-slate-100">
+              <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <span>📸 Instagram & Facebook Sharing</span>
+              </label>
+
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
+                <div className="space-y-1 text-slate-600 text-[11px] leading-relaxed">
+                  <p>
+                    <strong>Instagram Stories:</strong> Tap the <strong>Sticker</strong> icon in your Story, choose <strong>LINK</strong>, and paste the URL.
+                  </p>
+                  <p>
+                    <strong>Instagram Bio &amp; DMs:</strong> Paste into your profile bio or send directly in DM chats.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleCopyInstagramLink}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer inline-flex items-center gap-1.5 ${
+                      copiedInstagram
+                        ? "bg-pink-600 text-white"
+                        : "bg-white border border-pink-300 text-pink-700 hover:bg-pink-50"
+                    }`}
+                  >
+                    {copiedInstagram ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Link Copied for Instagram!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy Link for Instagram Sticker</span>
+                      </>
+                    )}
+                  </button>
+
+                  <a
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                      getPublicFormUrl(shareForm.slug)
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>Share on Facebook</span>
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1112,13 +1514,26 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
               </div>
             </div>
 
-            <div className="p-4 bg-slate-50 border-t border-slate-200 text-center shrink-0">
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
               <button
                 type="button"
                 onClick={() => setPreviewForm(null)}
-                className="px-4 py-1.5 bg-slate-800 text-white rounded-lg text-xs font-bold"
+                className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-bold transition cursor-pointer"
               >
                 Close Preview
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const f = previewForm;
+                  setPreviewForm(null);
+                  handleOpenShare(f);
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0D5E49] hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span>Share This Form</span>
               </button>
             </div>
           </div>

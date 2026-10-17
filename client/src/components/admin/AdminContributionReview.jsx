@@ -479,7 +479,10 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                 </div>
 
                 {/* Location Review Box with Google Maps Verification */}
-                {detailData.submission?.googleMapsUrl && (
+                {(detailData.submission?.googleMapsUrl ||
+                  detailData.submission?.proposedValues?.googleMapsUrl ||
+                  detailData.submission?.proposedValues?.latitude !== undefined ||
+                  detailData.submission?.proposedValues?.longitude !== undefined) && (
                   <div className="p-4 bg-emerald-50/60 rounded-xl border border-emerald-200 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -488,15 +491,15 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                           Google Maps Location Review &amp; Coordinate Verification
                         </h4>
                       </div>
-                      <span className="text-[10px] font-black uppercase text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                      <span className="text-[10px] font-black uppercase text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200">
                         Google Maps Only
                       </span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-white p-3 rounded-lg border border-emerald-100">
                       <div>
-                        <span className="text-slate-400 block text-[10px]">Proposed Coordinates:</span>
-                        <div className="font-mono font-bold text-slate-800 text-sm">
+                        <span className="text-slate-400 block text-[10px] font-bold">Proposed Coordinates:</span>
+                        <div className="font-mono font-bold text-slate-800 text-sm mt-0.5">
                           {detailData.submission.proposedValues?.latitude ?? "—"}, {detailData.submission.proposedValues?.longitude ?? "—"}
                         </div>
                         {detailData.submission.proposedValues?.latitude && detailData.submission.proposedValues?.longitude && (
@@ -515,29 +518,42 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                       </div>
 
                       <div>
-                        <span className="text-slate-400 block text-[10px]">Submitted Google Maps Link:</span>
-                        <a
-                          href={detailData.submission.googleMapsUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-mono text-xs text-blue-700 hover:underline block truncate max-w-full mt-0.5"
-                          title={detailData.submission.googleMapsUrl}
-                        >
-                          {detailData.submission.googleMapsUrl}
-                        </a>
-                        <div className="mt-1 text-[11px]">
-                          {detailData.submission.locationComparison?.status === "consistent" ? (
-                            <span className="text-emerald-700 font-bold">✓ Coordinates match Google Maps URL link</span>
-                          ) : detailData.submission.locationComparison?.status === "mismatch" ? (
-                            <span className="text-red-700 font-bold">
-                              ⚠️ {detailData.submission.locationComparison.warningMessage}
-                            </span>
-                          ) : (
-                            <span className="text-amber-700 font-bold">
-                              ⚠️ {detailData.submission.locationComparison?.warningMessage || "Inspect pin manually"}
-                            </span>
-                          )}
-                        </div>
+                        <span className="text-slate-400 block text-[10px] font-bold">Submitted Google Maps Link:</span>
+                        {(() => {
+                          const mapsLink =
+                            detailData.submission.googleMapsUrl ||
+                            detailData.submission.proposedValues?.googleMapsUrl ||
+                            "";
+                          if (!mapsLink) {
+                            return <span className="text-slate-400 italic text-xs mt-0.5 block">None provided</span>;
+                          }
+                          return (
+                            <>
+                              <a
+                                href={mapsLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-mono text-xs text-blue-700 hover:underline block truncate max-w-full mt-0.5"
+                                title={mapsLink}
+                              >
+                                {mapsLink}
+                              </a>
+                              <div className="mt-1 text-[11px]">
+                                {detailData.submission.locationComparison?.status === "consistent" ? (
+                                  <span className="text-emerald-700 font-bold">✓ Coordinates match Google Maps URL link</span>
+                                ) : detailData.submission.locationComparison?.status === "mismatch" ? (
+                                  <span className="text-red-700 font-bold">
+                                    ⚠️ {detailData.submission.locationComparison.warningMessage}
+                                  </span>
+                                ) : (
+                                  <span className="text-amber-700 font-bold">
+                                    ⚠️ {detailData.submission.locationComparison?.warningMessage || "Inspect pin manually on Google Maps"}
+                                  </span>
+                                )}
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -582,7 +598,12 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                                 />
                               </td>
                               <td className="py-2.5 px-3 font-bold text-slate-800">
-                                {diff.field}
+                                <div className="flex items-center gap-1.5">
+                                  {diff.field === "latitude" && <span className="text-emerald-700 font-extrabold text-sm">🌐</span>}
+                                  {diff.field === "longitude" && <span className="text-blue-700 font-extrabold text-sm">🧭</span>}
+                                  {diff.field === "googleMapsUrl" && <span className="text-rose-700 font-extrabold text-sm">📍</span>}
+                                  <span>{diff.field}</span>
+                                </div>
                               </td>
                               <td className="py-2.5 px-3 text-slate-600 max-w-xs break-words">
                                 {diff.currentLiveValue !== null && diff.currentLiveValue !== undefined && diff.currentLiveValue !== "" ? (
