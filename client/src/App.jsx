@@ -39,6 +39,7 @@ const GlobalFloatingAndStickyAds = lazy(() =>
 );
 import { Home, Compass, PhoneCall, Newspaper, Menu, X, ShieldAlert, MessageSquare } from "lucide-react";
 import seedPlaces from "./data/places.json";
+import { prefetchRoute } from "./utils/routePrefetch";
 
 const MAIN_NAV_ITEMS = [
   { path: "/", label: "Home" },
@@ -302,6 +303,9 @@ export default function App() {
                   <Link
                     key={item.id || item.path}
                     to={item.path}
+                    onMouseEnter={() => prefetchRoute(item.path)}
+                    onFocus={() => prefetchRoute(item.path)}
+                    onTouchStart={() => prefetchRoute(item.path)}
                     onClick={() => {
                       if (item.path === "/") window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
@@ -327,6 +331,9 @@ export default function App() {
               {/* Messages / नगर संवाद */}
               <Link
                 to="/messages"
+                onMouseEnter={() => prefetchRoute("/messages")}
+                onFocus={() => prefetchRoute("/messages")}
+                onTouchStart={() => prefetchRoute("/messages")}
                 className={`min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl border flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-[#B8323C]/30 cursor-pointer ${
                   location.pathname === "/messages"
                     ? "bg-[#B8323C] text-white border-[#B8323C]"
@@ -492,10 +499,10 @@ export default function App() {
             : "pt-[76px] sm:pt-[112px] pb-24 sm:pb-8 max-w-7xl mx-auto px-3 sm:px-6"
         }`}
       >
-        <div key={location.pathname} className={isNewsPage || isMessagesPage ? "w-full flex-1 min-h-0 flex flex-col overflow-hidden" : isPortalPage ? "w-full" : "animate-page-enter"}>
+        <div className={isNewsPage || isMessagesPage ? "w-full flex-1 min-h-0 flex flex-col overflow-hidden" : isPortalPage ? "w-full" : "w-full"}>
           <Suspense
             fallback={
-              <div className="min-h-[40vh] flex flex-col items-center justify-center p-8 gap-3">
+              <div className="w-full min-h-[45vh] flex flex-col items-center justify-center p-8 gap-3 animate-in fade-in duration-150">
                 <div className="w-8 h-8 border-3 border-[#B8323C] border-t-transparent rounded-full animate-spin" />
                 <span className="text-xs text-slate-500 font-medium">Loading civic section...</span>
               </div>
@@ -913,6 +920,8 @@ export default function App() {
                 <div className="grid grid-cols-2 gap-1.5">
                   <Link
                     to="/education"
+                    onMouseEnter={() => prefetchRoute("/education")}
+                    onTouchStart={() => prefetchRoute("/education")}
                     onClick={() => setMobileMenuOpen(false)}
                     className="p-2 rounded-lg text-xs font-semibold bg-blue-50/70 hover:bg-blue-100 text-blue-950 flex items-center gap-1.5 border border-blue-200/60 active:scale-95 transition"
                   >
@@ -921,6 +930,8 @@ export default function App() {
                   </Link>
                   <Link
                     to="/emergency"
+                    onMouseEnter={() => prefetchRoute("/emergency")}
+                    onTouchStart={() => prefetchRoute("/emergency")}
                     onClick={() => setMobileMenuOpen(false)}
                     className="p-2 rounded-lg text-xs font-semibold bg-rose-50/70 hover:bg-rose-100 text-rose-950 flex items-center gap-1.5 border border-rose-200/60 active:scale-95 transition"
                   >
@@ -929,6 +940,8 @@ export default function App() {
                   </Link>
                   <Link
                     to="/healthcare"
+                    onMouseEnter={() => prefetchRoute("/healthcare")}
+                    onTouchStart={() => prefetchRoute("/healthcare")}
                     onClick={() => setMobileMenuOpen(false)}
                     className="p-2 rounded-lg text-xs font-semibold bg-emerald-50/70 hover:bg-emerald-100 text-emerald-950 flex items-center gap-1.5 border border-emerald-200/60 active:scale-95 transition"
                   >
@@ -937,6 +950,8 @@ export default function App() {
                   </Link>
                   <Link
                     to="/jobs"
+                    onMouseEnter={() => prefetchRoute("/jobs")}
+                    onTouchStart={() => prefetchRoute("/jobs")}
                     onClick={() => setMobileMenuOpen(false)}
                     className="p-2 rounded-lg text-xs font-semibold bg-indigo-50/70 hover:bg-indigo-100 text-indigo-950 flex items-center gap-1.5 border border-indigo-200/60 active:scale-95 transition"
                   >
@@ -945,6 +960,8 @@ export default function App() {
                   </Link>
                   <Link
                     to="/tourism"
+                    onMouseEnter={() => prefetchRoute("/tourism")}
+                    onTouchStart={() => prefetchRoute("/tourism")}
                     onClick={() => setMobileMenuOpen(false)}
                     className="p-2 rounded-lg text-xs font-semibold bg-purple-50/70 hover:bg-purple-100 text-purple-950 flex items-center gap-1.5 border border-purple-200/60 active:scale-95 transition"
                   >
@@ -953,6 +970,8 @@ export default function App() {
                   </Link>
                   <Link
                     to="/food"
+                    onMouseEnter={() => prefetchRoute("/food")}
+                    onTouchStart={() => prefetchRoute("/food")}
                     onClick={() => setMobileMenuOpen(false)}
                     className="p-2 rounded-lg text-xs font-semibold bg-amber-50/70 hover:bg-amber-100 text-amber-950 flex items-center gap-1.5 border border-amber-200/60 active:scale-95 transition"
                   >
@@ -961,6 +980,8 @@ export default function App() {
                   </Link>
                   <Link
                     to="/marketplace"
+                    onMouseEnter={() => prefetchRoute("/marketplace")}
+                    onTouchStart={() => prefetchRoute("/marketplace")}
                     onClick={() => setMobileMenuOpen(false)}
                     className="p-2 rounded-lg text-xs font-semibold bg-orange-50/70 hover:bg-orange-100 text-orange-950 flex items-center gap-1.5 border border-orange-200/60 active:scale-95 transition"
                   >
@@ -969,6 +990,8 @@ export default function App() {
                   </Link>
                   <Link
                     to="/transport"
+                    onMouseEnter={() => prefetchRoute("/transport")}
+                    onTouchStart={() => prefetchRoute("/transport")}
                     onClick={() => setMobileMenuOpen(false)}
                     className="p-2 rounded-lg text-xs font-semibold bg-cyan-50/70 hover:bg-cyan-100 text-cyan-950 flex items-center gap-1.5 border border-cyan-200/60 active:scale-95 transition"
                   >
@@ -977,6 +1000,8 @@ export default function App() {
                   </Link>
                   <Link
                     to="/govt"
+                    onMouseEnter={() => prefetchRoute("/govt")}
+                    onTouchStart={() => prefetchRoute("/govt")}
                     onClick={() => setMobileMenuOpen(false)}
                     className="col-span-2 p-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-900 flex items-center justify-center gap-1.5 border border-slate-200 active:scale-95 transition"
                   >
@@ -1044,6 +1069,8 @@ export default function App() {
             <NavLink
               to="/"
               end
+              onMouseEnter={() => prefetchRoute("/")}
+              onTouchStart={() => prefetchRoute("/")}
               onClick={() => {
                 if (location.pathname === "/") {
                   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1063,6 +1090,8 @@ export default function App() {
 
             <NavLink
               to="/directory"
+              onMouseEnter={() => prefetchRoute("/directory")}
+              onTouchStart={() => prefetchRoute("/directory")}
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold relative touch-manipulation ${
                   isActive || location.pathname.startsWith("/directory")
@@ -1078,6 +1107,8 @@ export default function App() {
 
             <NavLink
               to="/emergency"
+              onMouseEnter={() => prefetchRoute("/emergency")}
+              onTouchStart={() => prefetchRoute("/emergency")}
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold touch-manipulation ${
                   isActive
@@ -1092,6 +1123,8 @@ export default function App() {
 
             <NavLink
               to="/news"
+              onMouseEnter={() => prefetchRoute("/news")}
+              onTouchStart={() => prefetchRoute("/news")}
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold touch-manipulation ${
                   isActive

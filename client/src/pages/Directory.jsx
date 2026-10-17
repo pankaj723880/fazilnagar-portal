@@ -1,13 +1,12 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import API from "../api";
 import seedPlaces from "../data/places.json";
 import { openGoogleMapsDirections } from "../utils/directions";
 import { usePageSEO } from "../utils/seo";
-import CommunityPlaceModal from "../components/CommunityPlaceModal";
-import AdminPlaceEditModal from "../components/AdminPlaceEditModal";
+const CommunityPlaceModal = lazy(() => import("../components/CommunityPlaceModal"));
+const AdminPlaceEditModal = lazy(() => import("../components/AdminPlaceEditModal"));
+const DirectoryMap = lazy(() => import("../components/DirectoryMap"));
 import { isUserAdmin, getAuthToken } from "../utils/authStorage";
 import { FAZILNAGAR_AREAS } from "../constants/areas";
 import {
@@ -263,9 +262,6 @@ export default function Directory({ user }) {
     }
   };
 
-  const mapContainerRef = useRef(null);
-  const mapInstanceRef = useRef(null);
-  const markersRef = useRef([]);
   const sideListRef = useRef(null);
 
   const debouncedSearch = useDebouncedSearch(searchQuery, 200);
@@ -414,288 +410,8 @@ export default function Directory({ user }) {
     }
   };
 
-  // Custom vector SVG marker icon (Standard Red vs Active Highlight Blue)
-  const createMarkerIcon = (isSelected) => {
-    const color = isSelected ? "#2563EB" : "#B8323C";
-    const size = isSelected ? 34 : 28;
-    const height = isSelected ? 44 : 36;
-    const strokeWidth = isSelected ? 2.2 : 1.8;
-    const shadow = isSelected ? "0 4px 10px rgba(37,99,235,0.5)" : "0 2px 4px rgba(0,0,0,0.35)";
-
-    const svgHtml = `
-      <div role="img" aria-label="Map location pin" style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${height}px;cursor:pointer;filter:drop-shadow(${shadow});transition:transform 0.2s;">
-        <svg viewBox="0 0 24 24" width="${size}" height="${height}" fill="${color}" stroke="#ffffff" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round">
-          <title>Location Pin</title>
-          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-          <circle cx="12" cy="9" r="${isSelected ? 3.2 : 2.8}" fill="#ffffff" />
-        </svg>
-      </div>
-    `;
-    return L.divIcon({
-      html: svgHtml,
-      className: isSelected ? "fazilnagar-custom-pin-selected" : "fazilnagar-custom-pin",
-      iconSize: [size, height],
-      iconAnchor: [size / 2, height],
-      popupAnchor: [0, -height + 2],
-    });
-  };
-
-  // Cluster icon when multiple places are very close to prevent overlapping pins
-  const createClusterIcon = (count) => {
-    const size = 32;
-    const svgHtml = `
-      <div style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;background:#18232E;border:2.5px solid #0D5E49;border-radius:50%;color:#ffffff;font-size:11px;font-weight:800;font-family:system-ui,sans-serif;box-shadow:0 3px 6px rgba(0,0,0,0.35);cursor:pointer;">
-        <span>${count}</span>
-      </div>
-    `;
-    return L.divIcon({
-      html: svgHtml,
-      className: "fazilnagar-cluster-pin",
-      iconSize: [size, size],
-      iconAnchor: [size / 2, size / 2],
-    });
-  };
-
-  // Initialize Leaflet Map
-  useEffect(() => {
-    if (viewMode !== "map") return;
-    if (!mapContainerRef.current) return;
-
-    if (mapContainerRef.current._leaflet_id && !mapInstanceRef.current) {
-      delete mapContainerRef.current._leaflet_id;
-    }
-
-    if (!mapInstanceRef.current) {
-      const townLat = 26.6827;
-      const townLng = 84.0498;
-      const map = L.map(mapContainerRef.current, {
-        center: [townLat, townLng],
-        zoom: 15,
-        // Map scrolling and gestures locked by default on all devices until activated by click
-        dragging: false,
-        touchZoom: false,
-        scrollWheelZoom: false,
-      });
-
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      }).addTo(map);
-
-      mapInstanceRef.current = map;
-
-      // On zoom, re-render markers to handle clustering dynamically
-      map.on("zoomend", () => {
-        if (mapInstanceRef.current) {
-          renderMapMarkers(placesRef.current || places);
-        }
-      });
-    }
-
-    const resizeTimer = setTimeout(() => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.invalidateSize();
-      }
-    }, 150);
-
-    renderMapMarkers(places);
-
-    return () => {
-      clearTimeout(resizeTimer);
-    };
-  }, [places, viewMode]);
-
-  // Clean up Leaflet on component unmount
-  useEffect(() => {
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, []);
-
-  // Update map interaction state (Lock map until user clicks on it)
-  useEffect(() => {
-    const map = mapInstanceRef.current;
-    if (!map) return;
-
-    if (isMapActive) {
-      map.dragging.enable();
-      map.touchZoom.enable();
-      map.scrollWheelZoom.enable();
-    } else {
-      map.dragging.disable();
-      map.touchZoom.disable();
-      map.scrollWheelZoom.disable();
-    }
-  }, [isMapActive]);
-
-  // Invalidate map size when expanded / collapsed
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.invalidateSize();
-      }
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [isMapExpanded]);
-
-  // Render Map Markers with smart clustering for nearby places to prevent overlapping
-  const renderMapMarkers = (items) => {
-    const map = mapInstanceRef.current;
-    if (!map) return;
-
-    markersRef.current.forEach((m) => {
-      map.removeLayer(m);
-    });
-    markersRef.current = [];
-
-    const itemsWithCoords = (items || []).filter(
-      (p) =>
-        p.isPublished !== false &&
-        p.latitude !== null &&
-        p.longitude !== null &&
-        !isNaN(parseFloat(p.latitude)) &&
-        !isNaN(parseFloat(p.longitude))
-    );
-
-    const currentZoom = map.getZoom();
-    const currSelected = selectedPlaceRef.current;
-
-    // When an entity is selected or map is zoomed in (>= 16), render all individual pins
-    if (currentZoom >= 16 || currSelected || itemsWithCoords.length <= 8) {
-      itemsWithCoords.forEach((place) => {
-        createSinglePlaceMarker(place);
-      });
-    } else {
-      const clusters = [];
-      const threshold = 0.0018; // approx 150m grouping
-
-      itemsWithCoords.forEach((place) => {
-        const lat = parseFloat(place.latitude);
-        const lng = parseFloat(place.longitude);
-        let addedToCluster = false;
-
-        for (const cluster of clusters) {
-          const cLat = cluster.lat;
-          const cLng = cluster.lng;
-          const dist = Math.hypot(lat - cLat, lng - cLng);
-          if (dist < threshold) {
-            cluster.places.push(place);
-            addedToCluster = true;
-            break;
-          }
-        }
-
-        if (!addedToCluster) {
-          clusters.push({ lat, lng, places: [place] });
-        }
-      });
-
-      clusters.forEach((cluster) => {
-        if (cluster.places.length === 1) {
-          createSinglePlaceMarker(cluster.places[0]);
-        } else {
-          // Render cluster pin
-          const clusterMarker = L.marker([cluster.lat, cluster.lng], {
-            icon: createClusterIcon(cluster.places.length),
-            title: `${cluster.places.length} places in this area`,
-          }).addTo(map);
-
-          clusterMarker.on("click", () => {
-            map.setView([cluster.lat, cluster.lng], Math.min(currentZoom + 2, 17), { animate: true });
-          });
-
-          markersRef.current.push(clusterMarker);
-        }
-      });
-    }
-
-    if (itemsWithCoords.length > 0) {
-      if (currSelected && currSelected.latitude && currSelected.longitude) {
-        map.panTo([parseFloat(currSelected.latitude), parseFloat(currSelected.longitude)], { animate: true });
-      }
-    }
-  };
-
-  const createSinglePlaceMarker = (place) => {
-    const map = mapInstanceRef.current;
-    if (!map) return;
-
-    const lat = parseFloat(place.latitude);
-    const lng = parseFloat(place.longitude);
-    const currSelected = selectedPlaceRef.current;
-    const isSelected = isSamePlace(currSelected, place);
-
-    const marker = L.marker([lat, lng], {
-      icon: createMarkerIcon(isSelected),
-      title: place.name,
-      zIndexOffset: isSelected ? 1000 : 0,
-    }).addTo(map);
-
-    const isVerified = place.verificationStatus === "verified";
-    const recordId = place.id || place._id || place.slug;
-
-    marker.bindPopup(`
-      <div style="font-size: 12px; min-width: 200px; font-family: Inter, system-ui, sans-serif; padding: 2px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-bottom: 3px;">
-          <span style="font-size: 9px; font-weight: 800; color: #0D5E49; text-transform: uppercase; letter-spacing: 0.5px;">${place.category}</span>
-          <span style="font-size: 8px; font-weight: 700; color: ${isVerified ? '#0D5E49' : '#B45309'}; background: ${isVerified ? '#ECFDF5' : '#FEF3C7'}; padding: 1px 5px; border-radius: 999px; border: 1px solid ${isVerified ? '#A7F3D0' : '#FDE68A'};">
-            ${isVerified ? '✓ Verified' : '⚠ Needs Verification'}
-          </span>
-        </div>
-        <h4 style="margin: 2px 0 3px; font-size: 13px; font-weight: 800; color: #18232E; line-height: 1.2;">${place.name}</h4>
-        <p style="margin: 0; font-size: 11px; color: #647180; line-height: 1.3;">${place.streetOrLandmark || place.addressFull || place.locality}</p>
-        <div style="display: flex; justify-content: space-between; font-size: 9px; color: #94A3B8; margin-top: 4px; padding-top: 3px; border-top: 1px dashed #E2E8F0;">
-          <span>ID: ${recordId}</span>
-          <span>${place.latitude}, ${place.longitude}</span>
-        </div>
-        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #E1E6EA; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-          <button type="button" class="leaflet-popup-directions-btn" style="color: #0D5E49; background: none; border: none; padding: 0; font-weight: 700; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
-            <span>🧭 Directions</span>
-          </button>
-          ${place.phone ? `<a href="tel:${place.phone.replace(/\\s+/g, '')}" style="color: #18232E; text-decoration: none; font-weight: 700; font-size: 11px;">📞 Call</a>` : ''}
-        </div>
-      </div>
-    `);
-
-    marker.on("popupopen", (e) => {
-      const btn = e.popup.getElement()?.querySelector(".leaflet-popup-directions-btn");
-      if (btn) {
-        btn.onclick = (ev) => {
-          ev.preventDefault();
-          ev.stopPropagation();
-          openGoogleMapsDirections(place);
-        };
-      }
-    });
-
-    marker.on("click", () => {
-      handleSelectPlace(place);
-    });
-
-    if (isSelected) {
-      setTimeout(() => {
-        if (marker.openPopup) marker.openPopup();
-      }, 150);
-    }
-
-    markersRef.current.push(marker);
-  };
-
   const handleSelectPlace = (place) => {
-    selectedPlaceRef.current = place;
     setSelectedPlace(place);
-    if (mapInstanceRef.current && place.latitude && place.longitude) {
-      const lat = parseFloat(place.latitude);
-      const lng = parseFloat(place.longitude);
-      if (!isNaN(lat) && !isNaN(lng)) {
-        // Instant little zoom to 17 and focus on pinned location
-        mapInstanceRef.current.setView([lat, lng], 17, { animate: true });
-        renderMapMarkers(placesRef.current || places);
-      }
-    }
   };
 
   const handleCategorySelect = (catId) => {
@@ -1112,89 +828,29 @@ export default function Directory({ user }) {
       ) : viewMode === "map" ? (
         /* Map View + Synchronized List */
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 sm:gap-5">
-          {/* Leaflet Map with Gesture Control (Part B Fix) */}
-          <div
-            className={`lg:col-span-2 bg-slate-50 rounded-2xl overflow-hidden border border-slate-200/90 shadow-sm relative transition-all duration-300 group ${
-              isMapExpanded ? "h-[460px] sm:h-[520px] lg:h-[620px]" : "h-[270px] sm:h-[380px] lg:h-[560px]"
-            }`}
-            onClick={() => {
-              if (!isMapActive) setIsMapActive(true);
-            }}
-            onMouseLeave={() => {
-              // Disengage scroll wheel when mouse leaves map container to allow page scrolling
-              if (isMapActive) setIsMapActive(false);
-            }}
+          {/* Lazy-Loaded Leaflet Map with Synchronized Skeleton */}
+          <Suspense
+            fallback={
+              <div
+                className={`lg:col-span-2 bg-slate-50 rounded-2xl overflow-hidden border border-slate-200/90 shadow-sm relative flex flex-col items-center justify-center gap-2.5 ${
+                  isMapExpanded ? "h-[460px] sm:h-[520px] lg:h-[620px]" : "h-[270px] sm:h-[380px] lg:h-[560px]"
+                }`}
+              >
+                <div className="w-8 h-8 border-3 border-[#B8323C] border-t-transparent rounded-full animate-spin" />
+                <span className="text-xs text-slate-500 font-medium">Loading town map view...</span>
+              </div>
+            }
           >
-            <div
-              ref={mapContainerRef}
-              id="fazilnagar-leaflet-map"
-              className="w-full h-full z-10"
-              style={{ height: "100%", width: "100%", position: "relative" }}
+            <DirectoryMap
+              places={places}
+              selectedPlace={selectedPlace}
+              onSelectPlace={handleSelectPlace}
+              isMapExpanded={isMapExpanded}
+              onToggleExpand={() => setIsMapExpanded((prev) => !prev)}
+              isMapActive={isMapActive}
+              onSetActive={setIsMapActive}
             />
-
-            {/* Top Info Badge */}
-            <div className="absolute top-2.5 left-2.5 z-20 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-200 text-[10px] sm:text-[11px] font-semibold text-slate-700 shadow-2xs flex items-center gap-1.5 pointer-events-none">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>26.6827° N, 84.0498° E (Fazilnagar)</span>
-            </div>
-
-            {/* Mobile/Desktop Map Expand/Collapse Toggle */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsMapExpanded((prev) => !prev);
-              }}
-              className="absolute top-2.5 right-2.5 z-20 bg-white/95 hover:bg-white text-slate-700 hover:text-slate-900 p-1.5 rounded-lg border border-slate-200 shadow-2xs text-[10px] font-bold flex items-center gap-1 transition cursor-pointer"
-              title={isMapExpanded ? "Compact map" : "Expand map"}
-            >
-              {isMapExpanded ? (
-                <>
-                  <Minimize2 className="w-3.5 h-3.5 text-slate-600" />
-                  <span className="hidden sm:inline">Compact</span>
-                </>
-              ) : (
-                <>
-                  <Maximize2 className="w-3.5 h-3.5 text-slate-600" />
-                  <span className="hidden sm:inline">Expand</span>
-                </>
-              )}
-            </button>
-
-            {/* Interaction Mode Activator Overlay (Locks scroll until clicked on both mobile & desktop) */}
-            {!isMapActive && (
-              <div className="absolute inset-x-0 bottom-3 z-20 flex justify-center pointer-events-none">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsMapActive(true);
-                  }}
-                  className="pointer-events-auto bg-[#18232E]/95 hover:bg-[#18232E] text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-lg border border-slate-700/80 backdrop-blur-md flex items-center gap-1.5 active:scale-95 transition cursor-pointer"
-                >
-                  <Compass className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Click map to interact & zoom</span>
-                </button>
-              </div>
-            )}
-
-            {/* Active Interaction Badge: Allows User to Lock Map & Resume Page Scrolling */}
-            {isMapActive && (
-              <div className="absolute top-11 right-2.5 z-20">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsMapActive(false);
-                  }}
-                  className="bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg border border-emerald-400 backdrop-blur-md flex items-center gap-1 active:scale-95 transition cursor-pointer"
-                >
-                  <Lock className="w-3 h-3" />
-                  <span>Lock map to scroll page</span>
-                </button>
-              </div>
-            )}
-          </div>
+          </Suspense>
 
           {/* Synchronized Places Side List (Persistent List with Active Zoom & Pin Highlight) */}
           <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs flex flex-col h-full min-h-[320px] sm:min-h-[420px]">
@@ -1651,57 +1307,65 @@ export default function Directory({ user }) {
       )}
 
       {/* Admin Place Add & Edit Modal */}
-      <AdminPlaceEditModal
-        isOpen={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          setEditModalPlace(null);
-        }}
-        place={editModalPlace}
-        onSave={(savedPlace) => {
-          setShowEditModal(false);
-          setEditModalPlace(null);
-          showToast(`Place "${savedPlace.name}" saved successfully!`);
-          setAllMasterPlaces((prev) => {
-            const id = savedPlace._id || savedPlace.id || savedPlace.slug;
-            const idx = prev.findIndex((p) => (p._id || p.id || p.slug) === id);
-            if (idx >= 0) {
-              const copy = [...prev];
-              copy[idx] = savedPlace;
-              return copy;
-            }
-            return [savedPlace, ...prev];
-          });
-          if (selectedPlace && isSamePlace(selectedPlace, savedPlace)) {
-            setSelectedPlace(savedPlace);
-          }
-          fetchPlaces();
-          fetchStats();
-        }}
-        onDelete={(deletedId) => {
-          setShowEditModal(false);
-          setEditModalPlace(null);
-          showToast("Place removed from directory.");
-          setAllMasterPlaces((prev) =>
-            prev.filter((p) => (p._id || p.id || p.slug) !== deletedId)
-          );
-          if (selectedPlace && (selectedPlace._id === deletedId || selectedPlace.id === deletedId || selectedPlace.slug === deletedId)) {
-            setSelectedPlace(null);
-          }
-          fetchPlaces();
-          fetchStats();
-        }}
-      />
+      {showEditModal && (
+        <Suspense fallback={null}>
+          <AdminPlaceEditModal
+            isOpen={showEditModal}
+            onClose={() => {
+              setShowEditModal(false);
+              setEditModalPlace(null);
+            }}
+            place={editModalPlace}
+            onSave={(savedPlace) => {
+              setShowEditModal(false);
+              setEditModalPlace(null);
+              showToast(`Place "${savedPlace.name}" saved successfully!`);
+              setAllMasterPlaces((prev) => {
+                const id = savedPlace._id || savedPlace.id || savedPlace.slug;
+                const idx = prev.findIndex((p) => (p._id || p.id || p.slug) === id);
+                if (idx >= 0) {
+                  const copy = [...prev];
+                  copy[idx] = savedPlace;
+                  return copy;
+                }
+                return [savedPlace, ...prev];
+              });
+              if (selectedPlace && isSamePlace(selectedPlace, savedPlace)) {
+                setSelectedPlace(savedPlace);
+              }
+              fetchPlaces();
+              fetchStats();
+            }}
+            onDelete={(deletedId) => {
+              setShowEditModal(false);
+              setEditModalPlace(null);
+              showToast("Place removed from directory.");
+              setAllMasterPlaces((prev) =>
+                prev.filter((p) => (p._id || p.id || p.slug) !== deletedId)
+              );
+              if (selectedPlace && (selectedPlace._id === deletedId || selectedPlace.id === deletedId || selectedPlace.slug === deletedId)) {
+                setSelectedPlace(null);
+              }
+              fetchPlaces();
+              fetchStats();
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Community Place Submission Modal */}
-      <CommunityPlaceModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onSuccess={(sub) => {
-          showToast(`Place "${sub.name}" submitted for verification! (Tracking Ref: ${sub.referenceId})`);
-          fetchStats();
-        }}
-      />
+      {showAddModal && (
+        <Suspense fallback={null}>
+          <CommunityPlaceModal
+            isOpen={showAddModal}
+            onClose={() => setShowAddModal(false)}
+            onSuccess={(sub) => {
+              showToast(`Place "${sub.name}" submitted for verification! (Tracking Ref: ${sub.referenceId})`);
+              fetchStats();
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Toast Feedback */}
       {toastMessage && (

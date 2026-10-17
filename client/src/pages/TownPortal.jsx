@@ -150,6 +150,26 @@ export default function TownPortal() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isMobilePreview = searchParams.get("view") === "mobile";
+
+  // Responsive layout gate: only mount desktop or mobile portal to prevent duplicate DOM bloat
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(min-width: 768px)").matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(min-width: 768px)");
+    const updateLayout = (e) => setIsDesktop(e.matches);
+    setIsDesktop(mq.matches);
+    if (mq.addEventListener) {
+      mq.addEventListener("change", updateLayout);
+      return () => mq.removeEventListener("change", updateLayout);
+    } else if (mq.addListener) {
+      mq.addListener(updateLayout);
+      return () => mq.removeListener(updateLayout);
+    }
+  }, []);
   usePageSEO({
     title: "Fazilnagar Town Civic & Local Directory Portal | Kushinagar, UP",
     description: "Official civic and local directory portal for Fazilnagar town (PIN 274401, Kushinagar, Uttar Pradesh). Verified town directory of schools, hospitals, local doctors, emergency helplines, shops, markets, and community news.",
@@ -520,21 +540,24 @@ export default function TownPortal() {
       {/* ========================================================
           MOBILE-FIRST APP EXPERIENCE (Targeted for mobile phones < md, or ?view=mobile)
           ======================================================== */}
-      <div className={isMobilePreview ? "block py-6 bg-slate-200/70 min-h-screen" : "block md:hidden"}>
-        <div className={isMobilePreview ? "max-w-[420px] mx-auto shadow-2xl rounded-3xl overflow-hidden border border-slate-300 bg-slate-50" : "w-full"}>
-          <MobileHomePortal
-            onOpenAddListing={() => setModalType("business")}
-            onOpenAddPlace={() => setCommunityModalOpen(true)}
-            onOpenCorrection={() => setModalType("correction")}
-            onOpenEvent={() => setModalType("event")}
-          />
+      {(!isDesktop || isMobilePreview) && (
+        <div className={isMobilePreview ? "block py-6 bg-slate-200/70 min-h-screen" : "block md:hidden w-full"}>
+          <div className={isMobilePreview ? "max-w-[420px] mx-auto shadow-2xl rounded-3xl overflow-hidden border border-slate-300 bg-slate-50" : "w-full"}>
+            <MobileHomePortal
+              onOpenAddListing={() => setModalType("business")}
+              onOpenAddPlace={() => setCommunityModalOpen(true)}
+              onOpenCorrection={() => setModalType("correction")}
+              onOpenEvent={() => setModalType("event")}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ========================================================
           DESKTOP CIVIC & LOCAL DIRECTORY PORTAL (>= md, hidden on mobile)
           ======================================================== */}
-      <div className={isMobilePreview ? "hidden" : "hidden md:block w-full max-w-full overflow-x-hidden bg-[#F5F7F8] font-sans text-[#18232E] selection:bg-[#B8323C] selection:text-white"}>
+      {isDesktop && !isMobilePreview && (
+        <div className="w-full max-w-full overflow-x-hidden bg-[#F5F7F8] font-sans text-[#18232E] selection:bg-[#B8323C] selection:text-white">
 
 
       {/* Dynamic Civic Announcement Ticker Banner */}
@@ -621,30 +644,32 @@ export default function TownPortal() {
           </div>
 
           <div className="relative z-30 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            {/* Civic / Active Landmark Pill Badge */}
-            {dynamicHeroSlides.length > 0 ? (
-              <div className="hero-location-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/30 text-xs text-slate-100 font-medium mb-5 shadow-2xl animate-fade-in-up">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="text-amber-300 font-bold">
-                  📍 {dynamicHeroSlides[heroSlideIndex % dynamicHeroSlides.length]?.location || "Fazilnagar"}
-                </span>
-                <span className="text-slate-300">•</span>
-                <span className="font-semibold text-white">
-                  {dynamicHeroSlides[heroSlideIndex % dynamicHeroSlides.length]?.title || "Official Civic Portal"}
-                </span>
-              </div>
-            ) : (
-              <div className="hero-location-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-slate-100 font-medium mb-5 shadow-xl animate-fade-in-up">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="text-emerald-300 font-bold">
-                  📍 {siteSettings.heroContent?.badgeLocation || "Official Civic Portal"}
-                </span>
-                <span className="text-slate-400">•</span>
-                <span className="font-semibold text-slate-200">
-                  {siteSettings.heroContent?.badgeTitle || "Nagar Panchayat Fazilnagar • Kushinagar (PIN 274401)"}
-                </span>
-              </div>
-            )}
+            {/* Civic / Active Landmark Pill Badge (Stabilized min-height container to eliminate CLS) */}
+            <div className="min-h-[42px] flex items-center justify-center mb-5">
+              {dynamicHeroSlides.length > 0 ? (
+                <div className="hero-location-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/30 text-xs text-slate-100 font-medium shadow-2xl animate-fade-in-up">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-amber-300 font-bold">
+                    📍 {dynamicHeroSlides[heroSlideIndex % dynamicHeroSlides.length]?.location || "Fazilnagar"}
+                  </span>
+                  <span className="text-slate-300">•</span>
+                  <span className="font-semibold text-white">
+                    {dynamicHeroSlides[heroSlideIndex % dynamicHeroSlides.length]?.title || "Official Civic Portal"}
+                  </span>
+                </div>
+              ) : (
+                <div className="hero-location-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-slate-100 font-medium shadow-xl animate-fade-in-up">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-emerald-300 font-bold">
+                    📍 {siteSettings.heroContent?.badgeLocation || "Official Civic Portal"}
+                  </span>
+                  <span className="text-slate-400">•</span>
+                  <span className="font-semibold text-slate-200">
+                    {siteSettings.heroContent?.badgeTitle || "Nagar Panchayat Fazilnagar • Kushinagar (PIN 274401)"}
+                  </span>
+                </div>
+              )}
+            </div>
 
             {/* Master Headline */}
             <h1 className="hero-title text-[32px] sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 leading-[1.12] font-heading drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
@@ -661,8 +686,8 @@ export default function TownPortal() {
               {siteSettings.heroContent?.description || "Official digital civic portal for Fazilnagar town. Verified schools, colleges, hospitals, emergency aid, local news, and community directory in Kushinagar, UP."}
             </p>
 
-          {/* Smart Search Bar */}
-          <div className="max-w-2xl mx-auto relative text-left">
+          {/* Smart Search Bar (Stabilized min-height to prevent search box jump) */}
+          <div className="max-w-2xl mx-auto relative text-left min-h-[58px]">
             <div className="hero-search bg-white rounded-2xl p-1.5 shadow-2xl flex flex-row items-center gap-1.5 border border-[#E1E6EA]">
               <div className="flex items-center gap-2 w-full min-w-0 px-2.5 py-2 text-[#18232E]">
                 <Search className="w-5 h-5 text-[#647180] flex-shrink-0" />
@@ -2226,6 +2251,7 @@ export default function TownPortal() {
         <span>Add Place</span>
       </button>
     </div>
+      )}
 
       {/* ========================================================
           INTERACTIVE MODALS: SUGGESTION, CORRECTION & EVENT
