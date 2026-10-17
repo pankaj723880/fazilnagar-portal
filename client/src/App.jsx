@@ -32,10 +32,11 @@ const ProfileEdit = lazy(() => import("./pages/ProfileEdit"));
 import AdminRoute from "./components/AdminRoute";
 import RequireMessagingAuth from "./components/RequireMessagingAuth";
 import InstallButton from "./components/InstallButton";
-import DirectionsModal from "./components/DirectionsModal";
+const DirectionsModal = lazy(() => import("./components/DirectionsModal"));
 import NotificationCenter from "./components/NotificationCenter";
-import SplashScreen from "./components/SplashScreen";
-import { GlobalFloatingAndStickyAds } from "./components/AdvertisementSlot";
+const GlobalFloatingAndStickyAds = lazy(() =>
+  import("./components/AdvertisementSlot").then((m) => ({ default: m.GlobalFloatingAndStickyAds }))
+);
 import { Home, Compass, PhoneCall, Newspaper, Menu, X, ShieldAlert, MessageSquare } from "lucide-react";
 import seedPlaces from "./data/places.json";
 
@@ -200,16 +201,18 @@ export default function App() {
     };
   }, []);
 
-  const [showSplash, setShowSplash] = useState(() => {
+  // Coordinated launch transition: notify HTML overlay that React app is mounted
+  useEffect(() => {
     if (typeof window !== "undefined") {
-      const hasSeen = sessionStorage.getItem("hasSeenSplash");
-      if (!hasSeen) {
-        sessionStorage.setItem("hasSeenSplash", "true");
-        return true;
+      if (typeof window.__dismissSplash === "function") {
+        window.__dismissSplash();
+      }
+      if (window.__STARTUP_METRICS__) {
+        window.__STARTUP_METRICS__.interactive = performance.now();
+        try { performance.mark("app-interactive"); } catch (e) {}
       }
     }
-    return false;
-  });
+  }, []);
 
   const handleLogout = () => {
     performLogout();
@@ -225,9 +228,6 @@ export default function App() {
       >
         Skip to main content / मुख्य सामग्री पर जाएं
       </a>
-
-      {/* Native App-Style Ultra-Premium Mobile Splash Screen */}
-      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
 
       {/* ========================================================
           PERMANENT FIXED TOP SHELL (Desktop / Non-Portal Pages)
@@ -1126,10 +1126,14 @@ export default function App() {
       )}
 
       {/* Global Floating Overlay & Sticky Banner Advertisements (Cancellable) */}
-      <GlobalFloatingAndStickyAds />
+      <Suspense fallback={null}>
+        <GlobalFloatingAndStickyAds />
+      </Suspense>
 
       {/* Global Turn-by-Turn GPS Directions Modal */}
-      <DirectionsModal />
+      <Suspense fallback={null}>
+        <DirectionsModal />
+      </Suspense>
     </div>
   );
 }

@@ -4,13 +4,13 @@ import API from "../api";
 import seedPlaces from "../data/places.json";
 import { openGoogleMapsDirections } from "../utils/directions";
 import InstallButton from "../components/InstallButton";
-import AdvertisementSlot from "../components/AdvertisementSlot";
+const AdvertisementSlot = lazy(() => import("../components/AdvertisementSlot"));
 import { usePageSEO } from "../utils/seo";
-import CommunityPlaceModal from "../components/CommunityPlaceModal";
+const CommunityPlaceModal = lazy(() => import("../components/CommunityPlaceModal"));
 import MobileHomePortal from "../components/MobileHomePortal";
 import { getAuthUser, clearAuthSession, getAuthToken, isUserAdmin } from "../utils/authStorage";
 import { performLogout } from "../api";
-import StoryVideoPreview from "../components/StoryVideoPreview";
+const StoryVideoPreview = lazy(() => import("../components/StoryVideoPreview"));
 import {
   getSiteSettings,
   DEFAULT_SITE_SETTINGS,
@@ -855,7 +855,9 @@ export default function TownPortal() {
       </section>
 
       {/* Dedicated Homepage Advertisement Slot (Zero footprint when inactive/unpublished) */}
-      <AdvertisementSlot />
+      <Suspense fallback={null}>
+        <AdvertisementSlot />
+      </Suspense>
 
       {/* ========================================================
           SECTION 4: ESSENTIAL SERVICES (High-Priority Civic Hub)
@@ -1466,12 +1468,14 @@ export default function TownPortal() {
                   className="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-slate-700 transition-all group"
                 >
                   {(item.mediaType === "video" || item.video) ? (
-                    <StoryVideoPreview
-                      story={item}
-                      className="h-40 w-full"
-                      aspectRatio="aspect-auto"
-                      fallbackPoster={item.image || ""}
-                    />
+                    <Suspense fallback={<div className="h-40 w-full bg-slate-800/80 animate-pulse" />}>
+                      <StoryVideoPreview
+                        story={item}
+                        className="h-40 w-full"
+                        aspectRatio="aspect-auto"
+                        fallbackPoster={item.image || ""}
+                      />
+                    </Suspense>
                   ) : item.image ? (
                     <div className="h-40 w-full overflow-hidden bg-slate-950">
                       <img
@@ -2450,13 +2454,17 @@ export default function TownPortal() {
       )}
 
       {/* Community Place Submission Modal */}
-      <CommunityPlaceModal
-        isOpen={communityModalOpen}
-        onClose={() => setCommunityModalOpen(false)}
-        onSuccess={(sub) => {
-          showToast(`Place "${sub.name}" submitted! Tracking ID: ${sub.referenceId}`);
-        }}
-      />
+      {communityModalOpen && (
+        <Suspense fallback={null}>
+          <CommunityPlaceModal
+            isOpen={communityModalOpen}
+            onClose={() => setCommunityModalOpen(false)}
+            onSuccess={(sub) => {
+              showToast(`Place "${sub.name}" submitted! Tracking ID: ${sub.referenceId}`);
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Global Toast */}
       {toastMsg && (

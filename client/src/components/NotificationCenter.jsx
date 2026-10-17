@@ -43,13 +43,15 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
       setSoundEnabled(soundPref !== "false");
     }
 
-    // Initial fetch
-    loadNotifications(false);
+    // Defer initial fetch so initial critical homepage rendering path is 100% unimpeded
+    const initialTimer = setTimeout(() => {
+      loadNotifications(false);
+    }, 800);
 
     // Poll frequently so broadcast notifications reach open visitor sessions promptly.
     const interval = setInterval(() => {
       fetchAndCheckNotifications({ triggerPopups: true });
-    }, 5000);
+    }, 8000);
 
     const syncAdmin = () => setIsAdmin(getAuthUser()?.role === "admin");
     window.addEventListener("auth-change", syncAdmin);
@@ -66,6 +68,7 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
     window.addEventListener("fazilnagar-notifications-updated", handleUpdate);
 
     return () => {
+      clearTimeout(initialTimer);
       clearInterval(interval);
       window.removeEventListener("auth-change", syncAdmin);
       window.removeEventListener("fazilnagar-notifications-updated", handleUpdate);

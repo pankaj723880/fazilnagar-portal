@@ -1,12 +1,22 @@
-// Fazilnagar Town Portal Service Worker
-const CACHE_NAME = 'fazilnagar-portal-v1';
+// Fazilnagar Town Portal High-Performance Service Worker
+const CACHE_NAME = 'fazilnagar-portal-v2';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      )
+    ).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('fetch', (event) => {
@@ -23,19 +33,62 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Always fetch fresh HTML documents directly from network without caching
-  if (url.pathname === '/' || url.pathname === '/index.html' || url.pathname.endsWith('.html')) {
-    event.respondWith(fetch(event.request, { cache: 'no-store' }));
+  // 1. Immutable Hashed Assets & Static Icons: Cache-First for instant warm launch (<200ms)
+  if (
+    url.pathname.startsWith('/assets/') ||
+    url.pathname === '/icon-192.svg' ||
+    url.pathname === '/icon-512.svg' ||
+    url.pathname === '/manifest.json'
+  ) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        });
+      })
+    );
     return;
   }
 
-  // Pass through fetch requests with fallback
+  // 2. HTML Documents: Network-First with Cache Fallback for fresh updates and reliable offline loading
+  if (url.pathname === '/' || url.pathname === '/index.html' || url.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(async () => {
+          const cached = await caches.match(event.request);
+          return cached || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+        })
+    );
+    return;
+  }
+
+  // 3. General static requests: Stale-While-Revalidate
   event.respondWith(
-    fetch(event.request)
-      .catch(async () => {
-        const cached = await caches.match(event.request);
-        return cached || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
-      })
+    caches.match(event.request).then((cached) => {
+      const fetchPromise = fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return networkResponse;
+        })
+        .catch(() => null);
+
+      return cached || fetchPromise.then((res) => res || new Response('Offline', { status: 503 }));
+    })
   );
 });
 
