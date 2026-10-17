@@ -1,7 +1,8 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { Routes, Route, NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 
-import TownPortal from "./pages/TownPortal";
+// Code-split TownPortal to eliminate massive entry chunk bloat
+const TownPortal = lazy(() => import("./pages/TownPortal"));
 import { getAuthUser, clearAuthSession, isUserAdmin } from "./utils/authStorage";
 import { performLogout } from "./api";
 import { getCachedSettings, getSiteSettings, DEFAULT_SITE_SETTINGS, subscribeToCMSLiveUpdates } from "./services/cmsService";
@@ -33,18 +34,19 @@ import AdminRoute from "./components/AdminRoute";
 import RequireMessagingAuth from "./components/RequireMessagingAuth";
 import InstallButton from "./components/InstallButton";
 const DirectionsModal = lazy(() => import("./components/DirectionsModal"));
-import NotificationCenter from "./components/NotificationCenter";
+const NotificationCenter = lazy(() => import("./components/NotificationCenter"));
 const GlobalFloatingAndStickyAds = lazy(() =>
   import("./components/AdvertisementSlot").then((m) => ({ default: m.GlobalFloatingAndStickyAds }))
 );
 import { Home, Compass, PhoneCall, Newspaper, Menu, X, ShieldAlert, MessageSquare } from "lucide-react";
-import seedPlaces from "./data/places.json";
 import { prefetchRoute } from "./utils/routePrefetch";
+
+const VERIFIED_DIRECTORY_COUNT = "37";
 
 const MAIN_NAV_ITEMS = [
   { path: "/", label: "Home" },
   { path: "/#explore-categories", label: "Explore", isHash: true },
-  { path: "/directory", label: "Directory", count: String(seedPlaces?.length || 19) },
+  { path: "/directory", label: "Directory", count: VERIFIED_DIRECTORY_COUNT },
   { path: "/#regional-connectivity-section", label: "Map", isHash: true },
   { path: "/news", label: "Local Updates" },
 ];
@@ -92,6 +94,33 @@ const DIRECTORY_SUB_NAV_PATHS = [
   "/govt",
   "/about",
 ];
+
+function CivicRouteSkeleton() {
+  return (
+    <div className="w-full max-w-7xl mx-auto px-4 py-6 animate-pulse space-y-6" role="status" aria-label="Loading civic section">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div className="space-y-2">
+          <div className="h-7 bg-slate-200/90 rounded-xl w-48 sm:w-64" />
+          <div className="h-3.5 bg-slate-200/60 rounded-lg w-72 max-w-full" />
+        </div>
+        <div className="hidden sm:block h-9 bg-slate-200/70 rounded-xl w-32" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="h-40 bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3 shadow-2xs">
+            <div className="flex justify-between items-center">
+              <div className="h-3.5 bg-slate-200/80 rounded-md w-24" />
+              <div className="h-3 bg-emerald-100 rounded-md w-16" />
+            </div>
+            <div className="h-5 bg-slate-300/80 rounded-md w-3/4" />
+            <div className="h-3 bg-slate-200/60 rounded-md w-full" />
+            <div className="h-3 bg-slate-200/40 rounded-md w-1/2" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -187,12 +216,12 @@ export default function App() {
   // Synchronize dynamic site settings for top civic alert bar & live navigation
   const [siteSettings, setSiteSettings] = useState(() => getCachedSettings() || DEFAULT_SITE_SETTINGS);
   useEffect(() => {
-    getSiteSettings(true).then((s) => {
+    getSiteSettings().then((s) => {
       if (s) setSiteSettings(s);
     });
 
     const unsubscribe = subscribeToCMSLiveUpdates(() => {
-      getSiteSettings(true).then((s) => {
+      getSiteSettings().then((s) => {
         if (s) setSiteSettings(s);
       });
     });
@@ -326,7 +355,9 @@ export default function App() {
 
             {/* Auth & Post Actions Bar */}
             <div className="hidden sm:flex items-center gap-2.5 shrink-0">
-              <NotificationCenter />
+              <Suspense fallback={<div className="w-11 h-11 shrink-0" />}>
+                <NotificationCenter />
+              </Suspense>
 
               {/* Messages / नगर संवाद */}
               <Link
@@ -404,7 +435,9 @@ export default function App() {
 
             {/* Mobile Actions: Notification Bell + Messages + Review Desk + Add Story (Icon-Only Controls) */}
             <div className="flex sm:hidden items-center gap-1.5">
-              <NotificationCenter />
+              <Suspense fallback={<div className="w-11 h-11 shrink-0" />}>
+                <NotificationCenter />
+              </Suspense>
               <Link
                 to="/messages"
                 className={`min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl border flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-[#B8323C]/30 cursor-pointer ${
@@ -500,14 +533,7 @@ export default function App() {
         }`}
       >
         <div className={isNewsPage || isMessagesPage ? "w-full flex-1 min-h-0 flex flex-col overflow-hidden" : isPortalPage ? "w-full" : "w-full"}>
-          <Suspense
-            fallback={
-              <div className="w-full min-h-[45vh] flex flex-col items-center justify-center p-8 gap-3 animate-in fade-in duration-150">
-                <div className="w-8 h-8 border-3 border-[#B8323C] border-t-transparent rounded-full animate-spin" />
-                <span className="text-xs text-slate-500 font-medium">Loading civic section...</span>
-              </div>
-            }
-          >
+          <Suspense fallback={<CivicRouteSkeleton />}>
             <Routes>
               <Route path="/" element={<TownPortal />} />
               <Route path="/news" element={<ReelsNewsFeed />} />
@@ -847,7 +873,7 @@ export default function App() {
                     className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-[#B8323C] text-white shadow-xs active:scale-95 transition"
                   >
                     <span>🗺️</span>
-                    <span>Directory ({seedPlaces?.length || 19})</span>
+                    <span>Directory ({VERIFIED_DIRECTORY_COUNT})</span>
                   </Link>
                   <Link
                     to="/emergency"

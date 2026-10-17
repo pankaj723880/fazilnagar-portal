@@ -1,7 +1,17 @@
 import { io } from "socket.io-client";
 import { getAuthToken } from "./utils/authStorage";
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const isLocalhost =
+  typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1");
+
+const DEFAULT_SOCKET_URL = isLocalhost
+  ? "http://localhost:5000"
+  : "https://fazilnagar-portal.onrender.com";
+
+const rawSocketUrl = (import.meta.env.VITE_API_URL || DEFAULT_SOCKET_URL).trim();
+const SOCKET_URL = rawSocketUrl.replace(/\/api\/?$/, "");
 
 let socket = null;
 

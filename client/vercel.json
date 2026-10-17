@@ -104,7 +104,7 @@
       ]
     },
     {
-      "source": "/(index\\.html)?",
+      "source": "/((?!assets/|images/|.*\\.(?:svg|png|jpg|jpeg|webp|ico|woff2|xml|txt|js|css|json)$).*)",
       "headers": [
         {
           "key": "Cache-Control",

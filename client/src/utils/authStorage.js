@@ -1,5 +1,4 @@
-// Tab-isolated and Persistently Synchronized Authentication Storage Utility
-// Ensures reliable login persistence and complete, permanent logout across browser refreshes and tabs.
+import { clearAllOfflineChatData } from "./offlineChatStorage";
 
 let currentAuthEpoch = Date.now();
 
@@ -146,6 +145,9 @@ export function clearAuthSession() {
     // Clean up legacy or variant keys
     localStorage.removeItem("fazil_user");
     localStorage.removeItem("fazil_auth_token");
+
+    // Purge private chat data and queues so shared devices never leak messages
+    clearAllOfflineChatData();
   } catch {
     // Storage error
   }

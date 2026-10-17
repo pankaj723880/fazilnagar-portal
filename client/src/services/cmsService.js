@@ -5,7 +5,20 @@
 import API from "../api";
 import seedPlaces from "../data/places.json";
 
-const CACHE_TTL_MS = 4 * 1000; // 4 seconds in-memory cache to ensure near-instant live updates
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds in-memory cache to eliminate duplicate network calls on refreshes while supporting instant live updates
+
+const inFlightRequests = new Map();
+
+function fetchWithDeduplication(key, fetcher) {
+  if (inFlightRequests.has(key)) {
+    return inFlightRequests.get(key);
+  }
+  const promise = fetcher().finally(() => {
+    inFlightRequests.delete(key);
+  });
+  inFlightRequests.set(key, promise);
+  return promise;
+}
 
 let liveBroadcastChannel = null;
 try {
@@ -270,23 +283,25 @@ export async function getSiteSettings(forceFresh = false) {
     return memoryCache.settings.data;
   }
 
-  try {
-    const res = await API.get("/settings", {
-      params: { _t: now },
-      headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
-      timeout: 30000,
-    });
-    if (res.data?.success && res.data?.settings) {
-      const merged = deepMerge(DEFAULT_SITE_SETTINGS, res.data.settings);
-      setPersistentCache("settings", merged);
-      memoryCache.settings = { data: merged, timestamp: now };
-      return merged;
+  return fetchWithDeduplication("settings", async () => {
+    try {
+      const res = await API.get("/settings", {
+        params: forceFresh ? { _t: Date.now() } : undefined,
+        headers: forceFresh ? { "Cache-Control": "no-cache", Pragma: "no-cache" } : undefined,
+        timeout: 30000,
+      });
+      if (res.data?.success && res.data?.settings) {
+        const merged = deepMerge(DEFAULT_SITE_SETTINGS, res.data.settings);
+        setPersistentCache("settings", merged);
+        memoryCache.settings = { data: merged, timestamp: Date.now() };
+        return merged;
+      }
+    } catch (err) {
+      console.warn("[CMSService] Settings fetch fallback:", err.message);
     }
-  } catch (err) {
-    console.warn("[CMSService] Settings fetch fallback:", err.message);
-  }
 
-  return memoryCache.settings.data || getPersistentCache("settings") || DEFAULT_SITE_SETTINGS;
+    return memoryCache.settings.data || getPersistentCache("settings") || DEFAULT_SITE_SETTINGS;
+  });
 }
 
 /**
@@ -484,78 +499,90 @@ export function clearCMSCache(key, broadcast = true) {
  * and background heartbeat polling to /settings/live-version.
  * Returns an unsubscribe cleanup function.
  */
-export function subscribeToCMSLiveUpdates(callback) {
-  if (typeof window === "undefined" || typeof callback !== "function") {
-    return () => {};
-  }
+// Shared singleton state for live updates across all subscribers
+const liveSubscribers = new Set();
+let livePollingInterval = null;
+let lastKnownVersion = null;
+let isLiveListening = false;
 
-  let isSubscribed = true;
-  let lastKnownVersion = null;
+function setupLiveListeners() {
+  if (isLiveListening || typeof window === "undefined") return;
+  isLiveListening = true;
 
-  const triggerUpdate = (info) => {
-    if (!isSubscribed) return;
+  const triggerAll = (info) => {
     clearCMSCache(undefined, false);
-    try {
-      callback(info);
-    } catch (err) {
-      console.warn("[LiveSync] Callback error:", err);
-    }
+    liveSubscribers.forEach((cb) => {
+      try {
+        cb(info);
+      } catch (err) {
+        console.warn("[LiveSync] Callback error:", err);
+      }
+    });
   };
 
-  // 1. Cross-tab custom and storage events
-  const handleLocalEvent = (e) => triggerUpdate({ source: "local", detail: e.detail });
+  const handleLocalEvent = (e) => triggerAll({ source: "local", detail: e.detail });
   const handleStorageEvent = (e) => {
     if (e.key === "fazilnagar_cms_cache_bust") {
-      triggerUpdate({ source: "storage", stamp: e.newValue });
+      triggerAll({ source: "storage", stamp: e.newValue });
+    }
+  };
+  const handleVisibility = () => {
+    if (document.visibilityState === "visible") {
+      checkLiveServerVersion();
     }
   };
 
   window.addEventListener("cms-cache-cleared", handleLocalEvent);
   window.addEventListener("storage", handleStorageEvent);
-
-  // 2. Tab focus / visibility revalidation
-  const handleVisibility = () => {
-    if (document.visibilityState === "visible") {
-      checkServerVersion();
-    }
-  };
   document.addEventListener("visibilitychange", handleVisibility);
   window.addEventListener("focus", handleVisibility);
 
-  // 3. Ultra-lightweight background heartbeat polling
-  const checkServerVersion = async () => {
-    if (!isSubscribed) return;
-    try {
-      const res = await API.get("/settings/live-version", {
-        params: { _t: Date.now() },
-        headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
-        timeout: 8000,
-      });
-      if (res.data?.success && res.data?.updatedAt) {
-        const serverVersion = res.data.updatedAt;
-        if (lastKnownVersion && lastKnownVersion !== serverVersion) {
-          triggerUpdate({ source: "poll", version: serverVersion });
-        }
-        lastKnownVersion = serverVersion;
+  // Background version check every 15s instead of aggressive per-component interval
+  livePollingInterval = setInterval(checkLiveServerVersion, 15000);
+}
+
+async function checkLiveServerVersion() {
+  if (liveSubscribers.size === 0) return;
+  try {
+    const res = await API.get("/settings/live-version", {
+      params: { _t: Date.now() },
+      headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+      timeout: 8000,
+    });
+    if (res.data?.success && res.data?.updatedAt) {
+      const serverVersion = res.data.updatedAt;
+      if (lastKnownVersion && lastKnownVersion !== serverVersion) {
+        clearCMSCache(undefined, false);
+        liveSubscribers.forEach((cb) => {
+          try {
+            cb({ source: "poll", version: serverVersion });
+          } catch (_) {}
+        });
       }
-    } catch (_) {
-      // Fallback silently if offline or network error
+      lastKnownVersion = serverVersion;
     }
-  };
+  } catch (_) {}
+}
 
-  // Initial check
-  checkServerVersion();
+/**
+ * Subscribes to live CMS changes across all devices and tabs without page reload.
+ * Uses a single shared listener and interval across all mounted components.
+ */
+export function subscribeToCMSLiveUpdates(callback) {
+  if (typeof window === "undefined" || typeof callback !== "function") {
+    return () => {};
+  }
 
-  // Heartbeat every 6 seconds
-  const intervalId = setInterval(checkServerVersion, 6000);
+  liveSubscribers.add(callback);
+  setupLiveListeners();
 
   return () => {
-    isSubscribed = false;
-    clearInterval(intervalId);
-    window.removeEventListener("cms-cache-cleared", handleLocalEvent);
-    window.removeEventListener("storage", handleStorageEvent);
-    document.removeEventListener("visibilitychange", handleVisibility);
-    window.removeEventListener("focus", handleVisibility);
+    liveSubscribers.delete(callback);
+    if (liveSubscribers.size === 0 && livePollingInterval) {
+      clearInterval(livePollingInterval);
+      livePollingInterval = null;
+      isLiveListening = false;
+    }
   };
 }
 
@@ -568,26 +595,30 @@ export async function getEvents({ category = "All", search = "", timeFilter = ""
     return memoryCache.events.data;
   }
 
-  try {
-    const params = { _t: now };
-    if (category && category !== "All") params.category = category;
-    if (search) params.search = search;
-    if (timeFilter) params.timeFilter = timeFilter;
+  const cacheKey = `events_${category}_${search}_${timeFilter}`;
+  return fetchWithDeduplication(cacheKey, async () => {
+    try {
+      const params = {};
+      if (forceFresh) params._t = Date.now();
+      if (category && category !== "All") params.category = category;
+      if (search) params.search = search;
+      if (timeFilter) params.timeFilter = timeFilter;
 
-    const res = await API.get("/events", {
-      params,
-      headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
-      timeout: 30000,
-    });
-    if (res.data?.success && Array.isArray(res.data?.events)) {
-      setPersistentCache("events", res.data.events);
-      memoryCache.events = { data: res.data.events, timestamp: now };
-      return res.data.events;
+      const res = await API.get("/events", {
+        params,
+        headers: forceFresh ? { "Cache-Control": "no-cache", Pragma: "no-cache" } : undefined,
+        timeout: 30000,
+      });
+      if (res.data?.success && Array.isArray(res.data?.events)) {
+        setPersistentCache("events", res.data.events);
+        memoryCache.events = { data: res.data.events, timestamp: Date.now() };
+        return res.data.events;
+      }
+    } catch (err) {
+      console.warn("[CMSService] Events fetch error, using fallbacks:", err.message);
     }
-  } catch (err) {
-    console.warn("[CMSService] Events fetch error, using fallbacks:", err.message);
-  }
-  return [];
+    return memoryCache.events.data || getPersistentCache("events") || [];
+  });
 }
 
 /**
@@ -599,21 +630,23 @@ export async function getHeritageSites(forceFresh = false) {
     return memoryCache.heritage.data;
   }
 
-  try {
-    const res = await API.get("/heritage", {
-      params: { _t: now },
-      headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
-      timeout: 30000,
-    });
-    if (res.data?.success && Array.isArray(res.data?.sites)) {
-      setPersistentCache("heritage", res.data.sites);
-      memoryCache.heritage = { data: res.data.sites, timestamp: now };
-      return res.data.sites;
+  return fetchWithDeduplication("heritage", async () => {
+    try {
+      const res = await API.get("/heritage", {
+        params: forceFresh ? { _t: Date.now() } : undefined,
+        headers: forceFresh ? { "Cache-Control": "no-cache", Pragma: "no-cache" } : undefined,
+        timeout: 30000,
+      });
+      if (res.data?.success && Array.isArray(res.data?.sites)) {
+        setPersistentCache("heritage", res.data.sites);
+        memoryCache.heritage = { data: res.data.sites, timestamp: Date.now() };
+        return res.data.sites;
+      }
+    } catch (err) {
+      console.warn("[CMSService] Heritage fetch error, using fallbacks:", err.message);
     }
-  } catch (err) {
-    console.warn("[CMSService] Heritage fetch error, using fallbacks:", err.message);
-  }
-  return [];
+    return memoryCache.heritage.data || getPersistentCache("heritage") || [];
+  });
 }
 
 export const DEFAULT_CIVIC_DIRECTORY_PLACES = [
@@ -763,32 +796,36 @@ export async function getCivicDirectory(forceFresh = false, includeAll = false) 
     return memoryCache.civicDirectory.data;
   }
 
-  try {
-    const params = { _t: now };
-    if (includeAll) params.all = "true";
+  const cacheKey = `civicDirectory_${includeAll ? 'all' : 'public'}`;
+  return fetchWithDeduplication(cacheKey, async () => {
+    try {
+      const params = {};
+      if (forceFresh) params._t = Date.now();
+      if (includeAll) params.all = "true";
 
-    const res = await API.get("/civic-directory", {
-      params,
-      headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
-      timeout: 30000,
-    });
+      const res = await API.get("/civic-directory", {
+        params,
+        headers: forceFresh ? { "Cache-Control": "no-cache", Pragma: "no-cache" } : undefined,
+        timeout: 30000,
+      });
 
-    const items = res.data?.items || (Array.isArray(res.data) ? res.data : []);
-    if (Array.isArray(items)) {
-      const normalized = items.map((i) => ({
-        ...i,
-        id: i.id || i._id || i.itemId,
-      }));
-      if (!includeAll) {
-        setPersistentCache("civicDirectory", normalized);
-        memoryCache.civicDirectory = { data: normalized, timestamp: now };
+      const items = res.data?.items || (Array.isArray(res.data) ? res.data : []);
+      if (Array.isArray(items)) {
+        const normalized = items.map((i) => ({
+          ...i,
+          id: i.id || i._id || i.itemId,
+        }));
+        if (!includeAll) {
+          setPersistentCache("civicDirectory", normalized);
+          memoryCache.civicDirectory = { data: normalized, timestamp: Date.now() };
+        }
+        return normalized;
       }
-      return normalized;
+    } catch (err) {
+      console.warn("[CMSService] Civic Directory fetch error, using fallbacks:", err.message);
     }
-  } catch (err) {
-    console.warn("[CMSService] Civic Directory fetch error, using fallbacks:", err.message);
-  }
 
-  return DEFAULT_CIVIC_DIRECTORY_PLACES;
+    return memoryCache.civicDirectory?.data || getPersistentCache("civicDirectory") || DEFAULT_CIVIC_DIRECTORY_PLACES;
+  });
 }
 

@@ -125,13 +125,27 @@ async function seedDefaultHeritageIfEmpty() {
   }
 }
 
+let cachedHeritage = null;
+let cachedHeritageTime = 0;
+const HERITAGE_CACHE_TTL_MS = 60 * 1000;
+
+export function invalidateHeritageCache() {
+  cachedHeritage = null;
+  cachedHeritageTime = 0;
+}
+
 // @route   GET /api/heritage
 // @desc    Get published heritage and tourism sites
 // @access  Public
 router.get("/", async (req, res) => {
   try {
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    const sites = await HeritageSite.find({ isPublished: true }).sort({ displayOrder: 1, createdAt: -1 });
+    if (cachedHeritage && Date.now() - cachedHeritageTime < HERITAGE_CACHE_TTL_MS) {
+      return res.status(200).json({ success: true, count: cachedHeritage.length, sites: cachedHeritage });
+    }
+    const sites = await HeritageSite.find({ isPublished: true }).sort({ displayOrder: 1, createdAt: -1 }).lean();
+    cachedHeritage = sites;
+    cachedHeritageTime = Date.now();
     res.status(200).json({ success: true, count: sites.length, sites });
   } catch (err) {
     console.error("[Heritage] Fetch error:", err);
@@ -217,6 +231,8 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
       ipAddress: req.ip,
     });
 
+    invalidateHeritageCache();
+
     res.status(201).json({ success: true, message: "Heritage destination added successfully.", site: newSite });
   } catch (err) {
     console.error("[Heritage] Create error:", err);
@@ -287,6 +303,8 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
       ipAddress: req.ip,
     });
 
+    invalidateHeritageCache();
+
     res.status(200).json({ success: true, message: "Heritage site updated successfully.", site });
   } catch (err) {
     console.error("[Heritage] Update error:", err);
@@ -317,6 +335,8 @@ const handlePublishToggle = async (req, res) => {
       changesSummary: `${site.isPublished ? "Published" : "Unpublished"} heritage site "${site.name}"`,
       ipAddress: req.ip,
     });
+
+    invalidateHeritageCache();
 
     res.status(200).json({
       success: true,
@@ -353,6 +373,8 @@ router.delete("/:id", verifyToken, requireAdmin, async (req, res) => {
       changesSummary: `Deleted heritage site "${site.name}"`,
       ipAddress: req.ip,
     });
+
+    invalidateHeritageCache();
 
     res.status(200).json({ success: true, message: "Heritage site deleted successfully." });
   } catch (err) {

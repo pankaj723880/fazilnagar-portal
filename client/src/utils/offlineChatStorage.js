@@ -123,20 +123,25 @@ export function clearConversationQueue(conversationId) {
 }
 
 /**
- * Get all queued messages across all conversations
+ * Purge all private chat history, conversations, and queues upon logout
  */
-export function getAllQueuedConversations() {
+export function clearAllOfflineChatData() {
   try {
-    const convIds = [];
+    localStorage.removeItem(CONVERSATIONS_CACHE_KEY);
+    const keysToRemove = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith(QUEUE_CACHE_PREFIX)) {
-        const convId = key.replace(QUEUE_CACHE_PREFIX, "");
-        if (convId) convIds.push(convId);
+      if (
+        key &&
+        (key.startsWith(MESSAGES_CACHE_PREFIX) ||
+          key.startsWith(QUEUE_CACHE_PREFIX))
+      ) {
+        keysToRemove.push(key);
       }
     }
-    return convIds;
-  } catch {
-    return [];
+    keysToRemove.forEach((k) => localStorage.removeItem(k));
+  } catch (err) {
+    console.warn("[Offline Storage] Failed to clear offline chat data:", err);
   }
 }
+

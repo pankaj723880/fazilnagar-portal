@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Link, useNavigate, useSearchParams, Navigate } from "react-router-dom";
 import API, { performLogout } from "../api";
 import { getAuthToken, getAuthUser, clearAuthSession, isUserAdmin } from "../utils/authStorage";
@@ -8,24 +8,38 @@ import { usePageSEO } from "../utils/seo";
 import AdminLayout from "../components/admin/AdminLayout";
 import AdminDashboardOverview from "../components/admin/AdminDashboardOverview";
 
-// 11 Core Admin Modules + Subsystems
-import AdminSettingsCMS from "../components/AdminSettingsCMS";         // Module 1: Site Settings
-import AdminHeroCMS from "../components/AdminHeroCMS";                 // Module 2: Hero Carousel
-import AdminServicesCMS from "../components/AdminServicesCMS";         // Module 3: Public Services
-import AdminEventsCMS from "../components/AdminEventsCMS";             // Module 4: Events & Melas
-import AdminHeritageCMS from "../components/AdminHeritageCMS";         // Module 5: Twin Heritage
-import AdminMediaLibrary from "../components/AdminMediaLibrary";       // Module 6: Media Library
-import AdminAuditLogs from "../components/AdminAuditLogs";             // Module 7: Audit Logs
-import AdminManageEntities from "../components/AdminManageEntities";   // Module 8: Entities (19)
-import AdminAdvertisementsCMS from "../components/AdminAdvertisementsCMS"; // Module 9: Advertisements
-import AdminNewsCMS from "../components/AdminNewsCMS";                 // Module 10: News & Reels
-import AdminCommunityPlaces from "../components/AdminCommunityPlaces"; // Module 11: Community Submissions
-import AdminManageUsers from "../components/AdminManageUsers";         // User Administration
-import AdminDriveStorage from "../components/AdminDriveStorage";       // Google Drive Cloud Storage
-import AdminHomepageCMS from "../components/AdminHomepageCMS";         // Module 12: Homepage CMS
-import AdminCustomNotifications from "../components/admin/AdminCustomNotifications"; // Module 13: Notifications & Alerts
-import AdminCivicDirectoryCMS from "../components/AdminCivicDirectoryCMS"; // Civic Directory Index CMS
-import AdminModerationCMS from "../components/admin/AdminModerationCMS"; // Citizen Messaging Moderation CMS
+// Code-Split 11 Core Admin Modules + Subsystems (Loads on demand when tab selected)
+const AdminSettingsCMS = lazy(() => import("../components/AdminSettingsCMS"));         // Module 1: Site Settings
+const AdminHeroCMS = lazy(() => import("../components/AdminHeroCMS"));                 // Module 2: Hero Carousel
+const AdminServicesCMS = lazy(() => import("../components/AdminServicesCMS"));         // Module 3: Public Services
+const AdminEventsCMS = lazy(() => import("../components/AdminEventsCMS"));             // Module 4: Events & Melas
+const AdminHeritageCMS = lazy(() => import("../components/AdminHeritageCMS"));         // Module 5: Twin Heritage
+const AdminMediaLibrary = lazy(() => import("../components/AdminMediaLibrary"));       // Module 6: Media Library
+const AdminAuditLogs = lazy(() => import("../components/AdminAuditLogs"));             // Module 7: Audit Logs
+const AdminManageEntities = lazy(() => import("../components/AdminManageEntities"));   // Module 8: Entities (19)
+const AdminAdvertisementsCMS = lazy(() => import("../components/AdminAdvertisementsCMS")); // Module 9: Advertisements
+const AdminNewsCMS = lazy(() => import("../components/AdminNewsCMS"));                 // Module 10: News & Reels
+const AdminCommunityPlaces = lazy(() => import("../components/AdminCommunityPlaces")); // Module 11: Community Submissions
+const AdminManageUsers = lazy(() => import("../components/AdminManageUsers"));         // User Administration
+const AdminDriveStorage = lazy(() => import("../components/AdminDriveStorage"));       // Google Drive Cloud Storage
+const AdminHomepageCMS = lazy(() => import("../components/AdminHomepageCMS"));         // Module 12: Homepage CMS
+const AdminCustomNotifications = lazy(() => import("../components/admin/AdminCustomNotifications")); // Module 13: Notifications & Alerts
+const AdminCivicDirectoryCMS = lazy(() => import("../components/AdminCivicDirectoryCMS")); // Civic Directory Index CMS
+const AdminModerationCMS = lazy(() => import("../components/admin/AdminModerationCMS")); // Citizen Messaging Moderation CMS
+
+function AdminTabSkeleton() {
+  return (
+    <div className="p-6 space-y-4 animate-pulse" role="status" aria-label="Loading admin module">
+      <div className="h-8 bg-slate-200 rounded-xl w-48" />
+      <div className="h-4 bg-slate-100 rounded-lg w-72" />
+      <div className="h-64 bg-slate-50 border border-slate-200/80 rounded-2xl p-6 space-y-3">
+        <div className="h-6 bg-slate-200/60 rounded-md w-1/3" />
+        <div className="h-4 bg-slate-100 rounded-md w-2/3" />
+        <div className="h-10 bg-slate-200/50 rounded-xl w-full mt-4" />
+      </div>
+    </div>
+  );
+}
 
 import {
   ShieldCheck,
@@ -101,35 +115,31 @@ export default function AdminReview({ user: propUser }) {
 
   const isAdmin = Boolean(currentUser && currentUser.role === "admin" && isUserAdmin());
 
-  // Fetch real count badges for sidebar
+  // Fetch real count badges for sidebar concurrently (eliminates sequential waterfall)
   const fetchBadgeCounts = async () => {
     if (!isAdmin) return;
     const token = getAuthToken();
+    const authHeaders = { Authorization: `Bearer ${token}` };
 
     try {
-      // 1. Pending submissions
-      const subRes = await API.get("/submissions?status=pending", {
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => null);
-      if (Array.isArray(subRes?.data)) {
-        setPendingCount(subRes.data.length);
-      }
+      const [subRes, placesRes, adsRes, newsRes, usersRes, civicRes] = await Promise.allSettled([
+        API.get("/submissions?status=pending", { headers: authHeaders }),
+        API.get("/places/admin?archived=all", { headers: authHeaders }),
+        API.get("/advertisements/admin", { headers: authHeaders }),
+        API.get("/news/admin/all", { headers: authHeaders }),
+        API.get("/users?limit=1", { headers: authHeaders }),
+        API.get("/civic-directory?all=true", { headers: authHeaders }),
+      ]);
 
-      // 2. Entities count
-      const placesRes = await API.get("/places/admin?archived=all", {
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => null);
-      if (Array.isArray(placesRes?.data)) {
-        setEntitiesCount(placesRes.data.length);
+      if (subRes.status === "fulfilled" && Array.isArray(subRes.value.data)) {
+        setPendingCount(subRes.value.data.length);
       }
-
-      // 3. Live Ads
-      const adsRes = await API.get("/advertisements/admin", {
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => null);
-      if (Array.isArray(adsRes?.data)) {
+      if (placesRes.status === "fulfilled" && Array.isArray(placesRes.value.data)) {
+        setEntitiesCount(placesRes.value.data.length);
+      }
+      if (adsRes.status === "fulfilled" && Array.isArray(adsRes.value.data)) {
         const now = new Date();
-        const active = adsRes.data.filter((a) => {
+        const active = adsRes.value.data.filter((a) => {
           if (!a.isActive || !a.isPublished) return false;
           if (a.startDate && new Date(a.startDate) > now) return false;
           if (a.endDate && new Date(a.endDate) < now) return false;
@@ -137,37 +147,22 @@ export default function AdminReview({ user: propUser }) {
         }).length;
         setLiveAdsCount(active);
       }
-
-      // 4. News count
-      const newsRes = await API.get("/news/admin/all", {
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => null);
-      if (Array.isArray(newsRes?.data)) {
-        setNewsCount(newsRes.data.length);
+      if (newsRes.status === "fulfilled" && Array.isArray(newsRes.value.data)) {
+        setNewsCount(newsRes.value.data.length);
       }
-
-      // 5. Registered users count
-      const usersRes = await API.get("/users?limit=1", {
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => null);
-      if (usersRes?.data) {
+      if (usersRes.status === "fulfilled" && usersRes.value.data) {
         const totalU =
-          usersRes.data.pagination?.total ??
-          (Array.isArray(usersRes.data.users) ? usersRes.data.users.length : 0);
+          usersRes.value.data.pagination?.total ??
+          (Array.isArray(usersRes.value.data.users) ? usersRes.value.data.users.length : 0);
         setUsersCount(totalU);
       }
-
-      // 6. Civic Directory Index listings count
-      const civicRes = await API.get("/civic-directory?all=true", {
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => null);
-      if (civicRes?.data) {
+      if (civicRes.status === "fulfilled" && civicRes.value.data) {
         const count =
-          civicRes.data.count ??
-          (Array.isArray(civicRes.data.items)
-            ? civicRes.data.items.length
-            : Array.isArray(civicRes.data)
-            ? civicRes.data.length
+          civicRes.value.data.count ??
+          (Array.isArray(civicRes.value.data.items)
+            ? civicRes.value.data.items.length
+            : Array.isArray(civicRes.value.data)
+            ? civicRes.value.data.length
             : 0);
         setCivicCount(count);
       }
@@ -375,7 +370,9 @@ export default function AdminReview({ user: propUser }) {
       onLogout={handleLogout}
       onRefresh={fetchBadgeCounts}
     >
-      {renderActiveModule()}
+      <Suspense fallback={<AdminTabSkeleton />}>
+        {renderActiveModule()}
+      </Suspense>
     </AdminLayout>
   );
 }

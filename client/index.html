@@ -9,9 +9,6 @@
     <meta name="description" content="Official civic and local directory portal for Fazilnagar town (PIN 274401, Kushinagar, Uttar Pradesh). Verified town directory of schools, hospitals, local doctors, emergency helplines, shops, markets, and community news." />
     <link rel="canonical" href="https://fazilnagar.vercel.app/" />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
 
     <!-- Geographic Location Meta Tags for Kushinagar / Fazilnagar Local SEO -->
     <meta name="geo.region" content="IN-UP" />
@@ -104,6 +101,18 @@
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=optional" />
     </noscript>
 
+    <!-- Homepage Splash Launcher Gate: runs before any DOM paint to prevent flash or stuck overlay on nested routes -->
+    <script>
+      (function() {
+        try {
+          var p = window.location.pathname;
+          if (p === '/' || p === '/index.html' || p === '/town' || p === '/portal' || p === '/fazilnagar') {
+            document.documentElement.classList.add('is-homepage-launch');
+          }
+        } catch (_) {}
+      })();
+    </script>
+
     <!-- Critical CSS for Instant Above-the-fold Layout & Zero CLS -->
     <style>
       html, body {
@@ -129,6 +138,13 @@
           animation: none !important;
         }
       }
+      /* Splash shell is hidden by default for ALL direct nested routes, preventing any blocking overlay */
+      #initial-splash-shell {
+        display: none;
+      }
+      html.is-homepage-launch #initial-splash-shell {
+        display: flex;
+      }
     </style>
     <!-- Startup Performance Instrumentation & Single Coordinated Launch Controller -->
     <script>
@@ -149,15 +165,6 @@
           var splash = document.getElementById('initial-splash-shell');
           if (!splash) return;
 
-          // Double check that React has mounted DOM elements into #root before fading splash
-          var root = document.getElementById('root');
-          if (!root || !root.firstElementChild) {
-            requestAnimationFrame(function() {
-              if (typeof window.__dismissSplash === 'function') window.__dismissSplash();
-            });
-            return;
-          }
-
           dismissed = true;
           if (window.__STARTUP_METRICS__) {
             window.__STARTUP_METRICS__.homepageUsable = performance.now();
@@ -166,29 +173,22 @@
           // Coordinate dismissal: double rAF ensures React DOM is painted underneath with zero flicker
           requestAnimationFrame(function() {
             requestAnimationFrame(function() {
-              splash.style.transition = 'opacity 220ms cubic-bezier(0.4, 0, 0.2, 1)';
+              splash.style.transition = 'opacity 180ms cubic-bezier(0.4, 0, 0.2, 1)';
               splash.style.opacity = '0';
               splash.style.pointerEvents = 'none';
               setTimeout(function() {
                 try { splash.remove(); } catch (e) {}
-              }, 250);
+              }, 200);
             });
           });
         };
-
-        // Direct sub-route entry: bypass launch splash so pre-rendered route content is immediately accessible
-        if (typeof window !== 'undefined' && window.location && window.location.pathname && window.location.pathname !== '/' && window.location.pathname !== '/index.html') {
-          var s = document.getElementById('initial-splash-shell');
-          if (s) s.style.display = 'none';
-          dismissed = true;
-        }
 
         // Safety fallback: auto-dismiss if background JS takes unexpectedly long
         setTimeout(function() {
           if (!dismissed && typeof window.__dismissSplash === 'function') {
             window.__dismissSplash();
           }
-        }, 2200);
+        }, 1200);
       })();
     </script>
   </head>
@@ -196,7 +196,7 @@
     <div id="root"></div>
 
     <!-- Single Coordinated Launch Splash Shell (Anchored with safe-area insets and box-sizing) -->
-    <div id="initial-splash-shell" style="position:fixed;inset:0;z-index:999999;width:100%;height:100%;height:100dvh;box-sizing:border-box;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);display:flex;flex-direction:column;align-items:center;justify-content:center;user-select:none;overflow:hidden;background:#18232E;background-image:linear-gradient(to bottom, #18232E, #131d27, #0f171e);font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;will-change:opacity;">
+    <div id="initial-splash-shell" style="position:fixed;inset:0;z-index:999999;width:100%;height:100%;height:100dvh;box-sizing:border-box;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);display:none;flex-direction:column;align-items:center;justify-content:center;user-select:none;overflow:hidden;background:#18232E;background-image:linear-gradient(to bottom, #18232E, #131d27, #0f171e);font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;will-change:opacity;">
       <div style="position:absolute;width:288px;height:288px;border-radius:50%;pointer-events:none;filter:blur(64px);opacity:0.20;background:radial-gradient(circle, #f59e0b, #e11d48, #ea580c);"></div>
       <div style="position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 24px;">
         <div style="width:96px;height:96px;border-radius:16px;background:rgba(15,23,30,0.9);border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 32px rgba(0,0,0,0.5);padding:14px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-sizing:border-box;">
@@ -213,7 +213,7 @@
         </div>
       </div>
     </div>
-    <noscript>
+    <noscript id="fallback-noscript">
       <div style="max-width:800px;margin:2rem auto;padding:1.5rem;font-family:system-ui,sans-serif;color:#18232E;">
         <h1>Fazilnagar Town Civic &amp; Local Directory Portal</h1>
         <p>Welcome to the official civic and local directory portal for Fazilnagar town (PIN 274401), Kushinagar, Uttar Pradesh, India. Access verified information about local businesses, schools, hospitals, emergency helplines, government services, and community news.</p>

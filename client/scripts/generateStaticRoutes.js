@@ -451,9 +451,12 @@ for (const route of ROUTES) {
   const initialBody = route.renderBody ? route.renderBody() : `<main style="padding:2rem;font-family:system-ui,sans-serif;"><h1>${route.h1}</h1><p>${route.description}</p></main>`;
   html = html.replace(/<div id="root">[\s\S]*?<\/div>/i, `<div id="root">${initialBody}</div>`);
 
-  // Inject route-specific noscript fallback
-  const noscriptHtml = `<noscript><div style="max-width:800px;margin:2rem auto;padding:1.5rem;font-family:system-ui,sans-serif;color:#18232E;"><h1>${route.h1}</h1><p>${route.description}</p>${initialBody}</div></noscript>`;
-  html = html.replace(/<noscript>[\s\S]*?<\/noscript>/i, noscriptHtml);
+  // Remove the splash shell from static pre-rendered routes so pre-rendered content is 100% visible immediately
+  html = html.replace(/<!-- Single Coordinated Launch Splash Shell[\s\S]*?<\/div>\s*<\/div>/i, "<!-- Static sub-route direct entry: splash shell bypassed -->");
+
+  // Inject route-specific noscript fallback strictly into the body noscript (never head font fallback)
+  const noscriptHtml = `<noscript id="fallback-noscript"><div style="max-width:800px;margin:2rem auto;padding:1.5rem;font-family:system-ui,sans-serif;color:#18232E;"><h1>${route.h1}</h1><p>${route.description}</p>${initialBody}</div></noscript>`;
+  html = html.replace(/<noscript id="fallback-noscript">[\s\S]*?<\/noscript>/i, noscriptHtml);
 
   const destFile = path.join(targetDir, "index.html");
   fs.writeFileSync(destFile, html, "utf-8");

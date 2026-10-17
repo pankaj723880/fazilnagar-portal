@@ -58,12 +58,27 @@ async function seedDefaultEventsIfEmpty() {
   }
 }
 
+let cachedEvents = null;
+let cachedEventsTime = 0;
+const EVENTS_CACHE_TTL_MS = 60 * 1000;
+
+export function invalidateEventsCache() {
+  cachedEvents = null;
+  cachedEventsTime = 0;
+}
+
 // @route   GET /api/events
 // @desc    Get published upcoming & recent events for the public portal
 // @access  Public
 router.get("/", async (req, res) => {
   try {
     const { category, search, timeFilter } = req.query;
+    const isDefaultQuery = (!category || category === "All") && (!search || !search.trim()) && !timeFilter;
+
+    if (isDefaultQuery && cachedEvents && Date.now() - cachedEventsTime < EVENTS_CACHE_TTL_MS) {
+      return res.status(200).json({ success: true, count: cachedEvents.length, events: cachedEvents });
+    }
+
     const filter = { isPublished: true, status: "published" };
 
     if (category && category !== "All") {
@@ -78,7 +93,13 @@ router.get("/", async (req, res) => {
     }
 
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    const events = await Event.find(filter).sort({ startDate: 1, createdAt: -1 });
+    const events = await Event.find(filter).sort({ startDate: 1, createdAt: -1 }).lean();
+
+    if (isDefaultQuery) {
+      cachedEvents = events;
+      cachedEventsTime = Date.now();
+    }
+
     res.status(200).json({ success: true, count: events.length, events });
   } catch (err) {
     console.error("[Events] Fetch error:", err);
@@ -189,6 +210,8 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
       ipAddress: req.ip,
     });
 
+    invalidateEventsCache();
+
     res.status(201).json({ success: true, message: "Event published successfully.", event: newEvent });
   } catch (err) {
     console.error("[Events] Create error:", err);
@@ -268,6 +291,8 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
       ipAddress: req.ip,
     });
 
+    invalidateEventsCache();
+
     res.status(200).json({ success: true, message: "Event updated successfully.", event });
   } catch (err) {
     console.error("[Events] Update error:", err);
@@ -288,6 +313,8 @@ router.patch("/:id/publish", verifyToken, requireAdmin, async (req, res) => {
     event.isPublished = req.body.isPublished !== undefined ? req.body.isPublished : !event.isPublished;
     event.status = event.isPublished ? "published" : "draft";
     await event.save();
+
+    invalidateEventsCache();
 
     res.status(200).json({
       success: true,
@@ -321,6 +348,8 @@ router.delete("/:id", verifyToken, requireAdmin, async (req, res) => {
       changesSummary: `Deleted event "${event.title}"`,
       ipAddress: req.ip,
     });
+
+    invalidateEventsCache();
 
     res.status(200).json({ success: true, message: "Event deleted successfully." });
   } catch (err) {

@@ -19,10 +19,23 @@ const DEFAULT_STATS = [
   { id: "stat-wards", label: "Selectable Wards & Areas", value: "26", subtext: "Municipal Boundary Scope", icon: "Landmark", isActive: true, displayOrder: 4 },
 ];
 
+let cachedSettings = null;
+let cachedSettingsTime = 0;
+const SETTINGS_CACHE_TTL_MS = 60 * 1000; // 60 seconds server-side in-memory cache
+
+export function invalidateServerSettingsCache() {
+  cachedSettings = null;
+  cachedSettingsTime = 0;
+}
+
 /**
  * Ensures initial default settings exist in DB and returns them.
  */
-async function getOrCreateSettings() {
+async function getOrCreateSettings(bypassCache = false) {
+  if (!bypassCache && cachedSettings && Date.now() - cachedSettingsTime < SETTINGS_CACHE_TTL_MS) {
+    return cachedSettings;
+  }
+
   let settings = await SiteSettings.findOne({ key: "primary_settings" });
   if (!settings) {
     settings = await SiteSettings.create({
@@ -99,6 +112,9 @@ async function getOrCreateSettings() {
       await settings.save();
     }
   }
+
+  cachedSettings = settings;
+  cachedSettingsTime = Date.now();
   return settings;
 }
 
@@ -130,10 +146,18 @@ router.get("/live-version", async (req, res) => {
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
-    const settings = await SiteSettings.findOne({ key: "primary_settings" }, { updatedAt: 1, _id: 1 }).lean();
+
+    let version = 0;
+    if (cachedSettings?.updatedAt) {
+      version = new Date(cachedSettings.updatedAt).getTime();
+    } else {
+      const settings = await SiteSettings.findOne({ key: "primary_settings" }, { updatedAt: 1, _id: 1 }).lean();
+      version = settings?.updatedAt ? new Date(settings.updatedAt).getTime() : 0;
+    }
+
     res.status(200).json({
       success: true,
-      updatedAt: settings?.updatedAt ? new Date(settings.updatedAt).getTime() : 0,
+      updatedAt: version,
       timestamp: Date.now(),
     });
   } catch (err) {
@@ -313,6 +337,7 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
     }
 
     await settings.save();
+    invalidateServerSettingsCache();
 
     await logAdminAction({
       adminUser: req.user.id,
@@ -368,6 +393,7 @@ router.post("/hero-slides", verifyToken, requireAdmin, async (req, res) => {
 
     settings.heroSettings.slides.push(newSlide);
     await settings.save();
+    invalidateServerSettingsCache();
 
     await logAdminAction({
       adminUser: req.user.id,
@@ -421,6 +447,7 @@ router.put("/hero-slides/reorder", verifyToken, requireAdmin, async (req, res) =
     }
 
     await settings.save();
+    invalidateServerSettingsCache();
 
     res.status(200).json({
       success: true,
@@ -464,6 +491,7 @@ router.put("/hero-slides/:id", verifyToken, requireAdmin, async (req, res) => {
     if (displayOrder !== undefined) slide.displayOrder = displayOrder;
 
     await settings.save();
+    invalidateServerSettingsCache();
 
     await logAdminAction({
       adminUser: req.user.id,
@@ -497,6 +525,7 @@ router.delete("/hero-slides/:id", verifyToken, requireAdmin, async (req, res) =>
       (s) => String(s._id) !== String(req.params.id)
     );
     await settings.save();
+    invalidateServerSettingsCache();
 
     await logAdminAction({
       adminUser: req.user.id,

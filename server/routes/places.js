@@ -12,10 +12,35 @@ const __dirname = path.dirname(__filename);
 
 // @route   GET /api/places
 // @desc    Get published, verified town directory places
+let cachedPublicPlaces = null;
+let cachedPublicPlacesTime = 0;
+let cachedStatsSummary = null;
+let cachedStatsSummaryTime = 0;
+const PLACES_CACHE_TTL_MS = 60 * 1000; // 60s in-memory cache
+
+export function invalidatePlacesCache() {
+  cachedPublicPlaces = null;
+  cachedPublicPlacesTime = 0;
+  cachedStatsSummary = null;
+  cachedStatsSummaryTime = 0;
+}
+
+// @route   GET /api/places
+// @desc    Get published, verified town directory places
 // @access  Public
 router.get("/", async (req, res) => {
   try {
     const { category, search, locality, sort = "name" } = req.query;
+
+    const isDefaultQuery =
+      (!category || category === "all" || category === "All" || category === "All Places") &&
+      !locality &&
+      (!search || !search.trim()) &&
+      sort === "name";
+
+    if (isDefaultQuery && cachedPublicPlaces && Date.now() - cachedPublicPlacesTime < PLACES_CACHE_TTL_MS) {
+      return res.status(200).json(cachedPublicPlaces);
+    }
 
     const query = {
       isPublished: true,
@@ -50,7 +75,13 @@ router.get("/", async (req, res) => {
     if (sort === "newest") sortOption = { createdAt: -1 };
     if (sort === "category") sortOption = { category: 1, name: 1 };
 
-    const places = await Place.find(query).sort(sortOption);
+    const places = await Place.find(query).sort(sortOption).lean();
+
+    if (isDefaultQuery) {
+      cachedPublicPlaces = places;
+      cachedPublicPlacesTime = Date.now();
+    }
+
     res.status(200).json(places);
   } catch (err) {
     console.error("Fetch Places Error, serving from places.json:", err);
@@ -81,6 +112,7 @@ router.all("/sync", verifyToken, requireAdmin, async (req, res) => {
       );
       updatedCount++;
     }
+    invalidatePlacesCache();
     res.status(200).json({
       message: `Successfully synchronized ${updatedCount} places into database.`,
       count: updatedCount,
@@ -96,27 +128,11 @@ router.all("/sync", verifyToken, requireAdmin, async (req, res) => {
 // @access  Public
 router.get("/stats/summary", async (req, res) => {
   try {
-    const total = await Place.countDocuments();
-    const published = await Place.countDocuments({ isPublished: true, isArchived: { $ne: true } });
-    const archived = await Place.countDocuments({ isArchived: true });
-    const inReview = await Place.countDocuments({ isPublished: false, isArchived: { $ne: true } });
-    const verified = await Place.countDocuments({ verificationStatus: "verified", isArchived: { $ne: true } });
-    const needsBoundary = await Place.countDocuments({
-      verificationStatus: "needs_boundary_verification",
-      isArchived: { $ne: true },
-    });
-    const needsAddress = await Place.countDocuments({
-      verificationStatus: "needs_address_verification",
-      isArchived: { $ne: true },
-    });
+    if (cachedStatsSummary && Date.now() - cachedStatsSummaryTime < PLACES_CACHE_TTL_MS) {
+      return res.status(200).json(cachedStatsSummary);
+    }
 
-    const categoryCounts = await Place.aggregate([
-      { $match: { isPublished: true, isArchived: { $ne: true } } },
-      { $group: { _id: "$category", count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-    ]);
-
-    res.status(200).json({
+    const [
       total,
       published,
       archived,
@@ -125,7 +141,36 @@ router.get("/stats/summary", async (req, res) => {
       needsBoundary,
       needsAddress,
       categoryCounts,
-    });
+    ] = await Promise.all([
+      Place.countDocuments(),
+      Place.countDocuments({ isPublished: true, isArchived: { $ne: true } }),
+      Place.countDocuments({ isArchived: true }),
+      Place.countDocuments({ isPublished: false, isArchived: { $ne: true } }),
+      Place.countDocuments({ verificationStatus: "verified", isArchived: { $ne: true } }),
+      Place.countDocuments({ verificationStatus: "needs_boundary_verification", isArchived: { $ne: true } }),
+      Place.countDocuments({ verificationStatus: "needs_address_verification", isArchived: { $ne: true } }),
+      Place.aggregate([
+        { $match: { isPublished: true, isArchived: { $ne: true } } },
+        { $group: { _id: "$category", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+      ]),
+    ]);
+
+    const statsPayload = {
+      total,
+      published,
+      archived,
+      inReview,
+      verified,
+      needsBoundary,
+      needsAddress,
+      categoryCounts,
+    };
+
+    cachedStatsSummary = statsPayload;
+    cachedStatsSummaryTime = Date.now();
+
+    res.status(200).json(statsPayload);
   } catch (err) {
     console.error("Stats Error:", err);
     res.status(500).json({ message: "Failed to load directory stats." });
@@ -153,7 +198,7 @@ router.get("/admin", verifyToken, requireAdmin, async (req, res) => {
       filter.townBoundaryStatus = boundary;
     }
 
-    const places = await Place.find(filter).sort({ updatedAt: -1 });
+    const places = await Place.find(filter).sort({ updatedAt: -1 }).lean();
     res.status(200).json(places);
   } catch (err) {
     console.error("Admin Places Error:", err);
@@ -177,6 +222,7 @@ router.patch("/:id/archive", verifyToken, requireAdmin, async (req, res) => {
     place.archiveReason = reason || "archived_by_admin";
     place.archivedAt = new Date();
     await place.save();
+    invalidatePlacesCache();
     res.status(200).json({ message: "Establishment archived successfully.", place });
   } catch (err) {
     console.error("Archive Place Error:", err);
@@ -199,6 +245,7 @@ router.patch("/:id/restore", verifyToken, requireAdmin, async (req, res) => {
     place.archiveReason = "";
     place.archivedAt = null;
     await place.save();
+    invalidatePlacesCache();
     res.status(200).json({ message: "Establishment restored successfully.", place });
   } catch (err) {
     console.error("Restore Place Error:", err);
@@ -381,6 +428,8 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
       return list;
     });
 
+    invalidatePlacesCache();
+
     res.status(201).json({
       message: "Place created successfully in directory.",
       place: savedPlace,
@@ -465,6 +514,8 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
       return res.status(404).json({ message: "Establishment not found." });
     }
 
+    invalidatePlacesCache();
+
     res.status(200).json({
       message: "Place updated successfully.",
       place: updated,
@@ -494,6 +545,8 @@ router.delete("/:id", verifyToken, requireAdmin, async (req, res) => {
     syncJsonPlaces((list) =>
       list.filter((p) => String(p.id) !== String(id) && String(p._id) !== String(id) && p.slug !== id)
     );
+
+    invalidatePlacesCache();
 
     res.status(200).json({ message: "Place removed from directory." });
   } catch (err) {

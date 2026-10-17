@@ -166,6 +166,10 @@ const placeSchema = new mongoose.Schema(
   }
 );
 
+// High performance compound indexes for public directory searches and filters
+placeSchema.index({ isPublished: 1, isArchived: 1, townBoundaryStatus: 1 });
+placeSchema.index({ category: 1, isPublished: 1, isArchived: 1 });
+
 // Helper method or pre-save hook for slug
 placeSchema.pre("save", function (next) {
   if (!this.slug && this.name) {

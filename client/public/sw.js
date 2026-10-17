@@ -1,5 +1,19 @@
 // Fazilnagar Town Portal High-Performance Service Worker
-const CACHE_NAME = 'fazilnagar-portal-v2';
+const CACHE_NAME = 'fazilnagar-portal-v3';
+
+// Private and non-cacheable paths that should always bypass the service worker
+const PRIVATE_OR_DYNAMIC_PREFIXES = [
+  '/api',
+  '/admin',
+  '/messages',
+  '/chat',
+  '/profile',
+  '/settings',
+  '/create-news',
+  '/login',
+  '/register',
+  '/upload',
+];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -20,12 +34,14 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Do not intercept non-GET requests or external API calls
+  // Do not intercept non-GET requests
   if (event.request.method !== 'GET') return;
+
   const url = new URL(event.request.url);
+
+  // Cross-origin, SEO verification, and meta files bypass
   if (
     url.origin !== self.location.origin ||
-    url.pathname.startsWith('/api') ||
     url.pathname === '/sitemap.xml' ||
     url.pathname === '/robots.txt' ||
     url.pathname.startsWith('/google')
@@ -33,13 +49,27 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 1. Immutable Hashed Assets & Static Icons: Cache-First for instant warm launch (<200ms)
-  if (
+  // Strictly exclude sensitive / authenticated / dynamic routes from caching
+  const isPrivateOrDynamic = PRIVATE_OR_DYNAMIC_PREFIXES.some((prefix) =>
+    url.pathname.startsWith(prefix)
+  );
+  if (isPrivateOrDynamic || event.request.headers.get('authorization')) {
+    return; // Pass through directly to network
+  }
+
+  // 1. Static Assets (Immutable Hashed bundles, fonts, images): Cache-First
+  const isStaticAsset =
     url.pathname.startsWith('/assets/') ||
+    url.pathname.startsWith('/images/') ||
+    url.pathname.endsWith('.woff2') ||
+    url.pathname.endsWith('.png') ||
+    url.pathname.endsWith('.jpg') ||
+    url.pathname.endsWith('.webp') ||
     url.pathname === '/icon-192.svg' ||
     url.pathname === '/icon-512.svg' ||
-    url.pathname === '/manifest.json'
-  ) {
+    url.pathname === '/manifest.json';
+
+  if (isStaticAsset) {
     event.respondWith(
       caches.match(event.request).then((cached) => {
         if (cached) return cached;
@@ -55,8 +85,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. HTML Documents: Network-First with Cache Fallback for fresh updates and reliable offline loading
-  if (url.pathname === '/' || url.pathname === '/index.html' || url.pathname.endsWith('.html')) {
+  // 2. Navigation Requests (Public HTML pages): Network-First with Cache / Shell Fallback
+  if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
@@ -68,13 +98,21 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(async () => {
           const cached = await caches.match(event.request);
-          return cached || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+          if (cached) return cached;
+          const indexFallback = await caches.match('/index.html');
+          return (
+            indexFallback ||
+            new Response('Offline - Please reconnect to view this page.', {
+              status: 503,
+              headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+            })
+          );
         })
     );
     return;
   }
 
-  // 3. General static requests: Stale-While-Revalidate
+  // 3. General public static requests: Stale-While-Revalidate
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const fetchPromise = fetch(event.request)

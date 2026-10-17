@@ -177,7 +177,36 @@ export default function TownPortal() {
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [places, setPlaces] = useState(INITIAL_PLACES);
+  const [places, setPlaces] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem("fazilnagar_cached_places");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((p) => ({
+            id: p._id || p.id,
+            name: p.name,
+            nameHindi: p.alternateNames?.[0] || p.name,
+            category: p.category,
+            subcategory: p.subcategory,
+            address: p.addressFull,
+            landmark: p.streetOrLandmark || p.locality,
+            lat: p.latitude || p.lat || null,
+            lng: p.longitude || p.lng || null,
+            latitude: p.latitude || p.lat || null,
+            longitude: p.longitude || p.lng || null,
+            hours: p.openingHours || "General Hours",
+            phone: p.phone || "Public Listing",
+            desc: p.description,
+            badge: p.subcategory || p.category,
+            verificationStatus: p.verificationStatus || "verified",
+            townBoundaryStatus: p.townBoundaryStatus || "confirmed",
+          }));
+        }
+      }
+    } catch (_) {}
+    return INITIAL_PLACES;
+  });
   const [schoolFilter, setSchoolFilter] = useState("all");
   const [modalType, setModalType] = useState(null); // "business" | "correction" | "event" | null
   const [communityModalOpen, setCommunityModalOpen] = useState(false);
@@ -185,7 +214,16 @@ export default function TownPortal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [liveNews, setLiveNews] = useState([]);
+  const [liveNews, setLiveNews] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem("fazilnagar_cached_live_news");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_) {}
+    return [];
+  });
   const [aboutTab, setAboutTab] = useState("fazilnagar"); // "fazilnagar" | "kushinagar" | "connection"
   const [isHeritageExpanded, setIsHeritageExpanded] = useState(false);
   const [isDirectoryExpanded, setIsDirectoryExpanded] = useState(false);
@@ -237,18 +275,18 @@ export default function TownPortal() {
   const [events, setEvents] = useState(() => getCachedEvents() || []);
   const [selectedEventCategory, setSelectedEventCategory] = useState("All");
 
-  const loadCMSData = () => {
-    getSiteSettings(true).then((s) => {
+  const loadCMSData = (forceFresh = false) => {
+    getSiteSettings(forceFresh).then((s) => {
       if (s) setSiteSettings(s);
     });
 
-    getHeritageSites(true).then((sites) => {
+    getHeritageSites(forceFresh).then((sites) => {
       if (Array.isArray(sites)) {
         setHeritageSites(sites);
       }
     });
 
-    getEvents({}, true).then((evts) => {
+    getEvents({}, forceFresh).then((evts) => {
       if (Array.isArray(evts)) {
         setEvents(evts);
       }
@@ -256,9 +294,9 @@ export default function TownPortal() {
   };
 
   useEffect(() => {
-    loadCMSData();
+    loadCMSData(false);
     const unsubscribe = subscribeToCMSLiveUpdates(() => {
-      loadCMSData();
+      loadCMSData(true);
     });
     return () => {
       unsubscribe();
@@ -427,6 +465,9 @@ export default function TownPortal() {
             townBoundaryStatus: p.townBoundaryStatus || "confirmed",
           }));
           setPlaces(apiPlaces);
+          try {
+            sessionStorage.setItem("fazilnagar_cached_places", JSON.stringify(rawList));
+          } catch (_) {}
         }
       })
       .catch(() => {
@@ -437,6 +478,9 @@ export default function TownPortal() {
       .then((res) => {
         if (Array.isArray(res.data) && res.data.length > 0) {
           setLiveNews(res.data);
+          try {
+            sessionStorage.setItem("fazilnagar_cached_live_news", JSON.stringify(res.data));
+          } catch (_) {}
         }
       })
       .catch(() => {

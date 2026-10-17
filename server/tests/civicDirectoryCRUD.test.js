@@ -12,6 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
 import civicDirectoryRoutes from "../routes/civicDirectory.js";
+import User from "../models/User.js";
 
 const TEST_PORT = 5088;
 const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_key";
@@ -69,14 +70,32 @@ describe("Civic Directory Index Management & CRUD Flow", () => {
       await mongoose.connect(MONGO_URI).catch(() => {});
     }
 
+    await User.deleteMany({ email: { $in: ["citizen_crud@fazilnagar.com", "admin_crud@fazilnagar.com"] } });
+
+    const citizen = await User.create({
+      name: "Test Citizen CRUD",
+      email: "citizen_crud@fazilnagar.com",
+      password: "dummy_password",
+      role: "user",
+      status: "active",
+    });
+
+    const admin = await User.create({
+      name: "Test Admin CRUD",
+      email: "admin_crud@fazilnagar.com",
+      password: "dummy_password",
+      role: "admin",
+      status: "active",
+    });
+
     citizenToken = jwt.sign(
-      { id: new mongoose.Types.ObjectId().toString(), email: "citizen@fazilnagar.com", role: "citizen" },
+      { id: citizen._id.toString(), email: citizen.email, role: citizen.role },
       JWT_SECRET,
       { expiresIn: "1h" }
     );
 
     adminToken = jwt.sign(
-      { id: new mongoose.Types.ObjectId().toString(), email: "admin@fazilnagar.com", role: "admin" },
+      { id: admin._id.toString(), email: admin.email, role: admin.role },
       JWT_SECRET,
       { expiresIn: "1h" }
     );
@@ -91,6 +110,7 @@ describe("Civic Directory Index Management & CRUD Flow", () => {
   });
 
   after(async () => {
+    await User.deleteMany({ email: { $in: ["citizen_crud@fazilnagar.com", "admin_crud@fazilnagar.com"] } });
     if (server) {
       await new Promise((resolve) => server.close(resolve));
     }

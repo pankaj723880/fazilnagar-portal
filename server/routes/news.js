@@ -877,7 +877,14 @@ router.delete("/:id/comments/:commentId/replies/:replyId", verifyToken, async (r
 
 // ====================================================================
 // STANDARD PUBLIC NEWS LIST (BACKWARD COMPATIBLE)
-// ====================================================================
+let cachedPublicNews = null;
+let cachedPublicNewsTime = 0;
+const NEWS_CACHE_TTL_MS = 30 * 1000;
+
+export function invalidateNewsCache() {
+  cachedPublicNews = null;
+  cachedPublicNewsTime = 0;
+}
 
 // @route   GET /api/news
 // @desc    Get news articles. Citizens get approved articles; Admins can filter by status
@@ -885,6 +892,12 @@ router.delete("/:id/comments/:commentId/replies/:replyId", verifyToken, async (r
 router.get("/", async (req, res) => {
   try {
     const { status, all } = req.query;
+    const isDefaultQuery = !status && !all;
+
+    if (isDefaultQuery && cachedPublicNews && Date.now() - cachedPublicNewsTime < NEWS_CACHE_TTL_MS) {
+      return res.status(200).json(cachedPublicNews);
+    }
+
     let query = {};
 
     if (all === "true" || status === "all") {
@@ -900,13 +913,18 @@ router.get("/", async (req, res) => {
 
     const news = await News.find(query)
       .populate("author", "name email role")
-      .sort({ isFeatured: -1, publishedAt: -1, createdAt: -1 });
+      .sort({ isFeatured: -1, publishedAt: -1, createdAt: -1 })
+      .lean();
 
     const normalizedNews = news.map((item) => {
-      const obj = item.toObject();
-      const media = formatNewsMedia(obj, req);
-      return { ...obj, ...media };
+      const media = formatNewsMedia(item, req);
+      return { ...item, ...media };
     });
+
+    if (isDefaultQuery) {
+      cachedPublicNews = normalizedNews;
+      cachedPublicNewsTime = Date.now();
+    }
 
     res.status(200).json(normalizedNews);
   } catch (err) {
@@ -1160,6 +1178,8 @@ router.post(
       resp.mediaUrl = normalizeMediaUrl(resp.mediaUrl || resp.video || resp.image, req);
       resp.mediaType = resp.mediaType || (resp.video ? "video" : resp.image ? "image" : "none");
 
+      invalidateNewsCache();
+
       res.status(201).json({
         ...resp,
         moderationMessage: initialPublished
@@ -1401,6 +1421,8 @@ router.put(
       resp.mediaUrl = normalizeMediaUrl(resp.mediaUrl || resp.video || resp.image, req);
       resp.mediaType = resp.mediaType || (resp.video ? "video" : resp.image ? "image" : "none");
 
+      invalidateNewsCache();
+
       res.status(200).json({ message: "News story updated successfully.", article: resp });
     } catch (err) {
       console.error("Update News Error:", err);
@@ -1440,6 +1462,7 @@ router.patch("/:id/publish", verifyToken, requireAdmin, async (req, res) => {
     }
 
     await article.save();
+    invalidateNewsCache();
     res.status(200).json({
       message: `News story ${article.isPublished ? "published" : "unpublished"}.`,
       isPublished: article.isPublished,
@@ -1466,6 +1489,7 @@ router.patch("/:id/feature", verifyToken, requireAdmin, async (req, res) => {
       req.body.isFeatured !== undefined ? req.body.isFeatured : !article.isFeatured;
 
     await article.save();
+    invalidateNewsCache();
     res.status(200).json({
       message: `News story ${article.isFeatured ? "featured" : "unfeatured"}.`,
       isFeatured: article.isFeatured,
@@ -1500,6 +1524,8 @@ router.patch("/:id/status", verifyToken, requireAdmin, async (req, res) => {
     if (!article) {
       return res.status(404).json({ message: "News article not found." });
     }
+
+    invalidateNewsCache();
 
     if (status === "approved") {
       if (article.author) {
@@ -1556,6 +1582,7 @@ router.delete("/:id", verifyToken, async (req, res) => {
     await News.findByIdAndDelete(req.params.id);
     await Like.deleteMany({ newsId: req.params.id });
     await Comment.deleteMany({ newsId: req.params.id });
+    invalidateNewsCache();
 
     res.status(200).json({ message: "News article deleted successfully." });
   } catch (err) {

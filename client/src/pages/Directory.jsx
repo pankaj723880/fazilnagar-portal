@@ -152,11 +152,18 @@ export default function Directory({ user }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCat = searchParams.get("category") || "all";
   const initialSearch = searchParams.get("search") || "";
-  const [allMasterPlaces, setAllMasterPlaces] = useState(() =>
-    Array.isArray(seedPlaces)
+  const [allMasterPlaces, setAllMasterPlaces] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem("fazilnagar_cached_places");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_) {}
+    return Array.isArray(seedPlaces)
       ? seedPlaces.filter((p) => !p.isArchived && p.isPublished !== false)
-      : []
-  );
+      : [];
+  });
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [selectedCategory, setSelectedCategory] = useState(initialCat);
@@ -192,6 +199,13 @@ export default function Directory({ user }) {
   const [showAdminQueue, setShowAdminQueue] = useState(false);
   const [adminQueuePlaces, setAdminQueuePlaces] = useState([]);
   const [stats, setStats] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem("fazilnagar_cached_places_stats");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && (parsed.total || parsed.published)) return parsed;
+      }
+    } catch (_) {}
     const catMap = {};
     seedPlaces.forEach((p) => {
       catMap[p.category] = (catMap[p.category] || 0) + 1;
@@ -274,7 +288,10 @@ export default function Directory({ user }) {
 
   const fetchPlaces = useCallback(async () => {
     try {
-      setLoading(true);
+      // Only show spinner if there is no place data at all
+      if (allMasterPlaces.length === 0) {
+        setLoading(true);
+      }
       const res = await API.get("/places");
       const data = Array.isArray(res.data)
         ? res.data
@@ -284,8 +301,12 @@ export default function Directory({ user }) {
         ? res.data.data
         : null;
       if (Array.isArray(data)) {
-        setAllMasterPlaces(data.filter((p) => !p.isArchived && p.isPublished !== false));
+        const valid = data.filter((p) => !p.isArchived && p.isPublished !== false);
+        setAllMasterPlaces(valid);
         setFetchError(null);
+        try {
+          sessionStorage.setItem("fazilnagar_cached_places", JSON.stringify(valid));
+        } catch (_) {}
       }
     } catch (err) {
       console.warn("[Directory] Using verified local seed data:", err.message);
@@ -293,13 +314,16 @@ export default function Directory({ user }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [allMasterPlaces.length]);
 
   const fetchStats = useCallback(async () => {
     try {
       const res = await API.get("/places/stats/summary");
       if (res.data && (res.data.total || res.data.published)) {
         setStats(res.data);
+        try {
+          sessionStorage.setItem("fazilnagar_cached_places_stats", JSON.stringify(res.data));
+        } catch (_) {}
         return;
       }
     } catch (err) {
