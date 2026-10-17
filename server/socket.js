@@ -5,6 +5,7 @@ import User from "./models/User.js";
 import Conversation from "./models/Conversation.js";
 import ConversationMember from "./models/ConversationMember.js";
 import Message from "./models/Message.js";
+import { isOriginAllowed } from "./utils/corsConfig.js";
 
 let io = null;
 const onlineUsers = new Map(); // userId -> Set of socket IDs
@@ -20,12 +21,12 @@ export function isUserOnline(userId) {
 export function initSocket(httpServer) {
   io = new SocketIOServer(httpServer, {
     cors: {
-      origin: [
-        "https://fazilnagar.vercel.app",
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-      ],
+      origin: (origin, callback) => {
+        if (isOriginAllowed(origin)) {
+          return callback(null, true);
+        }
+        return callback(new Error("Socket CORS violation: Access denied"), false);
+      },
       credentials: true,
       methods: ["GET", "POST"],
     },

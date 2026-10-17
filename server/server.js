@@ -24,27 +24,12 @@ const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
-
-const allowedOrigins = [
-  "https://fazilnagar.vercel.app",
-  process.env.CLIENT_URL,
-  ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(",") : []),
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "http://localhost:5000",
-  "http://127.0.0.1:5173",
-].filter(Boolean);
+import { isOriginAllowed, getAllowedOrigins } from "./utils/corsConfig.js";
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      const isAllowed =
-        allowedOrigins.includes(origin) ||
-        origin.endsWith(".vercel.app") ||
-        /^https?:\/\/localhost(:\d+)?$/.test(origin) ||
-        /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
-      if (isAllowed) {
+      if (isOriginAllowed(origin)) {
         return callback(null, true);
       }
       return callback(new Error("CORS policy violation: Access denied from this origin"));
