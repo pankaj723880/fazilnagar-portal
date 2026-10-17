@@ -112,7 +112,9 @@ export default function ChatWindow({
   const docInputRef = useRef(null);
   const actionsDropdownRef = useRef(null);
   const emojiPickerRef = useRef(null);
+  const emojiButtonRef = useRef(null);
   const attachMenuRef = useRef(null);
+  const attachButtonRef = useRef(null);
 
   const conversationId = conversation?._id || conversation?.id;
   const isGroup = conversation?.type === "group";
@@ -190,10 +192,20 @@ export default function ChatWindow({
       if (showActionsDropdown && actionsDropdownRef.current && !actionsDropdownRef.current.contains(e.target)) {
         setShowActionsDropdown(false);
       }
-      if (showEmojiPicker && emojiPickerRef.current && !emojiPickerRef.current.contains(e.target)) {
+      if (
+        showEmojiPicker &&
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(e.target) &&
+        !emojiButtonRef.current?.contains(e.target)
+      ) {
         setShowEmojiPicker(false);
       }
-      if (showAttachMenu && attachMenuRef.current && !attachMenuRef.current.contains(e.target)) {
+      if (
+        showAttachMenu &&
+        attachMenuRef.current &&
+        !attachMenuRef.current.contains(e.target) &&
+        !attachButtonRef.current?.contains(e.target)
+      ) {
         setShowAttachMenu(false);
       }
     };
@@ -2060,7 +2072,7 @@ export default function ChatWindow({
           </button>
         </div>
       ) : (
-        <div className="shrink-0 z-20 bg-white border-t border-slate-200/90 shadow-[0_-4px_16px_rgba(0,0,0,0.04)] pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        <div className="relative shrink-0 z-20 bg-white border-t border-slate-200/90 shadow-[0_-4px_16px_rgba(0,0,0,0.04)] pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           {/* Emoji Picker Tray */}
           {showEmojiPicker && (
             <div
@@ -2245,6 +2257,7 @@ export default function ChatWindow({
 
             {/* Emoji Trigger */}
             <button
+              ref={emojiButtonRef}
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
@@ -2264,6 +2277,7 @@ export default function ChatWindow({
 
             {/* Attachment Menu Trigger */}
             <button
+              ref={attachButtonRef}
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
