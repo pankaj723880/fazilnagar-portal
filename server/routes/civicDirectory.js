@@ -39,6 +39,24 @@ function syncJsonDirectory(updater) {
   }
 }
 
+let hasCheckedCivicSeed = false;
+async function seedDefaultCivicIfEmpty() {
+  if (hasCheckedCivicSeed) return;
+  hasCheckedCivicSeed = true;
+  try {
+    const count = await CivicDirectoryItem.countDocuments();
+    if (count === 0) {
+      const fallbackList = readJsonDirectory();
+      if (fallbackList.length > 0) {
+        console.log(`[CivicDirectory] Seeding ${fallbackList.length} items into database...`);
+        await CivicDirectoryItem.insertMany(fallbackList);
+      }
+    }
+  } catch (err) {
+    console.warn("[CivicDirectory] Seed check skipped:", err.message);
+  }
+}
+
 /**
  * @route   GET /api/civic-directory
  * @desc    Get civic directory index listings for carousel (public active or admin all)
@@ -46,35 +64,25 @@ function syncJsonDirectory(updater) {
  */
 router.get("/", async (req, res) => {
   try {
+    await seedDefaultCivicIfEmpty();
     const { all, includeInactive } = req.query;
     const showAll = all === "true" || includeInactive === "true";
 
     const filter = showAll ? {} : { isActive: { $ne: false } };
     let items = [];
+    let isDbHealthy = true;
 
     try {
       items = await CivicDirectoryItem.find(filter).sort({ displayOrder: 1, createdAt: 1 }).lean();
     } catch (dbErr) {
       console.warn("[CivicDirectory] Mongo fetch error, using JSON:", dbErr.message);
+      isDbHealthy = false;
     }
 
-    // Auto-seed if database is empty
-    if (!items || items.length === 0) {
+    // Only fallback to JSON if database connection failed, NOT when items array is legitimately empty
+    if (!isDbHealthy) {
       const fallbackList = readJsonDirectory();
-      if (fallbackList.length > 0) {
-        try {
-          const count = await CivicDirectoryItem.countDocuments();
-          if (count === 0) {
-            console.log(`[CivicDirectory] Seeding ${fallbackList.length} items into database...`);
-            await CivicDirectoryItem.insertMany(fallbackList);
-            items = await CivicDirectoryItem.find(filter).sort({ displayOrder: 1, createdAt: 1 }).lean();
-          }
-        } catch (_) {}
-
-        if (!items || items.length === 0) {
-          items = showAll ? fallbackList : fallbackList.filter((i) => i.isActive !== false);
-        }
-      }
+      items = showAll ? fallbackList : fallbackList.filter((i) => i.isActive !== false);
     }
 
     return res.status(200).json({

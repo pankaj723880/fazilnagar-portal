@@ -80,10 +80,17 @@ const DEFAULT_SERVICES = [
   },
 ];
 
+let hasCheckedServicesSeed = false;
 async function seedDefaultServicesIfEmpty() {
-  const count = await PublicService.countDocuments();
-  if (count === 0) {
-    await PublicService.insertMany(DEFAULT_SERVICES);
+  if (hasCheckedServicesSeed) return;
+  hasCheckedServicesSeed = true;
+  try {
+    const count = await PublicService.countDocuments();
+    if (count === 0) {
+      await PublicService.insertMany(DEFAULT_SERVICES);
+    }
+  } catch (err) {
+    console.warn("[Services] Seed check skipped:", err.message);
   }
 }
 

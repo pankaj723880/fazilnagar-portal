@@ -774,7 +774,7 @@ export async function getCivicDirectory(forceFresh = false, includeAll = false) 
     });
 
     const items = res.data?.items || (Array.isArray(res.data) ? res.data : []);
-    if (Array.isArray(items) && items.length > 0) {
+    if (Array.isArray(items)) {
       const normalized = items.map((i) => ({
         ...i,
         id: i.id || i._id || i.itemId,

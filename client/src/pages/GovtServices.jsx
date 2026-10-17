@@ -90,7 +90,7 @@ export default function GovtServices() {
   useEffect(() => {
     getPublicServices()
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setServices(data);
         }
       })

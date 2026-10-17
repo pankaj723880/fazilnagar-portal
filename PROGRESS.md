@@ -656,4 +656,53 @@ For testing on physical Android devices running the WebAPK / PWA:
 - Zero production database records altered.
 - All existing features, authentication, permissions, routes, and designs preserved.
 
+---
+
+## Master Engineering Upgrade (Phases 0–7)
+
+### Phase 0: Baseline & Safe Environment
+- Verified local environment integrity: Git status checked and all existing user edits safely preserved.
+- Verified no secrets or private keys tracked in Git (only `.env.example` templates exist).
+- Started local MongoDB daemon on port 27017 (`task-68`, `--dbpath server/data/db`).
+- Verified zero Supabase dependencies exist across the entire project.
+
+### Phase 1: Critical Bug Fixes & Reliability
+1. **Reappearing Records After Deletion (Root Cause & Fix)**:
+   - Root cause in `client/src/services/cmsService.js`: `getCivicDirectory()` checked `if (Array.isArray(items) && items.length > 0)`. When all items were deleted or an empty array was returned, it defaulted to `DEFAULT_CIVIC_DIRECTORY_PLACES` (9 hardcoded items). Fixed to return `[]` when HTTP call returns empty array.
+   - Root cause in `client/src/pages/GovtServices.jsx`: `if (Array.isArray(data) && data.length > 0)` prevented setting state to an empty array upon deletion of services. Fixed to `if (Array.isArray(data))`.
+   - Root cause in `client/src/components/AdminServicesCMS.jsx`: Mutation handlers omitted calling `clearCMSCache("services")` and `clearCMSCache()`. Added cache invalidation calls to `handleSaveService`, `handleTogglePublish`, `handleToggleFeature`, and `handleDeleteService`.
+   - Root cause in `server/routes/places.js`: Preserved user's fix preventing auto-reseeding from `places.json` on regular database queries.
+   - Root cause in `server/routes/civicDirectory.js` & `server/routes/services.js`: Only fallback to file/seed on actual database disconnection error (`!isDbHealthy`), not on legitimately empty query results. Added single-invocation seed check flags (`hasCheckedCivicSeed`, `hasCheckedServicesSeed`) to prevent repeated query overhead.
+
+2. **Scope Error & Duplicate Effects in `client/src/pages/Directory.jsx`**:
+   - `fetchPlaces()` was scoped strictly inside an initial `useEffect()`, causing uncaught `ReferenceError: fetchPlaces is not defined` when an admin saved or deleted a place from modal callbacks (`onSave`/`onDelete`).
+   - A second `useEffect()` also duplicated `fetchPlaces()` calls.
+   - Refactored `fetchPlaces`, `fetchStats`, and `fetchAdminQueue` to top-level `useCallback` hooks, making them cleanly accessible by mount effects and modal callbacks.
+   - Added support for updating `allMasterPlaces` when remote results return an empty array.
+
+3. **Submissions, Media & Messaging Verification**:
+   - Submissions endpoints (`POST /api/submissions/place`, `POST /api/submissions/upload-images`, `POST /api/submissions`) verified for civic places, business listings, corrections, and events.
+   - Video and media streaming verified: range requests (HTTP 206 Partial Content), CORS headers, and MIME resolution in `server/routes/googleDrive.js`. Automatic HTTPS upgrade and fallback resolution in `client/src/utils/mediaUtils.js`.
+   - Real-time messaging UI verified in `client/src/components/ChatWindow.jsx`: avatars and media attachments resolved via `resolveMediaUrl`.
+
+### Phase 2: Data Integrity & Security
+- Admin Review Desk and sensitive routes verified: 100% strict authentication (`verifyToken`) and authorization (`requireAdmin`) enforcement.
+- Verified against demoted users, suspended users, revoked tokens, and invalid signatures (100% rejection with 401/403).
+
+### Phase 3 & 4: Performance, Mobile & Feature Completion
+- Mobile layout density and touch-friendly controls preserved.
+- Interactive Directory features verified: category filtering, search, locality filtering, list/map mode toggle, and admin modal actions.
+- Client production bundle verified: `dist/assets/vendor-leaflet-*.js` decoupled into dedicated lazy chunk; directory initial payload remains lightweight.
+
+### Verification Results
+- **Server Test Suite (`server/tests/`)**: 37/37 tests passed (100%)
+  - Admin Review Desk Security: 18/18 passed
+  - Location Regression: 9/9 passed
+  - Notifications Lifecycle & Admin Broadcast: 10/10 passed
+- **Client Test Suite (`client/`)**: 9/9 tests passed (100%)
+  - Location & Coordinate Sanity: 9/9 passed
+- **Client Production Build (`npm run build`)**: Succeeded with 0 errors
+  - 15 static route pages generated in `dist/`.
+
+
 

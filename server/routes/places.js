@@ -50,37 +50,7 @@ router.get("/", async (req, res) => {
     if (sort === "newest") sortOption = { createdAt: -1 };
     if (sort === "category") sortOption = { category: 1, name: 1 };
 
-    let places = await Place.find(query).sort(sortOption);
-
-    // If database is empty or seeding, fallback gracefully to places.json
-    if (!places || places.length === 0) {
-      try {
-        const raw = fs.readFileSync(path.join(__dirname, "../data/places.json"), "utf8");
-        let localPlaces = JSON.parse(raw);
-        // Filter out archived
-        localPlaces = localPlaces.filter(p => !p.isArchived && p.isPublished !== false);
-
-        if (category && category !== "all" && category !== "All" && category !== "All Places") {
-          localPlaces = localPlaces.filter(p => p.category === category || p.subcategory === category);
-        }
-        if (locality && locality !== "all") {
-          localPlaces = localPlaces.filter(p => p.locality === locality);
-        }
-        if (search && search.trim()) {
-          const s = search.trim().toLowerCase();
-          localPlaces = localPlaces.filter(p =>
-            p.name.toLowerCase().includes(s) ||
-            p.category.toLowerCase().includes(s) ||
-            p.addressFull.toLowerCase().includes(s) ||
-            (p.streetOrLandmark && p.streetOrLandmark.toLowerCase().includes(s))
-          );
-        }
-        return res.status(200).json(localPlaces);
-      } catch (jsonErr) {
-        console.error("JSON fallback error:", jsonErr);
-      }
-    }
-
+    const places = await Place.find(query).sort(sortOption);
     res.status(200).json(places);
   } catch (err) {
     console.error("Fetch Places Error, serving from places.json:", err);

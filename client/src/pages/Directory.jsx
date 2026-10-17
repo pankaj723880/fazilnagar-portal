@@ -270,34 +270,73 @@ export default function Directory({ user }) {
     return filterPlaces(allMasterPlaces, selectedCategory, selectedLocality, debouncedSearch, sortBy);
   }, [allMasterPlaces, selectedCategory, selectedLocality, debouncedSearch, sortBy]);
 
-  // Resilient backend synchronization with zero crash on offline / network failure
   const [fetchError, setFetchError] = useState(null);
-  useEffect(() => {
-    let isMounted = true;
-    const fetchPlaces = async () => {
-      try {
-        setLoading(true);
-        const res = await API.get("/places");
-        if (isMounted && res.data && Array.isArray(res.data.places || res.data)) {
-          const remote = res.data.places || res.data;
-          if (remote.length > 0) {
-            setAllMasterPlaces(remote.filter((p) => !p.isArchived && p.isPublished !== false));
-          }
-        }
-      } catch (err) {
-        if (isMounted) {
-          console.warn("[Directory] Using verified local seed data:", err.message);
-          setFetchError("Displaying verified offline town directory.");
-        }
-      } finally {
-        if (isMounted) setLoading(false);
+
+  const fetchPlaces = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await API.get("/places");
+      const data = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.places)
+        ? res.data.places
+        : Array.isArray(res.data?.data)
+        ? res.data.data
+        : null;
+      if (Array.isArray(data)) {
+        setAllMasterPlaces(data.filter((p) => !p.isArchived && p.isPublished !== false));
+        setFetchError(null);
       }
-    };
-    fetchPlaces();
-    return () => {
-      isMounted = false;
-    };
+    } catch (err) {
+      console.warn("[Directory] Using verified local seed data:", err.message);
+      setFetchError("Displaying verified offline town directory.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await API.get("/places/stats/summary");
+      if (res.data && (res.data.total || res.data.published)) {
+        setStats(res.data);
+        return;
+      }
+    } catch (err) {
+      // ignore
+    }
+    const catMap = {};
+    seedPlaces.forEach((p) => {
+      catMap[p.category] = (catMap[p.category] || 0) + 1;
+    });
+    setStats({
+      total: seedPlaces.length,
+      published: seedPlaces.length,
+      inReview: 0,
+      categoryCounts: Object.keys(catMap).map((c) => ({ _id: c, count: catMap[c] })),
+    });
+  }, []);
+
+  const fetchAdminQueue = useCallback(async () => {
+    try {
+      const res = await API.get("/places/admin", {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      let data = Array.isArray(res.data) ? res.data : Array.isArray(res.data?.data) ? res.data.data : [];
+      if (data.length === 0) {
+        data = seedPlaces.filter((p) => p.isPublished === false);
+      }
+      setAdminQueuePlaces(data);
+    } catch (err) {
+      setAdminQueuePlaces(seedPlaces.filter((p) => p.isPublished === false));
+    }
+  }, []);
+
+  // Fetch verified places and stats on mount
+  useEffect(() => {
+    fetchPlaces();
+    fetchStats();
+  }, [fetchPlaces, fetchStats]);
 
   const placesRef = useRef(places);
   useEffect(() => {
@@ -351,64 +390,6 @@ export default function Directory({ user }) {
       setViewMode(view);
     }
   }, [searchParams]);
-
-  // Fetch verified places and stats on mount
-  useEffect(() => {
-    fetchPlaces();
-    fetchStats();
-  }, []);
-
-  const fetchPlaces = async () => {
-    try {
-      setLoading(true);
-      const res = await API.get("/places");
-      const data = Array.isArray(res.data) ? res.data : Array.isArray(res.data?.data) ? res.data.data : [];
-      if (data.length > 0) {
-        setAllMasterPlaces(data.filter((p) => !p.isArchived && p.isPublished !== false));
-      }
-    } catch (err) {
-      console.warn("API unavailable, keeping seed verified places:", err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const res = await API.get("/places/stats/summary");
-      if (res.data && (res.data.total || res.data.published)) {
-        setStats(res.data);
-        return;
-      }
-    } catch (err) {
-      // ignore
-    }
-    const catMap = {};
-    seedPlaces.forEach((p) => {
-      catMap[p.category] = (catMap[p.category] || 0) + 1;
-    });
-    setStats({
-      total: seedPlaces.length,
-      published: seedPlaces.length,
-      inReview: 0,
-      categoryCounts: Object.keys(catMap).map((c) => ({ _id: c, count: catMap[c] })),
-    });
-  };
-
-  const fetchAdminQueue = async () => {
-    try {
-      const res = await API.get("/places/admin", {
-        headers: { Authorization: `Bearer ${getAuthToken()}` },
-      });
-      let data = Array.isArray(res.data) ? res.data : Array.isArray(res.data?.data) ? res.data.data : [];
-      if (data.length === 0) {
-        data = seedPlaces.filter((p) => p.isPublished === false);
-      }
-      setAdminQueuePlaces(data);
-    } catch (err) {
-      setAdminQueuePlaces(seedPlaces.filter((p) => p.isPublished === false));
-    }
-  };
 
   const handleSelectPlace = (place) => {
     setSelectedPlace(place);

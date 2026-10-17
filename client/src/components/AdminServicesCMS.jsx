@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import API from "../api";
 import { getAuthToken } from "../utils/authStorage";
+import { clearCMSCache } from "../services/cmsService";
 import PageHeader from "./admin/PageHeader";
 import SearchAndFilters from "./admin/SearchAndFilters";
 import DataTable from "./admin/DataTable";
@@ -171,6 +172,8 @@ export default function AdminServicesCMS() {
           setServices((prev) =>
             prev.map((s) => (s._id === editingService._id ? res.data.service : s))
           );
+          clearCMSCache("services");
+          clearCMSCache();
           showToast("Service updated successfully!");
         }
       } else {
@@ -179,6 +182,8 @@ export default function AdminServicesCMS() {
         });
         if (res.data?.success) {
           setServices((prev) => [res.data.service, ...prev]);
+          clearCMSCache("services");
+          clearCMSCache();
           showToast("New civic service added!");
         }
       }
@@ -203,6 +208,8 @@ export default function AdminServicesCMS() {
       setServices((prev) =>
         prev.map((s) => (s._id === svc._id ? { ...s, isPublished: nextPub } : s))
       );
+      clearCMSCache("services");
+      clearCMSCache();
       showToast(`Service ${nextPub ? "published live" : "unpublished"}.`);
     } catch (err) {
       showToast("Failed to toggle status: " + err.message, "error");
@@ -221,6 +228,8 @@ export default function AdminServicesCMS() {
       setServices((prev) =>
         prev.map((s) => (s._id === svc._id ? { ...s, isFeatured: nextFeat } : s))
       );
+      clearCMSCache("services");
+      clearCMSCache();
       showToast(`Service ${nextFeat ? "marked featured" : "unfeatured"}.`);
     } catch (err) {
       showToast("Failed to toggle featured: " + err.message, "error");
@@ -235,6 +244,8 @@ export default function AdminServicesCMS() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setServices((prev) => prev.filter((s) => s._id !== deleteServiceId));
+      clearCMSCache("services");
+      clearCMSCache();
       showToast("Public service deleted.");
       setDeleteServiceId(null);
     } catch (err) {
