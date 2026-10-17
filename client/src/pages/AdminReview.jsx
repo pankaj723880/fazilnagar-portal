@@ -26,6 +26,8 @@ const AdminHomepageCMS = lazy(() => import("../components/AdminHomepageCMS"));  
 const AdminCustomNotifications = lazy(() => import("../components/admin/AdminCustomNotifications")); // Module 13: Notifications & Alerts
 const AdminCivicDirectoryCMS = lazy(() => import("../components/AdminCivicDirectoryCMS")); // Civic Directory Index CMS
 const AdminModerationCMS = lazy(() => import("../components/admin/AdminModerationCMS")); // Citizen Messaging Moderation CMS
+const AdminFormBuilder = lazy(() => import("../components/admin/AdminFormBuilder")); // Dynamic Form Builder
+const AdminContributionReview = lazy(() => import("../components/admin/AdminContributionReview")); // Public Contributions Review Desk
 
 function AdminTabSkeleton() {
   return (
@@ -77,6 +79,7 @@ export default function AdminReview({ user: propUser }) {
   const [newsCount, setNewsCount] = useState(0);
   const [civicCount, setCivicCount] = useState(0);
   const [usersCount, setUsersCount] = useState(0);
+  const [contributionsCount, setContributionsCount] = useState(0);
 
   // Synchronize Tab with URL
   const setActiveTab = (tabId) => {
@@ -122,13 +125,14 @@ export default function AdminReview({ user: propUser }) {
     const authHeaders = { Authorization: `Bearer ${token}` };
 
     try {
-      const [subRes, placesRes, adsRes, newsRes, usersRes, civicRes] = await Promise.allSettled([
+      const [subRes, placesRes, adsRes, newsRes, usersRes, civicRes, contribRes] = await Promise.allSettled([
         API.get("/submissions?status=pending", { headers: authHeaders }),
         API.get("/places/admin?archived=all", { headers: authHeaders }),
         API.get("/advertisements/admin", { headers: authHeaders }),
         API.get("/news/admin/all", { headers: authHeaders }),
         API.get("/users?limit=1", { headers: authHeaders }),
         API.get("/civic-directory?all=true", { headers: authHeaders }),
+        API.get("/contributions?status=pending", { headers: authHeaders }),
       ]);
 
       if (subRes.status === "fulfilled" && Array.isArray(subRes.value.data)) {
@@ -165,6 +169,14 @@ export default function AdminReview({ user: propUser }) {
             ? civicRes.value.data.length
             : 0);
         setCivicCount(count);
+      }
+      if (contribRes.status === "fulfilled" && contribRes.value.data) {
+        const cList = Array.isArray(contribRes.value.data.submissions)
+          ? contribRes.value.data.submissions
+          : Array.isArray(contribRes.value.data)
+          ? contribRes.value.data
+          : [];
+        setContributionsCount(cList.length);
       }
     } catch (err) {
       console.warn("Failed to load sidebar badge counts:", err);
@@ -335,6 +347,15 @@ export default function AdminReview({ user: propUser }) {
       case "audit":
         return <AdminAuditLogs />;
 
+      // E. Dynamic Public Contribution Form Builder & Review Desk
+      case "form-builder":
+      case "forms":
+        return <AdminFormBuilder token={getAuthToken()} />;
+
+      case "contributions-review":
+      case "contributions":
+        return <AdminContributionReview token={getAuthToken()} onStatsChange={fetchBadgeCounts} />;
+
       default:
         return (
           <AdminDashboardOverview
@@ -362,6 +383,7 @@ export default function AdminReview({ user: propUser }) {
       activeTab={activeTab}
       setActiveTab={setActiveTab}
       pendingCount={pendingCount}
+      contributionsCount={contributionsCount}
       entitiesCount={entitiesCount}
       liveAdsCount={liveAdsCount}
       newsCount={newsCount}

@@ -16,6 +16,8 @@ let cachedPublicPlaces = null;
 let cachedPublicPlacesTime = 0;
 let cachedStatsSummary = null;
 let cachedStatsSummaryTime = 0;
+let cachedMapEntities = null;
+let cachedMapEntitiesTime = 0;
 const PLACES_CACHE_TTL_MS = 60 * 1000; // 60s in-memory cache
 
 export function invalidatePlacesCache() {
@@ -23,7 +25,61 @@ export function invalidatePlacesCache() {
   cachedPublicPlacesTime = 0;
   cachedStatsSummary = null;
   cachedStatsSummaryTime = 0;
+  cachedMapEntities = null;
+  cachedMapEntitiesTime = 0;
 }
+
+// @route   GET /api/places/map-entities
+// @desc    Get all active map entities (villages, towns, cities, landmarks, hubs, civic establishments)
+// @access  Public
+router.get("/map-entities", async (req, res) => {
+  try {
+    if (cachedMapEntities && Date.now() - cachedMapEntitiesTime < PLACES_CACHE_TTL_MS) {
+      return res.status(200).json(cachedMapEntities);
+    }
+
+    const entities = await Place.find({
+      isPublished: { $ne: false },
+      isArchived: { $ne: true },
+      latitude: { $ne: null },
+      longitude: { $ne: null },
+    })
+      .sort({ sno: 1, name: 1 })
+      .lean();
+
+    if (entities && entities.length > 0) {
+      const mapped = entities.map((e) => ({
+        ...e,
+        id: e.id || String(e._id),
+        lat: Number(e.latitude),
+        lng: Number(e.longitude),
+        type: e.entityType || e.category || "village",
+        mapsUrl: e.mapsUrl || buildMapsUrl(e.latitude, e.longitude),
+      }));
+      cachedMapEntities = mapped;
+      cachedMapEntitiesTime = Date.now();
+      return res.status(200).json({ success: true, count: mapped.length, data: mapped });
+    }
+
+    // Fallback to static dataset if database is empty or still initializing
+    const regionalLocationsPath = path.resolve(__dirname, "../../client/src/data/regionalLocations.js");
+    if (fs.existsSync(regionalLocationsPath)) {
+      const { REGIONAL_LOCATIONS } = await import(`file://${regionalLocationsPath.replace(/\\/g, "/")}`);
+      return res.status(200).json({ success: true, count: REGIONAL_LOCATIONS.length, data: REGIONAL_LOCATIONS });
+    }
+
+    return res.status(200).json({ success: true, count: 0, data: [] });
+  } catch (err) {
+    console.error("Map Entities Fetch Error:", err);
+    try {
+      const regionalLocationsPath = path.resolve(__dirname, "../../client/src/data/regionalLocations.js");
+      const { REGIONAL_LOCATIONS } = await import(`file://${regionalLocationsPath.replace(/\\/g, "/")}`);
+      return res.status(200).json({ success: true, count: REGIONAL_LOCATIONS.length, data: REGIONAL_LOCATIONS });
+    } catch (_) {
+      res.status(500).json({ success: false, message: "Failed to fetch map entities." });
+    }
+  }
+});
 
 // @route   GET /api/places
 // @desc    Get published, verified town directory places
@@ -178,11 +234,22 @@ router.get("/stats/summary", async (req, res) => {
 });
 
 // @route   GET /api/places/admin
-// @desc    Get review queue & all moderation records
+// @desc    Get all map entities & directory records (searchable, filterable, paginated)
 // @access  Admin
 router.get("/admin", verifyToken, requireAdmin, async (req, res) => {
   try {
-    const { status, boundary, archived } = req.query;
+    const {
+      status,
+      boundary,
+      archived,
+      category,
+      entityType,
+      search,
+      page,
+      limit,
+      paginated,
+    } = req.query;
+
     const filter = {};
 
     if (archived === "only") {
@@ -197,8 +264,52 @@ router.get("/admin", verifyToken, requireAdmin, async (req, res) => {
     if (boundary && boundary !== "all") {
       filter.townBoundaryStatus = boundary;
     }
+    if (category && category !== "all") {
+      filter.category = category;
+    }
+    if (entityType && entityType !== "all") {
+      filter.entityType = entityType;
+    }
 
-    const places = await Place.find(filter).sort({ updatedAt: -1 }).lean();
+    if (search && search.trim()) {
+      const sanitized = String(search).trim().slice(0, 100);
+      const escaped = sanitized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(escaped, "i");
+      filter.$or = [
+        { name: regex },
+        { hindiName: regex },
+        { slug: regex },
+        { category: regex },
+        { entityType: regex },
+        { addressFull: regex },
+        { locality: regex },
+        { district: regex },
+      ];
+    }
+
+    const sortOption = { sno: 1, updatedAt: -1 };
+
+    // Support optional pagination
+    if (paginated === "true" || (page && limit)) {
+      const pageNum = Math.max(1, parseInt(page, 10) || 1);
+      const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 25));
+      const skip = (pageNum - 1) * limitNum;
+
+      const [total, places] = await Promise.all([
+        Place.countDocuments(filter),
+        Place.find(filter).sort(sortOption).skip(skip).limit(limitNum).lean(),
+      ]);
+
+      return res.status(200).json({
+        places,
+        total,
+        page: pageNum,
+        totalPages: Math.ceil(total / limitNum) || 1,
+        limit: limitNum,
+      });
+    }
+
+    const places = await Place.find(filter).sort(sortOption).lean();
     res.status(200).json(places);
   } catch (err) {
     console.error("Admin Places Error:", err);
@@ -331,18 +442,24 @@ function syncJsonPlaces(mutator) {
 }
 
 // @route   POST /api/places
-// @desc    Create an official place directly in directory
+// @desc    Create a map entity or official place directly in directory
 // @access  Private (Admin Only)
 router.post("/", verifyToken, requireAdmin, async (req, res) => {
   try {
     const {
       name,
       alternateNames,
+      hindiName,
+      entityType = "place",
+      sno,
       category,
       subcategory,
       description,
       addressFull,
       locality,
+      district,
+      state,
+      country,
       streetOrLandmark,
       latitude,
       longitude,
@@ -353,13 +470,49 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
       imageUrl,
       galleryUrls,
       sourceUrls,
-      isPublished = false,
+      coordinateSource,
+      distanceKm,
+      calculatedDistanceKm,
+      compassDirection,
+      distanceBand,
+      section,
+      isPublished = true,
       verificationStatus = "verified",
       townBoundaryStatus = "confirmed",
+      force = false,
     } = req.body;
 
-    if (!name || !category || !addressFull) {
-      return res.status(400).json({ message: "Name, category, and full address are required." });
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: "Entity name is required." });
+    }
+    if (!category || !category.trim()) {
+      return res.status(400).json({ message: "Category is required." });
+    }
+
+    // Duplicate check: Search for an existing entity before creating another with the same or similar name
+    const existingSimilar = await Place.findOne({
+      $or: [
+        { name: new RegExp(`^${name.trim()}$`, "i") },
+        { slug: name.toLowerCase().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-").replace(/^-+|-+$/g, "") },
+      ],
+      isArchived: { $ne: true },
+    });
+
+    if (existingSimilar && !force) {
+      return res.status(409).json({
+        message: `An entity with the name "${existingSimilar.name}" already exists (ID: ${existingSimilar.id || existingSimilar._id}). Provide 'force: true' if you explicitly intend to create a duplicate.`,
+        existingEntity: existingSimilar,
+      });
+    }
+
+    let coordinates;
+    try {
+      coordinates = normalizeCoordinates(latitude, longitude, {
+        allowNull: !isPublished,
+        enforceTownBounds: false,
+      });
+    } catch (coordinateError) {
+      return res.status(400).json({ message: coordinateError.message });
     }
 
     const cleanSlug = name
@@ -368,31 +521,33 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
       .replace(/[\s_-]+/g, "-")
       .replace(/^-+|-+$/g, "");
 
-    const customId = `fz-${category.slice(0, 3).toLowerCase()}-${Date.now().toString().slice(-4)}`;
-
-    let coordinates;
-    try {
-      coordinates = normalizeCoordinates(latitude, longitude, {
-        allowNull: !isPublished,
-        enforceTownBounds: Boolean(isPublished),
-      });
-    } catch (coordinateError) {
-      return res.status(400).json({ message: coordinateError.message });
-    }
+    const customId = req.body.id || `map-${(entityType || category).slice(0, 3).toLowerCase()}-${Date.now().toString().slice(-6)}`;
 
     const placeData = {
       id: customId,
-      name,
+      name: name.trim(),
+      hindiName: (hindiName || "").trim(),
       slug: cleanSlug,
       alternateNames: alternateNames || [],
-      category,
+      category: category.trim(),
+      entityType: entityType || "place",
+      sno: sno ? Number(sno) : null,
       subcategory: subcategory || "",
       description: description || "",
-      addressFull,
+      addressFull: addressFull || `${name.trim()}, ${locality || "Fazilnagar"}, ${district || "Kushinagar"}, ${state || "Uttar Pradesh"}`,
       locality: locality || "Fazilnagar Town",
+      district: district || "Kushinagar",
+      state: state || "Uttar Pradesh",
+      country: country || "India",
       streetOrLandmark: streetOrLandmark || "",
       latitude: coordinates.latitude,
       longitude: coordinates.longitude,
+      distanceKm: distanceKm !== undefined ? Number(distanceKm) : null,
+      calculatedDistanceKm: calculatedDistanceKm !== undefined ? Number(calculatedDistanceKm) : null,
+      compassDirection: compassDirection || "",
+      distanceBand: distanceBand || "",
+      section: section || "",
+      coordinateSource: coordinateSource || "Admin Geospatial Management",
       mapsUrl: coordinates.latitude === null ? "" : buildMapsUrl(coordinates.latitude, coordinates.longitude),
       phone: phone || "",
       website: website || "",
@@ -401,8 +556,8 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
       imageUrl: imageUrl || "",
       galleryUrls: galleryUrls || [],
       sourceUrls: sourceUrls || ["Admin/Portal Entry"],
-      verificationStatus: isPublished ? "verified" : verificationStatus,
-      townBoundaryStatus: isPublished ? "confirmed" : townBoundaryStatus,
+      verificationStatus: verificationStatus || "verified",
+      townBoundaryStatus: townBoundaryStatus || "confirmed",
       isPublished: Boolean(isPublished),
       isArchived: false,
       submissionSource: "official",
@@ -431,18 +586,18 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
     invalidatePlacesCache();
 
     res.status(201).json({
-      message: "Place created successfully in directory.",
+      message: "Map entity created successfully.",
       place: savedPlace,
     });
   } catch (err) {
     console.error("Submit Place Error:", err);
-    res.status(500).json({ message: "Failed to submit establishment candidate." });
+    res.status(500).json({ message: "Failed to create map entity: " + err.message });
   }
 });
 
 // @route   PUT /api/places/:id
-// @desc    Moderator update: verify, edit place details, coordinates, photos
-// @access  Public / Admin
+// @desc    Admin update: edit entity details, exact geographical coordinates, and status
+// @access  Private (Admin Only)
 router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
@@ -452,7 +607,7 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
       try {
         const coordinates = normalizeCoordinates(updateData.latitude, updateData.longitude, {
           allowNull: true,
-          enforceTownBounds: updateData.isPublished === true,
+          enforceTownBounds: false,
         });
         updateData.latitude = coordinates.latitude;
         updateData.longitude = coordinates.longitude;
@@ -460,8 +615,10 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
       } catch (coordinateError) {
         return res.status(400).json({ message: coordinateError.message });
       }
-    } else if (Object.prototype.hasOwnProperty.call(updateData, "mapsUrl")) {
-      delete updateData.mapsUrl;
+    } else if (Object.prototype.hasOwnProperty.call(updateData, "mapsUrl") && !updateData.mapsUrl) {
+      if (updateData.latitude && updateData.longitude) {
+        updateData.mapsUrl = buildMapsUrl(updateData.latitude, updateData.longitude);
+      }
     }
 
     if (updateData.isPublished === true) {
@@ -511,36 +668,53 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
     });
 
     if (!updated && !updatedInJson) {
-      return res.status(404).json({ message: "Establishment not found." });
+      return res.status(404).json({ message: "Entity not found." });
     }
 
     invalidatePlacesCache();
 
     res.status(200).json({
-      message: "Place updated successfully.",
+      message: "Map entity updated successfully.",
       place: updated,
     });
   } catch (err) {
     console.error("Update Place Error:", err);
-    res.status(500).json({ message: "Failed to update establishment." });
+    res.status(500).json({ message: "Failed to update map entity: " + err.message });
   }
 });
 
 // @route   DELETE /api/places/:id
-// @desc    Delete place from directory
-// @access  Public / Admin
+// @desc    Delete entity from directory with safeguards
+// @access  Private (Admin Only)
 router.delete("/:id", verifyToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    try {
-      if (id.match(/^[0-9a-fA-F]{24}$/)) {
-        await Place.findByIdAndDelete(id);
-      } else {
-        await Place.findOneAndDelete({ $or: [{ id }, { slug: id }] });
-      }
-    } catch (dbErr) {
-      console.warn("MongoDB delete error, continuing with JSON sync:", dbErr.message);
+
+    // Critical Safeguard: Protect Town Center Hub against accidental deletion
+    if (id === "fazilnagar-hub" || id === "loc-1-fazilnagar-centre") {
+      return res.status(400).json({
+        message: "The central Fazilnagar Hub cannot be deleted as it is the zero-km origin reference.",
+      });
     }
+
+    let placeToDelete = null;
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+      placeToDelete = await Place.findById(id);
+    } else {
+      placeToDelete = await Place.findOne({ $or: [{ id }, { slug: id }] });
+    }
+
+    if (!placeToDelete) {
+      return res.status(404).json({ message: "Entity not found." });
+    }
+
+    if (placeToDelete.id === "fazilnagar-hub" || placeToDelete.name === "Fazilnagar Centre") {
+      return res.status(400).json({
+        message: "The central Fazilnagar Hub cannot be deleted as it is the zero-km origin reference.",
+      });
+    }
+
+    await Place.findByIdAndDelete(placeToDelete._id);
 
     syncJsonPlaces((list) =>
       list.filter((p) => String(p.id) !== String(id) && String(p._id) !== String(id) && p.slug !== id)
@@ -548,10 +722,13 @@ router.delete("/:id", verifyToken, requireAdmin, async (req, res) => {
 
     invalidatePlacesCache();
 
-    res.status(200).json({ message: "Place removed from directory." });
+    res.status(200).json({
+      message: `Entity "${placeToDelete.name}" deleted successfully from map database.`,
+      deletedId: placeToDelete.id || placeToDelete._id,
+    });
   } catch (err) {
     console.error("Delete Place Error:", err);
-    res.status(500).json({ message: "Failed to remove establishment." });
+    res.status(500).json({ message: "Failed to remove entity: " + err.message });
   }
 });
 

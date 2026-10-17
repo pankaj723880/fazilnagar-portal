@@ -14,6 +14,7 @@ export default function AdminLayout({
   liveAdsCount = 0,
   newsCount = 0,
   civicCount = 0,
+  contributionsCount = 0,
   onRefresh = () => {},
   loading = false,
   toastMessage = "",
@@ -38,6 +39,7 @@ export default function AdminLayout({
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         pendingCount={calculatedPendingCount}
+        contributionsCount={contributionsCount}
         entitiesCount={entitiesCount}
         liveAdsCount={liveAdsCount}
         newsCount={newsCount}

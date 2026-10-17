@@ -57,9 +57,56 @@ export default function RegionalConnectivityMap() {
   const [currentZoom, setCurrentZoom] = useState(11);
   const [isBrowseOpen, setIsBrowseOpen] = useState(false);
   const [showTouchHint, setShowTouchHint] = useState(false);
+  const [locations, setLocations] = useState(REGIONAL_LOCATIONS);
   const touchHintTimeoutRef = useRef(null);
   const touchStartPosRef = useRef(null);
   const twoFingerCenterRef = useRef(null);
+
+  // Synchronize dynamic entities from backend API with fallback to static dataset
+  useEffect(() => {
+    let isMounted = true;
+    const fetchEntities = async () => {
+      try {
+        const res = await fetch("/api/places/map-entities");
+        if (!res.ok) return;
+        const resData = await res.json();
+        const rawList = Array.isArray(resData)
+          ? resData
+          : Array.isArray(resData?.data)
+          ? resData.data
+          : null;
+
+        if (isMounted && rawList && rawList.length > 0) {
+          const hub =
+            rawList.find(
+              (d) =>
+                d.id === "fazilnagar-hub" ||
+                d.slug === "fazilnagar-hub" ||
+                d.sno === 1 ||
+                (d.name && d.name.toLowerCase().includes("fazilnagar centre"))
+            ) || FAZILNAGAR_CENTRE;
+          const others = rawList.filter(
+            (d) => d.id !== hub.id && d.slug !== hub.slug && d.sno !== 1
+          );
+          setLocations([hub, ...others]);
+        }
+      } catch (err) {
+        console.warn("Using fallback static regional locations:", err);
+      }
+    };
+
+    fetchEntities();
+
+    const handlePlaceUpdate = () => {
+      fetchEntities();
+    };
+    window.addEventListener("fazilnagar-place-updated", handlePlaceUpdate);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener("fazilnagar-place-updated", handlePlaceUpdate);
+    };
+  }, []);
 
   // Geographic Straight-Line Distance Calculation via Haversine Formula
   const getHaversineDistance = useCallback((loc) => {
@@ -97,9 +144,10 @@ export default function RegionalConnectivityMap() {
 
   // Filtered dataset based on category tab, distance band, & search query
   const filteredLocations = useMemo(() => {
-    return REGIONAL_LOCATIONS.filter((loc) => {
+    return locations.filter((loc) => {
       // Always keep Fazilnagar Hub visible
-      if (loc.id === FAZILNAGAR_CENTRE.id) return true;
+      const isHub = loc.id === "fazilnagar-hub" || loc.id === FAZILNAGAR_CENTRE.id || loc.slug === "fazilnagar-hub" || loc.sno === 1 || (loc.name && loc.name.toLowerCase().includes("fazilnagar centre"));
+      if (isHub) return true;
 
       // Filter by category
       if (activeFilter !== "all" && loc.type !== activeFilter) {
@@ -107,7 +155,7 @@ export default function RegionalConnectivityMap() {
       }
 
       // Filter by distance band using actual straight-line Haversine distance
-      const dist = loc.calculatedStraightLineKm ?? loc.distanceKm ?? 0;
+      const dist = loc.calculatedStraightLineKm ?? loc.calculatedDistanceKm ?? loc.distanceKm ?? 0;
       if (activeDistanceBand === "le20km") {
         if (dist > 20) return false;
       } else if (activeDistanceBand === "le100km") {
@@ -131,7 +179,7 @@ export default function RegionalConnectivityMap() {
       // Filter by search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
-        const matchName = loc.name.toLowerCase().includes(q);
+        const matchName = loc.name?.toLowerCase().includes(q);
         const matchHindi = loc.hindiName && loc.hindiName.includes(q);
         const matchBlock = loc.block && loc.block.toLowerCase().includes(q);
         const matchType = loc.type && loc.type.toLowerCase().includes(q);
@@ -144,15 +192,16 @@ export default function RegionalConnectivityMap() {
 
       return true;
     });
-  }, [activeFilter, activeDistanceBand, searchQuery]);
+  }, [activeFilter, activeDistanceBand, searchQuery, locations]);
 
   // Instant Search Suggestions dropdown
   const searchSuggestions = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const q = searchQuery.toLowerCase().trim();
-    return REGIONAL_LOCATIONS.filter((loc) => {
-      if (loc.id === FAZILNAGAR_CENTRE.id) return false;
-      const matchName = loc.name.toLowerCase().includes(q);
+    return locations.filter((loc) => {
+      const isHub = loc.id === "fazilnagar-hub" || loc.id === FAZILNAGAR_CENTRE.id || loc.slug === "fazilnagar-hub" || loc.sno === 1 || (loc.name && loc.name.toLowerCase().includes("fazilnagar centre"));
+      if (isHub) return false;
+      const matchName = loc.name?.toLowerCase().includes(q);
       const matchHindi = loc.hindiName && loc.hindiName.includes(q);
       const matchBlock = loc.block && loc.block.toLowerCase().includes(q);
       const matchType = loc.type && loc.type.toLowerCase().includes(q);
@@ -160,15 +209,17 @@ export default function RegionalConnectivityMap() {
       const matchSno = String(loc.sno) === q;
       return matchName || matchHindi || matchBlock || matchType || matchCategory || matchSno;
     }).slice(0, 8);
-  }, [searchQuery]);
+  }, [searchQuery, locations]);
 
-  // Drawer Locations (All 117 supplied locations filtered by drawer search query)
+  // Drawer Locations (All supplied locations filtered by drawer search query)
   const drawerLocations = useMemo(() => {
-    let list = REGIONAL_LOCATIONS.filter((l) => l.id !== FAZILNAGAR_CENTRE.id);
+    let list = locations.filter((l) => {
+      return !(l.id === "fazilnagar-hub" || l.id === FAZILNAGAR_CENTRE.id || l.slug === "fazilnagar-hub" || l.sno === 1 || (l.name && l.name.toLowerCase().includes("fazilnagar centre")));
+    });
     if (drawerSearchQuery.trim()) {
       const q = drawerSearchQuery.toLowerCase().trim();
       list = list.filter((loc) => {
-        const matchName = loc.name.toLowerCase().includes(q);
+        const matchName = loc.name?.toLowerCase().includes(q);
         const matchHindi = loc.hindiName && loc.hindiName.includes(q);
         const matchCategory = loc.sourceCategory && loc.sourceCategory.toLowerCase().includes(q);
         const matchType = loc.type && loc.type.toLowerCase().includes(q);
@@ -178,35 +229,34 @@ export default function RegionalConnectivityMap() {
       });
     }
     return list;
-  }, [drawerSearchQuery]);
+  }, [drawerSearchQuery, locations]);
 
   // Counts by category and verification status
   const counts = useMemo(() => {
-    const villages = REGIONAL_LOCATIONS.filter((l) => l.type === "village").length;
-    const towns = REGIONAL_LOCATIONS.filter((l) => l.type === "town").length;
-    const cities = REGIONAL_LOCATIONS.filter((l) => l.type === "city").length;
-    const verified = REGIONAL_LOCATIONS.filter((l) => l.verificationStatus === "verified").length;
-    const unverified = REGIONAL_LOCATIONS.filter((l) => l.verificationStatus === "needs_verification").length;
+    const villages = locations.filter((l) => l.type === "village").length;
+    const towns = locations.filter((l) => l.type === "town").length;
+    const cities = locations.filter((l) => l.type === "city").length;
+    const verified = locations.filter((l) => l.verificationStatus === "verified").length;
+    const unverified = locations.filter((l) => l.verificationStatus === "needs_verification" || l.verificationStatus === "unverified").length;
     return {
-      all: REGIONAL_LOCATIONS.length,
+      all: locations.length,
       village: villages,
       town: towns,
       city: cities,
       verified,
       unverified,
     };
-  }, []);
+  }, [locations]);
 
-  // Open Google Maps Directions in new tab
-  const handleOpenDirections = (dest) => {
+  // Open Google Maps using exact saved numeric coordinates: https://www.google.com/maps/search/?api=1&query=LATITUDE%2CLONGITUDE
+  const handleOpenDirections = useCallback((dest) => {
     if (!dest) return;
-    const oLat = FAZILNAGAR_CENTRE.latitude ?? FAZILNAGAR_CENTRE.lat;
-    const oLng = FAZILNAGAR_CENTRE.longitude ?? FAZILNAGAR_CENTRE.lng;
-    const dLat = dest.latitude ?? dest.lat;
-    const dLng = dest.longitude ?? dest.lng;
-    const url = `https://www.google.com/maps/dir/?api=1&origin=${oLat},${oLng}&destination=${dLat},${dLng}&travelmode=driving`;
+    const lat = Number(dest.latitude ?? dest.lat);
+    const lng = Number(dest.longitude ?? dest.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    const url = `https://www.google.com/maps/search/?api=1&query=${lat}%2C${lng}`;
     window.open(url, "_blank", "noopener,noreferrer");
-  };
+  }, []);
 
   // Helper: Create custom icon for Fazilnagar Hub
   const createHubIcon = () => {
@@ -482,6 +532,28 @@ export default function RegionalConnectivityMap() {
     };
   }, []);
 
+  // Select location and smoothly frame connection
+  const handleSelectLocation = useCallback((loc) => {
+    setSelectedLocation(loc);
+    setHoveredLocation(null);
+    setShowSuggestions(false);
+    if (mapInstanceRef.current) {
+      const oLat = Number(FAZILNAGAR_CENTRE.latitude ?? FAZILNAGAR_CENTRE.lat);
+      const oLng = Number(FAZILNAGAR_CENTRE.longitude ?? FAZILNAGAR_CENTRE.lng);
+      const dLat = Number(loc.latitude ?? loc.lat);
+      const dLng = Number(loc.longitude ?? loc.lng);
+      const bounds = L.latLngBounds(
+        [oLat, oLng],
+        [dLat, dLng]
+      );
+      mapInstanceRef.current.fitBounds(bounds.pad(0.35), {
+        animate: true,
+        duration: 0.8,
+        maxZoom: 14,
+      });
+    }
+  }, []);
+
   // Render markers when filteredLocations, highlighted location, or zoom changes
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -491,8 +563,16 @@ export default function RegionalConnectivityMap() {
     layer.clearLayers();
 
     filteredLocations.forEach((loc) => {
-      const isHub = loc.id === FAZILNAGAR_CENTRE.id;
-      const isHighlighted = currentHighlight && currentHighlight.id === loc.id;
+      const isHub =
+        loc.id === "fazilnagar-hub" ||
+        loc.id === FAZILNAGAR_CENTRE.id ||
+        loc.slug === "fazilnagar-hub" ||
+        loc.sno === 1 ||
+        (loc.name && loc.name.toLowerCase().includes("fazilnagar centre"));
+      const isHighlighted =
+        currentHighlight &&
+        (currentHighlight.id === loc.id ||
+          (currentHighlight.sno && currentHighlight.sno === loc.sno));
 
       // At low zoom levels (zoom < 8) and without active filter/search, declutter villages to keep subcontinent clear
       const isFilteredActive = activeFilter !== "all" || activeDistanceBand !== "all" || Boolean(searchQuery.trim());
@@ -580,6 +660,11 @@ export default function RegionalConnectivityMap() {
               ${distanceInfo}
               <div><strong>Band:</strong> ${loc.distanceBand} &bull; ${loc.section}</div>
             </div>
+            <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end;">
+              <a href="https://www.google.com/maps/search/?api=1&query=${lat}%2C${lng}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 6px; background: #B8323C; color: #ffffff; font-size: 10px; font-weight: 700; text-decoration: none;">
+                Open in Google Maps ↗
+              </a>
+            </div>
           </div>
         `;
 
@@ -605,6 +690,11 @@ export default function RegionalConnectivityMap() {
               <div><strong>Category:</strong> कस्बा / ब्लॉक मुख्यालय</div>
               <div><strong>Coordinates:</strong> 26.6827° N, 84.0498° E</div>
               <div><strong>Role:</strong> Configured Town Center &amp; Zero-Km Reference Point</div>
+            </div>
+            <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end;">
+              <a href="https://www.google.com/maps/search/?api=1&query=26.6827%2C84.0498" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 6px; background: #B8323C; color: #ffffff; font-size: 10px; font-weight: 700; text-decoration: none;">
+                Open in Google Maps ↗
+              </a>
             </div>
           </div>
         `;
@@ -638,29 +728,7 @@ export default function RegionalConnectivityMap() {
 
       marker.addTo(layer);
     });
-  }, [filteredLocations, currentHighlight, currentZoom, getHaversineDistance]);
-
-  // Select location and smoothly frame connection
-  const handleSelectLocation = useCallback((loc) => {
-    setSelectedLocation(loc);
-    setHoveredLocation(null);
-    setShowSuggestions(false);
-    if (mapInstanceRef.current) {
-      const oLat = Number(FAZILNAGAR_CENTRE.latitude ?? FAZILNAGAR_CENTRE.lat);
-      const oLng = Number(FAZILNAGAR_CENTRE.longitude ?? FAZILNAGAR_CENTRE.lng);
-      const dLat = Number(loc.latitude ?? loc.lat);
-      const dLng = Number(loc.longitude ?? loc.lng);
-      const bounds = L.latLngBounds(
-        [oLat, oLng],
-        [dLat, dLng]
-      );
-      mapInstanceRef.current.fitBounds(bounds.pad(0.35), {
-        animate: true,
-        duration: 0.8,
-        maxZoom: 14,
-      });
-    }
-  }, []);
+  }, [filteredLocations, currentHighlight, currentZoom, getHaversineDistance, handleSelectLocation]);
 
   // Handle Animated Connection Line & Traveling Dot
   useEffect(() => {
@@ -1354,7 +1422,7 @@ export default function RegionalConnectivityMap() {
 
             {/* Drawer Footer */}
             <div className="p-3 bg-slate-950/80 border-t border-slate-800 text-center text-xs text-slate-400 flex items-center justify-between">
-              <span>Showing {drawerLocations.length} of {REGIONAL_LOCATIONS.length - 1} locations</span>
+              <span>Showing {drawerLocations.length} of {locations.length - 1} locations</span>
               <span className="text-amber-400/90 font-medium">Click any row to trace on map</span>
             </div>
           </div>

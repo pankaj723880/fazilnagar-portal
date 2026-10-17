@@ -22,12 +22,15 @@ import {
   ExternalLink,
   Globe,
   Flag,
+  FileText,
+  CheckSquare,
 } from "lucide-react";
 
 export default function AdminSidebar({
   activeTab,
   setActiveTab,
   pendingCount = 0,
+  contributionsCount = 0,
   entitiesCount = 19,
   liveAdsCount = 0,
   newsCount = 0,
@@ -137,6 +140,23 @@ export default function AdminSidebar({
           id: "drive",
           label: "Google Drive Storage",
           icon: HardDrive,
+        },
+      ],
+    },
+    {
+      title: "PUBLIC CONTRIBUTIONS",
+      items: [
+        {
+          id: "form-builder",
+          label: "Dynamic Form Builder",
+          icon: FileText,
+        },
+        {
+          id: "contributions-review",
+          label: "Contribution Review",
+          icon: CheckSquare,
+          badge: contributionsCount > 0 ? `${contributionsCount} New` : null,
+          badgeColor: "bg-amber-500 text-slate-950 font-black",
         },
       ],
     },

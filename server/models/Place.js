@@ -21,6 +21,22 @@ const placeSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    hindiName: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    entityType: {
+      type: String,
+      enum: ["village", "locality", "town", "city", "landmark", "hub", "place", "other"],
+      default: "place",
+      index: true,
+    },
+    sno: {
+      type: Number,
+      default: null,
+      index: true,
+    },
     category: {
       type: String,
       required: true,
@@ -38,12 +54,27 @@ const placeSchema = new mongoose.Schema(
     },
     addressFull: {
       type: String,
-      required: true,
+      default: "",
       trim: true,
     },
     locality: {
       type: String,
       default: "Fazilnagar Town",
+      trim: true,
+    },
+    district: {
+      type: String,
+      default: "Kushinagar",
+      trim: true,
+    },
+    state: {
+      type: String,
+      default: "Uttar Pradesh",
+      trim: true,
+    },
+    country: {
+      type: String,
+      default: "India",
       trim: true,
     },
     streetOrLandmark: {
@@ -58,6 +89,34 @@ const placeSchema = new mongoose.Schema(
     longitude: {
       type: Number,
       default: null,
+    },
+    distanceKm: {
+      type: Number,
+      default: null,
+    },
+    calculatedDistanceKm: {
+      type: Number,
+      default: null,
+    },
+    compassDirection: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    distanceBand: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    section: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    coordinateSource: {
+      type: String,
+      default: "",
+      trim: true,
     },
     mapsUrl: {
       type: String,
@@ -95,6 +154,8 @@ const placeSchema = new mongoose.Schema(
       type: String,
       enum: [
         "verified",
+        "needs_verification",
+        "unverified",
         "needs_address_verification",
         "needs_boundary_verification",
         "discovered",
@@ -169,8 +230,9 @@ const placeSchema = new mongoose.Schema(
 // High performance compound indexes for public directory searches and filters
 placeSchema.index({ isPublished: 1, isArchived: 1, townBoundaryStatus: 1 });
 placeSchema.index({ category: 1, isPublished: 1, isArchived: 1 });
+placeSchema.index({ entityType: 1, isPublished: 1 });
 
-// Helper method or pre-save hook for slug
+// Helper method or pre-save hook for slug and address
 placeSchema.pre("save", function (next) {
   if (!this.slug && this.name) {
     this.slug = this.name
@@ -178,6 +240,9 @@ placeSchema.pre("save", function (next) {
       .replace(/[^\w\s-]/g, "")
       .replace(/[\s_-]+/g, "-")
       .replace(/^-+|-+$/g, "");
+  }
+  if (!this.addressFull && this.name) {
+    this.addressFull = `${this.name}, ${this.locality || "Fazilnagar"}, ${this.district || "Kushinagar"}, ${this.state || "UP"}`;
   }
   next();
 });

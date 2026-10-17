@@ -177,11 +177,15 @@ import heritageRoutes from "./routes/heritage.js";
 import mediaRoutes from "./routes/media.js";
 import auditRoutes from "./routes/audit.js";
 import civicDirectoryRoutes from "./routes/civicDirectory.js";
+import formsRoutes from "./routes/forms.js";
+import contributionSubmissionsRoutes from "./routes/contributionSubmissions.js";
 import { authLimiter, writeLimiter, searchLimiter } from "./middleware/rateLimiter.js";
+import seedMapEntities from "./config/seedMapEntities.js";
 
 // Connect DB & Routes
 connectDB().then(() => {
   autoSeedPlaces();
+  seedMapEntities();
   seedAdminUser();
 });
 
@@ -189,6 +193,8 @@ app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/places", searchLimiter, placesRoutes);
 app.use("/api/submissions", writeLimiter, submissionsRoutes);
+app.use("/api/forms", formsRoutes);
+app.use("/api/contributions", writeLimiter, contributionSubmissionsRoutes);
 app.use("/api/advertisements", advertisementsRoutes);
 app.use("/api/google-drive", googleDriveRoutes);
 app.use("/api/users", usersRoutes);
@@ -208,6 +214,8 @@ app.use("/auth", authRoutes);
 app.use("/news", newsRoutes);
 app.use("/places", placesRoutes);
 app.use("/submissions", submissionsRoutes);
+app.use("/forms", formsRoutes);
+app.use("/contributions", writeLimiter, contributionSubmissionsRoutes);
 app.use("/advertisements", advertisementsRoutes);
 app.use("/google-drive", googleDriveRoutes);
 app.use("/users", usersRoutes);

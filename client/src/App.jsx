@@ -30,6 +30,7 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const AdminReview = lazy(() => import("./pages/AdminReview"));
 const Messages = lazy(() => import("./pages/Messages"));
 const ProfileEdit = lazy(() => import("./pages/ProfileEdit"));
+const PublicContributionForm = lazy(() => import("./pages/PublicContributionForm"));
 import AdminRoute from "./components/AdminRoute";
 import RequireMessagingAuth from "./components/RequireMessagingAuth";
 import InstallButton from "./components/InstallButton";
@@ -563,6 +564,10 @@ export default function App() {
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/disclaimer" element={<TermsOfService />} />
+
+              {/* Dynamic Public Contribution Forms */}
+              <Route path="/contribute/:slug" element={<PublicContributionForm />} />
+              <Route path="/forms/:slug" element={<PublicContributionForm />} />
 
               {/* Auth & Admin Routes */}
               <Route path="/login" element={<Login setUser={setUser} />} />
