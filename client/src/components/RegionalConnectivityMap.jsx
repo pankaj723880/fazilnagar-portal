@@ -24,6 +24,19 @@ import {
   Globe,
 } from "lucide-react";
 
+const FILTER_BANDS = [
+  { id: "all", label: "All Distances / सभी दूरियाँ" },
+  { id: "le20km", label: "≤ 20 km (Local Area)" },
+  { id: "le100km", label: "≤ 100 km (Regional Belt)" },
+  { id: "0-5km", label: "0–5 km" },
+  { id: "5-12km", label: "5–12 km" },
+  { id: "12-20km", label: "12–20 km" },
+  { id: "15-35km", label: "15–35 km" },
+  { id: "35-60km", label: "35–60 km" },
+  { id: "60-100km", label: "60–100 km" },
+  { id: "100plus", label: "100+ km" },
+];
+
 export default function RegionalConnectivityMap() {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -34,7 +47,9 @@ export default function RegionalConnectivityMap() {
   const animStartTimeRef = useRef(null);
 
   const [activeFilter, setActiveFilter] = useState("all"); // 'all' | 'village' | 'town' | 'city'
+  const [activeDistanceBand, setActiveDistanceBand] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [drawerSearchQuery, setDrawerSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [hoveredLocation, setHoveredLocation] = useState(null);
@@ -48,17 +63,27 @@ export default function RegionalConnectivityMap() {
 
   // Geographic Straight-Line Distance Calculation via Haversine Formula
   const getHaversineDistance = useCallback((loc) => {
+    if (loc?.calculatedDistanceKm !== undefined && loc?.calculatedDistanceKm !== null && !isNaN(loc.calculatedDistanceKm)) {
+      return Number(loc.calculatedDistanceKm);
+    }
+    if (loc?.calculatedStraightLineKm !== undefined && loc?.calculatedStraightLineKm !== null && !isNaN(loc.calculatedStraightLineKm)) {
+      return Number(loc.calculatedStraightLineKm);
+    }
     if (loc?.distanceKm !== undefined && loc?.distanceKm !== null && !isNaN(loc.distanceKm)) {
       return Number(loc.distanceKm);
     }
-    if (loc?.lat != null && loc?.lng != null && FAZILNAGAR_CENTRE?.lat != null && FAZILNAGAR_CENTRE?.lng != null) {
+    const lat = Number(loc?.latitude ?? loc?.lat);
+    const lng = Number(loc?.longitude ?? loc?.lng);
+    const oLat = Number(FAZILNAGAR_CENTRE?.latitude ?? FAZILNAGAR_CENTRE?.lat);
+    const oLng = Number(FAZILNAGAR_CENTRE?.longitude ?? FAZILNAGAR_CENTRE?.lng);
+    if (!isNaN(lat) && !isNaN(lng) && !isNaN(oLat) && !isNaN(oLng)) {
       const R = 6371; // Earth radius in km
-      const dLat = ((loc.lat - FAZILNAGAR_CENTRE.lat) * Math.PI) / 180;
-      const dLon = ((loc.lng - FAZILNAGAR_CENTRE.lng) * Math.PI) / 180;
+      const dLat = ((lat - oLat) * Math.PI) / 180;
+      const dLon = ((lng - oLng) * Math.PI) / 180;
       const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos((FAZILNAGAR_CENTRE.lat * Math.PI) / 180) *
-          Math.cos((loc.lat * Math.PI) / 180) *
+        Math.cos((oLat * Math.PI) / 180) *
+          Math.cos((lat * Math.PI) / 180) *
           Math.sin(dLon / 2) *
           Math.sin(dLon / 2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
@@ -70,15 +95,37 @@ export default function RegionalConnectivityMap() {
   // The location currently highlighted (hovered has transient priority, fallback to selected)
   const currentHighlight = hoveredLocation || selectedLocation;
 
-  // Filtered dataset based on category tab & search query
+  // Filtered dataset based on category tab, distance band, & search query
   const filteredLocations = useMemo(() => {
     return REGIONAL_LOCATIONS.filter((loc) => {
-      // Always keep Fazilnagar Hub
+      // Always keep Fazilnagar Hub visible
       if (loc.id === FAZILNAGAR_CENTRE.id) return true;
 
       // Filter by category
       if (activeFilter !== "all" && loc.type !== activeFilter) {
         return false;
+      }
+
+      // Filter by distance band using actual straight-line Haversine distance
+      const dist = loc.calculatedStraightLineKm ?? loc.distanceKm ?? 0;
+      if (activeDistanceBand === "le20km") {
+        if (dist > 20) return false;
+      } else if (activeDistanceBand === "le100km") {
+        if (dist > 100) return false;
+      } else if (activeDistanceBand === "0-5km") {
+        if (dist > 5) return false;
+      } else if (activeDistanceBand === "5-12km") {
+        if (dist <= 5 || dist > 12) return false;
+      } else if (activeDistanceBand === "12-20km") {
+        if (dist <= 12 || dist > 20) return false;
+      } else if (activeDistanceBand === "15-35km") {
+        if (dist < 15 || dist > 35) return false;
+      } else if (activeDistanceBand === "35-60km") {
+        if (dist <= 35 || dist > 60) return false;
+      } else if (activeDistanceBand === "60-100km") {
+        if (dist <= 60 || dist > 100) return false;
+      } else if (activeDistanceBand === "100plus") {
+        if (dist <= 100) return false;
       }
 
       // Filter by search query
@@ -88,12 +135,16 @@ export default function RegionalConnectivityMap() {
         const matchHindi = loc.hindiName && loc.hindiName.includes(q);
         const matchBlock = loc.block && loc.block.toLowerCase().includes(q);
         const matchType = loc.type && loc.type.toLowerCase().includes(q);
-        return matchName || matchHindi || matchBlock || matchType;
+        const matchCategory = loc.sourceCategory && loc.sourceCategory.toLowerCase().includes(q);
+        const matchDistrict = loc.district && loc.district.toLowerCase().includes(q);
+        const matchState = loc.state && loc.state.toLowerCase().includes(q);
+        const matchSno = String(loc.sno) === q;
+        return matchName || matchHindi || matchBlock || matchType || matchCategory || matchDistrict || matchState || matchSno;
       }
 
       return true;
     });
-  }, [activeFilter, searchQuery]);
+  }, [activeFilter, activeDistanceBand, searchQuery]);
 
   // Instant Search Suggestions dropdown
   const searchSuggestions = useMemo(() => {
@@ -105,27 +156,55 @@ export default function RegionalConnectivityMap() {
       const matchHindi = loc.hindiName && loc.hindiName.includes(q);
       const matchBlock = loc.block && loc.block.toLowerCase().includes(q);
       const matchType = loc.type && loc.type.toLowerCase().includes(q);
-      return matchName || matchHindi || matchBlock || matchType;
-    }).slice(0, 7);
+      const matchCategory = loc.sourceCategory && loc.sourceCategory.toLowerCase().includes(q);
+      const matchSno = String(loc.sno) === q;
+      return matchName || matchHindi || matchBlock || matchType || matchCategory || matchSno;
+    }).slice(0, 8);
   }, [searchQuery]);
 
-  // Counts by category
+  // Drawer Locations (All 117 supplied locations filtered by drawer search query)
+  const drawerLocations = useMemo(() => {
+    let list = REGIONAL_LOCATIONS.filter((l) => l.id !== FAZILNAGAR_CENTRE.id);
+    if (drawerSearchQuery.trim()) {
+      const q = drawerSearchQuery.toLowerCase().trim();
+      list = list.filter((loc) => {
+        const matchName = loc.name.toLowerCase().includes(q);
+        const matchHindi = loc.hindiName && loc.hindiName.includes(q);
+        const matchCategory = loc.sourceCategory && loc.sourceCategory.toLowerCase().includes(q);
+        const matchType = loc.type && loc.type.toLowerCase().includes(q);
+        const matchSno = String(loc.sno) === q || String(loc.sno).includes(q);
+        const matchBand = loc.distanceBand && loc.distanceBand.toLowerCase().includes(q);
+        return matchName || matchHindi || matchCategory || matchType || matchSno || matchBand;
+      });
+    }
+    return list;
+  }, [drawerSearchQuery]);
+
+  // Counts by category and verification status
   const counts = useMemo(() => {
     const villages = REGIONAL_LOCATIONS.filter((l) => l.type === "village").length;
     const towns = REGIONAL_LOCATIONS.filter((l) => l.type === "town").length;
     const cities = REGIONAL_LOCATIONS.filter((l) => l.type === "city").length;
+    const verified = REGIONAL_LOCATIONS.filter((l) => l.verificationStatus === "verified").length;
+    const unverified = REGIONAL_LOCATIONS.filter((l) => l.verificationStatus === "needs_verification").length;
     return {
       all: REGIONAL_LOCATIONS.length,
       village: villages,
       town: towns,
       city: cities,
+      verified,
+      unverified,
     };
   }, []);
 
   // Open Google Maps Directions in new tab
   const handleOpenDirections = (dest) => {
     if (!dest) return;
-    const url = `https://www.google.com/maps/dir/?api=1&origin=${FAZILNAGAR_CENTRE.lat},${FAZILNAGAR_CENTRE.lng}&destination=${dest.lat},${dest.lng}&travelmode=driving`;
+    const oLat = FAZILNAGAR_CENTRE.latitude ?? FAZILNAGAR_CENTRE.lat;
+    const oLng = FAZILNAGAR_CENTRE.longitude ?? FAZILNAGAR_CENTRE.lng;
+    const dLat = dest.latitude ?? dest.lat;
+    const dLng = dest.longitude ?? dest.lng;
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${oLat},${oLng}&destination=${dLat},${dLng}&travelmode=driving`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
@@ -212,16 +291,19 @@ export default function RegionalConnectivityMap() {
     // Individual names are always revealed via hover / tap tooltips or upon selection
     const isZoomedIn = zoom >= 14;
     const isZoomedOut = zoom < 11;
-    const color = isHighlighted ? "#B8323C" : "#475569";
+    const isNeedsVerification = loc.verificationStatus === "needs_verification";
+    const color = isHighlighted ? "#B8323C" : isNeedsVerification ? "#D97706" : "#475569";
     const size = isHighlighted ? 18 : isZoomedOut ? 6 : 8;
     const border = isHighlighted
       ? "border-2 border-white ring-2 ring-red-500/50"
+      : isNeedsVerification
+      ? "border-1 border-amber-300 ring-1 ring-amber-500/40"
       : isZoomedOut
       ? "border-1 border-slate-900"
       : "border-1 border-white/60";
 
     const labelHtml = (isZoomedIn || isHighlighted)
-      ? `<div class="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-slate-900/95 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-md border border-slate-700/80 pointer-events-none z-10">${loc.name}</div>`
+      ? `<div class="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-slate-900/95 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-md border ${isNeedsVerification ? "border-amber-500/80" : "border-slate-700/80"} pointer-events-none z-10">${loc.name}${isNeedsVerification ? " ⚠️" : ""}</div>`
       : "";
 
     const html = `
@@ -412,8 +494,9 @@ export default function RegionalConnectivityMap() {
       const isHub = loc.id === FAZILNAGAR_CENTRE.id;
       const isHighlighted = currentHighlight && currentHighlight.id === loc.id;
 
-      // At low zoom levels (zoom < 9), hide unhighlighted villages to keep regional/world view clear
-      if (loc.type === "village" && currentZoom < 9 && !isHighlighted) {
+      // At low zoom levels (zoom < 8) and without active filter/search, declutter villages to keep subcontinent clear
+      const isFilteredActive = activeFilter !== "all" || activeDistanceBand !== "all" || Boolean(searchQuery.trim());
+      if (loc.type === "village" && currentZoom < 8 && !isHighlighted && !isFilteredActive) {
         return;
       }
 
@@ -421,7 +504,13 @@ export default function RegionalConnectivityMap() {
         ? createHubIcon()
         : createLocationIcon(loc, isHighlighted, currentZoom);
 
-      const marker = L.marker([loc.lat, loc.lng], {
+      const lat = Number(loc.latitude ?? loc.lat);
+      const lng = Number(loc.longitude ?? loc.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        return;
+      }
+
+      const marker = L.marker([lat, lng], {
         icon,
         zIndexOffset: isHub ? 1000 : isHighlighted ? 900 : loc.type === "city" ? 500 : loc.type === "town" ? 400 : 100,
       });
@@ -432,6 +521,7 @@ export default function RegionalConnectivityMap() {
         const distText = dist !== null ? `${dist} km from Fazilnagar Centre` : "";
         const typeBadge = loc.type === "city" ? "City / शहर" : loc.type === "town" ? "Town / कस्बा" : "Village / गाँव";
         const badgeColor = loc.type === "city" ? "#6366F1" : loc.type === "town" ? "#10B981" : "#64748B";
+        const isVerified = loc.verificationStatus === "verified";
 
         const tooltipHtml = `
           <div style="font-family: inherit; min-width: 140px; text-align: left;">
@@ -445,7 +535,10 @@ export default function RegionalConnectivityMap() {
               ${loc.name}
             </div>
             ${loc.hindiName ? `<div style="font-size: 10px; color: #94A3B8; margin-top: 1px;">${loc.hindiName}</div>` : ""}
-            ${distText ? `<div style="font-size: 9px; color: #CBD5E1; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 3px;">📍 ${distText}</div>` : ""}
+            <div style="margin-top: 4px; font-size: 9px; font-weight: 700; color: ${isVerified ? '#4ADE80' : '#FBBF24'};">
+              ${isVerified ? '✓ Verified Settlement' : '⚠️ Candidate (Verification Pending)'}
+            </div>
+            ${distText ? `<div style="font-size: 9px; color: #CBD5E1; margin-top: 3px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 3px;">📍 ${distText}</div>` : ""}
           </div>
         `;
 
@@ -455,11 +548,78 @@ export default function RegionalConnectivityMap() {
           opacity: 1,
           className: "custom-location-preview-tooltip",
         });
+
+        // Informative Leaflet Popup (Accessible on mobile tap and desktop click)
+        const statusBadge = isVerified
+          ? `<span style="font-size: 8px; font-weight: 800; text-transform: uppercase; padding: 1px 5px; border-radius: 4px; background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC;">✓ Verified Settlement</span>`
+          : `<span style="font-size: 8px; font-weight: 800; text-transform: uppercase; padding: 1px 5px; border-radius: 4px; background: #FEF3C7; color: #B45309; border: 1px solid #FCD34D;">⚠️ Candidate (Needs Verification)</span>`;
+
+        const distanceInfo = loc.suppliedDistanceKm !== undefined && loc.calculatedDistanceKm !== undefined && loc.suppliedDistanceKm !== loc.calculatedDistanceKm
+          ? `<div><strong>Distances:</strong> ${loc.calculatedDistanceKm} km straight-line (Supplied: ${loc.suppliedDistanceKm} km)</div>`
+          : `<div><strong>Distance:</strong> ${dist} km straight-line (${loc.compassDirection} from Hub)</div>`;
+
+        const popupContent = `
+          <div style="font-family: inherit; font-size: 11px; color: #0f172a; max-width: 260px; line-height: 1.35; padding: 2px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
+              <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; background: ${badgeColor}; color: #fff;">
+                ${loc.type} &bull; SNO #${loc.sno}
+              </span>
+              <span style="font-size: 11px; font-weight: 800; color: #b45309; font-family: monospace;">
+                ${dist} km
+              </span>
+            </div>
+            <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin-top: 2px;">
+              ${loc.name}
+            </div>
+            ${loc.hindiName ? `<div style="font-size: 11px; color: #475569; font-weight: 600;">${loc.hindiName}</div>` : ""}
+            <div style="margin-top: 4px;">${statusBadge}</div>
+            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #334155; display: flex; flex-direction: column; gap: 3px;">
+              <div><strong>Category:</strong> ${loc.sourceCategory || loc.type}</div>
+              <div><strong>Coordinates:</strong> ${loc.sourceLatStr || loc.lat + '° N'}, ${loc.sourceLngStr || loc.lng + '° E'}</div>
+              <div><strong>Source:</strong> ${loc.coordinateSource || loc.source || 'Regional Dataset'}</div>
+              ${distanceInfo}
+              <div><strong>Band:</strong> ${loc.distanceBand} &bull; ${loc.section}</div>
+            </div>
+          </div>
+        `;
+
+        marker.bindPopup(popupContent, {
+          autoPan: true,
+          autoPanPadding: [15, 15],
+          closeButton: true,
+          maxWidth: 290,
+          className: "fazilnagar-custom-leaflet-popup",
+        });
+      } else {
+        const hubPopupContent = `
+          <div style="font-family: inherit; font-size: 11px; color: #0f172a; max-width: 250px; line-height: 1.35; padding: 2px;">
+            <div style="margin-bottom: 4px;">
+              <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; background: #B8323C; color: #fff;">
+                Central Hub &bull; SNO #1
+              </span>
+            </div>
+            <div style="font-size: 13px; font-weight: 800; color: #0f172a;">
+              Fazilnagar Centre (फाजिलनगर)
+            </div>
+            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #334155; display: flex; flex-direction: column; gap: 3px;">
+              <div><strong>Category:</strong> कस्बा / ब्लॉक मुख्यालय</div>
+              <div><strong>Coordinates:</strong> 26.6827° N, 84.0498° E</div>
+              <div><strong>Role:</strong> Configured Town Center &amp; Zero-Km Reference Point</div>
+            </div>
+          </div>
+        `;
+
+        marker.bindPopup(hubPopupContent, {
+          autoPan: true,
+          autoPanPadding: [15, 15],
+          closeButton: true,
+          maxWidth: 280,
+          className: "fazilnagar-custom-leaflet-popup",
+        });
       }
 
       // Click / Tap Handler
       marker.on("click", (e) => {
-        L.DomEvent.stopPropagation(e);
         if (isHub) {
           map.flyTo([FAZILNAGAR_CENTRE.lat, FAZILNAGAR_CENTRE.lng], 11, { duration: 0.8 });
           setSelectedLocation(null);
@@ -486,9 +646,13 @@ export default function RegionalConnectivityMap() {
     setHoveredLocation(null);
     setShowSuggestions(false);
     if (mapInstanceRef.current) {
+      const oLat = Number(FAZILNAGAR_CENTRE.latitude ?? FAZILNAGAR_CENTRE.lat);
+      const oLng = Number(FAZILNAGAR_CENTRE.longitude ?? FAZILNAGAR_CENTRE.lng);
+      const dLat = Number(loc.latitude ?? loc.lat);
+      const dLng = Number(loc.longitude ?? loc.lng);
       const bounds = L.latLngBounds(
-        [FAZILNAGAR_CENTRE.lat, FAZILNAGAR_CENTRE.lng],
-        [loc.lat, loc.lng]
+        [oLat, oLng],
+        [dLat, dLng]
       );
       mapInstanceRef.current.fitBounds(bounds.pad(0.35), {
         animate: true,
@@ -521,8 +685,14 @@ export default function RegionalConnectivityMap() {
       return;
     }
 
-    const startCoords = [FAZILNAGAR_CENTRE.lat, FAZILNAGAR_CENTRE.lng];
-    const endCoords = [currentHighlight.lat, currentHighlight.lng];
+    const startCoords = [
+      Number(FAZILNAGAR_CENTRE.latitude ?? FAZILNAGAR_CENTRE.lat),
+      Number(FAZILNAGAR_CENTRE.longitude ?? FAZILNAGAR_CENTRE.lng)
+    ];
+    const endCoords = [
+      Number(currentHighlight.latitude ?? currentHighlight.lat),
+      Number(currentHighlight.longitude ?? currentHighlight.lng)
+    ];
 
     // Check prefers-reduced-motion
     const prefersReducedMotion =
@@ -638,174 +808,199 @@ export default function RegionalConnectivityMap() {
   return (
     <div className="w-full bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
       {/* Top Controls Bar */}
-      <div className="p-4 sm:p-5 bg-slate-900/95 border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Category Tabs */}
-        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
-          <button
-            type="button"
-            onClick={() => setActiveFilter("all")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-              activeFilter === "all"
-                ? "bg-[#B8323C] text-white shadow-xs"
-                : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
-            }`}
-          >
-            <span>All Places</span>
-            <span className="text-[10px] bg-black/30 px-1.5 py-0.2 rounded-full">
-              {counts.all}
-            </span>
-          </button>
+      <div className="p-4 sm:p-5 bg-slate-900/95 border-b border-slate-800 flex flex-col gap-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          {/* Category Tabs */}
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+            <button
+              type="button"
+              onClick={() => setActiveFilter("all")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                activeFilter === "all"
+                  ? "bg-[#B8323C] text-white shadow-xs"
+                  : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+              }`}
+            >
+              <span>All Places</span>
+              <span className="text-[10px] bg-black/30 px-1.5 py-0.2 rounded-full">
+                {counts.all}
+              </span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveFilter("village")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-              activeFilter === "village"
-                ? "bg-[#B8323C] text-white shadow-xs"
-                : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
-            }`}
-          >
-            <span>Villages / गाँव</span>
-            <span className="text-[10px] bg-black/30 px-1.5 py-0.2 rounded-full">
-              {counts.village}
-            </span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveFilter("village")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                activeFilter === "village"
+                  ? "bg-[#B8323C] text-white shadow-xs"
+                  : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+              }`}
+            >
+              <span>Villages / गाँव</span>
+              <span className="text-[10px] bg-black/30 px-1.5 py-0.2 rounded-full">
+                {counts.village}
+              </span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveFilter("town")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-              activeFilter === "town"
-                ? "bg-[#B8323C] text-white shadow-xs"
-                : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
-            }`}
-          >
-            <span>Towns / कस्बे</span>
-            <span className="text-[10px] bg-black/30 px-1.5 py-0.2 rounded-full">
-              {counts.town}
-            </span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveFilter("town")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                activeFilter === "town"
+                  ? "bg-[#B8323C] text-white shadow-xs"
+                  : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+              }`}
+            >
+              <span>Towns / कस्बे</span>
+              <span className="text-[10px] bg-black/30 px-1.5 py-0.2 rounded-full">
+                {counts.town}
+              </span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveFilter("city")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-              activeFilter === "city"
-                ? "bg-[#B8323C] text-white shadow-xs"
-                : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
-            }`}
-          >
-            <span>Cities / शहर</span>
-            <span className="text-[10px] bg-black/30 px-1.5 py-0.2 rounded-full">
-              {counts.city}
-            </span>
-          </button>
-        </div>
-
-        {/* Search Input, Directory Button, and Reset Action */}
-        <div className="flex items-center gap-2 w-full md:w-auto relative">
-          <div className="relative flex-1 md:w-72">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setShowSuggestions(true);
-              }}
-              onFocus={() => setShowSuggestions(true)}
-              placeholder="Search village, town or city..."
-              className="w-full bg-slate-800/90 text-white placeholder-slate-400 text-xs pl-9 pr-8 py-2 rounded-xl border border-slate-700/80 focus:outline-hidden focus:border-[#B8323C] focus:ring-1 focus:ring-[#B8323C] transition"
-              aria-label="Search village, town or city"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery("");
-                  setShowSuggestions(false);
-                }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
-                aria-label="Clear search"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-
-            {/* Instant Suggestions Dropdown */}
-            {showSuggestions && searchQuery.trim() && searchSuggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1.5 z-40 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden divide-y divide-slate-800/80 animate-in fade-in slide-in-from-top-1 duration-150">
-                <div className="px-3 py-1.5 bg-slate-800/60 text-[10px] font-bold text-slate-400 flex items-center justify-between">
-                  <span>Matching Locations</span>
-                  <span>{searchSuggestions.length} found</span>
-                </div>
-                {searchSuggestions.map((sug) => (
-                  <button
-                    key={sug.id}
-                    type="button"
-                    onClick={() => handleSelectLocation(sug)}
-                    className="w-full px-3 py-2 text-left hover:bg-slate-800/90 flex items-center justify-between gap-2 transition cursor-pointer text-xs"
-                  >
-                    <div className="truncate">
-                      <div className="font-bold text-white truncate flex items-center gap-1.5">
-                        <span>{sug.name}</span>
-                        {sug.hindiName && (
-                          <span className="text-[10px] text-slate-400 font-normal">({sug.hindiName})</span>
-                        )}
-                      </div>
-                      <span className="text-[10px] text-slate-400">{sug.block} Block</span>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <span className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded ${
-                        sug.type === "city" ? "bg-indigo-900 text-indigo-200" :
-                        sug.type === "town" ? "bg-emerald-900 text-emerald-200" :
-                        "bg-slate-800 text-slate-300"
-                      }`}>
-                        {sug.type}
-                      </span>
-                      <div className="text-[10px] font-mono font-bold text-amber-400 mt-0.5">
-                        {sug.distanceKm} km
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={() => setActiveFilter("city")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                activeFilter === "city"
+                  ? "bg-[#B8323C] text-white shadow-xs"
+                  : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+              }`}
+            >
+              <span>Cities / शहर</span>
+              <span className="text-[10px] bg-black/30 px-1.5 py-0.2 rounded-full">
+                {counts.city}
+              </span>
+            </button>
           </div>
 
-          {/* Browse Directory Button */}
-          <button
-            type="button"
-            onClick={() => setIsBrowseOpen(true)}
-            className="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer border border-slate-700/80 flex items-center gap-1.5 text-xs font-bold shrink-0"
-            title="Browse all 126 villages & towns directory"
-          >
-            <ListFilter className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Directory</span>
-          </button>
+          {/* Search Input, Directory Button, and Reset Action */}
+          <div className="flex items-center gap-2 w-full md:w-auto relative">
+            <div className="relative flex-1 md:w-72">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                placeholder="Search village, town, city, or SNO..."
+                className="w-full bg-slate-800/90 text-white placeholder-slate-400 text-xs pl-9 pr-8 py-2 rounded-xl border border-slate-700/80 focus:outline-hidden focus:border-[#B8323C] focus:ring-1 focus:ring-[#B8323C] transition"
+                aria-label="Search village, town, city, or SNO"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setShowSuggestions(false);
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+                  aria-label="Clear search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
 
-          {/* World View / पूरी दुनिया Button */}
-          <button
-            type="button"
-            onClick={handleWorldView}
-            className="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer border border-slate-700/80 flex items-center gap-1.5 text-xs font-bold shrink-0"
-            title="World View / पूरी दुनिया (Zoom out to entire world)"
-            aria-label="World View / पूरी दुनिया"
-          >
-            <Globe className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden lg:inline">World View / पूरी दुनिया</span>
-          </button>
+              {/* Instant Suggestions Dropdown */}
+              {showSuggestions && searchQuery.trim() && searchSuggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1.5 z-40 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden divide-y divide-slate-800/80 animate-in fade-in slide-in-from-top-1 duration-150">
+                  <div className="px-3 py-1.5 bg-slate-800/60 text-[10px] font-bold text-slate-400 flex items-center justify-between">
+                    <span>Matching Locations</span>
+                    <span>{searchSuggestions.length} found</span>
+                  </div>
+                  {searchSuggestions.map((sug) => (
+                    <button
+                      key={sug.id}
+                      type="button"
+                      onClick={() => handleSelectLocation(sug)}
+                      className="w-full px-3 py-2 text-left hover:bg-slate-800/90 flex items-center justify-between gap-2 transition cursor-pointer text-xs"
+                    >
+                      <div className="truncate">
+                        <div className="font-bold text-white truncate flex items-center gap-1.5">
+                          <span className="text-[10px] text-amber-400 font-mono">#{sug.sno}</span>
+                          <span>{sug.name}</span>
+                          {sug.hindiName && (
+                            <span className="text-[10px] text-slate-400 font-normal">({sug.hindiName})</span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-slate-400">{sug.sourceCategory || sug.block}</span>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded ${
+                          sug.type === "city" ? "bg-indigo-900 text-indigo-200" :
+                          sug.type === "town" ? "bg-emerald-900 text-emerald-200" :
+                          "bg-slate-800 text-slate-300"
+                        }`}>
+                          {sug.type}
+                        </span>
+                        <div className="text-[10px] font-mono font-bold text-amber-400 mt-0.5">
+                          {sug.distanceKm} km
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
-          {/* Reset Map View */}
-          <button
-            type="button"
-            onClick={handleResetView}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer border border-slate-700/80 shrink-0"
-            title="Reset Map to Fazilnagar Centre"
-            aria-label="Reset Map View"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
+            {/* Browse Directory Button */}
+            <button
+              type="button"
+              onClick={() => setIsBrowseOpen(true)}
+              className="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer border border-slate-700/80 flex items-center gap-1.5 text-xs font-bold shrink-0"
+              title="Browse all 117 supplied locations directory"
+            >
+              <ListFilter className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Directory</span>
+            </button>
+
+            {/* World View / पूरी दुनिया Button */}
+            <button
+              type="button"
+              onClick={handleWorldView}
+              className="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer border border-slate-700/80 flex items-center gap-1.5 text-xs font-bold shrink-0"
+              title="World View / पूरी दुनिया (Zoom out to entire world)"
+              aria-label="World View / पूरी दुनिया"
+            >
+              <Globe className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden lg:inline">World View / पूरी दुनिया</span>
+            </button>
+
+            {/* Reset Map View */}
+            <button
+              type="button"
+              onClick={handleResetView}
+              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer border border-slate-700/80 shrink-0"
+              title="Reset Map to Fazilnagar Centre"
+              aria-label="Reset Map View"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Distance Band Filter Pills Row */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar text-xs border-t border-slate-800/80 pt-2.5">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1 mr-1">
+            <Compass className="w-3 h-3 text-[#B8323C]" />
+            Radius:
+          </span>
+          {FILTER_BANDS.map((band) => (
+            <button
+              key={band.id}
+              type="button"
+              onClick={() => setActiveDistanceBand(band.id)}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition whitespace-nowrap cursor-pointer ${
+                activeDistanceBand === band.id
+                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-xs"
+                  : "bg-slate-800/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent"
+              }`}
+            >
+              {band.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -826,6 +1021,15 @@ export default function RegionalConnectivityMap() {
           }
           .custom-location-preview-tooltip::before {
             border-top-color: rgba(15, 23, 42, 0.96) !important;
+          }
+          .fazilnagar-custom-leaflet-popup .leaflet-popup-content-wrapper {
+            background: #ffffff !important;
+            border-radius: 16px !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
+            padding: 4px 6px !important;
+          }
+          .fazilnagar-custom-leaflet-popup .leaflet-popup-tip {
+            background: #ffffff !important;
           }
           @keyframes previewTooltipFadeScale {
             0% {
@@ -894,10 +1098,10 @@ export default function RegionalConnectivityMap() {
           </button>
         </div>
 
-        {/* Verified Count Badge (Top Right) */}
+        {/* Verified & Candidate Count Badge (Top Right) */}
         <div className="absolute top-4 right-4 z-20 hidden sm:flex items-center gap-2 bg-slate-900/90 border border-slate-700 text-slate-200 text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>{filteredLocations.length} Verified Locations Mapped</span>
+          <span>{counts.verified} Verified &bull; {counts.unverified} Candidate</span>
         </div>
 
         {/* Empty Search Result State Overlay */}
@@ -938,10 +1142,10 @@ export default function RegionalConnectivityMap() {
                         : "bg-slate-700 text-slate-200"
                     }`}
                   >
-                    {currentHighlight.type}
+                    {currentHighlight.type} &bull; SNO #{currentHighlight.sno}
                   </span>
                   <span className="text-xs font-mono font-bold text-amber-400">
-                    {currentHighlight.distanceKm} km from Hub
+                    {currentHighlight.calculatedStraightLineKm ?? currentHighlight.distanceKm} km from Hub
                   </span>
                 </div>
                 <h4 className="text-sm sm:text-base font-extrabold text-white">
@@ -966,21 +1170,62 @@ export default function RegionalConnectivityMap() {
               )}
             </div>
 
-            <p className="text-[11px] text-slate-300 mt-2 leading-relaxed">
-              {currentHighlight.description ||
-                `Part of ${currentHighlight.block} Block, ${currentHighlight.district} district. Verified via ${currentHighlight.source || "Census of India 2011"}.`}
-            </p>
+            {/* Structured Location Metadata Box */}
+            <div className="mt-2.5 p-2.5 bg-slate-800/80 rounded-xl border border-slate-700/60 text-[11px] text-slate-300 space-y-1">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Category:</span>
+                <span className="font-semibold text-white truncate max-w-[200px]">{currentHighlight.sourceCategory}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Status:</span>
+                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                  currentHighlight.verificationStatus === "verified"
+                    ? "bg-emerald-950 text-emerald-300 border border-emerald-500/40"
+                    : "bg-amber-950 text-amber-300 border border-amber-500/40"
+                }`}>
+                  {currentHighlight.verificationStatus === "verified" ? "✓ Verified Settlement" : "⚠️ Needs Field Verification"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Coordinates:</span>
+                <span className="font-mono text-slate-200">
+                  {currentHighlight.sourceLatStr || (currentHighlight.latitude ?? currentHighlight.lat) + "° N"}, {currentHighlight.sourceLngStr || (currentHighlight.longitude ?? currentHighlight.lng) + "° E"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Source:</span>
+                <span className="text-slate-300 text-[10px] truncate max-w-[190px]" title={currentHighlight.coordinateSource || currentHighlight.source}>
+                  {currentHighlight.coordinateSource || currentHighlight.source || "Regional Dataset"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Straight-line:</span>
+                <span className="font-mono text-amber-400 font-bold">
+                  {currentHighlight.calculatedDistanceKm ?? currentHighlight.calculatedStraightLineKm ?? currentHighlight.distanceKm} km ({currentHighlight.compassDirection})
+                </span>
+              </div>
+              {currentHighlight.suppliedDistanceKm !== undefined && currentHighlight.calculatedDistanceKm !== undefined && currentHighlight.suppliedDistanceKm !== currentHighlight.calculatedDistanceKm && (
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">Supplied Dist:</span>
+                  <span className="font-mono text-slate-300">{currentHighlight.suppliedDistanceKm} km</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Band:</span>
+                <span className="text-slate-300">{currentHighlight.distanceBand} &bull; {currentHighlight.section}</span>
+              </div>
+            </div>
 
             <div className="mt-3 pt-2.5 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
               <span className="flex items-center gap-1 font-mono">
                 <Compass className="w-3.5 h-3.5 text-[#B8323C]" />
-                <span>Direction: {currentHighlight.compassDirection}</span>
+                <span>Bearing: {currentHighlight.compassDirection}</span>
               </span>
 
               <button
                 type="button"
                 onClick={() => handleOpenDirections(currentHighlight)}
-                className="inline-flex items-center gap-1 text-[#B8323C] hover:text-red-400 font-bold transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#B8323C] hover:bg-red-700 text-white font-bold transition cursor-pointer shadow-xs"
               >
                 <span>Google Maps</span>
                 <ExternalLink className="w-3 h-3" />
@@ -997,15 +1242,19 @@ export default function RegionalConnectivityMap() {
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#0D5E49]"></span>
-            <span>Towns</span>
+            <span>Towns ({counts.town})</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#4338CA]"></span>
-            <span>Cities</span>
+            <span>Cities ({counts.city})</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-            <span>Villages (126)</span>
+            <span>Verified Villages</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-500 border border-amber-300"></span>
+            <span>Candidate Villages ({counts.village})</span>
           </div>
         </div>
       </div>
@@ -1018,24 +1267,48 @@ export default function RegionalConnectivityMap() {
             <div className="p-4 border-b border-slate-800 flex items-center justify-between">
               <div>
                 <h3 className="text-base font-extrabold text-white">
-                  Fazilnagar Block &amp; Regional Directory
+                  Fazilnagar Regional Geospatial Directory
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  126 Verified Villages, 7 Towns, and 3 Cities
+                  117 Verified Locations (Villages, Towns, and Cities)
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsBrowseOpen(false)}
                 className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
+                aria-label="Close directory modal"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
+            {/* Drawer Search Filter */}
+            <div className="p-3 bg-slate-950/60 border-b border-slate-800/80">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={drawerSearchQuery}
+                  onChange={(e) => setDrawerSearchQuery(e.target.value)}
+                  placeholder="Filter 117 records by name, Hindi, SNO, category, band..."
+                  className="w-full bg-slate-800 text-white placeholder-slate-400 text-xs pl-8 pr-8 py-1.5 rounded-xl border border-slate-700/80 focus:outline-hidden focus:border-[#B8323C]"
+                />
+                {drawerSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setDrawerSearchQuery("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
             {/* Drawer Content List */}
             <div className="flex-1 overflow-y-auto p-3 space-y-1.5 divide-y divide-slate-800/60 custom-scrollbar">
-              {REGIONAL_LOCATIONS.filter((l) => l.id !== FAZILNAGAR_CENTRE.id).map((loc) => (
+              {drawerLocations.map((loc) => (
                 <button
                   key={loc.id}
                   type="button"
@@ -1047,13 +1320,14 @@ export default function RegionalConnectivityMap() {
                 >
                   <div className="truncate">
                     <div className="text-xs font-bold text-white group-hover:text-amber-400 transition truncate flex items-center gap-1.5">
-                      <span>{loc.name}</span>
+                      <span className="text-[10px] text-amber-400 font-mono font-bold shrink-0">#{loc.sno}</span>
+                      <span className="truncate">{loc.name}</span>
                       {loc.hindiName && (
-                        <span className="text-[10px] text-slate-400 font-normal">({loc.hindiName})</span>
+                        <span className="text-[10px] text-slate-400 font-normal truncate">({loc.hindiName})</span>
                       )}
                     </div>
-                    <p className="text-[10px] text-slate-400 truncate">
-                      {loc.block} Block &bull; {loc.district}
+                    <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                      {loc.sourceCategory} &bull; {loc.sourceLatStr || loc.lat + "° N"}, {loc.sourceLngStr || loc.lng + "° E"}
                     </p>
                   </div>
 
@@ -1063,7 +1337,7 @@ export default function RegionalConnectivityMap() {
                       loc.type === "town" ? "bg-emerald-900 text-emerald-200" :
                       "bg-slate-800 text-slate-300"
                     }`}>
-                      {loc.type}
+                      {loc.distanceBand}
                     </span>
                     <div className="text-xs font-mono font-bold text-amber-400 mt-0.5">
                       {loc.distanceKm} km {loc.compassDirection}
@@ -1071,11 +1345,17 @@ export default function RegionalConnectivityMap() {
                   </div>
                 </button>
               ))}
+              {drawerLocations.length === 0 && (
+                <div className="text-center py-8 text-xs text-slate-400">
+                  No records match "{drawerSearchQuery}"
+                </div>
+              )}
             </div>
 
             {/* Drawer Footer */}
-            <div className="p-3 bg-slate-950/80 border-t border-slate-800 text-center text-xs text-slate-400">
-              Tap any location to trace animated connectivity to Fazilnagar Hub
+            <div className="p-3 bg-slate-950/80 border-t border-slate-800 text-center text-xs text-slate-400 flex items-center justify-between">
+              <span>Showing {drawerLocations.length} of {REGIONAL_LOCATIONS.length - 1} locations</span>
+              <span className="text-amber-400/90 font-medium">Click any row to trace on map</span>
             </div>
           </div>
         </div>
