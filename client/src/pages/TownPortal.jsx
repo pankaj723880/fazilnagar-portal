@@ -592,6 +592,7 @@ export default function TownPortal() {
               onOpenAddPlace={() => setCommunityModalOpen(true)}
               onOpenCorrection={() => setModalType("correction")}
               onOpenEvent={() => setModalType("event")}
+              onOpenEditProfile={() => window.dispatchEvent(new CustomEvent("open-edit-profile"))}
             />
           </div>
         </div>

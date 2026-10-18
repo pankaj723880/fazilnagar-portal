@@ -928,7 +928,7 @@ export default function Directory({ user }) {
               </span>
             </div>
 
-            <p className="text-[11px] text-slate-500 mb-2">
+            <p className="text-[11px] text-slate-500 dark:text-[#E4E0D8] font-medium mb-2">
               Click any place below to zoom & highlight pin on map:
             </p>
 
@@ -942,25 +942,25 @@ export default function Directory({ user }) {
                     onClick={() => handleSelectPlace(place)}
                     className={`p-3 rounded-xl border transition cursor-pointer text-left ${
                       isSelected
-                        ? "border-blue-500 bg-blue-50/70 shadow-sm ring-1 ring-blue-400"
-                        : "border-slate-100 hover:border-slate-200 bg-slate-50/60 hover:bg-slate-50"
+                        ? "border-blue-500 bg-blue-50/70 shadow-sm ring-1 ring-blue-400 dark:bg-[#1E293B] dark:border-blue-400 dark:ring-blue-500/40"
+                        : "border-slate-100 hover:border-slate-200 bg-slate-50/60 hover:bg-slate-50 dark:bg-[#24242A] dark:border-[#38383E] dark:hover:border-[#52525C] dark:hover:bg-[#2C2C34]"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-1 mb-1">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded tracking-wide ${
                           isSelected
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-red-50 text-[#B8323C]"
+                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 dark:border dark:border-blue-700/80"
+                            : "bg-red-50 text-[#B8323C] border border-red-100/80 dark:bg-[#322A1E] dark:text-[#F3BA63] dark:border-[#5C4523]"
                         }`}>
                           {place.subcategory || place.category}
                         </span>
                         {isVerified && (
-                          <span className="text-[9px] font-semibold text-emerald-700 flex items-center gap-0.5">
-                            <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" /> Verified
+                          <span className="text-[9px] font-semibold text-emerald-700 dark:text-[#4ADE80] flex items-center gap-0.5">
+                            <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 dark:text-[#4ADE80]" /> Verified
                           </span>
                         )}
-                        <span className="text-[9px] text-slate-500 font-medium">
+                        <span className="text-[9px] text-slate-500 dark:text-[#E2DFD7] font-semibold">
                           • Updated {place.last_verified || (place.lastVerifiedAt ? place.lastVerifiedAt.split("T")[0] : "2026-10-14")}
                         </span>
                         {isAdmin && (
@@ -980,21 +980,21 @@ export default function Directory({ user }) {
                         )}
                       </div>
                       {isSelected && (
-                        <span className="text-[9px] font-bold text-blue-700 bg-blue-100/90 px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>
+                        <span className="text-[9px] font-bold text-blue-700 bg-blue-100/90 dark:bg-blue-900/80 dark:text-blue-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 animate-pulse"></span>
                           Pinned & Zoomed
                         </span>
                       )}
                     </div>
 
                     <h4 className={`text-xs font-bold leading-snug ${
-                      isSelected ? "text-blue-950 font-extrabold" : "text-slate-900"
+                      isSelected ? "text-blue-950 dark:text-[#93C5FD] font-extrabold" : "text-slate-900 dark:text-[#FFFFFF]"
                     }`}>
                       {place.name}
                     </h4>
 
-                    <p className="text-[11px] text-slate-500 mt-1 line-clamp-1 flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                    <p className="text-[11px] text-slate-500 dark:text-[#F5F1E9] font-medium mt-1 line-clamp-1 flex items-center gap-1">
+                      <MapPin className="w-3 h-3 text-slate-400 dark:text-[#F3BA63] shrink-0" />
                       <span>{place.streetOrLandmark || place.addressFull || place.locality}</span>
                     </p>
 
@@ -1083,7 +1083,7 @@ export default function Directory({ user }) {
         </div>
       ) : (
         /* List View (Single-Open Accordion Layout) */
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs divide-y divide-slate-100 overflow-hidden">
+        <div className="bg-white dark:bg-[#24242A] rounded-2xl border border-slate-200/90 dark:border-[#38383E] shadow-2xs divide-y divide-slate-100 dark:divide-[#38383E] overflow-hidden">
           {places.map((place) => {
             const entityId = place._id || place.id || place.slug;
             const isExpanded = expandedEntityId === entityId;
@@ -1096,7 +1096,7 @@ export default function Directory({ user }) {
                   type="button"
                   onClick={() => handleToggleAccordion(entityId)}
                   className={`w-full text-left px-3.5 py-3.5 sm:px-4 sm:py-3.5 min-h-[48px] flex items-center justify-between gap-3 transition cursor-pointer select-none group ${
-                    isExpanded ? "bg-slate-50/90" : "bg-white hover:bg-slate-50/60"
+                    isExpanded ? "bg-slate-50/90 dark:bg-[#1E1F24]" : "bg-white hover:bg-slate-50/60 dark:bg-[#24242A] dark:hover:bg-[#2C2C34]"
                   }`}
                   aria-expanded={isExpanded}
                   aria-controls={`details-${entityId}`}
@@ -1105,26 +1105,26 @@ export default function Directory({ user }) {
                     <span
                       className={`text-xs sm:text-sm truncate transition ${
                         isExpanded
-                          ? "text-[#B8323C] font-bold"
-                          : "text-slate-900 font-semibold group-hover:text-[#B8323C]"
+                          ? "text-[#B8323C] dark:text-[#F3BA63] font-bold"
+                          : "text-slate-900 dark:text-[#FFFFFF] font-semibold group-hover:text-[#B8323C] dark:group-hover:text-[#F3BA63]"
                       }`}
                     >
                       {place.name}
                     </span>
                     {place.subcategory ? (
-                      <span className="hidden sm:inline-block text-[11px] text-slate-400 font-normal truncate shrink-0">
+                      <span className="hidden sm:inline-block text-[11px] text-slate-400 dark:text-[#D5D0C5] font-normal truncate shrink-0">
                         • {place.subcategory}
                       </span>
                     ) : null}
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[10px] text-slate-400 font-medium hidden xs:inline-block max-w-[120px] truncate">
+                    <span className="text-[10px] text-slate-400 dark:text-[#D5D0C5] font-medium hidden xs:inline-block max-w-[120px] truncate">
                       {place.category}
                     </span>
                     <ChevronDown
-                      className={`w-4 h-4 text-slate-400 group-hover:text-slate-700 transition-transform duration-200 shrink-0 ${
-                        isExpanded ? "rotate-180 text-[#B8323C]" : ""
+                      className={`w-4 h-4 text-slate-400 dark:text-[#D5D0C5] group-hover:text-slate-700 dark:group-hover:text-white transition-transform duration-200 shrink-0 ${
+                        isExpanded ? "rotate-180 text-[#B8323C] dark:text-[#F3BA63]" : ""
                       }`}
                     />
                   </div>
@@ -1134,46 +1134,46 @@ export default function Directory({ user }) {
                 {isExpanded && (
                   <div
                     id={`details-${entityId}`}
-                    className="bg-slate-50/90 border-t border-slate-100 px-3.5 py-3.5 sm:px-4 sm:py-4 space-y-2.5 transition-all duration-200 animate-fade-in"
+                    className="bg-slate-50/90 dark:bg-[#1E1F24] border-t border-slate-100 dark:border-[#38383E] px-3.5 py-3.5 sm:px-4 sm:py-4 space-y-2.5 transition-all duration-200 animate-fade-in"
                   >
                     {/* Category tag & Verified badge */}
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-50 text-[#B8323C] border border-red-100">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-50 text-[#B8323C] border border-red-100 dark:bg-[#322A1E] dark:text-[#F3BA63] dark:border-[#5C4523]">
                           {place.category}
                         </span>
                         {place.subcategory && (
-                          <span className="text-[10px] font-medium text-slate-600 bg-slate-200/60 px-2 py-0.5 rounded">
+                          <span className="text-[10px] font-medium text-slate-600 bg-slate-200/60 px-2 py-0.5 rounded dark:bg-[#2C2C34] dark:text-[#D5D0C5] dark:border dark:border-[#42424C]">
                             {place.subcategory}
                           </span>
                         )}
                       </div>
 
                       {isVerified ? (
-                        <span className="text-[10px] text-[#0D5E49] font-bold flex items-center gap-1 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                          <CheckCircle2 className="w-3 h-3 text-[#0D5E49]" /> Verified Location
+                        <span className="text-[10px] text-[#0D5E49] dark:text-[#4ADE80] font-bold flex items-center gap-1 bg-emerald-50 border border-emerald-200 dark:bg-emerald-950/60 dark:border-emerald-800 px-2 py-0.5 rounded-full">
+                          <CheckCircle2 className="w-3 h-3 text-[#0D5E49] dark:text-[#4ADE80]" /> Verified Location
                         </span>
                       ) : (
-                        <span className="text-[10px] text-amber-800 font-bold flex items-center gap-1 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                          <AlertTriangle className="w-3 h-3 text-amber-700" /> Needs Verification
+                        <span className="text-[10px] text-amber-800 dark:text-amber-300 font-bold flex items-center gap-1 bg-amber-50 border border-amber-200 dark:bg-amber-950/60 dark:border-amber-800 px-2 py-0.5 rounded-full">
+                          <AlertTriangle className="w-3 h-3 text-amber-700 dark:text-amber-400" /> Needs Verification
                         </span>
                       )}
-                      <span className="text-[10px] text-slate-500 font-medium">
+                      <span className="text-[10px] text-slate-500 dark:text-[#E2DFD7] font-medium">
                         Last verified: {place.last_verified || (place.lastVerifiedAt ? place.lastVerifiedAt.split("T")[0] : "2026-10-14")} • Source: {place.source || place.submissionSource || (place.sourceUrls && place.sourceUrls[0]) || "Ground Survey"}
                       </span>
                     </div>
 
                     {/* Description */}
                     {place.description && (
-                      <p className="text-xs text-slate-600 leading-relaxed bg-white/80 p-2.5 rounded-xl border border-slate-200/60">
+                      <p className="text-xs text-slate-600 dark:text-[#F5F1E9] leading-relaxed bg-white/80 dark:bg-[#15161A] p-2.5 rounded-xl border border-slate-200/60 dark:border-[#38383E]">
                         {place.description}
                       </p>
                     )}
 
                     {/* Full Address */}
                     {(place.addressFull || place.streetOrLandmark) && (
-                      <div className="flex items-start gap-1.5 text-xs text-slate-700">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-1.5 text-xs text-slate-700 dark:text-[#F5F1E9] font-medium">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400 dark:text-[#F3BA63] shrink-0 mt-0.5" />
                         <span className="leading-snug">
                           {place.addressFull || place.streetOrLandmark}
                         </span>
@@ -1181,19 +1181,19 @@ export default function Directory({ user }) {
                     )}
 
                     {/* Opening Hours & Phone */}
-                    <div className="flex flex-wrap gap-y-1.5 gap-x-4 text-xs text-slate-600">
+                    <div className="flex flex-wrap gap-y-1.5 gap-x-4 text-xs text-slate-600 dark:text-[#E4E0D8]">
                       {place.openingHours && (
                         <div className="flex items-center gap-1.5">
-                          <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-[#F3BA63] shrink-0" />
                           <span>{place.openingHours}</span>
                         </div>
                       )}
                       {place.phone && (
                         <div className="flex items-center gap-1.5">
-                          <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <Phone className="w-3.5 h-3.5 text-slate-400 dark:text-[#F3BA63] shrink-0" />
                           <a
                             href={`tel:${place.phone.replace(/\s+/g, "")}`}
-                            className="text-[#0D5E49] hover:underline font-bold"
+                            className="text-[#0D5E49] dark:text-[#4ADE80] hover:underline font-bold"
                           >
                             {place.phone}
                           </a>

@@ -322,6 +322,7 @@ export default function MobileHomePortal({
   onOpenCorrection,
   onOpenEvent,
   onOpenAddListing,
+  onOpenEditProfile,
 }) {
   const navigate = useNavigate();
 
@@ -494,18 +495,26 @@ export default function MobileHomePortal({
           <ThemeToggle compact={true} />
           <NotificationCenter lightMode={true} subtleDot={true} />
           {authUser ? (
-            <Link
-              to={isAdmin ? "/admin/review" : "/news"}
-              className="flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200/80 transition text-slate-800"
-              title={isAdmin ? "Admin Console" : (authUser.name || authUser.email)}
+            <button
+              type="button"
+              onClick={() => {
+                if (onOpenEditProfile) {
+                  onOpenEditProfile();
+                } else {
+                  window.dispatchEvent(new CustomEvent("open-edit-profile"));
+                }
+              }}
+              className="flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200/80 transition text-slate-800 cursor-pointer shadow-2xs"
+              title={isAdmin ? "Admin Profile & Settings" : (authUser.name || authUser.email)}
+              aria-label={isAdmin ? "Admin Profile" : "User Profile"}
             >
-              <div className="w-6 h-6 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center shrink-0">
                 {isAdmin ? "A" : (authUser.name?.[0] || "U").toUpperCase()}
               </div>
               <span className="text-[10px] font-bold text-slate-700 max-w-[60px] truncate">
                 {isAdmin ? "Admin" : (authUser.name?.split(" ")[0] || "Citizen")}
               </span>
-            </Link>
+            </button>
           ) : (
             <Link
               to="/login"

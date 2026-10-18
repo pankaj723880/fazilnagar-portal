@@ -6,15 +6,8 @@ import { usePageSEO } from "../utils/seo";
 import { Camera, Save, ArrowLeft, Shield, Lock, CheckCircle2, AlertCircle, Phone } from "lucide-react";
 import { resolveMediaUrl } from "../utils/mediaUtils";
 
-// Mask email utility (ra****@gmail.com)
-export function maskEmail(email) {
-  if (!email || typeof email !== "string" || !email.includes("@")) return "";
-  const [local, domain] = email.split("@");
-  if (local.length <= 2) {
-    return `${local[0]}****@${domain}`;
-  }
-  return `${local.slice(0, 2)}****@${domain}`;
-}
+import { maskEmail } from "../utils/maskEmail";
+export { maskEmail };
 
 export default function ProfileEdit() {
   usePageSEO({

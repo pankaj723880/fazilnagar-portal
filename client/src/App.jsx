@@ -37,6 +37,7 @@ import RequireMessagingAuth from "./components/RequireMessagingAuth";
 import InstallButton from "./components/InstallButton";
 import ThemeToggle from "./components/ThemeToggle";
 import { useTheme } from "./context/ThemeContext";
+import EditProfileModal from "./components/EditProfileModal";
 const DirectionsModal = lazy(() => import("./components/DirectionsModal"));
 const NotificationCenter = lazy(() => import("./components/NotificationCenter"));
 const GlobalFloatingAndStickyAds = lazy(() =>
@@ -129,9 +130,17 @@ function CivicRouteSkeleton() {
 export default function App() {
   const { isDark } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [user, setUser] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Listen for global open profile events
+  useEffect(() => {
+    const handleOpenProfile = () => setIsProfileModalOpen(true);
+    window.addEventListener("open-edit-profile", handleOpenProfile);
+    return () => window.removeEventListener("open-edit-profile", handleOpenProfile);
+  }, []);
 
   // If on the Town Portal homepage, it renders full-width sections
   const isPortalPage =
@@ -421,9 +430,14 @@ export default function App() {
 
               {user ? (
                 <>
-                  <span className="text-xs font-bold text-[#168568] bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
-                    {user.role === "admin" ? "Admin" : (user.name || user.email)}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsProfileModalOpen(true)}
+                    className="text-xs font-bold text-[#168568] hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                    title={user.role === "admin" ? "Admin Profile & Settings" : "Edit Profile"}
+                  >
+                    <span>{user.role === "admin" ? "Admin 🛡️" : (user.name || user.email)}</span>
+                  </button>
                   <button
                     onClick={handleLogout}
                     className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer"
@@ -449,24 +463,37 @@ export default function App() {
               )}
             </div>
 
-            {/* Mobile Actions: Notification Bell + Theme Toggle + Messages + Review Desk + Add Story (Icon-Only Controls) */}
+            {/* Mobile Actions: Notification Bell + Theme Toggle + User/Admin Profile + Review Desk + Add Story */}
             <div className="flex sm:hidden items-center gap-1.5">
               <Suspense fallback={<div className="w-11 h-11 shrink-0" />}>
                 <NotificationCenter />
               </Suspense>
               <ThemeToggle />
-              <Link
-                to="/messages"
-                className={`min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl border flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-[#B8323C]/30 cursor-pointer ${
-                  location.pathname === "/messages"
-                    ? "bg-[#B8323C] text-white border-[#B8323C]"
-                    : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
-                }`}
-                aria-label="Town Messages"
-                title="Town Messages / नगर संवाद"
-              >
-                <MessageSquare className="w-5 h-5 text-slate-700" />
-              </Link>
+              {user ? (
+                <button
+                  type="button"
+                  onClick={() => setIsProfileModalOpen(true)}
+                  className="flex items-center gap-1 pl-1 pr-2 min-h-[44px] h-11 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200/80 transition text-slate-800 cursor-pointer shadow-2xs touch-manipulation"
+                  title={user.role === "admin" ? "Admin Profile & Settings" : (user.name || user.email)}
+                  aria-label={user.role === "admin" ? "Admin Profile" : "User Profile"}
+                >
+                  <div className="w-6 h-6 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center shrink-0">
+                    {user.role === "admin" ? "A" : (user.name?.[0] || "U").toUpperCase()}
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-700 max-w-[55px] truncate">
+                    {user.role === "admin" ? "Admin" : (user.name?.split(" ")[0] || "Citizen")}
+                  </span>
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition border border-slate-200/80 shadow-2xs touch-manipulation"
+                  title="Citizen Login"
+                  aria-label="Sign In"
+                >
+                  <span className="text-base">👤</span>
+                </Link>
+              )}
               {isAdmin && (
                 <Link
                   to="/admin/review"
@@ -484,7 +511,7 @@ export default function App() {
               <Link
                 to={user ? "/create-news" : "/login"}
                 state={!user ? { from: "/create-news", message: "Please log in to submit a local story." } : undefined}
-                className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#B8323C] hover:bg-red-700 text-white flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-[#B8323C]/50 cursor-pointer"
+                className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#B8323C] hover:bg-red-700 text-white flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-[#B8323C]/50 cursor-pointer touch-manipulation"
                 aria-label="Add Story"
                 title="Add Story"
               >
@@ -942,14 +969,19 @@ export default function App() {
                     <span>📍</span>
                     <span>Town Map</span>
                   </a>
-                  <Link
-                    to="/messages"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-emerald-50 text-emerald-950 hover:bg-emerald-100 border border-emerald-200/80 active:scale-95 transition"
-                  >
-                    <span>💬</span>
-                    <span>Chat / संवाद</span>
-                  </Link>
+                  {user && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setIsProfileModalOpen(true);
+                      }}
+                      className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-800 hover:bg-slate-100 border border-slate-200/70 active:scale-95 transition cursor-pointer text-left"
+                    >
+                      <span>👤</span>
+                      <span>Edit Profile / प्रोफ़ाइल</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Highlighted Banner: Admin Dashboard 🛡️ ADMIN DESK (Strictly Admin-Only) */}
@@ -1123,7 +1155,7 @@ export default function App() {
           ======================================================== */}
       {!isAdminPage && !isMessagesPage && (
         <nav className={`fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.07)] pb-[max(0.5rem,env(safe-area-inset-bottom))] ${isMobilePreview ? "block" : "sm:hidden"}`}>
-          <div className="max-w-[420px] mx-auto w-full px-2 py-1 flex items-center justify-around">
+          <div className="max-w-[420px] mx-auto w-full px-1 py-1 flex items-center justify-around">
             <NavLink
               to="/"
               end
@@ -1135,7 +1167,7 @@ export default function App() {
                 }
               }}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold touch-manipulation ${
+                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold touch-manipulation ${
                   isActive && location.pathname === "/"
                     ? "text-[#B8323C]"
                     : "text-slate-600 hover:text-slate-900"
@@ -1151,7 +1183,7 @@ export default function App() {
               onMouseEnter={() => prefetchRoute("/directory")}
               onTouchStart={() => prefetchRoute("/directory")}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold relative touch-manipulation ${
+                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold relative touch-manipulation ${
                   isActive || location.pathname.startsWith("/directory")
                     ? "text-[#B8323C]"
                     : "text-slate-600 hover:text-slate-900"
@@ -1160,23 +1192,23 @@ export default function App() {
             >
               <Compass className="w-5 h-5 mb-0.5" />
               <span>Directory</span>
-              <span className="absolute top-1.5 right-2.5 w-1.5 h-1.5 rounded-full bg-[#0D5E49]"></span>
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#0D5E49]"></span>
             </NavLink>
 
             <NavLink
-              to="/emergency"
-              onMouseEnter={() => prefetchRoute("/emergency")}
-              onTouchStart={() => prefetchRoute("/emergency")}
+              to="/messages"
+              onMouseEnter={() => prefetchRoute("/messages")}
+              onTouchStart={() => prefetchRoute("/messages")}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold touch-manipulation ${
-                  isActive
+                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold relative touch-manipulation ${
+                  isActive || location.pathname.startsWith("/messages")
                     ? "text-[#B8323C]"
                     : "text-slate-600 hover:text-slate-900"
                 }`
               }
             >
-              <PhoneCall className="w-5 h-5 mb-0.5 text-red-500" />
-              <span>24/7 Aid</span>
+              <MessageSquare className="w-5 h-5 mb-0.5" />
+              <span>Chat</span>
             </NavLink>
 
             <NavLink
@@ -1184,7 +1216,7 @@ export default function App() {
               onMouseEnter={() => prefetchRoute("/news")}
               onTouchStart={() => prefetchRoute("/news")}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold touch-manipulation ${
+                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold touch-manipulation ${
                   isActive
                     ? "text-[#B8323C]"
                     : "text-slate-600 hover:text-slate-900"
@@ -1195,10 +1227,26 @@ export default function App() {
               <span>Updates</span>
             </NavLink>
 
+            <NavLink
+              to="/emergency"
+              onMouseEnter={() => prefetchRoute("/emergency")}
+              onTouchStart={() => prefetchRoute("/emergency")}
+              className={({ isActive }) =>
+                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold touch-manipulation ${
+                  isActive
+                    ? "text-[#B8323C]"
+                    : "text-slate-600 hover:text-slate-900"
+                }`
+              }
+            >
+              <PhoneCall className="w-5 h-5 mb-0.5 text-red-500" />
+              <span>24/7 Aid</span>
+            </NavLink>
+
             <button
               type="button"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
-              className={`flex flex-col items-center justify-center min-w-[52px] min-h-[44px] py-1 px-2 rounded-xl transition text-[10px] font-bold cursor-pointer touch-manipulation ${
+              className={`flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold cursor-pointer touch-manipulation ${
                 mobileMenuOpen
                   ? "text-[#B8323C]"
                   : "text-slate-600 hover:text-slate-900"
@@ -1225,6 +1273,12 @@ export default function App() {
       <Suspense fallback={null}>
         <DirectionsModal />
       </Suspense>
+
+      {/* Global Edit Profile Modal (Popup Tab) */}
+      <EditProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+      />
     </div>
   );
 }

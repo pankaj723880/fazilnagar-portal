@@ -4,7 +4,7 @@ import API from "../api";
 import { usePageSEO } from "../utils/seo";
 import { getAuthUser, getAuthToken, setAuthSession, clearAuthSession } from "../utils/authStorage";
 import { initClientSocket, getSocket, playMessageChime } from "../socket";
-import { maskEmail } from "./ProfileEdit";
+import { maskEmail } from "../utils/maskEmail";
 import UserSearch from "../components/UserSearch";
 import ConversationList from "../components/ConversationList";
 import ChatWindow from "../components/ChatWindow";
@@ -34,6 +34,7 @@ import {
   Loader2,
   AlertCircle,
   Edit3,
+  ArrowLeft,
 } from "lucide-react";
 
 export default function Messages() {
@@ -551,6 +552,14 @@ export default function Messages() {
       {/* Top Bar */}
       <div className="flex items-center justify-between gap-3 pb-2.5 mb-2 border-b border-slate-200 shrink-0">
         <div className="flex items-center gap-2">
+          <Link
+            to="/"
+            className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-slate-200 transition flex items-center justify-center shrink-0 cursor-pointer"
+            title="Back to Town Portal / मुख्य पृष्ठ"
+            aria-label="Back to Portal"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#B8323C] text-white flex items-center justify-center shadow-xs">
               <MessageSquare className="w-4 h-4" />
