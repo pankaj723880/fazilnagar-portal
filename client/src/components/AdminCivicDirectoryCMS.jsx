@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import API from "../api";
 import { getAuthToken } from "../utils/authStorage";
 import { clearCMSCache } from "../services/cmsService";
@@ -93,14 +93,14 @@ export default function AdminCivicDirectoryCMS({ onStatsChange }) {
     setToast({ message, type });
   };
 
-  const fetchDirectory = async () => {
+  const fetchDirectory = async (triggerStatsChange = false) => {
     setLoading(true);
     try {
       const res = await API.get("/civic-directory?all=true");
       const list = res.data?.items || (Array.isArray(res.data) ? res.data : []);
       const sorted = [...list].sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
       setItems(sorted);
-      if (onStatsChange) onStatsChange();
+      if (triggerStatsChange && onStatsChange) onStatsChange();
     } catch (err) {
       console.warn("Failed to fetch civic directory index:", err);
       showToast("Could not load civic directory index.", "error");
@@ -253,7 +253,7 @@ export default function AdminCivicDirectoryCMS({ onStatsChange }) {
       clearCMSCache("civicDirectory");
       clearCMSCache();
       setModalOpen(false);
-      fetchDirectory();
+      fetchDirectory(true);
     } catch (err) {
       console.error("Save listing error:", err);
       showToast("Failed to save listing: " + (err.response?.data?.message || err.message), "error");
@@ -274,7 +274,7 @@ export default function AdminCivicDirectoryCMS({ onStatsChange }) {
       showToast(res.data?.message || `Listing visibility updated.`);
       clearCMSCache("civicDirectory");
       clearCMSCache();
-      fetchDirectory();
+      fetchDirectory(true);
     } catch (err) {
       console.error("Toggle active error:", err);
       showToast("Failed to toggle visibility.", "error");
@@ -330,7 +330,7 @@ export default function AdminCivicDirectoryCMS({ onStatsChange }) {
       clearCMSCache("civicDirectory");
       clearCMSCache();
       setDeleteItemId(null);
-      fetchDirectory();
+      fetchDirectory(true);
     } catch (err) {
       console.error("Delete error:", err);
       showToast("Failed to delete listing: " + (err.response?.data?.message || err.message), "error");
@@ -339,27 +339,34 @@ export default function AdminCivicDirectoryCMS({ onStatsChange }) {
     }
   };
 
-  // Filter listings
-  const filteredItems = items.filter((item) => {
-    if (categoryFilter !== "all" && item.category !== categoryFilter) {
-      return false;
-    }
-    if (statusFilter === "active" && item.isActive === false) return false;
-    if (statusFilter === "hidden" && item.isActive !== false) return false;
+  // Memoized filter listings
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      if (categoryFilter !== "all" && item.category !== categoryFilter) {
+        return false;
+      }
+      if (statusFilter === "active" && item.isActive === false) return false;
+      if (statusFilter === "hidden" && item.isActive !== false) return false;
 
-    if (search.trim()) {
-      const q = search.toLowerCase().trim();
-      const matchTitle = (item.title || "").toLowerCase().includes(q);
-      const matchSub = (item.subtitle || "").toLowerCase().includes(q);
-      const matchCat = (item.categoryLabel || "").toLowerCase().includes(q);
-      const matchPhone = (item.phone || "").toLowerCase().includes(q);
-      return matchTitle || matchSub || matchCat || matchPhone;
-    }
-    return true;
-  });
+      if (search.trim()) {
+        const q = search.toLowerCase().trim();
+        const matchTitle = (item.title || "").toLowerCase().includes(q);
+        const matchSub = (item.subtitle || "").toLowerCase().includes(q);
+        const matchCat = (item.categoryLabel || "").toLowerCase().includes(q);
+        const matchPhone = (item.phone || "").toLowerCase().includes(q);
+        return matchTitle || matchSub || matchCat || matchPhone;
+      }
+      return true;
+    });
+  }, [items, categoryFilter, statusFilter, search]);
 
-  const activeCount = items.filter((i) => i.isActive !== false).length;
-  const hiddenCount = items.length - activeCount;
+  const { activeCount, hiddenCount } = useMemo(() => {
+    let active = 0;
+    for (const i of items) {
+      if (i.isActive !== false) active++;
+    }
+    return { activeCount: active, hiddenCount: items.length - active };
+  }, [items]);
 
   return (
     <div className="space-y-6">

@@ -541,44 +541,45 @@ let livePollingInterval = null;
 let lastKnownVersion = null;
 let isLiveListening = false;
 
+const handleLocalEvent = (e) => triggerAll({ source: "local", detail: e.detail });
+const handleStorageEvent = (e) => {
+  if (e.key === "fazilnagar_cms_cache_bust") {
+    triggerAll({ source: "storage", stamp: e.newValue });
+  }
+};
+const handleVisibility = () => {
+  if (typeof document !== "undefined" && document.visibilityState === "visible") {
+    checkLiveServerVersion();
+  }
+};
+
+function triggerAll(info) {
+  clearCMSCache(undefined, false);
+  liveSubscribers.forEach((cb) => {
+    try {
+      cb(info);
+    } catch (err) {
+      console.warn("[LiveSync] Callback error:", err);
+    }
+  });
+}
+
 function setupLiveListeners() {
   if (isLiveListening || typeof window === "undefined") return;
   isLiveListening = true;
-
-  const triggerAll = (info) => {
-    clearCMSCache(undefined, false);
-    liveSubscribers.forEach((cb) => {
-      try {
-        cb(info);
-      } catch (err) {
-        console.warn("[LiveSync] Callback error:", err);
-      }
-    });
-  };
-
-  const handleLocalEvent = (e) => triggerAll({ source: "local", detail: e.detail });
-  const handleStorageEvent = (e) => {
-    if (e.key === "fazilnagar_cms_cache_bust") {
-      triggerAll({ source: "storage", stamp: e.newValue });
-    }
-  };
-  const handleVisibility = () => {
-    if (document.visibilityState === "visible") {
-      checkLiveServerVersion();
-    }
-  };
 
   window.addEventListener("cms-cache-cleared", handleLocalEvent);
   window.addEventListener("storage", handleStorageEvent);
   document.addEventListener("visibilitychange", handleVisibility);
   window.addEventListener("focus", handleVisibility);
 
-  // Background version check every 15s instead of aggressive per-component interval
-  livePollingInterval = setInterval(checkLiveServerVersion, 15000);
+  // Background version check every 30s when visible; immediate revalidation happens on visibilitychange
+  livePollingInterval = setInterval(checkLiveServerVersion, 30000);
 }
 
 async function checkLiveServerVersion() {
   if (liveSubscribers.size === 0) return;
+  if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
   try {
     const res = await API.get("/settings/live-version", {
       params: { _t: Date.now() },
@@ -614,10 +615,18 @@ export function subscribeToCMSLiveUpdates(callback) {
 
   return () => {
     liveSubscribers.delete(callback);
-    if (liveSubscribers.size === 0 && livePollingInterval) {
-      clearInterval(livePollingInterval);
-      livePollingInterval = null;
-      isLiveListening = false;
+    if (liveSubscribers.size === 0) {
+      if (livePollingInterval) {
+        clearInterval(livePollingInterval);
+        livePollingInterval = null;
+      }
+      if (isLiveListening && typeof window !== "undefined") {
+        window.removeEventListener("cms-cache-cleared", handleLocalEvent);
+        window.removeEventListener("storage", handleStorageEvent);
+        document.removeEventListener("visibilitychange", handleVisibility);
+        window.removeEventListener("focus", handleVisibility);
+        isLiveListening = false;
+      }
     }
   };
 }

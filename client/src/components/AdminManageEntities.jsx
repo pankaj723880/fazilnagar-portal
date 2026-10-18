@@ -226,12 +226,28 @@ export default function AdminManageEntities({ token: propToken, onStatsChange })
     setCurrentPage(1);
   }, [categoryFilter, statusFilter, search]);
 
-  // Statistics counters
-  const totalCount = places.length;
-  const villagesCount = places.filter((p) => p.category === "village" || p.entityType === "village" || p.type === "village").length;
-  const townsCitiesCount = places.filter((p) => p.type === "town" || p.type === "city" || p.category === "town" || p.category === "city").length;
-  const verifiedCount = places.filter((p) => p.verificationStatus === "verified" && !p.isArchived).length;
-  const needsReviewCount = places.filter((p) => (p.verificationStatus === "needs_verification" || p.verificationStatus === "discovered") && !p.isArchived).length;
+  // Statistics counters (single-pass memoized)
+  const { totalCount, villagesCount, townsCitiesCount, verifiedCount, needsReviewCount } = useMemo(() => {
+    let villages = 0;
+    let townsCities = 0;
+    let verified = 0;
+    let needsReview = 0;
+    for (const p of places) {
+      if (p.category === "village" || p.entityType === "village" || p.type === "village") villages++;
+      if (p.type === "town" || p.type === "city" || p.category === "town" || p.category === "city") townsCities++;
+      if (!p.isArchived) {
+        if (p.verificationStatus === "verified") verified++;
+        if (p.verificationStatus === "needs_verification" || p.verificationStatus === "discovered") needsReview++;
+      }
+    }
+    return {
+      totalCount: places.length,
+      villagesCount: villages,
+      townsCitiesCount: townsCities,
+      verifiedCount: verified,
+      needsReviewCount: needsReview,
+    };
+  }, [places]);
 
   const renderTypeBadge = (place) => {
     const type = place.entityType || place.type || place.category || "place";

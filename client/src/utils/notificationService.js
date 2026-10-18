@@ -227,6 +227,8 @@ export function getTrackedPhone() {
   }
 }
 
+let lastNotificationSignature = null;
+
 /**
  * Fetches notifications from backend and triggers OS popups ONLY for genuinely new, unread alerts.
  */
@@ -270,16 +272,20 @@ export async function fetchAndCheckNotifications({ triggerPopups = true } = {}) 
       }
     }
 
-    // Broadcast update event so all listening components re-render unread count
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent("fazilnagar-notifications-updated", {
-          detail: {
-            unreadCount: data.unreadCount || 0,
-            notifications,
-          },
-        })
-      );
+    // Broadcast update event ONLY if unreadCount or notifications list actually changed
+    const currentSig = `${data.unreadCount || 0}:${notifications.map((n) => `${n._id}:${n.isRead ? 1 : 0}`).join(",")}`;
+    if (currentSig !== lastNotificationSignature) {
+      lastNotificationSignature = currentSig;
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("fazilnagar-notifications-updated", {
+            detail: {
+              unreadCount: data.unreadCount || 0,
+              notifications,
+            },
+          })
+        );
+      }
     }
 
     return data;

@@ -216,7 +216,14 @@ export default function AdminPlaceEditModal({
       }
     }, 200);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+        markerRef.current = null;
+      }
+    };
   }, [isOpen]);
 
   // Synchronize map marker when manual lat/lng inputs change

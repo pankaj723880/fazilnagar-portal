@@ -167,14 +167,13 @@ export default function App() {
   const isAdminPage = location.pathname.startsWith("/admin");
   const isMessagesPage = location.pathname.startsWith("/messages");
 
-  const isAreaDetailsForm =
-    location.pathname === "/contribute/area-details" ||
-    location.pathname === "/forms/area-details" ||
-    location.pathname.replace(/\/+$/, "") === "/contribute/area-details" ||
-    location.pathname.replace(/\/+$/, "") === "/forms/area-details";
+  const isPublicFormPage =
+    !isAdminPage &&
+    (location.pathname.startsWith("/contribute") ||
+     location.pathname.startsWith("/forms"));
 
   const hideLayoutOnAreaDetails =
-    isAreaDetailsForm &&
+    isPublicFormPage &&
     Boolean(siteSettings?.contributionFormSettings?.hideNavbarAndFooter);
 
   const hasSubNav = DIRECTORY_SUB_NAV_PATHS.includes(location.pathname) && !isNewsPage;

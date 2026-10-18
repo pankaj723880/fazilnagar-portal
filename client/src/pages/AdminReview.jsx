@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { Link, useNavigate, useSearchParams, Navigate } from "react-router-dom";
 import API, { performLogout } from "../api";
 import { getAuthToken, getAuthUser, clearAuthSession, isUserAdmin } from "../utils/authStorage";
@@ -119,7 +119,7 @@ export default function AdminReview({ user: propUser }) {
   const isAdmin = Boolean(currentUser && currentUser.role === "admin" && isUserAdmin());
 
   // Fetch real count badges for sidebar concurrently (eliminates sequential waterfall)
-  const fetchBadgeCounts = async () => {
+  const fetchBadgeCounts = useCallback(async () => {
     if (!isAdmin) return;
     const token = getAuthToken();
     const authHeaders = { Authorization: `Bearer ${token}` };
@@ -181,7 +181,7 @@ export default function AdminReview({ user: propUser }) {
     } catch (err) {
       console.warn("Failed to load sidebar badge counts:", err);
     }
-  };
+  }, [isAdmin]);
 
   useEffect(() => {
     if (isAdmin) {

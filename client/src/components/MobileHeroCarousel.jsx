@@ -34,6 +34,7 @@ export default function MobileHeroCarousel({
     if (!autoplay || isPaused || totalSlides <= 1) return;
 
     const timer = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
       setCurrentIndex((prev) => (prev + 1) % totalSlides);
     }, Math.max(3000, interval));
 

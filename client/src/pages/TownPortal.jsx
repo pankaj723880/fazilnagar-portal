@@ -384,6 +384,7 @@ export default function TownPortal() {
     if (dynamicHeroSlides.length <= 1) return;
     if (siteSettings?.heroSettings?.enableAutoplay === false) return;
     const carouselTimer = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
       setHeroSlideIndex((prev) => (prev + 1) % dynamicHeroSlides.length);
     }, carouselInterval);
     return () => clearInterval(carouselTimer);

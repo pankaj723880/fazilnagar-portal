@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import API from "../api";
@@ -137,17 +137,17 @@ export default function AdminCommunityPlaces({ token: propToken, onStatsChange }
     });
   };
 
-  const filteredItems = submissions.filter((item) => {
-    if (!searchFilter.trim()) return true;
+  const filteredItems = useMemo(() => {
+    if (!searchFilter.trim()) return submissions;
     const q = searchFilter.trim().toLowerCase();
-    return (
+    return submissions.filter((item) => (
       item.name?.toLowerCase().includes(q) ||
       item.referenceId?.toLowerCase().includes(q) ||
       item.phone?.toLowerCase().includes(q) ||
       item.category?.toLowerCase().includes(q) ||
       item.locality?.toLowerCase().includes(q)
-    );
-  });
+    ));
+  }, [submissions, searchFilter]);
 
   return (
     <div className="space-y-6">
@@ -435,11 +435,12 @@ function SubmissionCard({
   onEdit,
   onPreviewImage,
 }) {
+  const [showInteractiveMap, setShowInteractiveMap] = useState(false);
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
 
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    if (!showInteractiveMap || !mapContainerRef.current) return;
 
     const lat = item.latitude;
     const lng = item.longitude;
@@ -453,10 +454,10 @@ function SubmissionCard({
       const map = L.map(mapContainerRef.current, {
         center: [lat, lng],
         zoom: 16,
-        dragging: false,
-        touchZoom: false,
+        dragging: true,
+        touchZoom: true,
         scrollWheelZoom: false,
-        zoomControl: false,
+        zoomControl: true,
       });
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -487,7 +488,7 @@ function SubmissionCard({
         mapInstanceRef.current = null;
       }
     };
-  }, [item.latitude, item.longitude]);
+  }, [showInteractiveMap, item.latitude, item.longitude]);
 
   const isLoading = actionLoadingId === item._id;
   const isInsideBoundary = isWithinTownBoundary(item.latitude, item.longitude);
@@ -640,8 +641,55 @@ function SubmissionCard({
               </span>
             </div>
 
-            <div className="relative w-full h-40 rounded-xl overflow-hidden border border-slate-200 shadow-2xs">
-              <div ref={mapContainerRef} className="w-full h-full z-10" />
+            <div className="relative w-full h-40 rounded-xl overflow-hidden border border-slate-200 shadow-2xs bg-slate-50 flex flex-col justify-center items-center">
+              {showInteractiveMap ? (
+                <>
+                  <div ref={mapContainerRef} className="w-full h-full z-10" />
+                  <button
+                    type="button"
+                    onClick={() => setShowInteractiveMap(false)}
+                    className="absolute top-2 right-2 z-20 bg-slate-900/80 hover:bg-slate-900 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs cursor-pointer"
+                  >
+                    Close Map
+                  </button>
+                </>
+              ) : (
+                <div className="p-3 text-center flex flex-col items-center justify-center gap-1.5 w-full h-full">
+                  <div className="p-2 rounded-full bg-red-100 text-[#B8323C]">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="font-mono text-xs font-bold text-slate-800 block">
+                      {item.latitude?.toFixed(5)}, {item.longitude?.toFixed(5)}
+                    </span>
+                    <span className="text-[10px] text-slate-500 block">
+                      {isInsideBoundary ? "Within Town Boundary" : "Outside Town Core"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowInteractiveMap(true)}
+                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-bold rounded-lg shadow-2xs transition cursor-pointer flex items-center gap-1"
+                    >
+                      <MapPin className="w-3 h-3 text-red-400" />
+                      <span>Preview Map</span>
+                    </button>
+                    {item.latitude && item.longitude && (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${item.latitude}%2C${item.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2 py-1 bg-white hover:bg-slate-100 text-slate-700 text-[10px] font-semibold rounded-lg border border-slate-200 transition flex items-center gap-1"
+                        title="Open in Google Maps"
+                      >
+                        <ExternalLink className="w-3 h-3 text-slate-500" />
+                        <span>Google Maps</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

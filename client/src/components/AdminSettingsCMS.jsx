@@ -696,7 +696,7 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
               {/* Group E: Contribution Form Layout */}
               <div>
                 <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
-                  E. Contribution Form Layout (/contribute/area-details)
+                  E. Public Contribution Forms Layout (/contribute/* &amp; /forms/*)
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   {(() => {
@@ -714,7 +714,7 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
                         <div className="min-w-0 pr-1">
                           <h5 className="text-xs font-bold truncate">Hide Navbar &amp; Footer</h5>
                           <p className="text-[10px] text-slate-500 truncate">
-                            {isEnabled ? "ON: Hidden on /contribute/area-details" : "OFF: Standard layout"}
+                            {isEnabled ? "ON: Hidden on all public forms" : "OFF: Standard layout (visible)"}
                           </p>
                         </div>
                         <div className={`w-9 h-5 rounded-full transition-colors relative shrink-0 ${isEnabled ? 'bg-amber-500' : 'bg-slate-300'}`}>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import API from "../../api";
 import { getAuthToken } from "../../utils/authStorage";
+import { clearCMSCache } from "../../services/cmsService";
 import {
   Plus,
   Edit,
@@ -87,17 +88,25 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
   const token = getAuthToken();
   const authHeaders = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
 
+  // Public Form Navbar & Footer Visibility State
+  const [hideNavbarAndFooter, setHideNavbarAndFooter] = useState(false);
+  const [updatingNavbarSetting, setUpdatingNavbarSetting] = useState(false);
+
   // Fetch catalog & forms on mount
   const fetchFormsAndCatalog = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const [catRes, formsRes] = await Promise.all([
+      const [catRes, formsRes, settingsRes] = await Promise.all([
         API.get("/forms/catalog", { headers: authHeaders }),
         API.get("/forms", { headers: authHeaders }),
+        API.get("/settings").catch(() => ({ data: { settings: {} } })),
       ]);
       setCatalog(catRes.data);
       setForms(Array.isArray(formsRes.data) ? formsRes.data : []);
+      if (settingsRes.data?.settings?.contributionFormSettings) {
+        setHideNavbarAndFooter(Boolean(settingsRes.data.settings.contributionFormSettings.hideNavbarAndFooter));
+      }
     } catch (err) {
       console.error("Failed to load forms:", err);
       setError(err.response?.data?.message || "Failed to load form builder data.");
@@ -105,6 +114,39 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
       setLoading(false);
     }
   }, [authHeaders]);
+
+  const handleToggleFormNavbar = async () => {
+    const nextVal = !hideNavbarAndFooter;
+    setUpdatingNavbarSetting(true);
+    try {
+      const res = await API.put(
+        "/settings",
+        {
+          contributionFormSettings: {
+            hideNavbarAndFooter: nextVal,
+          },
+        },
+        { headers: authHeaders }
+      );
+      if (res.data?.success || res.status === 200) {
+        setHideNavbarAndFooter(nextVal);
+        clearCMSCache("settings");
+        clearCMSCache();
+        setSuccessMessage(
+          nextVal
+            ? "Public Form Navbar & Footer turned OFF (Hidden on all public forms)."
+            : "Public Form Navbar & Footer turned ON (Visible on all public forms)."
+        );
+        setTimeout(() => setSuccessMessage(""), 4000);
+      }
+    } catch (err) {
+      console.error("Failed to update form navbar setting:", err);
+      setError(err.response?.data?.message || "Failed to update navbar setting.");
+      setTimeout(() => setError(""), 4000);
+    } finally {
+      setUpdatingNavbarSetting(false);
+    }
+  };
 
   useEffect(() => {
     fetchFormsAndCatalog();
@@ -137,6 +179,7 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
 
   // Handle open create modal
   const handleOpenCreate = () => {
+    setShareForm(null);
     setEditingFormId(null);
     const defaultFields =
       catalog?.allowedFields?.map?.slice(0, 5).map((f, idx) => ({
@@ -174,6 +217,7 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
 
   // Handle open edit modal
   const handleOpenEdit = (form) => {
+    setShareForm(null);
     setEditingFormId(form._id);
     setFormData({
       title: form.title || "",
@@ -363,6 +407,7 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
   };
 
   const handleOpenShare = (form) => {
+    setIsEditorOpen(false);
     setShareForm(form);
     setCopiedLink(false);
     setCopiedMessage(false);
@@ -458,6 +503,1039 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
     });
   }, [forms, moduleFilter, statusFilter, searchQuery]);
 
+  // Reusable Public Form Preview Modal
+  const renderPreviewModal = () => {
+    if (!previewForm) return null;
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in duration-150">
+          <div className="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2">
+              <Eye className="w-4 h-4 text-emerald-400" />
+              <h3 className="text-xs font-bold">Public Form Preview</h3>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPreviewForm(null)}
+              className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="p-6 overflow-y-auto flex-1 space-y-5">
+            <div className="border-b border-slate-200 pb-3">
+              <span className="text-[10px] font-black uppercase text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                {previewForm.targetModule === "map" ? "🗺️ Town Map" : "🏢 Town Directory"}
+              </span>
+              <h2 className="text-lg font-extrabold text-slate-900 mt-2">{previewForm.title}</h2>
+              <p className="text-xs text-slate-600 mt-1">{previewForm.description}</p>
+              {previewForm.instructions && (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-xl text-[11px] text-blue-900 leading-relaxed">
+                  ℹ️ <strong>Instructions:</strong> {previewForm.instructions}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-3.5">
+              {previewForm.fields?.map((f) => (
+                <div key={f.name}>
+                  <label className="block text-xs font-bold text-slate-800 mb-1">
+                    {f.label} {f.required && <span className="text-red-500">*</span>}
+                  </label>
+                  {f.description && <p className="text-[10px] text-slate-500 mb-1">{f.description}</p>}
+                  {f.type === "textarea" ? (
+                    <textarea
+                      disabled
+                      rows={2}
+                      className="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs opacity-75"
+                      placeholder="Citizen input area..."
+                    />
+                  ) : f.type === "select" ? (
+                    <select disabled className="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs opacity-75">
+                      <option>-- Select an option --</option>
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      disabled
+                      className="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs opacity-75"
+                      placeholder={f.name === "googleMapsUrl" ? "https://maps.google.com/..." : "Citizen input..."}
+                    />
+                  )}
+                </div>
+              ))}
+
+              {previewForm.attachmentsConfig?.enabled && (
+                <div className="p-4 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-center">
+                  <Upload className="w-6 h-6 text-slate-400 mx-auto mb-1" />
+                  <p className="text-xs font-bold text-slate-700">Attach Photos or Verification Proof</p>
+                  <p className="text-[10px] text-slate-500">
+                    Up to {previewForm.attachmentsConfig.maxFiles} files (max {previewForm.attachmentsConfig.maxSizeMb}MB each)
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+            <button
+              type="button"
+              onClick={() => setPreviewForm(null)}
+              className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-bold transition cursor-pointer"
+            >
+              Close Preview
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                const f = previewForm;
+                setPreviewForm(null);
+                handleOpenShare(f);
+              }}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0D5E49] hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span>Share This Form</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 1. FULL PAGE: Dynamic Form Creator / Generator Page
+  if (isEditorOpen) {
+    return (
+      <div className="space-y-6 pb-24 animate-in fade-in duration-150">
+        {/* Top Sticky Header & Action Bar */}
+        <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs sticky top-0 z-30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsEditorOpen(false)}
+              className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 rounded-xl transition cursor-pointer shrink-0"
+              title="Return to forms table"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to All Forms</span>
+            </button>
+            <div className="h-6 w-px bg-slate-200 hidden sm:block" />
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="p-2 rounded-xl bg-emerald-100 text-emerald-800 shrink-0">
+                <FileText className="w-5 h-5" />
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-base sm:text-lg font-extrabold text-slate-900 font-heading truncate">
+                  {editingFormId ? `Edit Form: ${formData.title || "Untitled"}` : "Create Dynamic Public Form"}
+                </h2>
+                <div className="flex items-center gap-2 mt-0.5 flex-wrap text-[11px] text-slate-500 font-medium">
+                  <span className="font-semibold text-emerald-700">
+                    {formData.targetModule === "map" ? "🗺️ Map Entity Form" : "🏢 Directory Entity Form"}
+                  </span>
+                  <span>&bull;</span>
+                  <span className="font-mono text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
+                    {formData.slug ? `/contribute/${formData.slug}` : "Auto-slug on save"}
+                  </span>
+                  <span>&bull;</span>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      formData.status === "published"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-slate-200 text-slate-700"
+                    }`}
+                  >
+                    {formData.status.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsEditorOpen(false)}
+              className="px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="form-generator-editor-form"
+              className="inline-flex items-center gap-2 px-5 py-2 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>{editingFormId ? "Save Changes" : "Create & Publish"}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Full-Page Form Body Container */}
+        <form id="form-generator-editor-form" onSubmit={handleSaveForm} className="space-y-6 max-w-5xl mx-auto">
+          {/* 1. Basic Details */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs space-y-4">
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+              <span className="p-1 rounded-lg bg-emerald-50 text-emerald-700">
+                <FileText className="w-4 h-4" />
+              </span>
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900">1. Basic Details</h3>
+                <p className="text-xs text-slate-500">Define the form title, URL slug, and public instructions for citizens.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Form Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="e.g. Propose Village Boundary & Coordinates"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Custom URL Slug (Optional)</label>
+                <input
+                  type="text"
+                  value={formData.slug}
+                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                  placeholder="Auto-generated if left blank"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Description</label>
+              <input
+                type="text"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Brief summary explaining what information this form collects..."
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Public Instructions</label>
+              <textarea
+                rows={3}
+                value={formData.instructions}
+                onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
+                placeholder="Provide helpful instructions for public contributors. Remind them to verify coordinates or places on Google Maps."
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition leading-relaxed"
+              />
+            </div>
+          </div>
+
+          {/* 2. Module & Scope */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs space-y-4">
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+              <span className="p-1 rounded-lg bg-emerald-50 text-emerald-700">
+                <Layers className="w-4 h-4" />
+              </span>
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900">2. Module &amp; Scope</h3>
+                <p className="text-xs text-slate-500">Determine whether this form attaches to Town Map entities or Town Directory listings.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Target Module *</label>
+                <select
+                  value={formData.targetModule}
+                  disabled={Boolean(editingFormId)}
+                  onChange={(e) => {
+                    const nextMod = e.target.value;
+                    const defaultType = nextMod === "map" ? "village" : "Schools & Colleges";
+                    const defaultCatalogFields = catalog?.allowedFields?.[nextMod] || [];
+                    setFormData({
+                      ...formData,
+                      targetModule: nextMod,
+                      entityType: defaultType,
+                      targetEntityId: "",
+                      targetEntityName: "",
+                      fields: defaultCatalogFields.slice(0, 5).map((f, i) => ({
+                        name: f.name,
+                        label: f.label,
+                        type: f.type,
+                        description: f.description || "",
+                        required: f.required || false,
+                        order: i,
+                        isEditableInCorrection: true,
+                      })),
+                    });
+                  }}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                >
+                  <option value="map">🗺️ Map Entities</option>
+                  <option value="directory">🏢 Directory</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Entity Type / Category *</label>
+                <select
+                  value={formData.entityType}
+                  onChange={(e) => setFormData({ ...formData, entityType: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                >
+                  {(catalog?.entityTypes?.[formData.targetModule] || []).map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Form Purpose *</label>
+                <select
+                  value={formData.purpose}
+                  onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                >
+                  <option value="both">Both New Records &amp; Corrections</option>
+                  <option value="correction">Corrections Only</option>
+                  <option value="new_entity">New Records Only</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Specific Entity Selection for Correction Forms */}
+            {formData.purpose !== "new_entity" && (
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                <label className="block text-xs font-bold text-slate-800">
+                  Target Specific Existing Record (Optional — for record-specific updates)
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={entitySearch}
+                    onChange={(e) => setEntitySearch(e.target.value)}
+                    placeholder={`Search existing ${formData.targetModule === "map" ? "villages/localities" : "directory places"}...`}
+                    className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+
+                <select
+                  value={formData.targetEntityId}
+                  onChange={(e) => {
+                    const chosen = availableEntities.find((ent) => ent.id === e.target.value);
+                    setFormData({
+                      ...formData,
+                      targetEntityId: e.target.value,
+                      targetEntityName: chosen ? chosen.name : "",
+                    });
+                  }}
+                  className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                >
+                  <option value="">-- Allow user to select record at submission time --</option>
+                  {availableEntities.map((ent) => (
+                    <option key={ent.id} value={ent.id}>
+                      {ent.name} {ent.hindiName ? `(${ent.hindiName})` : ""} &bull; {ent.category}
+                    </option>
+                  ))}
+                </select>
+                {formData.targetEntityName && (
+                  <p className="text-[11px] text-emerald-700 font-semibold">
+                    Selected Target: {formData.targetEntityName} (ID: {formData.targetEntityId})
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* 3. Dynamic Field Builder */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900">3. Configured Fields</h3>
+                <p className="text-xs text-slate-500">
+                  Build dynamic fields with custom labels, input types, coordinate constraints, and ordering.
+                </p>
+              </div>
+
+              {/* Add Schema Field Dropdown */}
+              <div className="flex items-center gap-2 shrink-0">
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleAddField(e.target.value);
+                      e.target.value = "";
+                    }
+                  }}
+                  className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold focus:outline-none cursor-pointer transition shadow-2xs"
+                >
+                  <option value="">+ Add Schema Field...</option>
+                  {(catalog?.allowedFields?.[formData.targetModule] || []).map((f) => (
+                    <option
+                      key={f.name}
+                      value={f.name}
+                      disabled={formData.fields.some((ex) => ex.name === f.name)}
+                    >
+                      {f.label} ({f.name})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Dedicated Geospatial Field Quick-Add Toolbar */}
+            <div className="p-3.5 bg-gradient-to-r from-emerald-50/70 via-blue-50/50 to-rose-50/60 rounded-xl border border-slate-200 flex flex-wrap items-center gap-2.5 text-xs">
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                <MapPin className="w-4 h-4 text-[#0D5E49]" />
+                <span>Quick-Add Location Fields:</span>
+              </span>
+
+              <button
+                type="button"
+                onClick={() => handleAddField("latitude")}
+                disabled={formData.fields.some((f) => f.name === "latitude")}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg font-bold text-xs shadow-2xs transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                title="Add Latitude field (-90 to 90 degrees)"
+              >
+                <Globe className="w-3.5 h-3.5 text-emerald-600" />
+                <span>+ Latitude (-90 to 90)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleAddField("longitude")}
+                disabled={formData.fields.some((f) => f.name === "longitude")}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-blue-50 text-blue-800 border border-blue-200 rounded-lg font-bold text-xs shadow-2xs transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                title="Add Longitude field (-180 to 180 degrees)"
+              >
+                <Compass className="w-3.5 h-3.5 text-blue-600" />
+                <span>+ Longitude (-180 to 180)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleAddField("googleMapsUrl")}
+                disabled={formData.fields.some((f) => f.name === "googleMapsUrl")}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-rose-50 text-rose-800 border border-rose-200 rounded-lg font-bold text-xs shadow-2xs transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                title="Add Google Maps Location Link field (Google Maps only)"
+              >
+                <MapPin className="w-3.5 h-3.5 text-rose-600" />
+                <span>+ Google Maps Location Link</span>
+              </button>
+            </div>
+
+            {/* Configured Fields List */}
+            <div className="space-y-3">
+              {formData.fields.length === 0 ? (
+                <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-300 text-slate-500 text-xs">
+                  No fields added yet. Choose a schema field above or use Quick-Add Location Fields.
+                </div>
+              ) : (
+                formData.fields.map((field, idx) => (
+                  <div
+                    key={field.name}
+                    className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs transition ${
+                      field.type === "latitude"
+                        ? "bg-emerald-50/40 border-emerald-200"
+                        : field.type === "longitude"
+                        ? "bg-blue-50/40 border-blue-200"
+                        : field.type === "googleMapsUrl"
+                        ? "bg-rose-50/40 border-rose-200"
+                        : "bg-slate-50 border-slate-200"
+                    }`}
+                  >
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-[10px] bg-slate-200 px-2 py-0.5 rounded text-slate-700 font-bold">
+                          #{idx + 1}
+                        </span>
+                        <input
+                          type="text"
+                          value={field.label}
+                          onChange={(e) => handleFieldChange(idx, "label", e.target.value)}
+                          className="font-bold text-slate-800 bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs w-48 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                          placeholder="Field Label"
+                        />
+                        <span className="text-[10px] text-slate-500 font-mono">({field.name})</span>
+
+                        {/* Configurable Field Type Selector */}
+                        <select
+                          value={field.type}
+                          onChange={(e) => handleFieldChange(idx, "type", e.target.value)}
+                          className={`text-xs font-bold px-2.5 py-1 rounded-lg border focus:outline-none cursor-pointer ${
+                            field.type === "latitude"
+                              ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                              : field.type === "longitude"
+                              ? "bg-blue-100 text-blue-900 border-blue-300"
+                              : field.type === "googleMapsUrl"
+                              ? "bg-rose-100 text-rose-900 border-rose-300"
+                              : "bg-white text-slate-700 border-slate-300"
+                          }`}
+                        >
+                          <option value="text">Text Input</option>
+                          <option value="textarea">Multi-line Text</option>
+                          <option value="number">Numeric</option>
+                          <option value="latitude">🌐 Latitude (-90 to 90)</option>
+                          <option value="longitude">🧭 Longitude (-180 to 180)</option>
+                          <option value="googleMapsUrl">📍 Google Maps Link (Strict)</option>
+                          <option value="select">Dropdown Select</option>
+                          <option value="phone">Phone Number</option>
+                          <option value="url">Website URL</option>
+                          <option value="address">Address</option>
+                          <option value="image">Image Attachment</option>
+                        </select>
+
+                        {field.type === "latitude" && (
+                          <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                            Bounds: -90° to 90°
+                          </span>
+                        )}
+                        {field.type === "longitude" && (
+                          <span className="text-[10px] font-semibold text-blue-800 bg-blue-100 px-2 py-0.5 rounded-full">
+                            Bounds: -180° to 180°
+                          </span>
+                        )}
+                        {field.type === "googleMapsUrl" && (
+                          <span className="text-[10px] font-semibold text-rose-800 bg-rose-100 px-2 py-0.5 rounded-full">
+                            Google Maps Only
+                          </span>
+                        )}
+                      </div>
+
+                      <input
+                        type="text"
+                        value={field.description}
+                        onChange={(e) => handleFieldChange(idx, "description", e.target.value)}
+                        placeholder="Field help text / instructions for public contributors..."
+                        className="w-full text-xs text-slate-600 bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700 select-none">
+                        <input
+                          type="checkbox"
+                          checked={field.required}
+                          onChange={(e) => handleFieldChange(idx, "required", e.target.checked)}
+                          className="rounded text-emerald-600 focus:ring-0 cursor-pointer"
+                        />
+                        <span>Required</span>
+                      </label>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          title="Move Field Up"
+                          disabled={idx === 0}
+                          onClick={() => handleMoveField(idx, -1)}
+                          className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-30 cursor-pointer transition shadow-2xs"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          title="Move Field Down"
+                          disabled={idx === formData.fields.length - 1}
+                          onClick={() => handleMoveField(idx, 1)}
+                          className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-30 cursor-pointer transition shadow-2xs"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          title="Remove Field"
+                          onClick={() => handleRemoveField(idx)}
+                          className="p-1.5 rounded-lg bg-white border border-red-200 text-red-600 hover:bg-red-50 cursor-pointer transition shadow-2xs"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* 4. Attachments & Evidence */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs space-y-4">
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+              <span className="p-1 rounded-lg bg-emerald-50 text-emerald-700">
+                <Upload className="w-4 h-4" />
+              </span>
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900">4. Attachments &amp; Evidence</h3>
+                <p className="text-xs text-slate-500">Configure photo uploads or document submissions for verification.</p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+              <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-800 select-none">
+                <input
+                  type="checkbox"
+                  checked={formData.attachmentsConfig.enabled}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      attachmentsConfig: { ...formData.attachmentsConfig, enabled: e.target.checked },
+                    })
+                  }
+                  className="rounded text-emerald-600 focus:ring-0 cursor-pointer w-4 h-4"
+                />
+                <span>Allow public contributors to upload photos or verification proof</span>
+              </label>
+
+              {formData.attachmentsConfig.enabled && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Max Files Allowed</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={5}
+                      value={formData.attachmentsConfig.maxFiles}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          attachmentsConfig: {
+                            ...formData.attachmentsConfig,
+                            maxFiles: parseInt(e.target.value, 10) || 1,
+                          },
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Max File Size (MB)</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={10}
+                      value={formData.attachmentsConfig.maxSizeMb}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          attachmentsConfig: {
+                            ...formData.attachmentsConfig,
+                            maxSizeMb: parseInt(e.target.value, 10) || 5,
+                          },
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 5. Publication Status */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs space-y-3">
+            <h3 className="text-sm font-extrabold text-slate-900">5. Publication Status</h3>
+            <p className="text-xs text-slate-500">Published forms are accessible publicly. Draft forms are only viewable by admins.</p>
+            <div className="flex flex-wrap items-center gap-6 pt-1 text-xs font-medium text-slate-800">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="radio"
+                  name="status"
+                  value="published"
+                  checked={formData.status === "published"}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="text-emerald-600 focus:ring-0 cursor-pointer"
+                />
+                <span className="font-bold text-emerald-800">Published (Accepting public submissions)</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="radio"
+                  name="status"
+                  value="draft"
+                  checked={formData.status === "draft"}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="text-slate-600 focus:ring-0 cursor-pointer"
+                />
+                <span className="font-semibold text-slate-600">Draft (Admin only — submissions closed)</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Bottom Action Footer Bar */}
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 p-4 shadow-xs flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setIsEditorOpen(false)}
+              className="px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+            >
+              Discard &amp; Return to All Forms
+            </button>
+            <button
+              type="submit"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>{editingFormId ? "Save Changes" : "Create & Publish Form"}</span>
+            </button>
+          </div>
+        </form>
+
+        {renderPreviewModal()}
+      </div>
+    );
+  }
+
+  // 2. FULL PAGE: Form Sharing & Social Broadcast Page
+  if (shareForm) {
+    return (
+      <div className="space-y-6 pb-24 animate-in fade-in duration-150">
+        {/* Top Sticky Header & Action Bar */}
+        <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs sticky top-0 z-30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShareForm(null)}
+              className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 rounded-xl transition cursor-pointer shrink-0"
+              title="Return to forms table"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to All Forms</span>
+            </button>
+            <div className="h-6 w-px bg-slate-200 hidden sm:block" />
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="p-2 rounded-xl bg-emerald-100 text-emerald-800 shrink-0">
+                <Share2 className="w-5 h-5" />
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-base sm:text-lg font-extrabold text-slate-900 font-heading truncate">
+                  Share Public Contribution Form
+                </h2>
+                <div className="flex items-center gap-2 mt-0.5 flex-wrap text-[11px] text-slate-500 font-medium">
+                  <span className="font-bold text-slate-800 truncate max-w-[260px]">{shareForm.title}</span>
+                  <span>&bull;</span>
+                  <span className="font-semibold text-emerald-700 capitalize">{shareForm.targetModule}</span>
+                  <span>&bull;</span>
+                  <span className="text-slate-600">({shareForm.entityType})</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <a
+              href={getPublicFormUrl(shareForm.slug)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-bold transition cursor-pointer"
+            >
+              <span>Open Public Form</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+            <button
+              type="button"
+              onClick={() => handleOpenEdit(shareForm)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-xs"
+            >
+              <Edit className="w-3.5 h-3.5" />
+              <span>Edit Form</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Full-Page Share Container */}
+        <div className="space-y-6 max-w-4xl mx-auto">
+          {/* Submissions Closed Warning Banner */}
+          {shareForm.status !== "published" && (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-900 flex items-start gap-3 shadow-xs">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-1">
+                <p className="font-bold text-sm">Form Submissions Closed ({shareForm.status.toUpperCase()})</p>
+                <p className="text-xs text-amber-800">
+                  Visitors opening this public link will see that this form is not currently accepting entries. Enable submissions by publishing the form now.
+                </p>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await handleToggleStatus(shareForm);
+                      setShareForm((prev) => (prev ? { ...prev, status: "published" } : null));
+                    }}
+                    className="px-4 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition shadow-2xs cursor-pointer inline-flex items-center gap-1.5"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Publish Form Now</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Native Share Notification / Feedback Alert */}
+          {nativeShareNotification && (
+            <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-center gap-2 shadow-2xs">
+              <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+              <span className="font-medium">{nativeShareNotification}</span>
+            </div>
+          )}
+
+          {/* Section 1: Permanent Public Form Link */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                  1. Permanent Public Form URL
+                </h4>
+                <p className="text-[11px] text-slate-500">Direct, login-free citizen access. Share this URL anywhere across town.</p>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">
+                Permanent URL
+              </span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <input
+                type="text"
+                readOnly
+                value={getPublicFormUrl(shareForm.slug)}
+                className="w-full bg-transparent text-xs font-mono text-slate-800 outline-none select-all truncate px-1"
+              />
+              <button
+                type="button"
+                onClick={handleCopyLinkOnly}
+                className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer ${
+                  copiedLink
+                    ? "bg-emerald-600 text-white shadow-xs"
+                    : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-2xs"
+                }`}
+                title="Copy permanent link"
+              >
+                {copiedLink ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>Link Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    <span>Copy Link</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-slate-500 px-1 pt-1">
+              <span>Anyone with this link can propose or correct town records.</span>
+              <a
+                href={getPublicFormUrl(shareForm.slug)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-emerald-700 hover:text-emerald-900 font-bold hover:underline"
+              >
+                <span>Open Public Form in New Tab</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+
+          {/* Section 2: Ready-to-Share Invitation Message */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                  2. Ready-to-Share Community Invitation Message
+                </h4>
+                <p className="text-[11px] text-slate-500">Edit or personalize this message before broadcasting to local town groups.</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleResetInviteMessage}
+                className="text-xs text-slate-500 hover:text-slate-800 inline-flex items-center gap-1 font-semibold cursor-pointer"
+                title="Reset to default template"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset Default</span>
+              </button>
+            </div>
+
+            <textarea
+              rows={6}
+              value={customInviteMessage}
+              onChange={(e) => setCustomInviteMessage(e.target.value)}
+              placeholder="Edit your personalized community message..."
+              className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition leading-relaxed font-sans"
+            />
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+              <span className="text-[11px] text-slate-500">
+                {customInviteMessage.length} characters &bull; Optimized for WhatsApp, SMS, or Instagram DMs
+              </span>
+              <button
+                type="button"
+                onClick={handleCopyInviteMessage}
+                className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer ${
+                  copiedMessage
+                    ? "bg-emerald-600 text-white shadow-xs"
+                    : "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300"
+                }`}
+              >
+                {copiedMessage ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>Message Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    <span>Copy Invitation Message</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Section 3: Direct Social & Device Sharing */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs space-y-3">
+            <div>
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                3. Instant Social &amp; Device Sharing
+              </h4>
+              <p className="text-[11px] text-slate-500">Broadcast directly to local residents in 1 click.</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {/* WhatsApp Share */}
+              <a
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(customInviteMessage)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2.5 transition shadow-xs cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Share via WhatsApp</span>
+              </a>
+
+              {/* Native Device Web Share API */}
+              <button
+                type="button"
+                onClick={handleNativeShare}
+                className={`py-3 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2.5 transition shadow-xs cursor-pointer ${
+                  nativeShareSuccess
+                    ? "bg-emerald-800 text-white"
+                    : "bg-[#0D5E49] hover:bg-emerald-900 text-white"
+                }`}
+                title="Share using native mobile sheet (iOS, Android, Chrome)"
+              >
+                <Smartphone className="w-4 h-4" />
+                <span>{nativeShareSuccess ? "Shared Successfully!" : "Share via Device (Sheet)"}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Section 4: Instagram & Facebook Community Guidance */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-base">📸</span>
+              <div>
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                  4. Instagram Stories, Bio &amp; Facebook Sharing
+                </h4>
+                <p className="text-[11px] text-slate-500">Reach youth and local community groups on social networks.</p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-600 text-xs leading-relaxed">
+                <div className="p-3 bg-white rounded-lg border border-slate-200">
+                  <p className="font-bold text-slate-800 mb-1">Instagram Stories</p>
+                  <p className="text-[11px]">
+                    Create a Story, tap the <strong>Sticker</strong> icon, choose <strong>LINK</strong>, and paste the URL.
+                  </p>
+                </div>
+                <div className="p-3 bg-white rounded-lg border border-slate-200">
+                  <p className="font-bold text-slate-800 mb-1">Instagram Bio &amp; DMs</p>
+                  <p className="text-[11px]">
+                    Paste directly in your account bio link or DM directly to town group chats and local admins.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleCopyInstagramLink}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer inline-flex items-center gap-2 ${
+                    copiedInstagram
+                      ? "bg-pink-600 text-white shadow-xs"
+                      : "bg-white border border-pink-300 text-pink-700 hover:bg-pink-50 shadow-2xs"
+                  }`}
+                >
+                  {copiedInstagram ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Link Copied for Instagram!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      <span>Copy Link for Instagram Sticker</span>
+                    </>
+                  )}
+                </button>
+
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                    getPublicFormUrl(shareForm.slug)
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition inline-flex items-center gap-2 shadow-2xs cursor-pointer"
+                >
+                  <Globe className="w-4 h-4" />
+                  <span>Share on Facebook</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 5: Form Status & Summary Overview */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">Form Configuration Overview</h4>
+              <p className="text-xs text-slate-500">
+                Target: <strong className="capitalize text-slate-700">{shareForm.targetModule}</strong> &bull; Entity: <strong className="text-slate-700">{shareForm.entityType}</strong> &bull; Fields: <strong className="text-slate-700">{shareForm.fields?.length || 0}</strong> &bull; Attachments: <strong className="text-slate-700">{shareForm.attachmentsConfig?.enabled ? "Enabled" : "Disabled"}</strong>
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setPreviewForm(shareForm)}
+                className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-bold transition cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <Eye className="w-3.5 h-3.5 text-slate-500" />
+                <span>Preview Citizen View</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleOpenEdit(shareForm)}
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <Edit className="w-3.5 h-3.5" />
+                <span>Edit Configuration</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {renderPreviewModal()}
+      </div>
+    );
+  }
+
+  // 3. MAIN DASHBOARD: Forms Directory & Management Grid
   return (
     <div className="space-y-6">
       {/* Header Banner */}
@@ -476,14 +1554,68 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Create Contribution Form</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
+          {/* Public Form Navbar & Footer Turn ON/OFF Toggle */}
+          <button
+            type="button"
+            id="form-builder-navbar-toggle"
+            title="Turn on/off Navbar and Footer on public contribution forms (/forms/* & /contribute/*)"
+            onClick={handleToggleFormNavbar}
+            disabled={updatingNavbarSetting}
+            className={`px-3 py-2 rounded-xl border transition flex items-center gap-2.5 select-none active:scale-95 cursor-pointer text-left ${
+              hideNavbarAndFooter
+                ? "bg-amber-50/90 border-amber-300 text-slate-900 shadow-2xs hover:bg-amber-100/70"
+                : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
+            } ${updatingNavbarSetting ? "opacity-60 cursor-not-allowed" : ""}`}
+          >
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 ${
+                    hideNavbarAndFooter ? "bg-amber-500 animate-pulse" : "bg-emerald-500"
+                  }`}
+                />
+                <span className="text-[11px] font-bold">Public Form Navbar:</span>
+                <span
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
+                    hideNavbarAndFooter
+                      ? "bg-amber-200 text-amber-900"
+                      : "bg-emerald-100 text-emerald-800"
+                  }`}
+                >
+                  {hideNavbarAndFooter ? "OFF (Hidden)" : "ON (Visible)"}
+                </span>
+              </div>
+              <div className="text-[10px] text-slate-500 mt-0.5">
+                {hideNavbarAndFooter
+                  ? "Top navbar & footer hidden"
+                  : "Standard navbar & footer shown"}
+              </div>
+            </div>
+
+            {/* Switch pill visual */}
+            <div
+              className={`w-9 h-5 rounded-full transition-colors relative shrink-0 ${
+                hideNavbarAndFooter ? "bg-amber-500" : "bg-slate-300"
+              }`}
+            >
+              <div
+                className={`w-3.5 h-3.5 rounded-full bg-white transition-transform absolute top-[3px] shadow-xs ${
+                  hideNavbarAndFooter ? "left-[19px]" : "left-[3px]"
+                }`}
+              />
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleOpenCreate}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Create Contribution Form</span>
+          </button>
+        </div>
       </div>
 
       {successMessage && (
@@ -685,860 +1817,8 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
         </div>
       )}
 
-      {/* Form Creator / Editor Modal */}
-      {isEditorOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            {/* Modal Header */}
-            <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-base font-bold">
-                  {editingFormId ? "Edit Contribution Form" : "Create Dynamic Public Form"}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsEditorOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Form Body */}
-            <form onSubmit={handleSaveForm} className="p-6 space-y-6 overflow-y-auto flex-1">
-              {/* Basic Details */}
-              <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">1. Basic Details</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Form Title *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      placeholder="e.g. Propose Village Boundary & Coordinates"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Custom URL Slug (Optional)</label>
-                    <input
-                      type="text"
-                      value={formData.slug}
-                      onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                      placeholder="Auto-generated if left blank"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Description</label>
-                  <input
-                    type="text"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Brief description of what this form is collecting"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Public Instructions</label>
-                  <textarea
-                    rows={2}
-                    value={formData.instructions}
-                    onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
-                    placeholder="Provide guidance to the public. For coordinates, remind them to verify via Google Maps."
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Module & Purpose Target */}
-              <div className="space-y-4 pt-4 border-t border-slate-200">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">2. Module & Scope</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Target Module *</label>
-                    <select
-                      value={formData.targetModule}
-                      disabled={Boolean(editingFormId)}
-                      onChange={(e) => {
-                        const nextMod = e.target.value;
-                        const defaultType = nextMod === "map" ? "village" : "Schools & Colleges";
-                        const defaultCatalogFields = catalog?.allowedFields?.[nextMod] || [];
-                        setFormData({
-                          ...formData,
-                          targetModule: nextMod,
-                          entityType: defaultType,
-                          targetEntityId: "",
-                          targetEntityName: "",
-                          fields: defaultCatalogFields.slice(0, 5).map((f, i) => ({
-                            name: f.name,
-                            label: f.label,
-                            type: f.type,
-                            description: f.description || "",
-                            required: f.required || false,
-                            order: i,
-                            isEditableInCorrection: true,
-                          })),
-                        });
-                      }}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                    >
-                      <option value="map">🗺️ Map Entities</option>
-                      <option value="directory">🏢 Directory</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Entity Type / Category *</label>
-                    <select
-                      value={formData.entityType}
-                      onChange={(e) => setFormData({ ...formData, entityType: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                    >
-                      {(catalog?.entityTypes?.[formData.targetModule] || []).map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Form Purpose *</label>
-                    <select
-                      value={formData.purpose}
-                      onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                    >
-                      <option value="both">Both New & Corrections</option>
-                      <option value="correction">Corrections Only</option>
-                      <option value="new_entity">New Entities Only</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Specific Entity Selection for Correction Forms */}
-                {formData.purpose !== "new_entity" && (
-                  <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Specific Existing Record (Optional — for entity-specific correction forms)
-                    </label>
-                    <div className="flex items-center gap-2 mb-2">
-                      <input
-                        type="text"
-                        value={entitySearch}
-                        onChange={(e) => setEntitySearch(e.target.value)}
-                        placeholder={`Search ${formData.targetModule === "map" ? "villages/localities" : "directory places"}...`}
-                        className="flex-1 px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                      />
-                    </div>
-
-                    <select
-                      value={formData.targetEntityId}
-                      onChange={(e) => {
-                        const chosen = availableEntities.find((ent) => ent.id === e.target.value);
-                        setFormData({
-                          ...formData,
-                          targetEntityId: e.target.value,
-                          targetEntityName: chosen ? chosen.name : "",
-                        });
-                      }}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                    >
-                      <option value="">-- Allow user to select record at submission time --</option>
-                      {availableEntities.map((ent) => (
-                        <option key={ent.id} value={ent.id}>
-                          {ent.name} {ent.hindiName ? `(${ent.hindiName})` : ""} &bull; {ent.category}
-                        </option>
-                      ))}
-                    </select>
-                    {formData.targetEntityName && (
-                      <p className="text-[11px] text-emerald-700 mt-1 font-semibold">
-                        Selected: {formData.targetEntityName} (ID: {formData.targetEntityId})
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Dynamic Field Builder */}
-              <div className="space-y-4 pt-4 border-t border-slate-200">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">3. Configured Fields</h4>
-                    <p className="text-[11px] text-slate-500">
-                      Configure field types, labels, decimal boundaries, and ordering for {formData.targetModule}.
-                    </p>
-                  </div>
-
-                  {/* Add Field Dropdown */}
-                  <div className="flex items-center gap-2">
-                    <select
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          handleAddField(e.target.value);
-                          e.target.value = "";
-                        }
-                      }}
-                      className="px-2.5 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold focus:outline-none cursor-pointer"
-                    >
-                      <option value="">+ Add Schema Field...</option>
-                      {(catalog?.allowedFields?.[formData.targetModule] || []).map((f) => (
-                        <option
-                          key={f.name}
-                          value={f.name}
-                          disabled={formData.fields.some((ex) => ex.name === f.name)}
-                        >
-                          {f.label} ({f.name})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Dedicated Geospatial Field Quick-Add Toolbar */}
-                <div className="p-3 bg-gradient-to-r from-emerald-50/60 via-blue-50/40 to-rose-50/50 rounded-xl border border-slate-200/80 flex flex-wrap items-center gap-2 text-xs">
-                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-[#0D5E49]" />
-                    <span>Quick-Add Location Fields:</span>
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() => handleAddField("latitude")}
-                    disabled={formData.fields.some((f) => f.name === "latitude")}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg font-bold text-[11px] shadow-2xs transition disabled:opacity-40 disabled:cursor-not-allowed"
-                    title="Add Latitude field (-90 to 90 degrees)"
-                  >
-                    <Globe className="w-3 h-3 text-emerald-600" />
-                    <span>+ Latitude (-90 to 90)</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleAddField("longitude")}
-                    disabled={formData.fields.some((f) => f.name === "longitude")}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-blue-50 text-blue-800 border border-blue-200 rounded-lg font-bold text-[11px] shadow-2xs transition disabled:opacity-40 disabled:cursor-not-allowed"
-                    title="Add Longitude field (-180 to 180 degrees)"
-                  >
-                    <Compass className="w-3 h-3 text-blue-600" />
-                    <span>+ Longitude (-180 to 180)</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleAddField("googleMapsUrl")}
-                    disabled={formData.fields.some((f) => f.name === "googleMapsUrl")}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-rose-50 text-rose-800 border border-rose-200 rounded-lg font-bold text-[11px] shadow-2xs transition disabled:opacity-40 disabled:cursor-not-allowed"
-                    title="Add Google Maps Location Link field (Google Maps only)"
-                  >
-                    <MapPin className="w-3 h-3 text-rose-600" />
-                    <span>+ Google Maps Location Link</span>
-                  </button>
-                </div>
-
-                <div className="space-y-2.5">
-                  {formData.fields.map((field, idx) => (
-                    <div
-                      key={field.name}
-                      className={`p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs transition ${
-                        field.type === "latitude"
-                          ? "bg-emerald-50/40 border-emerald-200"
-                          : field.type === "longitude"
-                          ? "bg-blue-50/40 border-blue-200"
-                          : field.type === "googleMapsUrl"
-                          ? "bg-rose-50/40 border-rose-200"
-                          : "bg-slate-50 border-slate-200"
-                      }`}
-                    >
-                      <div className="flex-1 space-y-1.5">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-mono text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-700 font-bold">
-                            #{idx + 1}
-                          </span>
-                          <input
-                            type="text"
-                            value={field.label}
-                            onChange={(e) => handleFieldChange(idx, "label", e.target.value)}
-                            className="font-bold text-slate-800 bg-white border border-slate-300 rounded px-2 py-0.5 text-xs w-44 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
-                            placeholder="Field Label"
-                          />
-                          <span className="text-[10px] text-slate-500 font-mono">({field.name})</span>
-
-                          {/* Configurable Field Type Selector */}
-                          <select
-                            value={field.type}
-                            onChange={(e) => handleFieldChange(idx, "type", e.target.value)}
-                            className={`text-[11px] font-bold px-2 py-0.5 rounded border focus:outline-none cursor-pointer ${
-                              field.type === "latitude"
-                                ? "bg-emerald-100/80 text-emerald-900 border-emerald-300"
-                                : field.type === "longitude"
-                                ? "bg-blue-100/80 text-blue-900 border-blue-300"
-                                : field.type === "googleMapsUrl"
-                                ? "bg-rose-100/80 text-rose-900 border-rose-300"
-                                : "bg-white text-slate-700 border-slate-300"
-                            }`}
-                          >
-                            <option value="text">Text Input</option>
-                            <option value="textarea">Multi-line Text</option>
-                            <option value="number">Numeric</option>
-                            <option value="latitude">🌐 Latitude (-90 to 90)</option>
-                            <option value="longitude">🧭 Longitude (-180 to 180)</option>
-                            <option value="googleMapsUrl">📍 Google Maps Link (Strict)</option>
-                            <option value="select">Dropdown Select</option>
-                            <option value="phone">Phone Number</option>
-                            <option value="url">Website URL</option>
-                            <option value="address">Address</option>
-                            <option value="image">Image Attachment</option>
-                          </select>
-
-                          {field.type === "latitude" && (
-                            <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded">
-                              Bounds: -90° to 90°
-                            </span>
-                          )}
-                          {field.type === "longitude" && (
-                            <span className="text-[10px] font-semibold text-blue-800 bg-blue-100 px-1.5 py-0.5 rounded">
-                              Bounds: -180° to 180°
-                            </span>
-                          )}
-                          {field.type === "googleMapsUrl" && (
-                            <span className="text-[10px] font-semibold text-rose-800 bg-rose-100 px-1.5 py-0.5 rounded">
-                              Google Maps Only
-                            </span>
-                          )}
-                        </div>
-
-                        <input
-                          type="text"
-                          value={field.description}
-                          onChange={(e) => handleFieldChange(idx, "description", e.target.value)}
-                          placeholder="Field help text / instructions for contributors"
-                          className="w-full text-[11px] text-slate-600 bg-white border border-slate-200 rounded px-2 py-0.5 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
-                        />
-                      </div>
-
-                      <div className="flex items-center gap-3 shrink-0">
-                        <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold text-slate-700">
-                          <input
-                            type="checkbox"
-                            checked={field.required}
-                            onChange={(e) => handleFieldChange(idx, "required", e.target.checked)}
-                            className="rounded text-emerald-600 focus:ring-0"
-                          />
-                          <span>Required</span>
-                        </label>
-
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            title="Move Field Up"
-                            disabled={idx === 0}
-                            onClick={() => handleMoveField(idx, -1)}
-                            className="p-1 rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
-                          >
-                            <ArrowUp className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            title="Move Field Down"
-                            disabled={idx === formData.fields.length - 1}
-                            onClick={() => handleMoveField(idx, 1)}
-                            className="p-1 rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
-                          >
-                            <ArrowDown className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            title="Remove Field"
-                            onClick={() => handleRemoveField(idx)}
-                            className="p-1 rounded bg-white border border-red-200 text-red-600 hover:bg-red-50 cursor-pointer"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Attachments Configuration */}
-              <div className="space-y-4 pt-4 border-t border-slate-200">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">4. Attachments & Evidence</h4>
-                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-800">
-                    <input
-                      type="checkbox"
-                      checked={formData.attachmentsConfig.enabled}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          attachmentsConfig: { ...formData.attachmentsConfig, enabled: e.target.checked },
-                        })
-                      }
-                      className="rounded text-emerald-600 focus:ring-0"
-                    />
-                    <span>Allow public users to upload photos / proof documents</span>
-                  </label>
-
-                  {formData.attachmentsConfig.enabled && (
-                    <div className="grid grid-cols-2 gap-4 pt-2">
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">Max Files</label>
-                        <input
-                          type="number"
-                          min={1}
-                          max={5}
-                          value={formData.attachmentsConfig.maxFiles}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              attachmentsConfig: {
-                                ...formData.attachmentsConfig,
-                                maxFiles: parseInt(e.target.value, 10) || 1,
-                              },
-                            })
-                          }
-                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">Max File Size (MB)</label>
-                        <input
-                          type="number"
-                          min={1}
-                          max={10}
-                          value={formData.attachmentsConfig.maxSizeMb}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              attachmentsConfig: {
-                                ...formData.attachmentsConfig,
-                                maxSizeMb: parseInt(e.target.value, 10) || 5,
-                              },
-                            })
-                          }
-                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Status */}
-              <div className="space-y-2 pt-4 border-t border-slate-200">
-                <label className="block text-xs font-bold text-slate-700">Initial Status</label>
-                <div className="flex items-center gap-4 text-xs font-medium text-slate-700">
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="published"
-                      checked={formData.status === "published"}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="text-emerald-600"
-                    />
-                    <span>Published (Accepting Submissions)</span>
-                  </label>
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="draft"
-                      checked={formData.status === "draft"}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="text-slate-600"
-                    />
-                    <span>Draft (Admin Only)</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsEditorOpen(false)}
-                  className="px-4 py-2 border border-slate-300 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-100 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition shadow-xs"
-                >
-                  {editingFormId ? "Save Changes" : "Create & Publish"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Comprehensive Public Form Share Modal */}
-      {shareForm && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 animate-in fade-in zoom-in-95 duration-150 max-h-[92vh] overflow-y-auto space-y-4">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between pb-3 border-b border-slate-100">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="p-1 rounded-lg bg-emerald-100 text-emerald-800">
-                    <Share2 className="w-4 h-4" />
-                  </span>
-                  <h3 className="text-sm font-extrabold text-slate-900">
-                    Share Public Contribution Form
-                  </h3>
-                </div>
-                <p className="text-xs text-slate-500 mt-1 line-clamp-1">
-                  {shareForm.title} &bull; <span className="font-semibold capitalize">{shareForm.targetModule}</span> ({shareForm.entityType})
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShareForm(null)}
-                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer"
-                title="Close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Warning Banner if form is not published */}
-            {shareForm.status !== "published" && (
-              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="font-bold">Form Submissions Closed ({shareForm.status.toUpperCase()})</p>
-                  <p className="text-[11px] text-amber-700 mt-0.5">
-                    Visitors opening this link will see that this form is not currently accepting entries. Enable submissions by publishing the form.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      await handleToggleStatus(shareForm);
-                      setShareForm((prev) => (prev ? { ...prev, status: "published" } : null));
-                    }}
-                    className="mt-2 px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold rounded-lg transition shadow-2xs cursor-pointer inline-flex items-center gap-1.5"
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Publish Form Now</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Native Share Notification / Feedback Alert */}
-            {nativeShareNotification && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
-                <span>{nativeShareNotification}</span>
-              </div>
-            )}
-
-            {/* Section 1: Permanent Public Form Link */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-slate-800">
-                1. Permanent Public Form URL
-              </label>
-              <div className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                <input
-                  type="text"
-                  readOnly
-                  value={getPublicFormUrl(shareForm.slug)}
-                  className="w-full bg-transparent text-xs font-mono text-slate-800 outline-none select-all truncate"
-                />
-                <button
-                  type="button"
-                  onClick={handleCopyLinkOnly}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition shrink-0 cursor-pointer ${
-                    copiedLink
-                      ? "bg-emerald-600 text-white"
-                      : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-100"
-                  }`}
-                  title="Copy permanent link"
-                >
-                  {copiedLink ? (
-                    <>
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Link Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Copy Link</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">
-                <span>Direct, login-free citizen access</span>
-                <a
-                  href={getPublicFormUrl(shareForm.slug)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 font-bold hover:underline"
-                >
-                  <span>Open Public Form in New Tab</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </div>
-
-            {/* Section 2: Editable Invitation Message */}
-            <div className="space-y-2 pt-2 border-t border-slate-100">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold text-slate-800">
-                  2. Ready-to-Share Invitation Message
-                </label>
-                <button
-                  type="button"
-                  onClick={handleResetInviteMessage}
-                  className="text-[11px] text-slate-500 hover:text-slate-800 inline-flex items-center gap-1 cursor-pointer"
-                  title="Reset to default template"
-                >
-                  <RotateCcw className="w-3 h-3" />
-                  <span>Reset Default</span>
-                </button>
-              </div>
-
-              <textarea
-                rows={5}
-                value={customInviteMessage}
-                onChange={(e) => setCustomInviteMessage(e.target.value)}
-                placeholder="Edit your personalized community message..."
-                className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition leading-relaxed"
-              />
-
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] text-slate-400">
-                  {customInviteMessage.length} characters &bull; Editable for WhatsApp, SMS or Instagram DMs
-                </span>
-                <button
-                  type="button"
-                  onClick={handleCopyInviteMessage}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition shrink-0 cursor-pointer ${
-                    copiedMessage
-                      ? "bg-emerald-600 text-white"
-                      : "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300"
-                  }`}
-                >
-                  {copiedMessage ? (
-                    <>
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Message Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Copy Invitation Message</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Section 3: Direct Sharing Actions */}
-            <div className="space-y-2 pt-2 border-t border-slate-100">
-              <label className="block text-xs font-bold text-slate-800">
-                3. Instant Social & Device Sharing
-              </label>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {/* WhatsApp Share */}
-                <a
-                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(customInviteMessage)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-xs cursor-pointer"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>Share via WhatsApp</span>
-                </a>
-
-                {/* Native Device Web Share API */}
-                <button
-                  type="button"
-                  onClick={handleNativeShare}
-                  className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-xs cursor-pointer ${
-                    nativeShareSuccess
-                      ? "bg-emerald-800 text-white"
-                      : "bg-[#0D5E49] hover:bg-emerald-900 text-white"
-                  }`}
-                  title="Share using native mobile sheet (iOS, Android, Chrome)"
-                >
-                  <Smartphone className="w-4 h-4" />
-                  <span>{nativeShareSuccess ? "Shared Successfully!" : "Share via Device (Sheet)"}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Section 4: Instagram & Facebook Community Guidance */}
-            <div className="space-y-2 pt-2 border-t border-slate-100">
-              <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <span>📸 Instagram & Facebook Sharing</span>
-              </label>
-
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
-                <div className="space-y-1 text-slate-600 text-[11px] leading-relaxed">
-                  <p>
-                    <strong>Instagram Stories:</strong> Tap the <strong>Sticker</strong> icon in your Story, choose <strong>LINK</strong>, and paste the URL.
-                  </p>
-                  <p>
-                    <strong>Instagram Bio &amp; DMs:</strong> Paste into your profile bio or send directly in DM chats.
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={handleCopyInstagramLink}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer inline-flex items-center gap-1.5 ${
-                      copiedInstagram
-                        ? "bg-pink-600 text-white"
-                        : "bg-white border border-pink-300 text-pink-700 hover:bg-pink-50"
-                    }`}
-                  >
-                    {copiedInstagram ? (
-                      <>
-                        <Check className="w-3.5 h-3.5" />
-                        <span>Link Copied for Instagram!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Copy Link for Instagram Sticker</span>
-                      </>
-                    )}
-                  </button>
-
-                  <a
-                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                      getPublicFormUrl(shareForm.slug)
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5"
-                  >
-                    <Globe className="w-3.5 h-3.5" />
-                    <span>Share on Facebook</span>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Preview Modal */}
-      {previewForm && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in duration-150">
-            <div className="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-emerald-400" />
-                <h3 className="text-xs font-bold">Public Form Preview</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPreviewForm(null)}
-                className="text-slate-400 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="p-6 overflow-y-auto flex-1 space-y-5">
-              <div className="border-b border-slate-200 pb-3">
-                <span className="text-[10px] font-black uppercase text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                  {previewForm.targetModule === "map" ? "🗺️ Town Map" : "🏢 Town Directory"}
-                </span>
-                <h2 className="text-lg font-extrabold text-slate-900 mt-2">{previewForm.title}</h2>
-                <p className="text-xs text-slate-600 mt-1">{previewForm.description}</p>
-                {previewForm.instructions && (
-                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-xl text-[11px] text-blue-900 leading-relaxed">
-                    ℹ️ <strong>Instructions:</strong> {previewForm.instructions}
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-3.5">
-                {previewForm.fields?.map((f) => (
-                  <div key={f.name}>
-                    <label className="block text-xs font-bold text-slate-800 mb-1">
-                      {f.label} {f.required && <span className="text-red-500">*</span>}
-                    </label>
-                    {f.description && <p className="text-[10px] text-slate-500 mb-1">{f.description}</p>}
-                    {f.type === "textarea" ? (
-                      <textarea
-                        disabled
-                        rows={2}
-                        className="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs opacity-75"
-                        placeholder="Citizen input area..."
-                      />
-                    ) : f.type === "select" ? (
-                      <select disabled className="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs opacity-75">
-                        <option>-- Select an option --</option>
-                      </select>
-                    ) : (
-                      <input
-                        type="text"
-                        disabled
-                        className="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs opacity-75"
-                        placeholder={f.name === "googleMapsUrl" ? "https://maps.google.com/..." : "Citizen input..."}
-                      />
-                    )}
-                  </div>
-                ))}
-
-                {previewForm.attachmentsConfig?.enabled && (
-                  <div className="p-4 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-center">
-                    <Upload className="w-6 h-6 text-slate-400 mx-auto mb-1" />
-                    <p className="text-xs font-bold text-slate-700">Attach Photos or Verification Proof</p>
-                    <p className="text-[10px] text-slate-500">
-                      Up to {previewForm.attachmentsConfig.maxFiles} files (max {previewForm.attachmentsConfig.maxSizeMb}MB each)
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
-              <button
-                type="button"
-                onClick={() => setPreviewForm(null)}
-                className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-bold transition cursor-pointer"
-              >
-                Close Preview
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  const f = previewForm;
-                  setPreviewForm(null);
-                  handleOpenShare(f);
-                }}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0D5E49] hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
-              >
-                <Share2 className="w-3.5 h-3.5" />
-                <span>Share This Form</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Reusable Public Form Preview Modal */}
+      {renderPreviewModal()}
     </div>
   );
 }

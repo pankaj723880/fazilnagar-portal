@@ -83,6 +83,7 @@ export default function Fazilnagar() {
   // Auto-play Carousel
   useEffect(() => {
     const timer = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
       setCurrentSlide((prev) => (prev + 1) % CAROUSEL_SLIDES.length);
     }, 4000);
     return () => clearInterval(timer);

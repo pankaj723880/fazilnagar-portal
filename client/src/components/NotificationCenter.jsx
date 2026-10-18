@@ -48,10 +48,18 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
       loadNotifications(false);
     }, 800);
 
-    // Poll frequently so broadcast notifications reach open visitor sessions promptly.
+    // Poll when tab is visible, pausing background wakeups when hidden
     const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
       fetchAndCheckNotifications({ triggerPopups: true });
-    }, 8000);
+    }, 20000);
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        fetchAndCheckNotifications({ triggerPopups: true });
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     const syncAdmin = () => setIsAdmin(getAuthUser()?.role === "admin");
     window.addEventListener("auth-change", syncAdmin);
@@ -70,6 +78,7 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
     return () => {
       clearTimeout(initialTimer);
       clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("auth-change", syncAdmin);
       window.removeEventListener("fazilnagar-notifications-updated", handleUpdate);
     };

@@ -272,10 +272,11 @@ export function GlobalFloatingAndStickyAds() {
     (a) => (a.format === "floating" || (!a.format && a.format !== "banner")) && isVisible(a)
   );
 
-  // Auto-rotate among multiple active floating ads every 9 seconds
+  // Auto-rotate among multiple active floating ads every 9 seconds (paused when tab hidden)
   useEffect(() => {
     if (floatingAds.length <= 1) return;
     const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
       setActiveFloatingIndex((prev) => (prev + 1) % floatingAds.length);
     }, 9000);
     return () => clearInterval(interval);
