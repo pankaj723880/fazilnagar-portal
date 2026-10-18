@@ -66,7 +66,7 @@ export default function Contact() {
               <div className="flex items-start gap-2.5">
                 <Mail className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                 <span>
-                  <strong>Email:</strong> editorial@fazilnagar.vercel.app
+                  <strong>Email:</strong> editorial@fazilnagar.me
                 </span>
               </div>
               <div className="flex items-start gap-2.5">

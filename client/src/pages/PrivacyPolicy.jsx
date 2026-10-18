@@ -19,7 +19,7 @@ export default function PrivacyPolicy() {
           Privacy Policy
         </h1>
         <p className="text-sm text-slate-600 leading-relaxed">
-          Fazilnagar Town Civic &amp; Local Directory Portal (https://fazilnagar.vercel.app) is an independent, community-driven civic resource. We respect your privacy and adhere to responsible data protection standards.
+          Fazilnagar Town Civic &amp; Local Directory Portal (https://www.fazilnagar.me) is an independent, community-driven civic resource. We respect your privacy and adhere to responsible data protection standards.
         </p>
       </div>
 
@@ -66,7 +66,7 @@ export default function PrivacyPolicy() {
           <p>
             For privacy inquiries or listing modification requests, please contact:<br />
             <strong>Volunteer Data Coordinator:</strong> Fazilnagar Community Editorial &amp; Privacy Desk<br />
-            <strong>Email:</strong> privacy@fazilnagar.vercel.app<br />
+            <strong>Email:</strong> privacy@fazilnagar.me<br />
             <strong>Postal Location:</strong> Fazilnagar Town, PIN 274401, Kushinagar, Uttar Pradesh
           </p>
         </section>

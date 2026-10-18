@@ -7,4 +7,4 @@ Disallow: /register
 Disallow: /create-news
 Disallow: /upload
 
-Sitemap: https://fazilnagar.vercel.app/sitemap.xml
+Sitemap: https://www.fazilnagar.me/sitemap.xml

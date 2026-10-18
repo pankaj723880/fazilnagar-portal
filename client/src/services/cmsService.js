@@ -88,7 +88,7 @@ export const DEFAULT_SITE_SETTINGS = {
     officialPhone: "+91 5564 222102",
     emergencyPhone: "112 / 108",
     chcPhone: "+91 94520 89540",
-    email: "contact@fazilnagar.vercel.app",
+    email: "contact@fazilnagar.me",
     officeAddress: "Fazilnagar Town, Kushinagar - 274401 (Community Desk)",
     workingHours: "10:00 AM – 05:00 PM (Mon-Sat)",
   },
@@ -102,7 +102,7 @@ export const DEFAULT_SITE_SETTINGS = {
   seo: {
     metaTitle: "Fazilnagar Town Portal | Civic Directory & Local Guide (Unofficial)",
     metaDescription: "Unofficial, community-operated civic and local directory portal for Fazilnagar town (PIN 274401, Kushinagar, UP). Verified schools, hospitals, emergency aid, local news, and community directory.",
-    ogImageUrl: "https://fazilnagar.vercel.app/og-image.jpg",
+    ogImageUrl: "https://www.fazilnagar.me/og-image.jpg",
   },
   heroSettings: {
     animationSpeed: 5000,

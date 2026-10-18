@@ -346,7 +346,7 @@ export default function AdminHomepageCMS() {
 
         <div className="flex items-center gap-3">
           <a
-            href="https://fazilnagar.vercel.app/"
+            href="https://www.fazilnagar.me/"
             target="_blank"
             rel="noopener noreferrer"
             className="px-4 py-2 rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-800 text-xs font-bold text-slate-300 flex items-center gap-1.5 transition"

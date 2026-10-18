@@ -19,7 +19,7 @@ export default function TermsOfService() {
           Terms of Service &amp; Non-Governmental Disclaimer
         </h1>
         <p className="text-sm text-slate-600 leading-relaxed">
-          Please review the terms and conditions governing the use of the Fazilnagar Town Civic &amp; Local Directory Portal (https://fazilnagar.vercel.app).
+          Please review the terms and conditions governing the use of the Fazilnagar Town Civic &amp; Local Directory Portal (https://www.fazilnagar.me).
         </p>
       </div>
 
@@ -61,7 +61,7 @@ export default function TermsOfService() {
           <p>
             To notify us of intellectual property matters, incorrect directory data, or terms inquiries:<br />
             <strong>Contact:</strong> Community Editorial Board, Fazilnagar Civic Initiative<br />
-            <strong>Email:</strong> editorial@fazilnagar.vercel.app<br />
+            <strong>Email:</strong> editorial@fazilnagar.me<br />
             <strong>Jurisdiction:</strong> Courts having jurisdiction in Kushinagar District, Uttar Pradesh, India.
           </p>
         </section>

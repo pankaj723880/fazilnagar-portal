@@ -774,7 +774,7 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
                     )}
                     <div className="p-3.5 space-y-1">
                       <span className="text-[10px] uppercase text-slate-400 font-semibold">
-                        fazilnagar.vercel.app
+                        www.fazilnagar.me
                       </span>
                       <h4 className="text-xs font-bold text-slate-900 line-clamp-1">
                         {settings.seoSettings.metaTitle}
