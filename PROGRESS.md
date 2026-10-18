@@ -1,5 +1,29 @@
 # Town Portal & Regional Connectivity Implementation Progress
 
+- **PUBLIC-PAGE CONTENT VISIBILITY, SEO RENDERING & PRERENDERING (COMPLETED & VERIFIED)**
+  - **Issue Investigated & Confirmed Root Causes**:
+    - Public pages on `https://www.fazilnagar.me` (`/`, `/directory`, `/news`, `/education`, `/tourism`) returned identical generic homepage titles and empty `<div id="root"></div>` content to search engine crawlers and direct navigations.
+    - **Confirmed Causes**:
+      1. *Vercel Routing & cleanUrls*: `client/vercel.json` had `"cleanUrls": false` and a blanket rewrite `/(.*) -> /index.html` that intercepted all extensionless requests. Because `generateStaticRoutes.js` only produced `dist/{route}/index.html` (and not `dist/{route}.html`), Vercel did not resolve extensionless paths to static files and served `dist/index.html`.
+      2. *Domain Mismatches in Metadata & Sitemaps*: Canonical links, Open Graph URLs, Twitter Cards, Schema.org JSON-LD, `sitemap.xml`, and `robots.txt` had hardcoded `https://fazilnagar.vercel.app` instead of `https://www.fazilnagar.me`, causing crawlers to deduplicate pages.
+      3. *Shallow Prerender Bodies*: `/news` rendered only a loading text placeholder, `/tourism` lacked attraction records, and root `/` lacked pre-rendered semantic HTML inside `#root`.
+  - **Fixes Applied**:
+    - **`client/vercel.json`**: Enabled `"cleanUrls": true`, allowing Vercel to cleanly resolve extensionless URLs (`/directory`, `/news`, etc.) to static `.html` files before rewrites.
+    - **`client/scripts/generateStaticRoutes.js`**:
+      - Updated base URL to `https://www.fazilnagar.me`.
+      - Generated both flat `dist/${route}.html` and subfolder `dist/${route}/index.html`.
+      - Injected pre-rendered semantic HTML into `dist/index.html` for root `/`.
+      - Populated `/directory` with ground-truth places from `places.json`, `/news` with verified community reporting, `/education` with schools and colleges, and `/tourism` with the 4 canonical Twin Heritage sites.
+      - Fixed splash bypass regex to eliminate stray closing tags.
+    - **`client/src/utils/seo.js`**: Updated `BASE_URL` and `DEFAULT_OG_IMAGE` to `https://www.fazilnagar.me`.
+    - **`client/index.html`**: Updated canonical link, Open Graph tags, Twitter card, and Schema.org JSON-LD to `https://www.fazilnagar.me`.
+    - **`client/public/sitemap.xml` & `robots.txt`**: Updated all URLs and sitemap directives to `https://www.fazilnagar.me`.
+    - **CMS & Legal Pages**: Cleaned up legacy domain references across `cmsService.js`, `TermsOfService.jsx`, `PrivacyPolicy.jsx`, `Contact.jsx`, `AdminSettingsCMS.jsx`, and `AdminHomepageCMS.jsx`.
+  - **Verification**:
+    - Verified production build output (`npm run build`): Generated 16 route-specific HTML pages.
+    - Verified direct preview HTTP requests (`vite preview`): All 5 target routes returned HTTP 200, distinct semantic HTML, unique titles, and canonical tags pointing to `https://www.fazilnagar.me`.
+    - Automated tests (`npm test`): 9/9 location and synchronization regression tests passed.
+
 - **ADMIN APPROVAL & REAL-TIME PUBLISHING SYNCHRONIZATION (COMPLETED & VERIFIED)**
   - **Issue Investigated & Root Causes Identified**:
     - When an admin approved a submitted value or record in Map or Directory modules, the approved information did not always appear or update immediately on public pages.
