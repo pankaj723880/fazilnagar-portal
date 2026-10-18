@@ -180,66 +180,579 @@ h1, h2, h3, h4, h5, h6, .civic-card, .civic-card * {
 }
 
 /* ========================================================
-   MIDNIGHT CIVIC PUBLIC THEME SYSTEM
-   Strictly scoped to public pages via [data-public-theme]
-   Completely excluded from the Admin section
+   GRAPHITE ROYALE PUBLIC THEME SYSTEM
+   Approved Graphite Royale Palette:
+   Light Mode:
+     Main background: #F7F6F2
+     Navbar: #FFFFFF
+     Secondary sections: #EFEEE9
+     Cards: #FFFFFF
+     Primary text: #202124
+     Secondary text: #626262
+     Borders: #E4E0D8
+     Accent: #A78650
+     Accent hover: #8E7042
+     Highlight: #F1E8D8
+   Dark Mode:
+     Main background: #101114
+     Navbar: #101114
+     Secondary sections: #19191E
+     Cards: #24242A
+     Inputs/elevated surfaces: #1C1C22
+     Primary text: #F5F1E9
+     Secondary text: #B6B4B0
+     Borders: #38383E
+     Accent: #C5A46D
+     Accent hover: #D8BA85
+     Highlight: #30291F
    ======================================================== */
 
 :root {
-  --civic-bg: #F8FAFC;
-  --civic-surface: #FFFFFF;
-  --civic-surface-secondary: #F1F5F9;
-  --civic-text-primary: #111827;
-  --civic-text-secondary: #64748B;
-  --civic-border: #E5E7EB;
-  --civic-accent: #B8323C;
-  --civic-shadow: 0 1px 3px 0 rgba(17, 24, 39, 0.05);
-  --civic-shadow-hover: 0 4px 12px 0 rgba(17, 24, 39, 0.08);
+  /* Default / Light Mode Graphite Royale Tokens */
+  --gr-bg-main: #F7F6F2;
+  --gr-navbar-bg: #FFFFFF;
+  --gr-section-secondary: #EFEEE9;
+  --gr-card-bg: #FFFFFF;
+  --gr-input-bg: #FFFFFF;
+  --gr-text-primary: #202124;
+  --gr-text-secondary: #626262;
+  --gr-border: #E4E0D8;
+  --gr-border-hover: #D5D0C5;
+  --gr-accent: #A78650;
+  --gr-accent-hover: #8E7042;
+  --gr-highlight: #F1E8D8;
+
+  /* Status Colors: Light Mode */
+  --gr-success: #15803D;
+  --gr-success-bg: #F0FDF4;
+  --gr-success-border: #BBF7D0;
+  --gr-warning: #B45309;
+  --gr-warning-bg: #FFFBEB;
+  --gr-warning-border: #FDE68A;
+  --gr-error: #B91C1C;
+  --gr-error-bg: #FEF2F2;
+  --gr-error-border: #FECACA;
+  --gr-info: #1D4ED8;
+  --gr-info-bg: #EFF6FF;
+  --gr-info-border: #BFDBFE;
+
+  /* Civic Alias Mappings */
+  --civic-bg: var(--gr-bg-main);
+  --civic-surface: var(--gr-card-bg);
+  --civic-surface-secondary: var(--gr-section-secondary);
+  --civic-text-primary: var(--gr-text-primary);
+  --civic-text-secondary: var(--gr-text-secondary);
+  --civic-border: var(--gr-border);
+  --civic-accent: var(--gr-accent);
+  --civic-shadow: 0 1px 3px 0 rgba(32, 33, 36, 0.05);
+  --civic-shadow-hover: 0 4px 12px 0 rgba(32, 33, 36, 0.08);
 }
 
 html[data-public-theme="dark"] {
-  --civic-bg: #0B1120;
-  --civic-surface: #111827;
-  --civic-surface-secondary: #1E293B;
-  --civic-text-primary: #F8FAFC;
-  --civic-text-secondary: #CBD5E1;
-  --civic-border: #334155;
-  --civic-accent: #B8323C;
+  /* Dark Mode Graphite Royale Tokens */
+  --gr-bg-main: #101114;
+  --gr-navbar-bg: #101114;
+  --gr-section-secondary: #19191E;
+  --gr-card-bg: #24242A;
+  --gr-input-bg: #1C1C22;
+  --gr-text-primary: #F5F1E9;
+  --gr-text-secondary: #B6B4B0;
+  --gr-border: #38383E;
+  --gr-border-hover: #4E4E56;
+  --gr-accent: #C5A46D;
+  --gr-accent-hover: #D8BA85;
+  --gr-highlight: #30291F;
+
+  /* Status Colors: Dark Mode */
+  --gr-success: #4ADE80;
+  --gr-success-bg: #064E3B;
+  --gr-success-border: #065F46;
+  --gr-warning: #FBBF24;
+  --gr-warning-bg: #78350F;
+  --gr-warning-border: #92400E;
+  --gr-error: #F87171;
+  --gr-error-bg: #7F1D1D;
+  --gr-error-border: #991B1B;
+  --gr-info: #60A5FA;
+  --gr-info-bg: #1E3A8A;
+  --gr-info-border: #1D4ED8;
+
+  /* Civic Alias Mappings */
+  --civic-bg: var(--gr-bg-main);
+  --civic-surface: var(--gr-card-bg);
+  --civic-surface-secondary: var(--gr-section-secondary);
+  --civic-text-primary: var(--gr-text-primary);
+  --civic-text-secondary: var(--gr-text-secondary);
+  --civic-border: var(--gr-border);
+  --civic-accent: var(--gr-accent);
   --civic-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
   --civic-shadow-hover: 0 4px 12px 0 rgba(0, 0, 0, 0.6);
 }
 
-/* Light mode default root styles for public portal */
+/* ========================================================
+   LIGHT MODE: COMPLETE GRAPHITE ROYALE PUBLIC STYLING
+   ======================================================== */
 html[data-public-theme="light"] body {
-  background-color: var(--civic-bg);
-  color: var(--civic-text-primary);
+  background-color: #F7F6F2 !important;
+  color: #202124 !important;
 }
 
-/* Dark mode overrides: strictly active only when html[data-public-theme="dark"] */
+html[data-public-theme="light"] #public-portal-root {
+  background-color: #F7F6F2 !important;
+  color: #202124 !important;
+}
+
+/* Primary Surfaces & Cards (Light: #FFFFFF, border: #E4E0D8) */
+html[data-public-theme="light"] .civic-card,
+html[data-public-theme="light"] .bg-white,
+html[data-public-theme="light"] .bg-\[\#FFFFFF\],
+html[data-public-theme="light"] .bg-\[\#ffffff\],
+html[data-public-theme="light"] .bg-pure-white,
+html[data-public-theme="light"] [role="dialog"] .bg-white,
+html[data-public-theme="light"] .modal-content {
+  background-color: #FFFFFF !important;
+  border-color: #E4E0D8 !important;
+  color: #202124;
+}
+
+html[data-public-theme="light"] .civic-card:hover {
+  border-color: #D5D0C5 !important;
+  box-shadow: 0 4px 12px 0 rgba(32, 33, 36, 0.08) !important;
+}
+
+/* Secondary Surfaces & Sections (Light: #EFEEE9) */
+html[data-public-theme="light"] .bg-slate-50,
+html[data-public-theme="light"] .bg-slate-100,
+html[data-public-theme="light"] .bg-slate-200,
+html[data-public-theme="light"] .bg-\[\#F5F7F8\],
+html[data-public-theme="light"] .bg-\[\#F8FAFC\],
+html[data-public-theme="light"] .bg-soft-white,
+html[data-public-theme="light"] .bg-slate-50\/80,
+html[data-public-theme="light"] .bg-slate-50\/70,
+html[data-public-theme="light"] .bg-slate-100\/80 {
+  background-color: #EFEEE9 !important;
+  border-color: #E4E0D8 !important;
+}
+
+/* Primary Text (Light: #202124) */
+html[data-public-theme="light"] .text-slate-900,
+html[data-public-theme="light"] .text-slate-800,
+html[data-public-theme="light"] .text-slate-700,
+html[data-public-theme="light"] .text-\[\#18232E\],
+html[data-public-theme="light"] .text-\[\#111827\],
+html[data-public-theme="light"] .text-deep-slate {
+  color: #202124 !important;
+}
+
+/* Secondary Text (Light: #626262) */
+html[data-public-theme="light"] .text-slate-600,
+html[data-public-theme="light"] .text-slate-500,
+html[data-public-theme="light"] .text-slate-400,
+html[data-public-theme="light"] .text-\[\#647180\],
+html[data-public-theme="light"] .text-\[\#64748B\],
+html[data-public-theme="light"] .text-secondary {
+  color: #626262 !important;
+}
+
+/* Borders (Light: #E4E0D8) */
+html[data-public-theme="light"] .border-slate-100,
+html[data-public-theme="light"] .border-slate-200,
+html[data-public-theme="light"] .border-slate-300,
+html[data-public-theme="light"] .border-slate-200\/90,
+html[data-public-theme="light"] .border-slate-200\/80,
+html[data-public-theme="light"] .border-slate-200\/70,
+html[data-public-theme="light"] .border-slate-200\/60,
+html[data-public-theme="light"] .border-\[\#E1E6EA\],
+html[data-public-theme="light"] .border-\[\#E5E7EB\],
+html[data-public-theme="light"] .border-civic {
+  border-color: #E4E0D8 !important;
+}
+
+html[data-public-theme="light"] .divide-slate-100 > * + *,
+html[data-public-theme="light"] .divide-slate-200 > * + * {
+  border-color: #E4E0D8 !important;
+}
+
+/* Public Primary Accent Buttons & Badges (Light: #A78650, hover: #8E7042) */
+html[data-public-theme="light"] .btn-civic-primary,
+html[data-public-theme="light"] .bg-crimson,
+html[data-public-theme="light"] .bg-\[\#B8323C\] {
+  background-color: #A78650 !important;
+  color: #FFFFFF !important;
+  border-color: #A78650 !important;
+}
+
+html[data-public-theme="light"] .btn-civic-primary:hover,
+html[data-public-theme="light"] .bg-crimson:hover,
+html[data-public-theme="light"] .bg-\[\#B8323C\]:hover {
+  background-color: #8E7042 !important;
+  border-color: #8E7042 !important;
+}
+
+html[data-public-theme="light"] .text-crimson,
+html[data-public-theme="light"] .text-\[\#B8323C\] {
+  color: #A78650 !important;
+}
+
+html[data-public-theme="light"] .border-crimson,
+html[data-public-theme="light"] .border-\[\#B8323C\] {
+  border-color: #A78650 !important;
+}
+
+/* Secondary Button (Light: #EFEEE9, hover: #E4E0D8, text: #202124) */
+html[data-public-theme="light"] .btn-civic-secondary {
+  background-color: #EFEEE9 !important;
+  border-color: #E4E0D8 !important;
+  color: #202124 !important;
+}
+
+html[data-public-theme="light"] .btn-civic-secondary:hover {
+  background-color: #E4E0D8 !important;
+  color: #202124 !important;
+}
+
+/* Inputs, Textareas, Selects (Light: bg #FFFFFF, border #E4E0D8, text #202124) */
+html[data-public-theme="light"] .civic-input,
+html[data-public-theme="light"] input[type="text"],
+html[data-public-theme="light"] input[type="search"],
+html[data-public-theme="light"] input[type="tel"],
+html[data-public-theme="light"] input[type="email"],
+html[data-public-theme="light"] input[type="password"],
+html[data-public-theme="light"] select,
+html[data-public-theme="light"] textarea {
+  background-color: #FFFFFF !important;
+  color: #202124 !important;
+  border-color: #E4E0D8 !important;
+}
+
+html[data-public-theme="light"] input::placeholder,
+html[data-public-theme="light"] textarea::placeholder,
+html[data-public-theme="light"] .civic-input::placeholder {
+  color: #8C887B !important;
+}
+
+html[data-public-theme="light"] input:focus,
+html[data-public-theme="light"] select:focus,
+html[data-public-theme="light"] textarea:focus,
+html[data-public-theme="light"] .civic-input:focus {
+  border-color: #A78650 !important;
+}
+
+html[data-public-theme="light"] option {
+  background-color: #FFFFFF;
+  color: #202124;
+}
+
+/* Keyboard Focus Rings in Light Mode */
+html[data-public-theme="light"] :focus-visible,
+html[data-public-theme="light"] button:focus-visible,
+html[data-public-theme="light"] a:focus-visible,
+html[data-public-theme="light"] input:focus-visible,
+html[data-public-theme="light"] select:focus-visible,
+html[data-public-theme="light"] textarea:focus-visible {
+  outline: 2px solid #A78650 !important;
+  outline-offset: 2px !important;
+}
+
+/* Header & Top Civic Bar in Light Mode */
+html[data-public-theme="light"] header .bg-\[\#18232E\] {
+  background-color: #EFEEE9 !important;
+  border-color: #E4E0D8 !important;
+  color: #202124 !important;
+}
+
+html[data-public-theme="light"] header .bg-\[\#18232E\] span {
+  color: #202124;
+}
+
+html[data-public-theme="light"] header .bg-\[\#18232E\] .bg-\[\#B8323C\] {
+  background-color: #A78650 !important;
+  color: #FFFFFF !important;
+}
+
+html[data-public-theme="light"] header .bg-\[\#FFFFFF\]\/95,
+html[data-public-theme="light"] header .bg-white\/95,
+html[data-public-theme="light"] header .bg-white {
+  background-color: #FFFFFF !important;
+  border-color: #E4E0D8 !important;
+}
+
+html[data-public-theme="light"] footer,
+html[data-public-theme="light"] footer .bg-\[\#18232E\],
+html[data-public-theme="light"] footer.bg-\[\#18232E\],
+html[data-public-theme="light"] footer.bg-slate-900 {
+  background-color: #EFEEE9 !important;
+  border-color: #E4E0D8 !important;
+  color: #626262 !important;
+}
+
+html[data-public-theme="light"] footer h1,
+html[data-public-theme="light"] footer h2,
+html[data-public-theme="light"] footer h3,
+html[data-public-theme="light"] footer h4,
+html[data-public-theme="light"] footer .text-white {
+  color: #202124 !important;
+}
+
+html[data-public-theme="light"] footer a,
+html[data-public-theme="light"] footer button,
+html[data-public-theme="light"] footer span,
+html[data-public-theme="light"] footer p,
+html[data-public-theme="light"] footer li {
+  color: #626262;
+}
+
+html[data-public-theme="light"] footer a:hover,
+html[data-public-theme="light"] footer button:hover {
+  color: #A78650 !important;
+}
+
+html[data-public-theme="light"] footer .border-slate-800,
+html[data-public-theme="light"] footer .border-slate-800\/80,
+html[data-public-theme="light"] footer .border-slate-800\/60,
+html[data-public-theme="light"] footer .border-slate-800\/40,
+html[data-public-theme="light"] footer .border-t {
+  border-color: #E4E0D8 !important;
+}
+
+html[data-public-theme="light"] footer .bg-slate-900\/60,
+html[data-public-theme="light"] footer .bg-slate-900\/30,
+html[data-public-theme="light"] footer .bg-slate-800\/80,
+html[data-public-theme="light"] footer .bg-slate-800 {
+  background-color: #FFFFFF !important;
+  border-color: #E4E0D8 !important;
+}
+
+/* Leaflet Popups & Controls (Light Mode) */
+html[data-public-theme="light"] .leaflet-popup-content-wrapper,
+html[data-public-theme="light"] .leaflet-popup-tip {
+  background-color: #FFFFFF !important;
+  color: #202124 !important;
+  border: 1px solid #E4E0D8 !important;
+  box-shadow: 0 4px 14px rgba(32, 33, 36, 0.1) !important;
+}
+
+html[data-public-theme="light"] .leaflet-popup-content {
+  color: #202124 !important;
+}
+
+html[data-public-theme="light"] .leaflet-container {
+  background-color: #EFEEE9 !important;
+}
+
+html[data-public-theme="light"] .leaflet-bar a {
+  background-color: #FFFFFF !important;
+  color: #202124 !important;
+  border-color: #E4E0D8 !important;
+}
+
+/* ========================================================
+   GRAPHITE ROYALE: MAP, NEWS, & SACRED TWIN HERITAGE (LIGHT)
+   ======================================================== */
+html[data-public-theme="light"] #regional-connectivity-section {
+  background-color: #F7F6F2 !important;
+  border-color: #E4E0D8 !important;
+  color: #202124 !important;
+}
+
+html[data-public-theme="light"] #regional-connectivity-section h2 {
+  color: #202124 !important;
+}
+
+html[data-public-theme="light"] #regional-connectivity-section p {
+  color: #626262 !important;
+}
+
+html[data-public-theme="light"] #regional-connectivity-section .text-amber-400 {
+  color: #A78650 !important;
+}
+
+html[data-public-theme="light"] #regional-connectivity-section .bg-slate-800\/80,
+html[data-public-theme="light"] #regional-connectivity-section .bg-slate-800 {
+  background-color: #EFEEE9 !important;
+  border-color: #E4E0D8 !important;
+  color: #626262 !important;
+}
+
+html[data-public-theme="light"] #regional-connectivity-section .bg-slate-900,
+html[data-public-theme="light"] #regional-connectivity-section .bg-slate-900\/95,
+html[data-public-theme="light"] #regional-connectivity-section .bg-slate-900\/90,
+html[data-public-theme="light"] #regional-connectivity-section .bg-slate-900\/80 {
+  background-color: #FFFFFF !important;
+  border-color: #E4E0D8 !important;
+  color: #202124 !important;
+}
+
+html[data-public-theme="light"] #regional-connectivity-section .bg-slate-800\/90,
+html[data-public-theme="light"] #regional-connectivity-section .bg-slate-800\/60 {
+  background-color: #EFEEE9 !important;
+  border-color: #E4E0D8 !important;
+  color: #626262 !important;
+}
+
+html[data-public-theme="light"] #regional-connectivity-section input {
+  background-color: #FFFFFF !important;
+  border-color: #E4E0D8 !important;
+  color: #202124 !important;
+}
+
+html[data-public-theme="light"] #regional-connectivity-section input::placeholder {
+  color: #626262 !important;
+}
+
+html[data-public-theme="light"] #local-updates-section {
+  background-color: #F7F6F2 !important;
+  border-color: #E4E0D8 !important;
+  color: #202124 !important;
+}
+
+html[data-public-theme="light"] #local-updates-section h2 {
+  color: #202124 !important;
+}
+
+html[data-public-theme="light"] #local-updates-section p {
+  color: #626262 !important;
+}
+
+html[data-public-theme="light"] #local-updates-section .text-red-400 {
+  color: #A78650 !important;
+}
+
+html[data-public-theme="light"] #local-updates-section .bg-slate-900\/90,
+html[data-public-theme="light"] #local-updates-section .bg-slate-900\/80,
+html[data-public-theme="light"] #local-updates-section .bg-slate-900 {
+  background-color: #FFFFFF !important;
+  border-color: #E4E0D8 !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
+}
+
+html[data-public-theme="light"] #local-updates-section .border-slate-800,
+html[data-public-theme="light"] #local-updates-section .border-slate-800\/80 {
+  border-color: #E4E0D8 !important;
+}
+
+html[data-public-theme="light"] #local-updates-section h3 {
+  color: #202124 !important;
+}
+
+html[data-public-theme="light"] #local-updates-section .text-slate-300,
+html[data-public-theme="light"] #local-updates-section .text-slate-400 {
+  color: #626262 !important;
+}
+
+html[data-public-theme="light"] #local-updates-section .bg-red-950\/60 {
+  background-color: #F1E8D8 !important;
+  border-color: #E4D5BE !important;
+  color: #8E7042 !important;
+}
+
+html[data-public-theme="light"] #about-fazilnagar-section {
+  background-color: #EFEEE9 !important;
+  border-color: #E4E0D8 !important;
+  color: #202124 !important;
+}
+
+html[data-public-theme="light"] #about-fazilnagar-section h2 {
+  color: #202124 !important;
+}
+
+html[data-public-theme="light"] #about-fazilnagar-section p {
+  color: #626262 !important;
+}
+
+html[data-public-theme="light"] #about-fazilnagar-section .bg-red-50 {
+  background-color: #F1E8D8 !important;
+  border-color: #E4D5BE !important;
+  color: #8E7042 !important;
+}
+
+html[data-public-theme="light"] #about-fazilnagar-section .bg-\[\#F5F7F8\] {
+  background-color: #E4E0D8 !important;
+  border-color: #D5D0C5 !important;
+}
+
+html[data-public-theme="light"] #about-fazilnagar-section .bg-\[\#18232E\] {
+  background-color: #FFFFFF !important;
+  color: #202124 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+}
+
+html[data-public-theme="light"] #about-fazilnagar-section a.bg-\[\#18232E\],
+html[data-public-theme="light"] #about-fazilnagar-section button.bg-\[\#18232E\] {
+  background-color: #A78650 !important;
+  color: #FFFFFF !important;
+}
+
+html[data-public-theme="light"] #about-fazilnagar-section a.bg-\[\#18232E\]:hover,
+html[data-public-theme="light"] #about-fazilnagar-section button.bg-\[\#18232E\]:hover {
+  background-color: #8E7042 !important;
+}
+
+html[data-public-theme="light"] #about-fazilnagar-section .lg\:col-span-2.bg-\[\#F5F7F8\],
+html[data-public-theme="light"] #about-fazilnagar-section .bg-white.p-6 {
+  background-color: #FFFFFF !important;
+  border-color: #E4E0D8 !important;
+  color: #202124 !important;
+}
+
+html[data-public-theme="light"] #about-fazilnagar-section h3 {
+  color: #202124 !important;
+}
+
+html[data-public-theme="light"] #about-fazilnagar-section .bg-white.p-3 {
+  background-color: #EFEEE9 !important;
+  border-color: #E4E0D8 !important;
+}
+
+html[data-public-theme="light"] #about-fazilnagar-section .text-slate-500,
+html[data-public-theme="light"] #about-fazilnagar-section .text-slate-600,
+html[data-public-theme="light"] #about-fazilnagar-section .text-slate-700 {
+  color: #626262 !important;
+}
+
+html[data-public-theme="light"] #about-fazilnagar-section .bg-gradient-to-br {
+  background: #FFFFFF !important;
+  border: 1px solid #E4E0D8 !important;
+  color: #202124 !important;
+}
+
+html[data-public-theme="light"] #about-fazilnagar-section .bg-slate-800\/80,
+html[data-public-theme="light"] #about-fazilnagar-section .bg-slate-800\/60 {
+  background-color: #EFEEE9 !important;
+  border-color: #E4E0D8 !important;
+  color: #626262 !important;
+}
+
+/* ========================================================
+   DARK MODE: COMPLETE GRAPHITE ROYALE PUBLIC STYLING
+   ======================================================== */
 html[data-public-theme="dark"] body {
-  background-color: #0B1120 !important;
-  color: #F8FAFC !important;
+  background-color: #101114 !important;
+  color: #F5F1E9 !important;
 }
 
 html[data-public-theme="dark"] #public-portal-root {
-  background-color: #0B1120 !important;
-  color: #F8FAFC !important;
+  background-color: #101114 !important;
+  color: #F5F1E9 !important;
 }
 
-/* Public Primary Surfaces & Cards (Midnight Civic: #111827, border: #334155) */
+/* Public Primary Surfaces & Cards (Graphite Royale Dark: #24242A, border: #38383E) */
 html[data-public-theme="dark"] .civic-card,
 html[data-public-theme="dark"] .bg-white,
 html[data-public-theme="dark"] .bg-\[\#FFFFFF\],
 html[data-public-theme="dark"] .bg-\[\#ffffff\],
+html[data-public-theme="dark"] .bg-pure-white,
 html[data-public-theme="dark"] .bg-white\/95,
 html[data-public-theme="dark"] .bg-white\/90,
-html[data-public-theme="dark"] .bg-white\/80 {
-  background-color: #111827 !important;
-  border-color: #334155 !important;
-  color: #F8FAFC;
+html[data-public-theme="dark"] .bg-white\/80,
+html[data-public-theme="dark"] [role="dialog"] .bg-white,
+html[data-public-theme="dark"] .modal-content {
+  background-color: #24242A !important;
+  border-color: #38383E !important;
+  color: #F5F1E9;
 }
 
-/* Public Secondary Surfaces & Backgrounds (Midnight Civic: #1E293B) */
+/* Public Secondary Surfaces & Backgrounds (Graphite Royale Dark: #19191E) */
 html[data-public-theme="dark"] .bg-slate-50,
 html[data-public-theme="dark"] .bg-slate-100,
 html[data-public-theme="dark"] .bg-slate-200,
@@ -249,67 +762,94 @@ html[data-public-theme="dark"] .bg-soft-white,
 html[data-public-theme="dark"] .bg-slate-50\/80,
 html[data-public-theme="dark"] .bg-slate-50\/70,
 html[data-public-theme="dark"] .bg-slate-100\/80 {
-  background-color: #1E293B !important;
-  border-color: #334155 !important;
+  background-color: #19191E !important;
+  border-color: #38383E !important;
 }
 
-/* Secondary Button & Dark Surfaces */
+/* Secondary Button & Dark Surfaces (Graphite Royale Dark: #19191E, border: #38383E) */
 html[data-public-theme="dark"] .btn-civic-secondary,
 html[data-public-theme="dark"] .bg-deep-slate {
-  background-color: #1E293B !important;
-  border-color: #334155 !important;
-  color: #F8FAFC !important;
+  background-color: #19191E !important;
+  border-color: #38383E !important;
+  color: #F5F1E9 !important;
 }
 
 html[data-public-theme="dark"] .btn-civic-secondary:hover {
-  background-color: #334155 !important;
+  background-color: #24242A !important;
 }
 
 /* Card hover glow and subtle border in dark mode */
 html[data-public-theme="dark"] .civic-card:hover {
-  border-color: #475569 !important;
+  border-color: #4E4E56 !important;
   box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.45) !important;
 }
 
-/* Primary Text (Midnight Civic: #F8FAFC) */
+/* Primary Text (Graphite Royale Dark: #F5F1E9) */
 html[data-public-theme="dark"] .text-slate-900,
 html[data-public-theme="dark"] .text-slate-800,
 html[data-public-theme="dark"] .text-slate-700,
 html[data-public-theme="dark"] .text-\[\#18232E\],
 html[data-public-theme="dark"] .text-\[\#111827\],
 html[data-public-theme="dark"] .text-deep-slate {
-  color: #F8FAFC !important;
+  color: #F5F1E9 !important;
 }
 
-/* Secondary Text (Midnight Civic: #CBD5E1) */
+/* Secondary Text (Graphite Royale Dark: #B6B4B0) */
 html[data-public-theme="dark"] .text-slate-600,
 html[data-public-theme="dark"] .text-slate-500,
 html[data-public-theme="dark"] .text-slate-400,
 html[data-public-theme="dark"] .text-\[\#647180\],
 html[data-public-theme="dark"] .text-\[\#64748B\],
 html[data-public-theme="dark"] .text-secondary {
-  color: #CBD5E1 !important;
+  color: #B6B4B0 !important;
 }
 
-/* Borders (Midnight Civic: #334155) */
+/* Borders (Graphite Royale Dark: #38383E) */
 html[data-public-theme="dark"] .border-slate-100,
 html[data-public-theme="dark"] .border-slate-200,
 html[data-public-theme="dark"] .border-slate-300,
 html[data-public-theme="dark"] .border-slate-200\/90,
 html[data-public-theme="dark"] .border-slate-200\/80,
+html[data-public-theme="dark"] .border-slate-200\/70,
 html[data-public-theme="dark"] .border-slate-200\/60,
 html[data-public-theme="dark"] .border-\[\#E1E6EA\],
 html[data-public-theme="dark"] .border-\[\#E5E7EB\],
 html[data-public-theme="dark"] .border-civic {
-  border-color: #334155 !important;
+  border-color: #38383E !important;
 }
 
 html[data-public-theme="dark"] .divide-slate-100 > * + *,
 html[data-public-theme="dark"] .divide-slate-200 > * + * {
-  border-color: #334155 !important;
+  border-color: #38383E !important;
 }
 
-/* Inputs, Textareas, Selects & Placeholders */
+/* Public Primary Accent Buttons & Badges (Dark: #C5A46D, hover: #D8BA85, text: #101114) */
+html[data-public-theme="dark"] .btn-civic-primary,
+html[data-public-theme="dark"] .bg-crimson,
+html[data-public-theme="dark"] .bg-\[\#B8323C\] {
+  background-color: #C5A46D !important;
+  color: #101114 !important;
+  border-color: #C5A46D !important;
+}
+
+html[data-public-theme="dark"] .btn-civic-primary:hover,
+html[data-public-theme="dark"] .bg-crimson:hover,
+html[data-public-theme="dark"] .bg-\[\#B8323C\]:hover {
+  background-color: #D8BA85 !important;
+  border-color: #D8BA85 !important;
+}
+
+html[data-public-theme="dark"] .text-crimson,
+html[data-public-theme="dark"] .text-\[\#B8323C\] {
+  color: #C5A46D !important;
+}
+
+html[data-public-theme="dark"] .border-crimson,
+html[data-public-theme="dark"] .border-\[\#B8323C\] {
+  border-color: #C5A46D !important;
+}
+
+/* Inputs, Textareas, Selects & Elevated Surfaces (Dark: #1C1C22, border: #38383E, text: #F5F1E9) */
 html[data-public-theme="dark"] .civic-input,
 html[data-public-theme="dark"] input[type="text"],
 html[data-public-theme="dark"] input[type="search"],
@@ -318,20 +858,105 @@ html[data-public-theme="dark"] input[type="email"],
 html[data-public-theme="dark"] input[type="password"],
 html[data-public-theme="dark"] select,
 html[data-public-theme="dark"] textarea {
-  background-color: #1E293B !important;
-  color: #F8FAFC !important;
-  border-color: #334155 !important;
+  background-color: #1C1C22 !important;
+  color: #F5F1E9 !important;
+  border-color: #38383E !important;
 }
 
 html[data-public-theme="dark"] input::placeholder,
 html[data-public-theme="dark"] textarea::placeholder,
 html[data-public-theme="dark"] .civic-input::placeholder {
-  color: #64748B !important;
+  color: #7A7873 !important;
+}
+
+html[data-public-theme="dark"] input:focus,
+html[data-public-theme="dark"] select:focus,
+html[data-public-theme="dark"] textarea:focus,
+html[data-public-theme="dark"] .civic-input:focus {
+  border-color: #C5A46D !important;
 }
 
 html[data-public-theme="dark"] option {
-  background-color: #111827;
-  color: #F8FAFC;
+  background-color: #1C1C22;
+  color: #F5F1E9;
+}
+
+/* Keyboard Focus Rings in Dark Mode */
+html[data-public-theme="dark"] :focus-visible,
+html[data-public-theme="dark"] button:focus-visible,
+html[data-public-theme="dark"] a:focus-visible,
+html[data-public-theme="dark"] input:focus-visible,
+html[data-public-theme="dark"] select:focus-visible,
+html[data-public-theme="dark"] textarea:focus-visible {
+  outline: 2px solid #C5A46D !important;
+  outline-offset: 2px !important;
+}
+
+/* Header & Top Civic Bar in Dark Mode (Navbar: #101114) */
+html[data-public-theme="dark"] header,
+html[data-public-theme="dark"] header .bg-\[\#FFFFFF\]\/95,
+html[data-public-theme="dark"] header .bg-white\/95,
+html[data-public-theme="dark"] header .bg-white {
+  background-color: #101114 !important;
+  border-color: #38383E !important;
+}
+
+html[data-public-theme="dark"] header .bg-\[\#18232E\] {
+  background-color: #19191E !important;
+  border-color: #38383E !important;
+  color: #B6B4B0 !important;
+}
+
+html[data-public-theme="dark"] header .bg-\[\#18232E\] .bg-\[\#B8323C\] {
+  background-color: #C5A46D !important;
+  color: #101114 !important;
+}
+
+/* Footer in Dark Mode (Secondary sections: #19191E, borders: #38383E) */
+html[data-public-theme="dark"] footer,
+html[data-public-theme="dark"] footer .bg-\[\#18232E\],
+html[data-public-theme="dark"] footer.bg-\[\#18232E\],
+html[data-public-theme="dark"] footer.bg-slate-900 {
+  background-color: #19191E !important;
+  border-color: #38383E !important;
+  color: #B6B4B0 !important;
+}
+
+html[data-public-theme="dark"] footer h1,
+html[data-public-theme="dark"] footer h2,
+html[data-public-theme="dark"] footer h3,
+html[data-public-theme="dark"] footer h4,
+html[data-public-theme="dark"] footer .text-white {
+  color: #F5F1E9 !important;
+}
+
+html[data-public-theme="dark"] footer a,
+html[data-public-theme="dark"] footer button,
+html[data-public-theme="dark"] footer span,
+html[data-public-theme="dark"] footer p,
+html[data-public-theme="dark"] footer li {
+  color: #B6B4B0;
+}
+
+html[data-public-theme="dark"] footer a:hover,
+html[data-public-theme="dark"] footer button:hover {
+  color: #C5A46D !important;
+}
+
+html[data-public-theme="dark"] footer .border-slate-800,
+html[data-public-theme="dark"] footer .border-slate-800\/80,
+html[data-public-theme="dark"] footer .border-slate-800\/60,
+html[data-public-theme="dark"] footer .border-slate-800\/40,
+html[data-public-theme="dark"] footer .border-t {
+  border-color: #38383E !important;
+}
+
+html[data-public-theme="dark"] footer .bg-slate-900\/60,
+html[data-public-theme="dark"] footer .bg-slate-900\/30,
+html[data-public-theme="dark"] footer .bg-slate-800\/80,
+html[data-public-theme="dark"] footer .bg-slate-800 {
+  background-color: #24242A !important;
+  border-color: #38383E !important;
 }
 
 /* Skeletons */
@@ -341,61 +966,218 @@ html[data-public-theme="dark"] .animate-pulse .bg-slate-200\/80,
 html[data-public-theme="dark"] .animate-pulse .bg-slate-200\/70,
 html[data-public-theme="dark"] .animate-pulse .bg-slate-200\/60,
 html[data-public-theme="dark"] .animate-pulse .bg-slate-200\/40 {
-  background-color: #1E293B !important;
+  background-color: #19191E !important;
 }
 
 html[data-public-theme="dark"] .animate-pulse .bg-slate-300,
 html[data-public-theme="dark"] .animate-pulse .bg-slate-300\/80 {
-  background-color: #334155 !important;
+  background-color: #38383E !important;
 }
 
 /* Scrollbars */
 html[data-public-theme="dark"] .civic-scrollbar::-webkit-scrollbar-track {
-  background: #111827;
+  background: #101114;
 }
 
 html[data-public-theme="dark"] .civic-scrollbar::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #38383E;
 }
 
 html[data-public-theme="dark"] .civic-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #4E4E56;
 }
 
 /* Leaflet Map Popups & Controls in Dark Mode */
 html[data-public-theme="dark"] .leaflet-popup-content-wrapper,
 html[data-public-theme="dark"] .leaflet-popup-tip {
-  background-color: #111827 !important;
-  color: #F8FAFC !important;
-  border: 1px solid #334155;
+  background-color: #24242A !important;
+  color: #F5F1E9 !important;
+  border: 1px solid #38383E !important;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
 }
 
 html[data-public-theme="dark"] .leaflet-popup-content {
-  color: #F8FAFC !important;
+  color: #F5F1E9 !important;
 }
 
 html[data-public-theme="dark"] .leaflet-container {
-  background-color: #0B1120 !important;
+  background-color: #101114 !important;
 }
 
 html[data-public-theme="dark"] .leaflet-bar a {
-  background-color: #1E293B !important;
-  color: #F8FAFC !important;
-  border-color: #334155 !important;
+  background-color: #1C1C22 !important;
+  color: #F5F1E9 !important;
+  border-color: #38383E !important;
 }
 
-/* Modals & Dialogs */
-html[data-public-theme="dark"] [role="dialog"] .bg-white,
-html[data-public-theme="dark"] .modal-content {
-  background-color: #111827 !important;
-  border-color: #334155 !important;
-  color: #F8FAFC !important;
+/* ========================================================
+   GRAPHITE ROYALE: MAP, NEWS, & SACRED TWIN HERITAGE (DARK)
+   ======================================================== */
+html[data-public-theme="dark"] #regional-connectivity-section {
+  background-color: #101114 !important;
+  border-color: #38383E !important;
+  color: #F5F1E9 !important;
+}
+
+html[data-public-theme="dark"] #regional-connectivity-section h2 {
+  color: #F5F1E9 !important;
+}
+
+html[data-public-theme="dark"] #regional-connectivity-section p {
+  color: #B6B4B0 !important;
+}
+
+html[data-public-theme="dark"] #regional-connectivity-section .text-amber-400 {
+  color: #C5A46D !important;
+}
+
+html[data-public-theme="dark"] #regional-connectivity-section .bg-slate-800\/80,
+html[data-public-theme="dark"] #regional-connectivity-section .bg-slate-800 {
+  background-color: #1C1C22 !important;
+  border-color: #38383E !important;
+  color: #B6B4B0 !important;
+}
+
+html[data-public-theme="dark"] #regional-connectivity-section .bg-slate-900,
+html[data-public-theme="dark"] #regional-connectivity-section .bg-slate-900\/95,
+html[data-public-theme="dark"] #regional-connectivity-section .bg-slate-900\/90,
+html[data-public-theme="dark"] #regional-connectivity-section .bg-slate-900\/80 {
+  background-color: #24242A !important;
+  border-color: #38383E !important;
+}
+
+html[data-public-theme="dark"] #regional-connectivity-section .bg-slate-800\/90,
+html[data-public-theme="dark"] #regional-connectivity-section .bg-slate-800\/60 {
+  background-color: #1C1C22 !important;
+  border-color: #38383E !important;
+  color: #B6B4B0 !important;
+}
+
+html[data-public-theme="dark"] #local-updates-section {
+  background-color: #101114 !important;
+  border-color: #38383E !important;
+  color: #F5F1E9 !important;
+}
+
+html[data-public-theme="dark"] #local-updates-section h2 {
+  color: #F5F1E9 !important;
+}
+
+html[data-public-theme="dark"] #local-updates-section p {
+  color: #B6B4B0 !important;
+}
+
+html[data-public-theme="dark"] #local-updates-section .text-red-400 {
+  color: #C5A46D !important;
+}
+
+html[data-public-theme="dark"] #local-updates-section .bg-slate-900\/90,
+html[data-public-theme="dark"] #local-updates-section .bg-slate-900\/80,
+html[data-public-theme="dark"] #local-updates-section .bg-slate-900 {
+  background-color: #24242A !important;
+  border-color: #38383E !important;
+}
+
+html[data-public-theme="dark"] #local-updates-section .border-slate-800,
+html[data-public-theme="dark"] #local-updates-section .border-slate-800\/80 {
+  border-color: #38383E !important;
+}
+
+html[data-public-theme="dark"] #local-updates-section h3 {
+  color: #F5F1E9 !important;
+}
+
+html[data-public-theme="dark"] #local-updates-section .text-slate-300,
+html[data-public-theme="dark"] #local-updates-section .text-slate-400 {
+  color: #B6B4B0 !important;
+}
+
+html[data-public-theme="dark"] #local-updates-section .bg-red-950\/60 {
+  background-color: #30291F !important;
+  border-color: #4E3E26 !important;
+  color: #C5A46D !important;
+}
+
+html[data-public-theme="dark"] #about-fazilnagar-section {
+  background-color: #19191E !important;
+  border-color: #38383E !important;
+  color: #F5F1E9 !important;
+}
+
+html[data-public-theme="dark"] #about-fazilnagar-section h2 {
+  color: #F5F1E9 !important;
+}
+
+html[data-public-theme="dark"] #about-fazilnagar-section p {
+  color: #B6B4B0 !important;
+}
+
+html[data-public-theme="dark"] #about-fazilnagar-section .bg-red-50 {
+  background-color: #30291F !important;
+  border-color: #4E3E26 !important;
+  color: #C5A46D !important;
+}
+
+html[data-public-theme="dark"] #about-fazilnagar-section .bg-\[\#F5F7F8\] {
+  background-color: #24242A !important;
+  border-color: #38383E !important;
+}
+
+html[data-public-theme="dark"] #about-fazilnagar-section .bg-\[\#18232E\] {
+  background-color: #1C1C22 !important;
+  color: #F5F1E9 !important;
+}
+
+html[data-public-theme="dark"] #about-fazilnagar-section a.bg-\[\#18232E\],
+html[data-public-theme="dark"] #about-fazilnagar-section button.bg-\[\#18232E\] {
+  background-color: #C5A46D !important;
+  color: #101114 !important;
+}
+
+html[data-public-theme="dark"] #about-fazilnagar-section a.bg-\[\#18232E\]:hover,
+html[data-public-theme="dark"] #about-fazilnagar-section button.bg-\[\#18232E\]:hover {
+  background-color: #D8BA85 !important;
+}
+
+html[data-public-theme="dark"] #about-fazilnagar-section .lg\:col-span-2.bg-\[\#F5F7F8\],
+html[data-public-theme="dark"] #about-fazilnagar-section .bg-white.p-6 {
+  background-color: #24242A !important;
+  border-color: #38383E !important;
+  color: #F5F1E9 !important;
+}
+
+html[data-public-theme="dark"] #about-fazilnagar-section h3 {
+  color: #F5F1E9 !important;
+}
+
+html[data-public-theme="dark"] #about-fazilnagar-section .bg-white.p-3 {
+  background-color: #1C1C22 !important;
+  border-color: #38383E !important;
+}
+
+html[data-public-theme="dark"] #about-fazilnagar-section .text-slate-500,
+html[data-public-theme="dark"] #about-fazilnagar-section .text-slate-600,
+html[data-public-theme="dark"] #about-fazilnagar-section .text-slate-700 {
+  color: #B6B4B0 !important;
+}
+
+html[data-public-theme="dark"] #about-fazilnagar-section .bg-gradient-to-br {
+  background: #24242A !important;
+  border: 1px solid #38383E !important;
+}
+
+html[data-public-theme="dark"] #about-fazilnagar-section .bg-slate-800\/80,
+html[data-public-theme="dark"] #about-fazilnagar-section .bg-slate-800\/60 {
+  background-color: #1C1C22 !important;
+  border-color: #38383E !important;
+  color: #B6B4B0 !important;
 }
 
 /* Strict Admin Isolation Safeguard: ensure admin workspace is never affected */
 html[data-public-theme="dark"] .admin-workspace,
-html[data-public-theme="dark"] .admin-workspace * {
+html[data-public-theme="dark"] .admin-workspace *,
+html[data-public-theme="light"] .admin-workspace,
+html[data-public-theme="light"] .admin-workspace * {
   /* Revert to native styles if ever encountered */
   background-color: revert;
   color: revert;

@@ -989,7 +989,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 5: FAZILNAGAR & NEARBY PLACES (Regional Connectivity Map)
           ======================================================== */}
-      <section id="regional-connectivity-section" className="py-16 bg-[#18232E] text-white border-y border-slate-800 content-visibility-auto">
+      <section id="regional-connectivity-section" className="py-16 border-y content-visibility-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
@@ -1497,7 +1497,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 8: LOCAL NEWS & CIVIC BULLETINS (Dated & Credible)
           ======================================================== */}
-      <section id="local-updates-section" className="mobile-density-section bg-[#18232E] text-white py-16 content-visibility-auto">
+      <section id="local-updates-section" className="mobile-density-section py-16 border-y content-visibility-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-8 gap-4">
             <div>
@@ -1660,7 +1660,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 9: ABOUT FAZILNAGAR & KUSHINAGAR (History & Culture)
           ======================================================== */}
-      <section id="about-fazilnagar-section" className="mobile-density-section py-16 bg-white border-t border-[#E1E6EA]">
+      <section id="about-fazilnagar-section" className="mobile-density-section py-16 border-t content-visibility-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center max-w-3xl mx-auto mb-10">

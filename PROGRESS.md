@@ -1,5 +1,86 @@
 # Town Portal & Regional Connectivity Implementation Progress
 
+- **FIX INCONSISTENT SECTION BACKGROUNDS (MAP, NEWS & SACRED TWIN HERITAGE) (COMPLETED & VERIFIED)**
+  - **Summary**: Resolved section wrapper background inconsistencies across Issue 1 (Map Section) and Issue 2 (Local News & Civic Bulletins + Sacred Twin Heritage Sections) in one focused implementation.
+  - **Changes Made**:
+    - Removed hardcoded `bg-[#18232E]` (blue/navy) from `#regional-connectivity-section` and `#local-updates-section` wrappers in `TownPortal.jsx`.
+    - Removed `bg-white` from `#about-fazilnagar-section` wrapper in `TownPortal.jsx` to prevent it from inheriting the full-width `#24242A` card gray background.
+    - Added scoped rules in `client/src/index.css` for both Light Mode and Dark Mode:
+      - Dark Mode:
+        - `#regional-connectivity-section`: Main background `#101114`, borders `#38383E`, text `#F5F1E9` / `#B6B4B0`, map container `#24242A`.
+        - `#local-updates-section`: Main background `#101114`, borders `#38383E`, text `#F5F1E9` / `#B6B4B0`, news cards `#24242A` with `#38383E` borders.
+        - `#about-fazilnagar-section`: Secondary section background `#19191E`, borders `#38383E`, text `#F5F1E9` / `#B6B4B0`, heritage cards `#24242A`, sub-stat boxes `#1C1C22`, gold accent `#C5A46D`.
+      - Light Mode:
+        - `#regional-connectivity-section`: Main background `#F7F6F2`, borders `#E4E0D8`, text `#202124` / `#626262`, map container `#FFFFFF`.
+        - `#local-updates-section`: Main background `#F7F6F2`, borders `#E4E0D8`, text `#202124` / `#626262`, news cards `#FFFFFF`.
+        - `#about-fazilnagar-section`: Secondary section background `#EFEEE9`, borders `#E4E0D8`, text `#202124` / `#626262`, heritage cards `#FFFFFF`, sub-stat boxes `#EFEEE9`, gold accent `#A78650`.
+  - **Verification**:
+    - Production build (`npm run build`) succeeded in 6.23s with 17 static HTML routes generated.
+    - Automated tests (`server/tests/themeSwitcher.test.js` [4/4], `locationRegression.test.js` [9/9]) passed.
+    - Visual browser subagent inspection verified all three sections in Dark Mode and Light Mode, and confirmed strict admin isolation with no theme switcher.
+
+- **COMPLETE GRAPHITE ROYALE IMPLEMENTATION — ALL PUBLIC ROUTES & SHELLS (COMPLETED & VERIFIED)**
+  - **Summary**: Implemented the complete, approved Graphite Royale Light/Dark color system across the ENTIRE public website, covering every route, shared shell, and nested component. Preserved 100% of the existing layouts, component dimensions, typography, and features. Strictly isolated the admin panel to retain its original Midnight Civic styling with zero theme leakage.
+  - **Discovered Public Route & Component Coverage**:
+    - **Routes Covered**:
+      - Homepage / Civic Portal: `/`, `/town`, `/portal`, `/fazilnagar` (`TownPortal.jsx`, `MobileHomePortal.jsx`)
+      - News & Video Feeds: `/news`, `/news/:id`, `/local-updates`, `/directory/news` (`ReelsNewsFeed.jsx`), `/news/classic` (`News.jsx`)
+      - Civic Directory & Maps: `/directory`, `/local-directory` (`Directory.jsx`, `RegionalConnectivityMap.jsx`)
+      - Civic Hubs: `/emergency` (`EmergencyHub.jsx`), `/healthcare` (`HealthcareDirectory.jsx`), `/education` (`EducationHub.jsx`), `/jobs` (`JobsAndBusiness.jsx`), `/tourism` (`Tourism.jsx`), `/food` (`FoodGuide.jsx`), `/marketplace` (`Marketplace.jsx`), `/transport` (`Transportation.jsx`), `/govt` (`GovtServices.jsx`)
+      - Public Forms & Submissions: `/contribute/:slug`, `/forms/:slug` (`PublicContributionForm.jsx`), `/create-news`, `/upload` (`CreateNews.jsx`), `/contact`, `/report` (`Contact.jsx`)
+      - Town Messaging & Citizen Communication: `/messages` (`Messages.jsx`), `/profile`, `/settings` (`ProfileEdit.jsx`)
+      - Public Auth: `/login` (`Login.jsx`), `/register` (`Register.jsx`)
+      - Informational & Legal: `/about` (`About.jsx`), `/privacy`, `/privacy-policy` (`PrivacyPolicy.jsx`), `/terms`, `/terms-of-service`, `/disclaimer` (`TermsOfService.jsx`)
+      - Catch-All 404: `*` (`NotFound.jsx`)
+    - **Shared Components & Shells Covered**:
+      - Fixed Top Shell & Top Civic Alert Bar (`App.jsx`, `MobileHomePortal.jsx`)
+      - Desktop Navigation & Logo (`App.jsx`)
+      - Secondary Sub-Navbar across all civic hubs (`App.jsx`)
+      - Mobile Bottom Navigation Bar & Mobile Bottom Menu Drawer Sheet (`App.jsx`, `MobileHomePortal.jsx`)
+      - Interactive Theme Switcher Toggle (`ThemeToggle.jsx`)
+      - Notification Center Popover (`NotificationCenter.jsx`)
+      - Direction & Route Modal (`DirectionsModal.jsx`)
+      - Leaflet Map Popups, Zoom Bar, Tooltips & Attributions (`RegionalConnectivityMap.jsx`, `DirectoryMap.jsx`)
+      - Search Bars, Voice Search Trays, and Auto-complete Popovers
+      - Editorial Footers (`App.jsx`, `TownPortal.jsx`)
+  - **Approved Graphite Royale Palette Applied**:
+    - **Light Mode**:
+      - Main background: `#F7F6F2`
+      - Navbar: `#FFFFFF`
+      - Secondary sections: `#EFEEE9`
+      - Cards / Primary surfaces: `#FFFFFF`
+      - Inputs: `#FFFFFF`
+      - Primary text: `#202124`
+      - Secondary text: `#626262`
+      - Borders: `#E4E0D8` (hover: `#D5D0C5`)
+      - Accent: `#A78650` (hover: `#8E7042`)
+      - Highlight: `#F1E8D8`
+    - **Dark Mode**:
+      - Main background: `#101114`
+      - Navbar: `#101114`
+      - Secondary sections: `#19191E`
+      - Cards / Primary surfaces: `#24242A`
+      - Inputs / elevated surfaces: `#1C1C22`
+      - Primary text: `#F5F1E9`
+      - Secondary text: `#B6B4B0`
+      - Borders: `#38383E` (hover: `#4E4E56`)
+      - Accent: `#C5A46D` (hover: `#D8BA85`)
+      - Highlight: `#30291F`
+    - **Accessible Status Colors**:
+      - Success: Light `#15803D` / bg `#F0FDF4` / border `#BBF7D0`; Dark `#4ADE80` / bg `#064E3B` / border `#065F46`
+      - Warning: Light `#B45309` / bg `#FFFBEB` / border `#FDE68A`; Dark `#FBBF24` / bg `#78350F` / border `#92400E`
+      - Error: Light `#B91C1C` / bg `#FEF2F2` / border `#FECACA`; Dark `#F87171` / bg `#7F1D1D` / border `#991B1B`
+      - Info: Light `#1D4ED8` / bg `#EFF6FF` / border `#BFDBFE`; Dark `#60A5FA` / bg `#1E3A8A` / border `#1D4ED8`
+  - **Admin Isolation Verification**:
+    - Confirmed admin routes (`/admin`, `/admin/review`) completely strip `data-public-theme`, `theme-light`, and `theme-dark`.
+    - Added `.admin-workspace` CSS safeguard reverting background, text, and border properties.
+    - Verified `ThemeToggle.jsx` returns `null` when `isAdminPage` is true, ensuring no toggle button renders anywhere in the admin desk.
+  - **Build & Verification Results**:
+    - `server/tests/themeSwitcher.test.js`: 4/4 passing tests verifying Graphite Royale tokens in both modes, localStorage persistence, admin exclusion, and pre-paint scripts.
+    - `client/` location regression test (`npm test`): 9/9 passing tests.
+    - Admin security regression test (`node --test server/tests/adminReviewDeskSecurity.test.js`): 18/18 passing tests across 5 test suites.
+    - Client production build (`npm run build`): 2122 modules transformed, 17 static route HTML pages generated cleanly in 5.69s.
+
 - **MIDNIGHT CIVIC ADMIN UI & WEBSITE-WIDE TRANSITIONS RESTORATION — COMPLETED & VERIFIED**
   - **Summary**: Polished and standardized the existing Fazilnagar Portal Admin Panel in place using the Midnight Civic design system tokens while preserving 100% of all existing layouts, modules, endpoints, routes, actions, and schemas. Identified the exact root causes of missing transitions across the site and restored high-performance micro-transitions (150–180ms) and route change animations without layout shifts or navigation delays.
   - **Files Changed & Purpose of Each Change**:

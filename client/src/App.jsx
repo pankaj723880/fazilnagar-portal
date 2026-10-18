@@ -258,10 +258,10 @@ export default function App() {
     <div
       id="public-portal-root"
       data-public-theme={isAdminPage ? undefined : (isDark ? "dark" : "light")}
-      className={`min-h-screen w-full max-w-full overflow-x-hidden flex flex-col font-sans selection:bg-[#B8323C] selection:text-white transition-colors duration-200 ${
+      className={`min-h-screen w-full max-w-full overflow-x-hidden flex flex-col font-sans transition-colors duration-200 ${
         !isAdminPage && isDark
-          ? "bg-[#0B1120] text-[#F8FAFC]"
-          : "bg-[#F8FAFC] text-[#111827]"
+          ? "bg-[#101114] text-[#F5F1E9] selection:bg-[#C5A46D] selection:text-[#101114]"
+          : "bg-[#F7F6F2] text-[#202124] selection:bg-[#A78650] selection:text-white"
       }`}
     >
       {/* Skip to Main Content Link for WCAG 2.2 AA Keyboard Accessibility */}
