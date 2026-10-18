@@ -35,12 +35,14 @@ import {
 } from "lucide-react";
 import NotificationCenter from "./NotificationCenter";
 import ThemeToggle from "./ThemeToggle";
+import MobileHeroCarousel from "./MobileHeroCarousel";
 import { openGoogleMapsDirections } from "../utils/directions";
 import { getAuthUser, isUserAdmin } from "../utils/authStorage";
 import {
   getCivicDirectory,
   getCachedCivicDirectory,
   subscribeToCMSLiveUpdates,
+  DEFAULT_HERO_SLIDES,
 } from "../services/cmsService";
 import seedPlaces from "../data/places.json";
 
@@ -323,8 +325,13 @@ export default function MobileHomePortal({
   onOpenEvent,
   onOpenAddListing,
   onOpenEditProfile,
+  heroSlides,
+  heroSettings,
 }) {
   const navigate = useNavigate();
+
+  const effectiveHeroSlides =
+    heroSlides && heroSlides.length > 0 ? heroSlides : DEFAULT_HERO_SLIDES;
 
   // Current logged in user for Top App Bar
   const [authUser, setAuthUser] = useState(() => getAuthUser());
@@ -541,7 +548,7 @@ export default function MobileHomePortal({
           ======================================================== */}
       <section className="bg-gradient-to-b from-amber-50/50 via-slate-50/30 to-transparent px-4 pt-3 pb-2" aria-label="Hero & Search Area">
         {/* Short Heading */}
-        <div className="mb-2">
+        <div className="mb-1">
           <h2 className="text-[18px] font-black text-slate-900 font-heading tracking-tight leading-tight">
             Official Fazilnagar Portal
           </h2>
@@ -549,6 +556,13 @@ export default function MobileHomePortal({
             Verified Town Directory & Public Services
           </p>
         </div>
+
+        {/* Existing Carousel in 16:9 Aspect Ratio */}
+        <MobileHeroCarousel
+          slides={effectiveHeroSlides}
+          autoplay={heroSettings?.enableAutoplay !== false}
+          interval={heroSettings?.animationSpeed || 5000}
+        />
 
         {/* Search Pill Input */}
         <div className="relative flex items-center bg-white rounded-2xl border border-slate-200/90 shadow-sm px-3.5 py-2.5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-100 transition">

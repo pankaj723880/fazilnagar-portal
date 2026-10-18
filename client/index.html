@@ -138,24 +138,8 @@
         0% { transform: translate3d(-100%, 0, 0); }
         100% { transform: translate3d(240%, 0, 0); }
       }
-      .splash-initial-shimmer {
-        animation: splashInitialMotion 1.25s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-        will-change: transform;
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .splash-initial-shimmer {
-          animation: none !important;
-        }
-      }
-      /* Splash shell is hidden by default for ALL direct nested routes, preventing any blocking overlay */
-      #initial-splash-shell {
-        display: none;
-      }
-      html.is-homepage-launch #initial-splash-shell {
-        display: flex;
-      }
     </style>
-    <!-- Startup Performance Instrumentation & Single Coordinated Launch Controller -->
+    <!-- Startup Performance Instrumentation -->
     <script>
       window.__STARTUP_METRICS__ = {
         navStart: performance.now(),
@@ -166,62 +150,17 @@
         interactive: 0
       };
       try { performance.mark('app-html-start'); } catch (e) {}
-
-      (function() {
-        var dismissed = false;
-        window.__dismissSplash = function() {
-          if (dismissed) return;
-          var splash = document.getElementById('initial-splash-shell');
-          if (!splash) return;
-
-          dismissed = true;
-          if (window.__STARTUP_METRICS__) {
-            window.__STARTUP_METRICS__.homepageUsable = performance.now();
-            try { performance.mark('app-homepage-usable'); } catch (e) {}
-          }
-          // Coordinate dismissal: double rAF ensures React DOM is painted underneath with zero flicker
-          requestAnimationFrame(function() {
-            requestAnimationFrame(function() {
-              splash.style.transition = 'opacity 180ms cubic-bezier(0.4, 0, 0.2, 1)';
-              splash.style.opacity = '0';
-              splash.style.pointerEvents = 'none';
-              setTimeout(function() {
-                try { splash.remove(); } catch (e) {}
-              }, 200);
-            });
-          });
-        };
-
-        // Safety fallback: auto-dismiss if background JS takes unexpectedly long
-        setTimeout(function() {
-          if (!dismissed && typeof window.__dismissSplash === 'function') {
-            window.__dismissSplash();
-          }
-        }, 1200);
-      })();
+      window.__dismissSplash = function() {
+        if (window.__STARTUP_METRICS__) {
+          window.__STARTUP_METRICS__.homepageUsable = performance.now();
+          try { performance.mark('app-homepage-usable'); } catch (e) {}
+        }
+      };
     </script>
   </head>
   <body class="font-sans antialiased text-slate-800" style="background-color:#18232E;margin:0;padding:0;">
     <div id="root"></div>
 
-    <!-- Single Coordinated Launch Splash Shell (Anchored with safe-area insets and box-sizing) -->
-    <div id="initial-splash-shell" style="position:fixed;inset:0;z-index:999999;width:100%;height:100%;height:100dvh;box-sizing:border-box;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);display:none;flex-direction:column;align-items:center;justify-content:center;user-select:none;overflow:hidden;background:#18232E;background-image:linear-gradient(to bottom, #18232E, #131d27, #0f171e);font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;will-change:opacity;">
-      <div style="position:absolute;width:288px;height:288px;border-radius:50%;pointer-events:none;filter:blur(64px);opacity:0.20;background:radial-gradient(circle, #f59e0b, #e11d48, #ea580c);"></div>
-      <div style="position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 24px;">
-        <div style="width:96px;height:96px;border-radius:16px;background:rgba(15,23,30,0.9);border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 32px rgba(0,0,0,0.5);padding:14px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-sizing:border-box;">
-          <img src="/icon-192.svg" alt="Fazilnagar Town Portal" width="68" height="68" style="width:68px;height:68px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(184,50,60,0.4));" />
-        </div>
-        <h1 style="font-size:24px;font-weight:900;letter-spacing:0.05em;color:#ffffff;margin:0 0 6px 0;line-height:1.2;">
-          FAZIL<span style="color:#B8323C;">NAGAR</span>
-        </h1>
-        <p style="font-size:11px;font-weight:600;letter-spacing:0.08em;color:#94a3b8;text-transform:uppercase;margin:0;">
-          PIN 274401 • Your Town. Your Community.
-        </p>
-        <div style="margin-top:24px;height:2px;width:128px;background:rgba(255,255,255,0.1);border-radius:9999px;overflow:hidden;position:relative;">
-          <div class="splash-initial-shimmer" style="position:absolute;inset:0;width:64px;background:linear-gradient(to right, transparent, rgba(255,255,255,0.8), transparent);border-radius:9999px;"></div>
-        </div>
-      </div>
-    </div>
     <noscript id="fallback-noscript">
       <div style="max-width:800px;margin:2rem auto;padding:1.5rem;font-family:system-ui,sans-serif;color:#18232E;">
         <h1>Fazilnagar Town Civic &amp; Local Directory Portal</h1>

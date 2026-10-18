@@ -11,7 +11,7 @@ import { useState, useEffect } from "react";
  * 5. GPU-accelerated exit fade & scale (400ms) with seamless homepage reveal.
  * 6. Body scroll locked during mount, pointer-events-none during exit, touch-none.
  */
-export default function SplashScreen({ onComplete, duration = 1800 }) {
+export default function SplashScreen({ onComplete, duration = 3800 }) {
   const [stage, setStage] = useState("active"); // 'active' | 'exit' | 'done'
 
   useEffect(() => {
@@ -21,10 +21,10 @@ export default function SplashScreen({ onComplete, duration = 1800 }) {
     document.body.style.overflow = "hidden";
     document.body.style.touchAction = "none";
 
-    // Trigger smooth opacity cross-fade (300ms before completion)
+    // Trigger smooth opacity cross-fade (400ms before completion)
     const exitTimer = setTimeout(() => {
       setStage("exit");
-    }, Math.max(1000, duration - 300));
+    }, Math.max(1000, duration - 400));
 
     // Fully complete & unmount
     const doneTimer = setTimeout(() => {
@@ -51,7 +51,7 @@ export default function SplashScreen({ onComplete, duration = 1800 }) {
       aria-live="polite"
       className={`fixed inset-0 z-[999999] h-[100dvh] w-full flex flex-col items-center justify-center select-none overflow-hidden touch-none ${
         isExiting ? "pointer-events-none opacity-0" : "pointer-events-auto opacity-100"
-      } transition-opacity duration-300 ease-out bg-[#18232E] bg-gradient-to-b from-[#18232E] via-[#131d27] to-[#0f171e]`}
+      } transition-opacity duration-400 ease-out bg-[#18232E] bg-gradient-to-b from-[#18232E] via-[#131d27] to-[#0f171e]`}
       style={{
         WebkitTapHighlightColor: "transparent",
         willChange: "opacity",

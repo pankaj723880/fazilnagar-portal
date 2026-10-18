@@ -14,6 +14,7 @@ const StoryVideoPreview = lazy(() => import("../components/StoryVideoPreview"));
 import {
   getSiteSettings,
   DEFAULT_SITE_SETTINGS,
+  DEFAULT_HERO_SLIDES,
   getCachedSettings,
   getHeritageSites,
   DEFAULT_HERITAGE_SITES,
@@ -345,8 +346,12 @@ export default function TownPortal() {
     return evt.category === selectedEventCategory;
   });
 
-  // Compute dynamic hero slides (custom admin slides if any with valid URLs)
-  const configuredSlides = (siteSettings?.heroSettings?.slides || []).filter(
+  // Compute dynamic hero slides (custom admin slides if any with valid URLs, or default slides)
+  const rawHeroSlides =
+    siteSettings?.heroSettings?.slides && siteSettings.heroSettings.slides.length > 0
+      ? siteSettings.heroSettings.slides
+      : DEFAULT_HERO_SLIDES;
+  const configuredSlides = rawHeroSlides.filter(
     (s) => {
       const title = String(s?.title || "").toLowerCase();
       return (
@@ -588,6 +593,8 @@ export default function TownPortal() {
         <div className={isMobilePreview ? "block py-6 bg-slate-200/70 min-h-screen" : "block md:hidden w-full"}>
           <div className={isMobilePreview ? "max-w-[420px] mx-auto shadow-2xl rounded-3xl overflow-hidden border border-slate-300 bg-slate-50" : "w-full"}>
             <MobileHomePortal
+              heroSlides={dynamicHeroSlides}
+              heroSettings={siteSettings?.heroSettings}
               onOpenAddListing={() => setModalType("business")}
               onOpenAddPlace={() => setCommunityModalOpen(true)}
               onOpenCorrection={() => setModalType("correction")}

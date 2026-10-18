@@ -71,6 +71,39 @@ const memoryCache = {
   civicDirectory: { data: getPersistentCache("civicDirectory"), timestamp: Date.now() },
 };
 
+export const DEFAULT_HERO_SLIDES = [
+  {
+    _id: "default-slide-1",
+    title: "Official Civic & Digital Directory",
+    subtitle: "Fazilnagar Nagar Panchayat, Kushinagar",
+    caption: "Find verified schools, colleges, healthcare centres, public services, and live community news in Fazilnagar.",
+    imageUrl: "/images/fazilnagar_pawanagar.webp",
+    linkUrl: "/directory",
+    buttonText: "Browse Town Directory",
+    isActive: true,
+  },
+  {
+    _id: "default-slide-2",
+    title: "Healthcare & 24/7 Emergency Medical Aid",
+    subtitle: "Community Health Centre & Verified Clinics",
+    caption: "Access Community Health Centre (CHC) Fazilnagar, 24x7 ambulance contacts, and verified medical stores.",
+    imageUrl: "/images/kushinagar_mahaparinirvana.webp",
+    linkUrl: "/emergency",
+    buttonText: "Emergency Healthcare Hub",
+    isActive: true,
+  },
+  {
+    _id: "default-slide-3",
+    title: "Sacred Twin Heritage of Fazilnagar & Kushinagar",
+    subtitle: "Historic Pawapuri Dham & Ancient Pilgrimage Trail",
+    caption: "Explore the sacred historical convergence of Bhagwan Mahavira's nirvana land and Buddha's Mahaparinirvana trail.",
+    imageUrl: "/images/fazilnagar_kakodha.webp",
+    linkUrl: "/tourism",
+    buttonText: "Explore Twin Heritage",
+    isActive: true,
+  },
+];
+
 export const DEFAULT_SITE_SETTINGS = {
   siteName: "Fazilnagar Town Civic & Local Directory Portal (Unofficial, Community-Run)",
   shortName: "Fazilnagar Portal",
@@ -107,8 +140,8 @@ export const DEFAULT_SITE_SETTINGS = {
   heroSettings: {
     animationSpeed: 5000,
     animationDirection: "left",
-    enableAutoplay: false,
-    slides: [],
+    enableAutoplay: true,
+    slides: DEFAULT_HERO_SLIDES,
   },
   stats: [
     { id: "stat-schools", label: "Schools & Colleges", value: "9+", subtext: "Verified Institutions", icon: "GraduationCap", isActive: true },

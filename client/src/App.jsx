@@ -38,6 +38,7 @@ import InstallButton from "./components/InstallButton";
 import ThemeToggle from "./components/ThemeToggle";
 import { useTheme } from "./context/ThemeContext";
 import EditProfileModal from "./components/EditProfileModal";
+import SplashScreen from "./components/SplashScreen";
 const DirectionsModal = lazy(() => import("./components/DirectionsModal"));
 const NotificationCenter = lazy(() => import("./components/NotificationCenter"));
 const GlobalFloatingAndStickyAds = lazy(() =>
@@ -261,6 +262,20 @@ export default function App() {
     }
   }, []);
 
+  // Splash Screen State: Show once on initial homepage launch, never restart on route changes
+  const [showSplash, setShowSplash] = useState(() => {
+    if (typeof window !== "undefined") {
+      const p = window.location.pathname;
+      const isHome = p === "/" || p === "/town" || p === "/portal" || p === "/fazilnagar" || p === "/index.html";
+      const hasSeen = sessionStorage.getItem("hasSeenSplash");
+      if (isHome && !hasSeen) {
+        sessionStorage.setItem("hasSeenSplash", "true");
+        return true;
+      }
+    }
+    return false;
+  });
+
   const handleLogout = () => {
     performLogout();
     setUser(null);
@@ -276,6 +291,11 @@ export default function App() {
           : "bg-[#F7F6F2] text-[#202124] selection:bg-[#A78650] selection:text-white"
       }`}
     >
+      {/* Native App-Style Ultra-Premium Splash Screen (Increased display duration ~3.8s) */}
+      {showSplash && (
+        <SplashScreen onComplete={() => setShowSplash(false)} duration={3800} />
+      )}
+
       {/* Skip to Main Content Link for WCAG 2.2 AA Keyboard Accessibility */}
       <a
         href="#main-content"
