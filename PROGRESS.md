@@ -1,5 +1,85 @@
 # Town Portal & Regional Connectivity Implementation Progress
 
+- **ADMIN APPROVAL & REAL-TIME PUBLISHING SYNCHRONIZATION (COMPLETED & VERIFIED)**
+  - **Issue Investigated & Root Causes Identified**:
+    - When an admin approved a submitted value or record in Map or Directory modules, the approved information did not always appear or update immediately on public pages.
+    - **Root Causes**:
+      1. *Invisible New Places in Directory*: In `server/routes/places.js`, `GET /api/places` enforced `townBoundaryStatus: "confirmed"`. Newly created approved places lacked this flag by default and defaulted to `"unverified"`, causing MongoDB queries to completely exclude approved places from public directory listings.
+      2. *Stale Server Caches*: `server/routes/places.js` cached public directory results and `/api/places/map-entities` for 60 seconds (`PLACES_CACHE_TTL_MS`), but approval endpoints in `submissions.js` never called `invalidatePlacesCache()`, resulting in stale public responses for up to a minute.
+      3. *Frontend Session Storage Locking*: `client/src/pages/Directory.jsx` loaded places from `sessionStorage.getItem("fazilnagar_cached_places")`. Approving a submission in an admin tab did not bust or clear this session cache in public tabs or cross-tab sessions.
+      4. *Map Entities API Routing*: `RegionalConnectivityMap.jsx` called `fetch("/api/places/map-entities")` using relative paths without Axios baseURL, causing requests in development or preview to fail and fall back to static local data.
+      5. *Query Parameter URL Encoding*: Express queries containing encoded characters (such as `%26` in `"Hospitals & Clinics"` and `%20` in search) were not safely decoded before being passed to MongoDB queries, causing category and search filters to miss matching approved items.
+  - **Fixes Applied**:
+    - **`server/socket.js`**: Added and exported `emitPlacesUpdated({ placeId, place, action, submissionId })` to broadcast `"places_updated"` events over Socket.IO.
+    - **`server/routes/places.js`**:
+      - Updated public places filter to `townBoundaryStatus: { $ne: "outside" }`.
+      - Added safe URL decoding for `category`, `search`, and `locality` with case-insensitive boundary regex queries.
+      - Combined query conditions using `$and` to prevent category filter and search query from clobbering each other.
+      - Integrated `emitPlacesUpdated` into all CRUD operations (`POST`, `PUT`, `DELETE`, `PATCH /:id/archive`, `PATCH /:id/restore`).
+    - **`server/routes/submissions.js`**:
+      - Added duplicate approval guards returning HTTP 400 for repeated review clicks.
+      - Distinguishes edit requests of existing linked places (`submission.placeId`) vs new place creation.
+      - Preserves verified coordinates on edit requests when submitted coordinates are omitted or invalid.
+      - Explicitly enforces `isPublished: true`, `townBoundaryStatus: "confirmed"`, and `verificationStatus: "verified"` on approvals.
+      - Calls `invalidatePlacesCache()`, `syncJsonPlaces(...)`, and `emitPlacesUpdated(...)`.
+      - Returns canonical saved `place` and `success: true` in the API response.
+    - **`server/routes/contributionSubmissions.js`**:
+      - Enhanced place lookup with `$or: [{ id }, { slug }, { _id }, { name }]`.
+      - Supports flexible action aliases (`action`, `decision`, `status`) and defaults `approvedFields` to all submitted fields if unspecified.
+      - Validates and preserves verified coordinates, recomputes Haversine distance and `mapsUrl`.
+      - Calls `invalidatePlacesCache()`, `syncJsonPlaces(...)`, and `emitPlacesUpdated(...)`.
+      - Returns canonical `place` and `success: true`.
+    - **`client/src/pages/Directory.jsx`**:
+      - Added real-time sync listener for `"fazilnagar-place-updated"`, `localStorage` cross-tab `storage` events, and Socket.IO `"places_updated"`.
+      - Invalidates `sessionStorage` caches and re-fetches places, stats, and admin queue.
+      - Automatically refreshes `selectedPlace`, `detailModalPlace`, and `editModalPlace` in place so any open cards/modals update immediately.
+    - **`client/src/components/RegionalConnectivityMap.jsx`**:
+      - Enhanced fetching to use `API.get("/places/map-entities")` with fallback to `fetch`.
+      - Added listeners for custom event, cross-tab storage, and Socket.IO.
+      - Refreshes `selectedLocation` in place so markers and popups reflect updates immediately without manual reload.
+    - **`client/src/components/admin/AdminContributionReview.jsx`**, **`AdminCommunityPlaces.jsx`**, **`AdminPlaceEditModal.jsx`**, **`AdminManageEntities.jsx`**:
+      - Clear `sessionStorage` caches, set `fazilnagar_last_place_update` in `localStorage`, and dispatch `fazilnagar-place-updated`.
+  - **Verification**:
+    - Built comprehensive 8-scenario test suite `server/tests/adminApprovalSync.test.js`:
+      1. Approve new Map location -> appears in `/api/places/map-entities` (PASS).
+      2. Approve existing location edit -> marker updates without duplication (PASS).
+      3. Approve new Directory listing -> appears in `/api/places` under category (PASS).
+      4. Approve existing listing edit -> card shows updated values and preserved coordinates (PASS).
+      5. Approve same request twice -> returns 400 with no duplicate records (PASS).
+      6. Refresh / reload simulation -> approved changes remain permanent in DB (PASS).
+      7. Reject submission -> unpublished and omitted from public APIs (PASS).
+      8. Counts, filters, and search reflect approved data (PASS).
+      - Result: 8/8 tests passed (0 failures).
+    - Ran `dynamicFormBuilderAndApproval.test.js`: 17/17 tests passed (0 failures).
+    - Ran client production bundle build (`npm run build`): clean build in 23.59s with 0 errors.
+
+- **BUG FIX — Form Shows Generic Validation Error Despite All Visible Fields Being Filled (Resolved)**
+  - **Issue Investigated**:
+    - Users reported that public/location submission forms displayed a generic red alert banner: *"Please check and correct the highlighted fields below."* even when all visible form fields were correctly filled in, with zero visible fields highlighted.
+    - **Exact Root Cause Identified**:
+      1. **Backend Unconditional Requirement for Removed Field**: In `server/routes/forms.js`, when coordinates (`latitude` and `longitude`) were submitted on a form where `googleMapsUrl` was intentionally removed or omitted by the admin, the backend executed `else if (hasLat || hasLng)` and rejected the request with HTTP 400 and `errors: { googleMapsUrl: "Google Maps URL is required for location submissions." }`.
+      2. **Frontend Field-Error Mismatch & Invisible Failure**: In `client/src/pages/PublicContributionForm.jsx`, `setFormErrors(err.response.data.errors)` received the `googleMapsUrl` error. Because `googleMapsUrl` was not present in the active `form.fields`, no visible form input matched the error key. The top banner rendered *"Please check and correct the highlighted fields below."*, but no field on the screen could be highlighted, leaving the user blocked with all visible fields filled.
+      3. **Missing Error Styling, HTML Attributes & Auto-Scroll**: Form inputs lacked standard `id`, `name`, `aria-invalid`, and `aria-describedby` attributes. Error borders were missing on the outer container cards, and submission errors did not scroll or focus the invalid field.
+  - **Fixes Applied**:
+    - **`server/routes/forms.js`**:
+      - Updated location validation so that `googleMapsUrl` is only required if it is configured as an active, required field on the specific form (`mapsFieldDef && mapsFieldDef.required`).
+      - When coordinates (`latitude` and `longitude`) are provided without an active `googleMapsUrl` field, the backend automatically derives the canonical Google Maps URL using `buildGoogleMapsCoordinateUrl(lat, lng)`, sets `locationComparison` status to `"consistent"`, and allows valid submissions to succeed without error.
+      - Added paired coordinate validation: submitting latitude without longitude (or vice-versa) flags the missing coordinate field directly.
+      - Auto-extracts coordinates from authentic Google Maps URLs when coordinate fields are omitted from the form.
+    - **`client/src/pages/PublicContributionForm.jsx`**:
+      - Replaced the generic top alert banner with an actionable, accessible error summary (`#form-validation-summary`) listing every failing field with plain-language explanations and clickable jump links.
+      - Added smooth auto-scroll (`scrollToFirstError`) to the first invalid visible field, focusing the element automatically upon failure.
+      - Added explicit HTML `id={`contrib-field-${field.name}`}`, `name={field.name}`, `aria-invalid`, and `aria-describedby` to all inputs, selects, and textareas.
+      - Enhanced visual error feedback: invalid fields and their container cards render with prominent red borders and background styling (`border-2 border-red-500 bg-red-50/50 ring-2 ring-red-200`).
+      - Added field-level error messages below each invalid control with clear warning icons and text.
+      - Handled server errors and unmapped requirements gracefully without silently discarding entered input.
+    - **`server/tests/publicFormSharingAndSubmissions.test.js`**:
+      - Added Section 4: 7 new automated tests covering all submission workflows: all visible fields filled with removed `googleMapsUrl`, required visible fields missing, removed fields not blocking, latitude/longitude boundary checks (-90 to 90, -180 to 180), coordinate pairing requirements, and optional coordinate validation.
+  - **Verification**:
+    - Ran all 35 tests in `publicFormSharingAndSubmissions.test.js` and `dynamicFormBuilderAndApproval.test.js`: 35/35 passing (0 failures).
+    - Ran complete server regression suite (`npm test`): 64/64 tests passing (0 failures).
+    - Ran client production bundle build (`npm run build`): clean build in 24.21s with 0 errors.
+
 - **CRITICAL BUG FIX — Story Video Playback & Reel Format Streaming (Vercel & Production Fix)**
   - **Issue Investigated**:
     - Videos played on localhost but failed with "Video playback failed. Could not stream video. Please check connection and retry" on the deployed Vercel app (`https://fazilnagar.vercel.app/news`).

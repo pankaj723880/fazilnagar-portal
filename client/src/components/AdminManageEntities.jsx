@@ -118,6 +118,11 @@ export default function AdminManageEntities({ token: propToken, onStatsChange })
         );
         showToast("success", `Archived "${place.name}". It is now hidden from the public map.`);
       }
+      try {
+        sessionStorage.removeItem("fazilnagar_cached_places");
+        sessionStorage.removeItem("fazilnagar_cached_places_stats");
+        localStorage.setItem("fazilnagar_last_place_update", String(Date.now()));
+      } catch (_) {}
       fetchPlaces();
       window.dispatchEvent(new CustomEvent("fazilnagar-place-updated"));
       if (onStatsChange) onStatsChange();
@@ -152,6 +157,11 @@ export default function AdminManageEntities({ token: propToken, onStatsChange })
       showToast("success", `Permanently deleted "${deleteConfirmPlace.name}".`);
       setDeleteConfirmPlace(null);
       setDeleteDialogOpen(false);
+      try {
+        sessionStorage.removeItem("fazilnagar_cached_places");
+        sessionStorage.removeItem("fazilnagar_cached_places_stats");
+        localStorage.setItem("fazilnagar_last_place_update", String(Date.now()));
+      } catch (_) {}
       fetchPlaces();
       window.dispatchEvent(new CustomEvent("fazilnagar-place-updated"));
       if (onStatsChange) onStatsChange();

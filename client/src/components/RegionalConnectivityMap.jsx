@@ -5,6 +5,8 @@ import {
   REGIONAL_LOCATIONS,
   FAZILNAGAR_CENTRE,
 } from "../data/regionalLocations";
+import API from "../api";
+import { getSocket } from "../socket";
 import {
   Compass,
   Search,
@@ -67,9 +69,16 @@ export default function RegionalConnectivityMap() {
     let isMounted = true;
     const fetchEntities = async () => {
       try {
-        const res = await fetch("/api/places/map-entities");
-        if (!res.ok) return;
-        const resData = await res.json();
+        let resData = null;
+        try {
+          const apiRes = await API.get("/places/map-entities");
+          resData = apiRes.data;
+        } catch (_) {
+          const res = await fetch("/api/places/map-entities");
+          if (res.ok) {
+            resData = await res.json();
+          }
+        }
         const rawList = Array.isArray(resData)
           ? resData
           : Array.isArray(resData?.data)
@@ -88,7 +97,22 @@ export default function RegionalConnectivityMap() {
           const others = rawList.filter(
             (d) => d.id !== hub.id && d.slug !== hub.slug && d.sno !== 1
           );
-          setLocations([hub, ...others]);
+          const fullList = [hub, ...others];
+          setLocations(fullList);
+
+          // Update currently selected location in place so marker popup reflects updates immediately
+          setSelectedLocation((currentSelected) => {
+            if (!currentSelected) return null;
+            const currentId = currentSelected.id || currentSelected._id || currentSelected.slug;
+            const updated = fullList.find(
+              (loc) =>
+                (loc.id && currentId && String(loc.id) === String(currentId)) ||
+                (loc._id && currentId && String(loc._id) === String(currentId)) ||
+                (loc.slug && currentId && String(loc.slug) === String(currentId)) ||
+                (loc.name && currentSelected.name && loc.name === currentSelected.name)
+            );
+            return updated || currentSelected;
+          });
         }
       } catch (err) {
         console.warn("Using fallback static regional locations:", err);
@@ -100,11 +124,31 @@ export default function RegionalConnectivityMap() {
     const handlePlaceUpdate = () => {
       fetchEntities();
     };
+
+    const handleStorageUpdate = (e) => {
+      if (e.key === "fazilnagar_last_place_update") {
+        fetchEntities();
+      }
+    };
+
     window.addEventListener("fazilnagar-place-updated", handlePlaceUpdate);
+    window.addEventListener("storage", handleStorageUpdate);
+
+    let socket = null;
+    try {
+      socket = getSocket();
+      if (socket) {
+        socket.on("places_updated", handlePlaceUpdate);
+      }
+    } catch (_) {}
 
     return () => {
       isMounted = false;
       window.removeEventListener("fazilnagar-place-updated", handlePlaceUpdate);
+      window.removeEventListener("storage", handleStorageUpdate);
+      if (socket) {
+        socket.off("places_updated", handlePlaceUpdate);
+      }
     };
   }, []);
 

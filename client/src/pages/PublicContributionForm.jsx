@@ -86,13 +86,42 @@ export default function PublicContributionForm() {
     };
   }, [slug]);
 
+  // Scroll to first invalid field with focus
+  const scrollToFirstError = (errorsObj) => {
+    if (!errorsObj || Object.keys(errorsObj).length === 0) return;
+    const errorKeys = Object.keys(errorsObj);
+    const matchingField = form?.fields?.find((f) => errorsObj[f.name]);
+    const targetKey = matchingField ? matchingField.name : errorKeys[0];
+
+    const targetEl =
+      document.getElementById(`contrib-field-${targetKey}`) ||
+      document.getElementById(`contrib-container-${targetKey}`);
+
+    if (targetEl) {
+      targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (typeof targetEl.focus === "function") {
+        targetEl.focus({ preventScroll: true });
+      }
+      return;
+    }
+
+    const summaryEl = document.getElementById("form-validation-summary");
+    if (summaryEl) {
+      summaryEl.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   // Handle Input Changes
   const handleInputChange = (fieldName, value) => {
     setFormData((prev) => ({ ...prev, [fieldName]: value }));
-    if (formErrors[fieldName]) {
+    if (formErrors[fieldName] || formErrors._server || formErrors._general) {
       setFormErrors((prev) => {
         const cp = { ...prev };
         delete cp[fieldName];
+        delete cp._server;
+        delete cp._general;
         return cp;
       });
     }
@@ -193,6 +222,7 @@ export default function PublicContributionForm() {
       if (field.required) {
         if (val === undefined || val === null || String(val).trim() === "") {
           errors[field.name] = `${field.label} is required.`;
+          return;
         }
       }
 
@@ -242,9 +272,31 @@ export default function PublicContributionForm() {
       }
     });
 
+    // Cross-field coordinate pairing validation
+    const latVal = formData.latitude;
+    const lngVal = formData.longitude;
+    const hasLatVal = latVal !== undefined && latVal !== null && String(latVal).trim() !== "";
+    const hasLngVal = lngVal !== undefined && lngVal !== null && String(lngVal).trim() !== "";
+
+    if (hasLatVal && !hasLngVal) {
+      const hasLngField = form.fields.some((f) => f.name === "longitude" || f.type === "longitude");
+      if (hasLngField) {
+        errors.longitude = "Longitude coordinate is required when latitude is entered.";
+      } else {
+        errors.latitude = "Both Latitude and Longitude are required together.";
+      }
+    } else if (hasLngVal && !hasLatVal) {
+      const hasLatField = form.fields.some((f) => f.name === "latitude" || f.type === "latitude");
+      if (hasLatField) {
+        errors.latitude = "Latitude coordinate is required when longitude is entered.";
+      } else {
+        errors.longitude = "Both Latitude and Longitude are required together.";
+      }
+    }
+
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => scrollToFirstError(errors), 50);
       return;
     }
 
@@ -269,10 +321,15 @@ export default function PublicContributionForm() {
       });
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
-      if (err.response?.data?.errors) {
-        setFormErrors(err.response.data.errors);
+      const respData = err.response?.data;
+      if (respData?.errors && typeof respData.errors === "object" && Object.keys(respData.errors).length > 0) {
+        setFormErrors(respData.errors);
+        setTimeout(() => scrollToFirstError(respData.errors), 50);
       } else {
-        alert(err.response?.data?.message || "Failed to submit. Please try again.");
+        const errorMsg = respData?.message || "Failed to submit contribution proposal. Please try again.";
+        const serverErrMap = { _server: errorMsg };
+        setFormErrors(serverErrMap);
+        setTimeout(() => scrollToFirstError(serverErrMap), 50);
       }
     } finally {
       setSubmitting(false);
@@ -432,9 +489,47 @@ export default function PublicContributionForm() {
             {/* Form Fields */}
             <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
               {Object.keys(formErrors).length > 0 && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 font-semibold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                  <span>Please check and correct the highlighted fields below.</span>
+                <div
+                  id="form-validation-summary"
+                  role="alert"
+                  tabIndex={-1}
+                  className="p-4 bg-red-50 border-2 border-red-300 rounded-2xl text-xs text-red-900 space-y-2.5 shadow-xs"
+                >
+                  <div className="flex items-center gap-2 font-extrabold text-red-800 text-sm">
+                    <AlertCircle className="w-4.5 h-4.5 text-red-600 shrink-0" />
+                    <span>
+                      {Object.keys(formErrors).length === 1
+                        ? "Please check and correct the 1 highlighted field below:"
+                        : `Please check and correct the ${Object.keys(formErrors).length} highlighted fields below:`}
+                    </span>
+                  </div>
+                  <ul className="list-disc pl-5 space-y-1.5 text-slate-700 text-xs">
+                    {Object.entries(formErrors).map(([key, msg]) => {
+                      const matchingField = form.fields.find((f) => f.name === key);
+                      const label = matchingField ? matchingField.label : key === "_server" ? "Server Notice" : key === "_general" ? "Notice" : key;
+                      return (
+                        <li key={key}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const target =
+                                document.getElementById(`contrib-field-${key}`) ||
+                                document.getElementById(`contrib-container-${key}`);
+                              if (target) {
+                                target.scrollIntoView({ behavior: "smooth", block: "center" });
+                                if (typeof target.focus === "function") {
+                                  target.focus({ preventScroll: true });
+                                }
+                              }
+                            }}
+                            className="text-left text-red-700 hover:text-red-900 hover:underline font-semibold cursor-pointer"
+                          >
+                            <strong className="text-slate-900">{label}:</strong> {msg}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
               )}
 
@@ -449,8 +544,11 @@ export default function PublicContributionForm() {
                   return (
                     <div
                       key={field.name}
+                      id={`contrib-container-${field.name}`}
                       className={
-                        isLocationField
+                        errorMsg
+                          ? "p-4 rounded-2xl border-2 border-red-500 bg-red-50/50 shadow-xs space-y-2.5 transition-all ring-2 ring-red-200"
+                          : isLocationField
                           ? `p-4 rounded-2xl border space-y-2.5 transition ${
                               isLatitude
                                 ? "bg-emerald-50/50 border-emerald-200"
@@ -462,7 +560,10 @@ export default function PublicContributionForm() {
                       }
                     >
                       <div className="flex items-center justify-between flex-wrap gap-1">
-                        <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <label
+                          htmlFor={`contrib-field-${field.name}`}
+                          className="block text-xs font-bold text-slate-800 flex items-center gap-1.5"
+                        >
                           {isLatitude && <Globe className="w-3.5 h-3.5 text-emerald-600" />}
                           {isLongitude && <Compass className="w-3.5 h-3.5 text-blue-600" />}
                           {isGoogleMaps && <MapPin className="w-3.5 h-3.5 text-rose-600" />}
@@ -511,21 +612,33 @@ export default function PublicContributionForm() {
                       {/* Field Inputs */}
                       {field.type === "textarea" ? (
                         <textarea
+                          id={`contrib-field-${field.name}`}
+                          name={field.name}
+                          aria-invalid={Boolean(errorMsg)}
+                          aria-describedby={errorMsg ? `error-${field.name}` : undefined}
                           rows={3}
                           value={formData[field.name] || ""}
                           onChange={(e) => handleInputChange(field.name, e.target.value)}
-                          placeholder="Enter details..."
-                          className={`w-full px-3.5 py-2.5 bg-slate-50 border ${
-                            errorMsg ? "border-red-400 bg-red-50/30" : "border-slate-300"
-                          } rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                          placeholder={`Enter ${field.label.toLowerCase()}...`}
+                          className={`w-full px-3.5 py-2.5 bg-white border ${
+                            errorMsg
+                              ? "border-red-500 ring-2 ring-red-300 bg-red-50/40 text-red-950 font-medium"
+                              : "border-slate-300 text-slate-800"
+                          } rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                         />
                       ) : field.type === "select" ? (
                         <select
+                          id={`contrib-field-${field.name}`}
+                          name={field.name}
+                          aria-invalid={Boolean(errorMsg)}
+                          aria-describedby={errorMsg ? `error-${field.name}` : undefined}
                           value={formData[field.name] || ""}
                           onChange={(e) => handleInputChange(field.name, e.target.value)}
-                          className={`w-full px-3.5 py-2.5 bg-slate-50 border ${
-                            errorMsg ? "border-red-400 bg-red-50/30" : "border-slate-300"
-                          } rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                          className={`w-full px-3.5 py-2.5 bg-white border ${
+                            errorMsg
+                              ? "border-red-500 ring-2 ring-red-300 bg-red-50/40 text-red-950 font-medium"
+                              : "border-slate-300 text-slate-800"
+                          } rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                         >
                           <option value="">-- Select an option --</option>
                           {(field.options || []).map((opt) => (
@@ -537,11 +650,15 @@ export default function PublicContributionForm() {
                       ) : (
                         <div className="space-y-1.5">
                           <input
-                            type={isLatitude || isLongitude ? "number" : "text"}
+                            id={`contrib-field-${field.name}`}
+                            name={field.name}
+                            aria-invalid={Boolean(errorMsg)}
+                            aria-describedby={errorMsg ? `error-${field.name}` : undefined}
+                            type={isLatitude || isLongitude ? "number" : field.type === "number" ? "number" : "text"}
                             step={isLatitude || isLongitude ? "any" : undefined}
                             min={isLatitude ? -90 : isLongitude ? -180 : undefined}
                             max={isLatitude ? 90 : isLongitude ? 180 : undefined}
-                            value={formData[field.name] || ""}
+                            value={formData[field.name] ?? ""}
                             onChange={(e) => handleInputChange(field.name, e.target.value)}
                             placeholder={
                               isGoogleMaps
@@ -553,8 +670,10 @@ export default function PublicContributionForm() {
                                 : `Enter ${field.label.toLowerCase()}...`
                             }
                             className={`w-full px-3.5 py-2.5 bg-white border ${
-                              errorMsg ? "border-red-400 bg-red-50/30" : "border-slate-300"
-                            } rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                              errorMsg
+                                ? "border-red-500 ring-2 ring-red-300 bg-red-50/40 text-red-950 font-medium"
+                                : "border-slate-300 text-slate-800"
+                            } rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                           />
 
                           {/* Quick helper button under Google Maps link */}
@@ -573,8 +692,12 @@ export default function PublicContributionForm() {
                       )}
 
                       {errorMsg && (
-                        <p className="text-[11px] font-semibold text-red-600 mt-1 flex items-center gap-1">
-                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <p
+                          id={`error-${field.name}`}
+                          role="alert"
+                          className="text-[11px] font-bold text-red-600 mt-1.5 flex items-center gap-1.5"
+                        >
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0 text-red-600" />
                           <span>{errorMsg}</span>
                         </p>
                       )}

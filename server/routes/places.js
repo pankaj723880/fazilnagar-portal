@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
 import { buildMapsUrl, normalizeCoordinates } from "../utils/coordinates.js";
+import { emitPlacesUpdated } from "../socket.js";
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -86,46 +87,71 @@ router.get("/map-entities", async (req, res) => {
 // @access  Public
 router.get("/", async (req, res) => {
   try {
-    const { category, search, locality, sort = "name" } = req.query;
+    const rawCategory = req.query.category;
+    const rawSearch = req.query.search;
+    const rawLocality = req.query.locality;
+    const sort = req.query.sort || "name";
+
+    const safeDecode = (val) => {
+      if (!val) return "";
+      try {
+        return decodeURIComponent(String(val)).trim();
+      } catch (_) {
+        return String(val).trim();
+      }
+    };
+
+    const category = safeDecode(rawCategory);
+    const search = safeDecode(rawSearch);
+    const locality = safeDecode(rawLocality);
 
     const isDefaultQuery =
       (!category || category === "all" || category === "All" || category === "All Places") &&
-      !locality &&
-      (!search || !search.trim()) &&
+      (!locality || locality === "all") &&
+      !search &&
       sort === "name";
 
     if (isDefaultQuery && cachedPublicPlaces && Date.now() - cachedPublicPlacesTime < PLACES_CACHE_TTL_MS) {
       return res.status(200).json(cachedPublicPlaces);
     }
 
-    const query = {
-      isPublished: true,
-      townBoundaryStatus: "confirmed",
-      isArchived: { $ne: true },
-    };
+    const conditions = [
+      {
+        isPublished: true,
+        townBoundaryStatus: { $ne: "outside" },
+        isArchived: { $ne: true },
+      },
+    ];
 
     if (category && category !== "all" && category !== "All" && category !== "All Places") {
-      query.$or = [{ category }, { subcategory: category }];
+      const catRegex = new RegExp(`^${category.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+      conditions.push({
+        $or: [{ category: catRegex }, { subcategory: catRegex }],
+      });
     }
 
     if (locality && locality !== "all") {
-      query.locality = locality;
+      conditions.push({ locality });
     }
 
-    if (search && search.trim()) {
-      const sanitized = String(search).trim().slice(0, 100);
+    if (search) {
+      const sanitized = search.slice(0, 100);
       const escaped = sanitized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const regex = new RegExp(escaped, "i");
-      query.$or = [
-        { name: regex },
-        { alternateNames: { $in: [regex] } },
-        { category: regex },
-        { subcategory: regex },
-        { addressFull: regex },
-        { streetOrLandmark: regex },
-        { locality: regex },
-      ];
+      conditions.push({
+        $or: [
+          { name: regex },
+          { alternateNames: { $in: [regex] } },
+          { category: regex },
+          { subcategory: regex },
+          { addressFull: regex },
+          { streetOrLandmark: regex },
+          { locality: regex },
+        ],
+      });
     }
+
+    const query = conditions.length === 1 ? conditions[0] : { $and: conditions };
 
     let sortOption = { name: 1 };
     if (sort === "newest") sortOption = { createdAt: -1 };
@@ -334,6 +360,7 @@ router.patch("/:id/archive", verifyToken, requireAdmin, async (req, res) => {
     place.archivedAt = new Date();
     await place.save();
     invalidatePlacesCache();
+    emitPlacesUpdated({ placeId: place._id, place, action: "archived" });
     res.status(200).json({ message: "Establishment archived successfully.", place });
   } catch (err) {
     console.error("Archive Place Error:", err);
@@ -357,6 +384,7 @@ router.patch("/:id/restore", verifyToken, requireAdmin, async (req, res) => {
     place.archivedAt = null;
     await place.save();
     invalidatePlacesCache();
+    emitPlacesUpdated({ placeId: place._id, place, action: "restored" });
     res.status(200).json({ message: "Establishment restored successfully.", place });
   } catch (err) {
     console.error("Restore Place Error:", err);
@@ -584,6 +612,7 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
     });
 
     invalidatePlacesCache();
+    emitPlacesUpdated({ placeId: savedPlace._id, place: savedPlace, action: "created" });
 
     res.status(201).json({
       message: "Map entity created successfully.",
@@ -672,6 +701,7 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
     }
 
     invalidatePlacesCache();
+    emitPlacesUpdated({ placeId: updated?._id || id, place: updated, action: "updated" });
 
     res.status(200).json({
       message: "Map entity updated successfully.",
@@ -721,6 +751,7 @@ router.delete("/:id", verifyToken, requireAdmin, async (req, res) => {
     );
 
     invalidatePlacesCache();
+    emitPlacesUpdated({ placeId: placeToDelete._id, action: "deleted" });
 
     res.status(200).json({
       message: `Entity "${placeToDelete.name}" deleted successfully from map database.`,

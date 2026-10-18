@@ -14,6 +14,7 @@ import {
   buildGoogleMapsCoordinateUrl,
   calculateHaversineDistanceKm,
 } from "../utils/googleMapsValidator.js";
+import { emitPlacesUpdated } from "../socket.js";
 import { uploadMediaToDrive } from "./googleDrive.js";
 import { writeLimiter } from "../middleware/rateLimiter.js";
 
@@ -320,7 +321,9 @@ router.get("/:id", verifyToken, requireAdmin, async (req, res) => {
 // @access  Admin Only
 router.patch("/:id/review", verifyToken, requireAdmin, async (req, res) => {
   try {
-    const action = req.body.action || req.body.decision;
+    let action = req.body.action || req.body.decision || req.body.status;
+    if (action === "approved") action = "approve";
+    if (action === "rejected") action = "reject";
     const { approvedFields = [], reviewerComments = "" } = req.body;
 
     if (!["approve", "reject", "changes_requested"].includes(action)) {
@@ -352,7 +355,11 @@ router.patch("/:id/review", verifyToken, requireAdmin, async (req, res) => {
     const afterSnapshot = {};
 
     if (action === "approve") {
-      if (!Array.isArray(approvedFields) || approvedFields.length === 0) {
+      let fieldsToApprove = approvedFields;
+      if (!Array.isArray(fieldsToApprove) || fieldsToApprove.length === 0) {
+        fieldsToApprove = Object.keys({ ...(submission.submittedValues || {}), ...(submission.proposedValues || {}) });
+      }
+      if (fieldsToApprove.length === 0) {
         return res.status(400).json({
           message: "Please select at least one proposed field to approve.",
         });
@@ -361,9 +368,10 @@ router.patch("/:id/review", verifyToken, requireAdmin, async (req, res) => {
       // Filter proposed values to only the approved fields
       const patchData = {};
       const rejectedList = [];
+      const sourceValues = { ...(submission.submittedValues || {}), ...(submission.proposedValues || {}) };
 
-      for (const [key, val] of Object.entries(submission.proposedValues || {})) {
-        if (approvedFields.includes(key)) {
+      for (const [key, val] of Object.entries(sourceValues)) {
+        if (fieldsToApprove.includes(key)) {
           patchData[key] = val;
         } else {
           rejectedList.push(key);
@@ -377,12 +385,18 @@ router.patch("/:id/review", verifyToken, requireAdmin, async (req, res) => {
           return res.status(400).json({ message: "No target entity ID associated with this correction." });
         }
 
-        const existingPlace = await Place.findOne({
-          $or: [
-            { id: entityId },
-            { _id: entityId.match(/^[0-9a-fA-F]{24}$/) ? entityId : null },
-          ],
-        });
+        const queryOr = [
+          { id: entityId },
+          { slug: entityId },
+        ];
+        if (typeof entityId === "string" && entityId.match(/^[0-9a-fA-F]{24}$/)) {
+          queryOr.push({ _id: entityId });
+        }
+        if (submission.targetEntityName) {
+          queryOr.push({ name: submission.targetEntityName });
+        }
+
+        const existingPlace = await Place.findOne({ $or: queryOr });
 
         if (!existingPlace) {
           return res.status(404).json({ message: "Target entity record not found in database." });
@@ -403,7 +417,7 @@ router.patch("/:id/review", verifyToken, requireAdmin, async (req, res) => {
         if (patchData.latitude !== undefined || patchData.longitude !== undefined) {
           const newLat = Number(existingPlace.latitude);
           const newLng = Number(existingPlace.longitude);
-          if (!isNaN(newLat) && !isNaN(newLng)) {
+          if (!isNaN(newLat) && !isNaN(newLng) && newLat >= -90 && newLat <= 90 && newLng >= -180 && newLng <= 180) {
             existingPlace.mapsUrl = buildGoogleMapsCoordinateUrl(newLat, newLng);
             existingPlace.googleMapsUrl = existingPlace.mapsUrl;
             existingPlace.calculatedDistanceKm = calculateHaversineDistanceKm(newLat, newLng, 26.6804068, 84.046655);
@@ -418,13 +432,17 @@ router.patch("/:id/review", verifyToken, requireAdmin, async (req, res) => {
           afterSnapshot.googleMapsUrl = existingPlace.googleMapsUrl;
         }
 
+        existingPlace.isPublished = true;
+        existingPlace.isArchived = false;
+        existingPlace.verificationStatus = "verified";
+        existingPlace.townBoundaryStatus = "confirmed";
         existingPlace.lastVerifiedAt = new Date();
         existingPlace.reviewNotes = `Approved contribution: ${submission.referenceId} by admin ${adminUser.email}`;
 
         await existingPlace.save();
         appliedPlace = existingPlace;
 
-        // Keep local JSON files in sync
+        // Keep local JSON files in sync if matching canonical place
         syncJsonPlaces((list) => {
           const targetId = existingPlace.id || String(existingPlace._id);
           const idx = list.findIndex(
@@ -446,9 +464,10 @@ router.patch("/:id/review", verifyToken, requireAdmin, async (req, res) => {
         // Create brand new entity record from approved proposal
         const lat = parseFloat(patchData.latitude);
         const lng = parseFloat(patchData.longitude);
-        const validCoords = !isNaN(lat) && !isNaN(lng);
+        const validCoords = !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
 
         const newDoc = {
+          id: `p-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
           name: patchData.name || submission.targetEntityName || "New Contributed Place",
           hindiName: patchData.hindiName || "",
           category: patchData.category || submission.entityType || "general",
@@ -475,6 +494,7 @@ router.patch("/:id/review", verifyToken, requireAdmin, async (req, res) => {
           mapsUrl: validCoords ? buildGoogleMapsCoordinateUrl(lat, lng) : (patchData.googleMapsUrl || ""),
           googleMapsUrl: patchData.googleMapsUrl || (validCoords ? buildGoogleMapsCoordinateUrl(lat, lng) : ""),
           verificationStatus: "verified",
+          townBoundaryStatus: "confirmed",
           isPublished: true,
           isArchived: false,
           submissionSource: "community",
@@ -484,15 +504,31 @@ router.patch("/:id/review", verifyToken, requireAdmin, async (req, res) => {
         appliedPlace = await Place.create(newDoc);
         Object.assign(afterSnapshot, newDoc);
 
-        // Keep local JSON files in sync
+        // Keep local JSON files in sync if matching
         syncJsonPlaces((list) => {
-          list.push(appliedPlace.toObject());
+          const idx = list.findIndex(
+            (p) =>
+              String(p.id) === String(appliedPlace.id) ||
+              String(p._id) === String(appliedPlace._id) ||
+              p.slug === appliedPlace.slug
+          );
+          if (idx >= 0) {
+            list[idx] = { ...list[idx], ...appliedPlace.toObject() };
+          }
           return list;
         });
       }
 
       // Invalidate relevant in-memory caches so map and directory display updated data immediately
       invalidatePlacesCache();
+
+      // Broadcast realtime update event to all connected sessions
+      emitPlacesUpdated({
+        placeId: appliedPlace._id,
+        place: appliedPlace,
+        action: submission.submissionType === "correction" ? "updated" : "created",
+        submissionId: submission._id,
+      });
 
       submission.status = "approved";
       submission.approvedFields = approvedFields;
@@ -560,8 +596,10 @@ router.patch("/:id/review", verifyToken, requireAdmin, async (req, res) => {
     await submission.save();
 
     res.status(200).json({
+      success: true,
       message: `Submission marked as ${submission.status}.`,
       submission,
+      place: appliedPlace,
       appliedPlace,
     });
   } catch (err) {

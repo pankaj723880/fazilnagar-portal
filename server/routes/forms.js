@@ -252,9 +252,9 @@ router.post("/public/:slug/submit", writeLimiter, async (req, res) => {
       warningMessage: "",
     };
 
-    const hasLat = proposedValues.latitude !== undefined;
-    const hasLng = proposedValues.longitude !== undefined;
-    const mapsLink =
+    const hasLat = proposedValues.latitude !== undefined && proposedValues.latitude !== null && proposedValues.latitude !== "";
+    const hasLng = proposedValues.longitude !== undefined && proposedValues.longitude !== null && proposedValues.longitude !== "";
+    let mapsLink =
       proposedValues.googleMapsUrl ||
       Object.entries(proposedValues).find(([k]) => {
         const fDef = form.fields.find((f) => f.name === k);
@@ -262,18 +262,76 @@ router.post("/public/:slug/submit", writeLimiter, async (req, res) => {
       })?.[1] ||
       "";
 
+    // Validate coordinate pairing if either coordinate is provided
+    if (hasLat && !hasLng) {
+      const lngFieldOnForm = form.fields.some((f) => f.name === "longitude" || f.type === "longitude");
+      return res.status(400).json({
+        message: "Longitude is required when latitude is provided.",
+        errors: {
+          [lngFieldOnForm ? "longitude" : "latitude"]: "Longitude coordinate is required when latitude is provided.",
+        },
+      });
+    }
+
+    if (hasLng && !hasLat) {
+      const latFieldOnForm = form.fields.some((f) => f.name === "latitude" || f.type === "latitude");
+      return res.status(400).json({
+        message: "Latitude is required when longitude is provided.",
+        errors: {
+          [latFieldOnForm ? "latitude" : "longitude"]: "Latitude coordinate is required when longitude is provided.",
+        },
+      });
+    }
+
+    // Process mapsLink and location verification
     if (mapsLink) {
       locationComparison = compareLocationCoordinates(
         hasLat ? proposedValues.latitude : null,
         hasLng ? proposedValues.longitude : null,
         mapsLink
       );
-    } else if (hasLat || hasLng) {
-      // Latitude or longitude provided without a Google Maps link
-      return res.status(400).json({
-        message: "A Google Maps location link is required whenever geographic coordinates are submitted.",
-        errors: { googleMapsUrl: "Google Maps URL is required for location submissions." },
-      });
+
+      // If coordinates were not explicitly submitted in form fields, but exist in Google Maps URL, populate them
+      if (!hasLat && locationComparison.urlLat !== null && locationComparison.urlLng !== null) {
+        proposedValues.latitude = locationComparison.urlLat;
+        proposedValues.longitude = locationComparison.urlLng;
+        locationComparison.submittedLat = locationComparison.urlLat;
+        locationComparison.submittedLng = locationComparison.urlLng;
+      }
+    } else if (hasLat && hasLng) {
+      // Both coordinates provided without Google Maps link
+      // Check if googleMapsUrl is an active REQUIRED field on this specific form
+      const mapsFieldDef = form.fields.find(
+        (f) => f.name === "googleMapsUrl" || f.type === "googleMapsUrl"
+      );
+
+      if (mapsFieldDef && mapsFieldDef.required) {
+        return res.status(400).json({
+          message: `${mapsFieldDef.label || "Google Maps URL"} is required.`,
+          errors: {
+            [mapsFieldDef.name]: `${mapsFieldDef.label || "Google Maps URL"} is required.`,
+          },
+        });
+      }
+
+      // If googleMapsUrl was removed from this form or is optional, auto-generate canonical Google Maps URL from coordinates
+      const derivedMapsUrl = buildGoogleMapsCoordinateUrl(
+        proposedValues.latitude,
+        proposedValues.longitude
+      );
+      mapsLink = derivedMapsUrl;
+      if (!proposedValues.googleMapsUrl) {
+        proposedValues.googleMapsUrl = derivedMapsUrl;
+      }
+      locationComparison = {
+        submittedLat: proposedValues.latitude,
+        submittedLng: proposedValues.longitude,
+        urlLat: proposedValues.latitude,
+        urlLng: proposedValues.longitude,
+        distanceKm: 0,
+        status: "consistent",
+        warningMessage: "",
+      };
     }
 
     // Check potential duplicates for new entity proposals

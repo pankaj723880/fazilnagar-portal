@@ -351,3 +351,14 @@ export function getIO() {
   }
   return io;
 }
+
+export function emitPlacesUpdated(data) {
+  if (io) {
+    try {
+      io.emit("places_updated", data || {});
+    } catch (e) {
+      console.warn("[Socket.IO] Broadcast places_updated error:", e.message);
+    }
+  }
+}
+

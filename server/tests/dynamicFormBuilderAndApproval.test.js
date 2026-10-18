@@ -547,6 +547,15 @@ describe("Dynamic Form Builder & Public Contribution Approval System", () => {
 
     before(async () => {
       pendingSubmission = await ContributionSubmission.findOne({ evidenceNotes: /Test Suite: Updated GPS coordinates/, status: "pending" });
+      if (!pendingSubmission) {
+        pendingSubmission = await ContributionSubmission.findOne({ evidenceNotes: /Test Suite: Updated GPS coordinates/ });
+        if (pendingSubmission) {
+          pendingSubmission.status = "pending";
+          pendingSubmission.approvedFields = [];
+          pendingSubmission.rejectedFields = [];
+          await pendingSubmission.save();
+        }
+      }
     });
 
     it("Admin can fetch pending submissions list and single submission detail with diff", async () => {

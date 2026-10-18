@@ -141,9 +141,18 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
       fetchSubmissions();
       onStatsChange();
 
-      // Trigger map update broadcast event
+      // Clear client cache and trigger map & directory update broadcast event
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("fazilnagar-place-updated"));
+        try {
+          sessionStorage.removeItem("fazilnagar_cached_places");
+          sessionStorage.removeItem("fazilnagar_cached_places_stats");
+          localStorage.setItem("fazilnagar_last_place_update", String(Date.now()));
+        } catch (_) {}
+        window.dispatchEvent(
+          new CustomEvent("fazilnagar-place-updated", {
+            detail: { action, place: res.data?.appliedPlace, submissionId: detailData.submission._id },
+          })
+        );
       }
 
       setTimeout(() => setActionSuccessMsg(""), 4000);

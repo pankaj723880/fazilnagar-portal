@@ -12,6 +12,10 @@ import { FAZILNAGAR_AREAS, isWithinTownBoundary } from "../config/areas.js";
 import { detectDuplicates, determineBoundaryStatus, normalizePhone } from "../utils/submissionUtils.js";
 import { uploadMediaToDrive } from "./googleDrive.js";
 import { createBroadcastNotification, createSubmissionNotification } from "../utils/notify.js";
+import { invalidatePlacesCache, syncJsonPlaces } from "./places.js";
+import { buildMapsUrl } from "../utils/coordinates.js";
+import { calculateHaversineDistanceKm } from "../utils/googleMapsValidator.js";
+import { emitPlacesUpdated } from "../socket.js";
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -327,6 +331,16 @@ const handlePlaceReview = async (req, res) => {
       return res.status(404).json({ message: "Submission not found." });
     }
 
+    // Prevent duplicate approvals
+    if (submission.status === "approved" && action === "approve") {
+      const existingPlace = submission.placeId ? await Place.findById(submission.placeId) : null;
+      return res.status(400).json({
+        message: "This submission has already been approved and published.",
+        submission,
+        place: existingPlace,
+      });
+    }
+
     // Apply any edits supplied by admin (e.g. corrected pin or corrected category/name)
     if (editedFields && typeof editedFields === "object") {
       if (editedFields.title) submission.title = editedFields.title.trim();
@@ -345,7 +359,7 @@ const handlePlaceReview = async (req, res) => {
       if (editedFields.latitude !== undefined && editedFields.longitude !== undefined) {
         const nLat = parseFloat(editedFields.latitude);
         const nLng = parseFloat(editedFields.longitude);
-        if (!isNaN(nLat) && !isNaN(nLng)) {
+        if (!isNaN(nLat) && !isNaN(nLng) && nLat >= -90 && nLat <= 90 && nLng >= -180 && nLng <= 180) {
           submission.latitude = nLat;
           submission.longitude = nLng;
           submission.townBoundaryStatus = determineBoundaryStatus(nLat, nLng, submission.locality);
@@ -363,45 +377,86 @@ const handlePlaceReview = async (req, res) => {
       submission.status = "approved";
       submission.rejectionReason = "";
 
-      // Ensure numeric coordinates
-      const lat = parseFloat(submission.latitude);
-      const lng = parseFloat(submission.longitude);
+      const lat = parseFloat(submission.latitude ?? submission.placeDetails?.latitude);
+      const lng = parseFloat(submission.longitude ?? submission.placeDetails?.longitude);
+      const hasValidCoords = !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
 
-      const placePayload = {
-        name: submission.title,
-        category: submission.category,
-        subcategory: submission.subcategory || "Community Listed",
-        description: submission.description,
-        addressFull: submission.addressFull,
-        locality: submission.locality,
-        streetOrLandmark: submission.streetOrLandmark || submission.locality,
-        latitude: !isNaN(lat) ? lat : 26.6827,
-        longitude: !isNaN(lng) ? lng : 84.0498,
-        mapsUrl: !isNaN(lat) && !isNaN(lng) ? `https://www.google.com/maps?q=${lat},${lng}` : "",
-        phone: submission.phone,
-        alternatePhone: submission.alternatePhone,
-        whatsapp: submission.whatsapp,
-        website: submission.website,
-        openingHours: submission.openingHours,
-        services: submission.services,
-        imageUrl: submission.primaryImage || "",
-        galleryUrls: submission.images || [],
-        ownerName: submission.ownerName,
-        submissionSource: "community",
-        submissionId: submission._id,
-        verificationStatus: "verified",
-        townBoundaryStatus: submission.townBoundaryStatus || "confirmed",
-        isPublished: true,
-        isArchived: false,
-        reviewNotes: `Approved by admin from community submission ID: ${submission.referenceId}`,
-      };
-
+      let existingPlace = null;
       if (submission.placeId) {
-        // Update existing linked place
-        placeResult = await Place.findByIdAndUpdate(submission.placeId, placePayload, { new: true });
+        existingPlace = await Place.findById(submission.placeId);
+      }
+
+      if (existingPlace) {
+        // Update existing linked place while preserving unmodified/unrelated fields
+        existingPlace.name = submission.title || submission.placeDetails?.name || existingPlace.name;
+        if (submission.category || submission.placeDetails?.category) existingPlace.category = submission.category || submission.placeDetails?.category;
+        if (submission.subcategory) existingPlace.subcategory = submission.subcategory;
+        if (submission.description || submission.placeDetails?.description) existingPlace.description = submission.description || submission.placeDetails?.description;
+        if (submission.addressFull) existingPlace.addressFull = submission.addressFull;
+        if (submission.locality || submission.placeDetails?.locality) existingPlace.locality = submission.locality || submission.placeDetails?.locality;
+        if (submission.streetOrLandmark) existingPlace.streetOrLandmark = submission.streetOrLandmark;
+        if (submission.phone || submission.placeDetails?.phone) existingPlace.phone = submission.phone || submission.placeDetails?.phone;
+        if (submission.alternatePhone !== undefined) existingPlace.alternatePhone = submission.alternatePhone;
+        if (submission.whatsapp !== undefined) existingPlace.whatsapp = submission.whatsapp;
+        if (submission.website !== undefined) existingPlace.website = submission.website;
+        if (submission.openingHours !== undefined) existingPlace.openingHours = submission.openingHours;
+        if (submission.services && submission.services.length > 0) existingPlace.services = submission.services;
+        if (submission.primaryImage) existingPlace.imageUrl = submission.primaryImage;
+        if (submission.images && submission.images.length > 0) existingPlace.galleryUrls = submission.images;
+        if (submission.ownerName) existingPlace.ownerName = submission.ownerName;
+
+        // Preserve verified coordinates if submitted ones are invalid or missing
+        if (hasValidCoords) {
+          existingPlace.latitude = lat;
+          existingPlace.longitude = lng;
+          existingPlace.mapsUrl = buildMapsUrl(lat, lng);
+          existingPlace.calculatedDistanceKm = calculateHaversineDistanceKm(lat, lng, 26.6804068, 84.046655);
+        }
+
+        existingPlace.isPublished = true;
+        existingPlace.isArchived = false;
+        existingPlace.verificationStatus = "verified";
+        existingPlace.townBoundaryStatus = "confirmed";
+        existingPlace.lastVerifiedAt = new Date();
+        existingPlace.reviewNotes = `Approved by admin from community submission ID: ${submission.referenceId}`;
+
+        await existingPlace.save();
+        placeResult = existingPlace;
       } else {
         // Create new published Place
-        placeResult = await Place.create(placePayload);
+        const newPlacePayload = {
+          id: `p-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
+          name: submission.title || submission.placeDetails?.name,
+          category: submission.category || submission.placeDetails?.category || "General",
+          type: submission.placeDetails?.type || (submission.type === "community_place" ? "village" : "place"),
+          subcategory: submission.subcategory || "Community Listed",
+          description: submission.description || submission.placeDetails?.description || "",
+          addressFull: submission.addressFull || `${submission.title || submission.placeDetails?.name}, Fazilnagar`,
+          locality: submission.locality || submission.placeDetails?.locality || "Fazilnagar",
+          streetOrLandmark: submission.streetOrLandmark || submission.locality || "Fazilnagar",
+          latitude: hasValidCoords ? lat : null,
+          longitude: hasValidCoords ? lng : null,
+          mapsUrl: hasValidCoords ? buildMapsUrl(lat, lng) : "",
+          phone: submission.phone || submission.placeDetails?.phone || "",
+          alternatePhone: submission.alternatePhone || "",
+          whatsapp: submission.whatsapp || "",
+          website: submission.website || "",
+          openingHours: submission.openingHours || "",
+          services: submission.services || [],
+          imageUrl: submission.primaryImage || "",
+          galleryUrls: submission.images || [],
+          ownerName: submission.ownerName || "",
+          submissionSource: "community",
+          submissionId: submission._id,
+          verificationStatus: "verified",
+          townBoundaryStatus: "confirmed",
+          isPublished: true,
+          isArchived: false,
+          calculatedDistanceKm: hasValidCoords ? calculateHaversineDistanceKm(lat, lng, 26.6804068, 84.046655) : null,
+          reviewNotes: `Approved by admin from community submission ID: ${submission.referenceId}`,
+        };
+
+        placeResult = await Place.create(newPlacePayload);
         submission.placeId = placeResult._id;
       }
     } else if (action === "reject") {
@@ -440,6 +495,34 @@ const handlePlaceReview = async (req, res) => {
 
     await submission.save();
 
+    // Invalidate in-memory caches so public map & directory update immediately
+    invalidatePlacesCache();
+
+    // Safely sync JSON if matching record exists
+    if (placeResult) {
+      syncJsonPlaces((list) => {
+        const targetId = placeResult.id || String(placeResult._id);
+        const idx = list.findIndex(
+          (p) =>
+            String(p.id) === String(targetId) ||
+            String(p._id) === String(targetId) ||
+            p.slug === placeResult.slug
+        );
+        if (idx >= 0) {
+          list[idx] = { ...list[idx], ...placeResult.toObject() };
+        }
+        return list;
+      });
+    }
+
+    // Emit realtime socket event for live map & directory synchronization
+    emitPlacesUpdated({
+      placeId: placeResult?._id,
+      place: placeResult,
+      action,
+      submissionId: submission._id,
+    });
+
     // Trigger user notification and optional town broadcast
     if (action === "approve") {
       createSubmissionNotification({
@@ -472,6 +555,7 @@ const handlePlaceReview = async (req, res) => {
     }
 
     res.status(200).json({
+      success: true,
       message: `Submission marked as ${submission.status}.`,
       submission,
       place: placeResult,
@@ -618,6 +702,17 @@ const handleStatusUpdate = async (req, res) => {
     }
 
     const nextStatus = status === "resolved" ? "approved" : status;
+
+    // Prevent duplicate approvals
+    if (submission.status === "approved" && nextStatus === "approved") {
+      const existingPlace = submission.placeId ? await Place.findById(submission.placeId) : null;
+      return res.status(400).json({
+        message: "This submission has already been approved and published.",
+        submission,
+        place: existingPlace,
+      });
+    }
+
     submission.status = nextStatus;
     if (adminNotes !== undefined) submission.adminNotes = adminNotes;
     if (rejectionReason !== undefined) submission.rejectionReason = rejectionReason;
@@ -629,40 +724,81 @@ const handleStatusUpdate = async (req, res) => {
     if (nextStatus === "approved" && (submission.type === "business" || submission.type === "community_place")) {
       const lat = parseFloat(submission.latitude);
       const lng = parseFloat(submission.longitude);
+      const hasValidCoords = !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
 
-      const placePayload = {
-        name: submission.title,
-        category: submission.category,
-        subcategory: submission.subcategory || "Community Listed",
-        description: submission.description || submission.details || "",
-        addressFull: submission.addressFull || submission.landmark || "Fazilnagar",
-        locality: submission.locality || "Fazilnagar",
-        streetOrLandmark: submission.streetOrLandmark || submission.landmark || submission.locality || "Fazilnagar",
-        latitude: !isNaN(lat) ? lat : 26.6827,
-        longitude: !isNaN(lng) ? lng : 84.0498,
-        mapsUrl: !isNaN(lat) && !isNaN(lng) ? `https://www.google.com/maps?q=${lat},${lng}` : "",
-        phone: submission.phone || "",
-        alternatePhone: submission.alternatePhone || "",
-        whatsapp: submission.whatsapp || "",
-        website: submission.website || "",
-        openingHours: submission.openingHours || "",
-        services: submission.services || [],
-        imageUrl: submission.primaryImage || "",
-        galleryUrls: submission.images || [],
-        ownerName: submission.ownerName || submission.submittedBy?.name || "",
-        submissionSource: "community",
-        submissionId: submission._id,
-        verificationStatus: "verified",
-        townBoundaryStatus: submission.townBoundaryStatus || "confirmed",
-        isPublished: true,
-        isArchived: false,
-        reviewNotes: `Approved by admin from submission ID: ${submission.referenceId || submission._id}`,
-      };
-
+      let existingPlace = null;
       if (submission.placeId) {
-        placeResult = await Place.findByIdAndUpdate(submission.placeId, placePayload, { new: true });
+        existingPlace = await Place.findById(submission.placeId);
+      }
+
+      if (existingPlace) {
+        existingPlace.name = submission.title || existingPlace.name;
+        if (submission.category) existingPlace.category = submission.category;
+        if (submission.subcategory) existingPlace.subcategory = submission.subcategory;
+        if (submission.description || submission.details) existingPlace.description = submission.description || submission.details;
+        if (submission.addressFull) existingPlace.addressFull = submission.addressFull;
+        if (submission.locality) existingPlace.locality = submission.locality;
+        if (submission.streetOrLandmark) existingPlace.streetOrLandmark = submission.streetOrLandmark;
+        if (submission.phone) existingPlace.phone = submission.phone;
+        if (submission.alternatePhone !== undefined) existingPlace.alternatePhone = submission.alternatePhone;
+        if (submission.whatsapp !== undefined) existingPlace.whatsapp = submission.whatsapp;
+        if (submission.website !== undefined) existingPlace.website = submission.website;
+        if (submission.openingHours !== undefined) existingPlace.openingHours = submission.openingHours;
+        if (submission.services && submission.services.length > 0) existingPlace.services = submission.services;
+        if (submission.primaryImage) existingPlace.imageUrl = submission.primaryImage;
+        if (submission.images && submission.images.length > 0) existingPlace.galleryUrls = submission.images;
+        if (submission.ownerName) existingPlace.ownerName = submission.ownerName;
+
+        // Preserve coordinates if missing/invalid
+        if (hasValidCoords) {
+          existingPlace.latitude = lat;
+          existingPlace.longitude = lng;
+          existingPlace.mapsUrl = buildMapsUrl(lat, lng);
+          existingPlace.calculatedDistanceKm = calculateHaversineDistanceKm(lat, lng, 26.6804068, 84.046655);
+        }
+
+        existingPlace.isPublished = true;
+        existingPlace.isArchived = false;
+        existingPlace.verificationStatus = "verified";
+        existingPlace.townBoundaryStatus = "confirmed";
+        existingPlace.lastVerifiedAt = new Date();
+        existingPlace.reviewNotes = `Approved by admin from submission ID: ${submission.referenceId || submission._id}`;
+
+        await existingPlace.save();
+        placeResult = existingPlace;
       } else {
-        placeResult = await Place.create(placePayload);
+        const newPlacePayload = {
+          id: `p-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
+          name: submission.title,
+          category: submission.category || "General",
+          subcategory: submission.subcategory || "Community Listed",
+          description: submission.description || submission.details || "",
+          addressFull: submission.addressFull || submission.landmark || `${submission.title}, Fazilnagar`,
+          locality: submission.locality || "Fazilnagar",
+          streetOrLandmark: submission.streetOrLandmark || submission.landmark || submission.locality || "Fazilnagar",
+          latitude: hasValidCoords ? lat : null,
+          longitude: hasValidCoords ? lng : null,
+          mapsUrl: hasValidCoords ? buildMapsUrl(lat, lng) : "",
+          phone: submission.phone || "",
+          alternatePhone: submission.alternatePhone || "",
+          whatsapp: submission.whatsapp || "",
+          website: submission.website || "",
+          openingHours: submission.openingHours || "",
+          services: submission.services || [],
+          imageUrl: submission.primaryImage || "",
+          galleryUrls: submission.images || [],
+          ownerName: submission.ownerName || submission.submittedBy?.name || "",
+          submissionSource: "community",
+          submissionId: submission._id,
+          verificationStatus: "verified",
+          townBoundaryStatus: "confirmed",
+          isPublished: true,
+          isArchived: false,
+          calculatedDistanceKm: hasValidCoords ? calculateHaversineDistanceKm(lat, lng, 26.6804068, 84.046655) : null,
+          reviewNotes: `Approved by admin from submission ID: ${submission.referenceId || submission._id}`,
+        };
+
+        placeResult = await Place.create(newPlacePayload);
         submission.placeId = placeResult._id;
       }
     } else if (nextStatus === "rejected" && submission.placeId) {
@@ -673,6 +809,34 @@ const handleStatusUpdate = async (req, res) => {
     }
 
     await submission.save();
+
+    // Invalidate in-memory caches
+    invalidatePlacesCache();
+
+    // Safely sync JSON if matching
+    if (placeResult) {
+      syncJsonPlaces((list) => {
+        const targetId = placeResult.id || String(placeResult._id);
+        const idx = list.findIndex(
+          (p) =>
+            String(p.id) === String(targetId) ||
+            String(p._id) === String(targetId) ||
+            p.slug === placeResult.slug
+        );
+        if (idx >= 0) {
+          list[idx] = { ...list[idx], ...placeResult.toObject() };
+        }
+        return list;
+      });
+    }
+
+    // Emit realtime socket event
+    emitPlacesUpdated({
+      placeId: placeResult?._id,
+      place: placeResult,
+      action: nextStatus,
+      submissionId: submission._id,
+    });
 
     // Trigger submitter notification and broadcast if approved
     if (nextStatus === "approved") {

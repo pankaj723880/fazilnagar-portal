@@ -8,6 +8,7 @@ const CommunityPlaceModal = lazy(() => import("../components/CommunityPlaceModal
 const AdminPlaceEditModal = lazy(() => import("../components/AdminPlaceEditModal"));
 const DirectoryMap = lazy(() => import("../components/DirectoryMap"));
 import { isUserAdmin, getAuthToken } from "../utils/authStorage";
+import { getSocket } from "../socket";
 import { FAZILNAGAR_AREAS } from "../constants/areas";
 import {
   Search,
@@ -288,10 +289,6 @@ export default function Directory({ user }) {
 
   const fetchPlaces = useCallback(async () => {
     try {
-      // Only show spinner if there is no place data at all
-      if (allMasterPlaces.length === 0) {
-        setLoading(true);
-      }
       const res = await API.get("/places");
       const data = Array.isArray(res.data)
         ? res.data
@@ -307,6 +304,24 @@ export default function Directory({ user }) {
         try {
           sessionStorage.setItem("fazilnagar_cached_places", JSON.stringify(valid));
         } catch (_) {}
+
+        // Immediately update any selected or open modal place with refreshed values
+        const updateItemInPlace = (current) => {
+          if (!current) return null;
+          const currentId = current._id || current.id || current.slug;
+          const updated = valid.find(
+            (p) =>
+              (p._id && currentId && String(p._id) === String(currentId)) ||
+              (p.id && currentId && String(p.id) === String(currentId)) ||
+              (p.slug && currentId && String(p.slug) === String(currentId)) ||
+              (p.name && current.name && p.name === current.name)
+          );
+          return updated || current;
+        };
+
+        setSelectedPlace(updateItemInPlace);
+        setDetailModalPlace(updateItemInPlace);
+        setEditModalPlace(updateItemInPlace);
       }
     } catch (err) {
       console.warn("[Directory] Using verified local seed data:", err.message);
@@ -314,7 +329,7 @@ export default function Directory({ user }) {
     } finally {
       setLoading(false);
     }
-  }, [allMasterPlaces.length]);
+  }, []);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -361,6 +376,46 @@ export default function Directory({ user }) {
     fetchPlaces();
     fetchStats();
   }, [fetchPlaces, fetchStats]);
+
+  // Real-time synchronization for approvals, edits, and cross-tab updates
+  useEffect(() => {
+    const handlePlaceUpdate = () => {
+      try {
+        sessionStorage.removeItem("fazilnagar_cached_places");
+        sessionStorage.removeItem("fazilnagar_cached_places_stats");
+      } catch (_) {}
+      fetchPlaces();
+      fetchStats();
+      if (isAdmin) {
+        fetchAdminQueue();
+      }
+    };
+
+    const handleStorage = (e) => {
+      if (e.key === "fazilnagar_last_place_update") {
+        handlePlaceUpdate();
+      }
+    };
+
+    window.addEventListener("fazilnagar-place-updated", handlePlaceUpdate);
+    window.addEventListener("storage", handleStorage);
+
+    let socket = null;
+    try {
+      socket = getSocket();
+      if (socket) {
+        socket.on("places_updated", handlePlaceUpdate);
+      }
+    } catch (_) {}
+
+    return () => {
+      window.removeEventListener("fazilnagar-place-updated", handlePlaceUpdate);
+      window.removeEventListener("storage", handleStorage);
+      if (socket) {
+        socket.off("places_updated", handlePlaceUpdate);
+      }
+    };
+  }, [fetchPlaces, fetchStats, fetchAdminQueue, isAdmin]);
 
   const placesRef = useRef(places);
   useEffect(() => {

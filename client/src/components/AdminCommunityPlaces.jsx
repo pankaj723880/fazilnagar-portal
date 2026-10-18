@@ -101,6 +101,19 @@ export default function AdminCommunityPlaces({ token: propToken, onStatsChange }
       setEditingItem(null);
       fetchCommunitySubmissions();
       if (onStatsChange) onStatsChange();
+
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.removeItem("fazilnagar_cached_places");
+          sessionStorage.removeItem("fazilnagar_cached_places_stats");
+          localStorage.setItem("fazilnagar_last_place_update", String(Date.now()));
+        } catch (_) {}
+        window.dispatchEvent(
+          new CustomEvent("fazilnagar-place-updated", {
+            detail: { action, place: res.data?.place, id },
+          })
+        );
+      }
     } catch (err) {
       console.error("Action error:", err);
       showToast("error", err.response?.data?.message || "Failed to execute review action.");

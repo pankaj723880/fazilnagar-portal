@@ -374,6 +374,18 @@ export default function AdminPlaceEditModal({
       }
 
       setHasUnsavedChanges(false);
+
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.removeItem("fazilnagar_cached_places");
+          sessionStorage.removeItem("fazilnagar_cached_places_stats");
+          localStorage.setItem("fazilnagar_last_place_update", String(Date.now()));
+        } catch (_) {}
+        window.dispatchEvent(
+          new CustomEvent("fazilnagar-place-updated", { detail: { place: resultPlace } })
+        );
+      }
+
       if (onSave) onSave(resultPlace);
       onClose();
     } catch (err) {
