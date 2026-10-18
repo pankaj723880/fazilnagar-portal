@@ -712,7 +712,7 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
                         }`}
                       >
                         <div className="min-w-0 pr-1">
-                          <h5 className="text-xs font-bold truncate">Hide Navbar &amp; Footer</h5>
+                          <h5 className="text-xs font-bold truncate">Hide Navbar, Footer &amp; Return Button</h5>
                           <p className="text-[10px] text-slate-500 truncate">
                             {isEnabled ? "ON: Hidden on all public forms" : "OFF: Standard layout (visible)"}
                           </p>

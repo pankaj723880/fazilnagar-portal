@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import API from "../api";
 import { usePageSEO } from "../utils/seo";
+import { getCachedSettings, getSiteSettings, subscribeToCMSLiveUpdates } from "../services/cmsService";
 import {
   FileText,
   MapPin,
@@ -24,6 +25,21 @@ export default function PublicContributionForm() {
   const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState("");
+
+  // Synchronize site settings for hideNavbarAndFooter layout & return buttons
+  const [siteSettings, setSiteSettings] = useState(() => getCachedSettings());
+  useEffect(() => {
+    getSiteSettings().then((s) => {
+      if (s) setSiteSettings(s);
+    });
+    return subscribeToCMSLiveUpdates(() => {
+      getSiteSettings().then((s) => {
+        if (s) setSiteSettings(s);
+      });
+    });
+  }, []);
+
+  const hideNavbarAndFooter = Boolean(siteSettings?.contributionFormSettings?.hideNavbarAndFooter);
 
   // Submitter Form State
   const [formData, setFormData] = useState({});
@@ -356,15 +372,17 @@ export default function PublicContributionForm() {
           </div>
           <h2 className="text-lg font-extrabold text-slate-900 font-heading">Form Not Available</h2>
           <p className="text-xs text-slate-600 leading-relaxed">{fetchError}</p>
-          <div className="pt-2">
-            <Link
-              to="/"
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Return to Town Portal</span>
-            </Link>
-          </div>
+          {!hideNavbarAndFooter && (
+            <div className="pt-2">
+              <Link
+                to="/"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Return to Town Portal</span>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -374,13 +392,15 @@ export default function PublicContributionForm() {
     <div className="min-h-screen bg-[#F5F7FA] py-8 px-4 sm:px-6">
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Back Link */}
-        <Link
-          to={form.targetModule === "map" ? "/#regional-connectivity-section" : "/directory"}
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to {form.targetModule === "map" ? "Town Map" : "Directory"}</span>
-        </Link>
+        {!hideNavbarAndFooter && (
+          <Link
+            to={form.targetModule === "map" ? "/#regional-connectivity-section" : "/directory"}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to {form.targetModule === "map" ? "Town Map" : "Directory"}</span>
+          </Link>
+        )}
 
         {/* Success Confirmation Card */}
         {submissionSuccess ? (
@@ -427,12 +447,14 @@ export default function PublicContributionForm() {
                 Submit Another Contribution
               </button>
 
-              <Link
-                to="/"
-                className="w-full sm:w-auto px-5 py-2.5 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition shadow-xs"
-              >
-                Return to Town Portal
-              </Link>
+              {!hideNavbarAndFooter && (
+                <Link
+                  to="/"
+                  className="w-full sm:w-auto px-5 py-2.5 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition shadow-xs"
+                >
+                  Return to Town Portal
+                </Link>
+              )}
             </div>
           </div>
         ) : (

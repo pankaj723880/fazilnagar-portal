@@ -135,8 +135,8 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
         clearCMSCache();
         setSuccessMessage(
           nextVal
-            ? "Public Form Navbar & Footer turned OFF (Hidden on all public forms)."
-            : "Public Form Navbar & Footer turned ON (Visible on all public forms)."
+            ? "Public Form Navbar, Footer & Return button turned OFF (Hidden on all public forms)."
+            : "Public Form Navbar, Footer & Return button turned ON (Visible on all public forms)."
         );
         setTimeout(() => setSuccessMessage(""), 4000);
       }
@@ -1560,7 +1560,7 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
           <button
             type="button"
             id="form-builder-navbar-toggle"
-            title="Turn on/off Navbar and Footer on public contribution forms (/forms/* & /contribute/*)"
+            title="Turn on/off Navbar, Footer & Return button on public contribution forms (/forms/* & /contribute/*)"
             onClick={handleToggleFormNavbar}
             disabled={updatingNavbarSetting}
             className={`px-3 py-2 rounded-xl border transition flex items-center gap-2.5 select-none active:scale-95 cursor-pointer text-left ${
@@ -1576,7 +1576,7 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
                     hideNavbarAndFooter ? "bg-amber-500 animate-pulse" : "bg-emerald-500"
                   }`}
                 />
-                <span className="text-[11px] font-bold">Public Form Navbar:</span>
+                <span className="text-[11px] font-bold">Public Form Navbar &amp; Return:</span>
                 <span
                   className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
                     hideNavbarAndFooter
@@ -1589,8 +1589,8 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
               </div>
               <div className="text-[10px] text-slate-500 mt-0.5">
                 {hideNavbarAndFooter
-                  ? "Top navbar & footer hidden"
-                  : "Standard navbar & footer shown"}
+                  ? "Navbar, footer & return button hidden"
+                  : "Navbar, footer & return button shown"}
               </div>
             </div>
 
