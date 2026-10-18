@@ -19,6 +19,7 @@ import {
   Filter,
   ArrowUp,
   ArrowDown,
+  ArrowLeft,
   X,
   FileText,
   MapPin,
