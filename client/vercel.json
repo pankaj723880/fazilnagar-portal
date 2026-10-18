@@ -130,10 +130,15 @@
       ]
     }
   ],
+  "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/((?!api|sitemap\\.xml|robots\\.txt|google[a-zA-Z0-9]+\\.html).*)",
-      "destination": "/index.html"
+      "source": "/google4f0808f0811c4245.html",
+      "destination": "/google4f0808f0811c4245.html"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index"
     }
   ]
 }

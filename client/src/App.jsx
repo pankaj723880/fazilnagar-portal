@@ -167,6 +167,16 @@ export default function App() {
   const isAdminPage = location.pathname.startsWith("/admin");
   const isMessagesPage = location.pathname.startsWith("/messages");
 
+  const isAreaDetailsForm =
+    location.pathname === "/contribute/area-details" ||
+    location.pathname === "/forms/area-details" ||
+    location.pathname.replace(/\/+$/, "") === "/contribute/area-details" ||
+    location.pathname.replace(/\/+$/, "") === "/forms/area-details";
+
+  const hideLayoutOnAreaDetails =
+    isAreaDetailsForm &&
+    Boolean(siteSettings?.contributionFormSettings?.hideNavbarAndFooter);
+
   const hasSubNav = DIRECTORY_SUB_NAV_PATHS.includes(location.pathname) && !isNewsPage;
   const isAdmin = Boolean(user && user.role === "admin") && isUserAdmin();
 
@@ -307,7 +317,7 @@ export default function App() {
       {/* ========================================================
           PERMANENT FIXED TOP SHELL (Desktop / Non-Portal Pages)
           ======================================================== */}
-      <header className={`fixed top-0 left-0 right-0 z-50 bg-[#FFFFFF] shadow-xs ${isAdminPage ? "hidden" : isPortalPage || isMobilePreview ? "hidden md:block" : ""}`}>
+      <header className={`fixed top-0 left-0 right-0 z-50 bg-[#FFFFFF] shadow-xs ${isAdminPage || hideLayoutOnAreaDetails ? "hidden" : isPortalPage || isMobilePreview ? "hidden md:block" : ""}`}>
         {/* Top Alert & User Status Bar - Modern Civic Deep Slate & Crimson (Desktop / Tablet) */}
         {siteSettings?.topAlertBar?.enabled !== false && (
           <div className="hidden sm:flex h-8 bg-[#18232E] text-slate-300 text-[11px] font-semibold px-4 justify-between items-center border-b border-slate-800 shadow-xs">
@@ -586,7 +596,7 @@ export default function App() {
         id="main-content"
         tabIndex="-1"
         className={`flex-1 w-full outline-none ${
-          isAdminPage
+          isAdminPage || hideLayoutOnAreaDetails
             ? "pt-0 pb-0 p-0 m-0 w-full max-w-full"
             : isNewsPage
             ? "pt-16 sm:pt-[96px] pb-14 sm:pb-0 p-0 m-0 overflow-hidden"
@@ -701,7 +711,7 @@ export default function App() {
           FOOTER - Modern Civic Deep Slate with Crimson & Emerald Accents
           (Hidden on /news full-screen reels page and TownPortal homepage which has its own footer)
           ======================================================== */}
-      {!isNewsPage && !isPortalPage && !isAdminPage && !isMessagesPage && (
+      {!isNewsPage && !isPortalPage && !isAdminPage && !isMessagesPage && !hideLayoutOnAreaDetails && (
         <footer className="bg-[#18232E] text-slate-400 text-xs mt-12 border-t border-slate-800 pb-28 sm:pb-8">
           {/* Mobile Collapsible Accordions (md:hidden) */}
           <div className="md:hidden max-w-lg mx-auto px-4 py-6 space-y-2.5">
@@ -1176,7 +1186,7 @@ export default function App() {
           MOBILE NATIVE BOTTOM APP BAR (Fixed at bottom for phones < 640px)
           Provides effortless 1-thumb native app navigation across the portal
           ======================================================== */}
-      {!isAdminPage && !isMessagesPage && (
+      {!isAdminPage && !isMessagesPage && !hideLayoutOnAreaDetails && (
         <nav className={`fixed bottom-0 left-0 right-0 z-[1050] bg-white/95 dark:bg-[#101114]/95 backdrop-blur-md border-t border-slate-200/90 dark:border-[#38383E] shadow-[0_-4px_20px_rgba(0,0,0,0.12)] pb-[max(0.5rem,env(safe-area-inset-bottom))] ${isMobilePreview ? "block" : "sm:hidden"}`}>
           <div className="max-w-[420px] mx-auto w-full px-1 py-1 flex items-center justify-around">
             <NavLink

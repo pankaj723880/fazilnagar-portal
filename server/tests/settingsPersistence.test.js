@@ -17,6 +17,7 @@ import SiteSettings, {
 } from "../models/SiteSettings.js";
 import User from "../models/User.js";
 import settingsRoutes from "../routes/settings.js";
+import formsRoutes from "../routes/forms.js";
 
 const TEST_PORT = 5055;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/fazilnagar_db";
@@ -75,6 +76,8 @@ describe("Settings Persistence & Live Version Endpoint Verification", () => {
     app.use(express.json());
     app.use("/api/settings", settingsRoutes);
     app.use("/settings", settingsRoutes);
+    app.use("/api/forms", formsRoutes);
+    app.use("/forms", formsRoutes);
 
     await new Promise((resolve) => {
       server = app.listen(TEST_PORT, resolve);
@@ -253,6 +256,69 @@ describe("Settings Persistence & Live Version Endpoint Verification", () => {
     reloaded.data.settings.heroContent.trustBadges.forEach((t) =>
       assert.equal(t.isActive, true)
     );
+  });
+
+  it("8. GET /api/settings includes contributionFormSettings with default hideNavbarAndFooter: false", async () => {
+    const res = await makeRequest("GET", "/api/settings");
+    assert.equal(res.status, 200);
+    assert.equal(res.data.success, true);
+    assert.ok(res.data.settings.contributionFormSettings);
+    assert.equal(res.data.settings.contributionFormSettings.hideNavbarAndFooter, false);
+  });
+
+  it("9. PUT /api/settings: Citizen cannot modify contributionFormSettings (403 Forbidden)", async () => {
+    const res = await makeRequest(
+      "PUT",
+      "/api/settings",
+      { contributionFormSettings: { hideNavbarAndFooter: true } },
+      citizenToken
+    );
+    assert.equal(res.status, 403);
+  });
+
+  it("10. PUT /api/settings: Admin toggling hideNavbarAndFooter to true persists in DB and returns in GET", async () => {
+    const putRes = await makeRequest(
+      "PUT",
+      "/api/settings",
+      { contributionFormSettings: { hideNavbarAndFooter: true } },
+      adminToken
+    );
+    assert.equal(putRes.status, 200);
+    assert.equal(putRes.data.success, true);
+    assert.equal(putRes.data.settings.contributionFormSettings.hideNavbarAndFooter, true);
+
+    // Verify in MongoDB directly
+    const dbDoc = await SiteSettings.findOne({ key: "primary_settings" }).lean();
+    assert.equal(dbDoc.contributionFormSettings?.hideNavbarAndFooter, true);
+
+    // Verify subsequent GET returns the persisted setting
+    const getRes = await makeRequest("GET", "/api/settings");
+    assert.equal(getRes.status, 200);
+    assert.equal(getRes.data.settings.contributionFormSettings?.hideNavbarAndFooter, true);
+  });
+
+  it("11. PUT /api/settings: Admin toggling hideNavbarAndFooter back to false persists in DB", async () => {
+    const putRes = await makeRequest(
+      "PUT",
+      "/api/settings",
+      { contributionFormSettings: { hideNavbarAndFooter: false } },
+      adminToken
+    );
+    assert.equal(putRes.status, 200);
+    assert.equal(putRes.data.settings.contributionFormSettings.hideNavbarAndFooter, false);
+
+    const dbDoc = await SiteSettings.findOne({ key: "primary_settings" }).lean();
+    assert.equal(dbDoc.contributionFormSettings?.hideNavbarAndFooter, false);
+  });
+
+  it("12. GET /api/forms/public/area-details returns the published area-details form with 200", async () => {
+    const res = await makeRequest("GET", "/api/forms/public/area-details");
+    assert.equal(res.status, 200);
+    assert.equal(res.data.slug, "area-details");
+    assert.equal(res.data.status, "published");
+    assert.equal(res.data.targetModule, "map");
+    assert.ok(Array.isArray(res.data.fields));
+    assert.ok(res.data.fields.length >= 5);
   });
 
   after(async () => {

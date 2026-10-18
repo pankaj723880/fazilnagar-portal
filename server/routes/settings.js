@@ -47,9 +47,18 @@ async function getOrCreateSettings(bypassCache = false) {
         slides: [],
       },
       stats: DEFAULT_STATS,
+      contributionFormSettings: {
+        hideNavbarAndFooter: false,
+      },
     });
   } else {
     let changed = false;
+    if (!settings.contributionFormSettings) {
+      settings.contributionFormSettings = {
+        hideNavbarAndFooter: false,
+      };
+      changed = true;
+    }
     if (!settings.heroSettings) {
       settings.heroSettings = {
         animationSpeed: 5000,
@@ -227,6 +236,13 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
       settings.sections = {
         ...safeObj(settings.sections),
         ...updateData.sections,
+      };
+    }
+
+    if (updateData.contributionFormSettings && typeof updateData.contributionFormSettings === "object") {
+      settings.contributionFormSettings = {
+        ...safeObj(settings.contributionFormSettings),
+        hideNavbarAndFooter: Boolean(updateData.contributionFormSettings.hideNavbarAndFooter),
       };
     }
 

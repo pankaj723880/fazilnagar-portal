@@ -692,6 +692,39 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
                   })}
                 </div>
               </div>
+
+              {/* Group E: Contribution Form Layout */}
+              <div>
+                <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
+                  E. Contribution Form Layout (/contribute/area-details)
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                  {(() => {
+                    const isEnabled = Boolean(settings.contributionFormSettings?.hideNavbarAndFooter);
+                    return (
+                      <div
+                        id="toggle-hide-navbar-footer-area-details"
+                        onClick={() => updateField("contributionFormSettings.hideNavbarAndFooter", !isEnabled)}
+                        className={`p-3 rounded-xl border transition cursor-pointer flex items-center justify-between gap-2.5 active:scale-98 ${
+                          isEnabled
+                            ? "bg-amber-50/70 border-amber-300 text-slate-900"
+                            : "bg-slate-50/70 border-slate-200 text-slate-500"
+                        }`}
+                      >
+                        <div className="min-w-0 pr-1">
+                          <h5 className="text-xs font-bold truncate">Hide Navbar &amp; Footer</h5>
+                          <p className="text-[10px] text-slate-500 truncate">
+                            {isEnabled ? "ON: Hidden on /contribute/area-details" : "OFF: Standard layout"}
+                          </p>
+                        </div>
+                        <div className={`w-9 h-5 rounded-full transition-colors relative shrink-0 ${isEnabled ? 'bg-amber-500' : 'bg-slate-300'}`}>
+                          <div className={`w-3.5 h-3.5 rounded-full bg-white transition-transform absolute top-[3px] ${isEnabled ? 'left-[19px]' : 'left-[3px]'}`} />
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
             </div>
           </div>
         )}

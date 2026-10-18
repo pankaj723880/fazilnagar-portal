@@ -15,6 +15,7 @@ import {
   buildGoogleMapsCoordinateUrl,
 } from "../utils/googleMapsValidator.js";
 import { writeLimiter } from "../middleware/rateLimiter.js";
+import { ensureAreaDetailsForm } from "../config/db.js";
 
 const router = express.Router();
 
@@ -40,7 +41,12 @@ function slugify(text) {
 router.get("/public/:slug", async (req, res) => {
   try {
     const { slug } = req.params;
-    const form = await ContributionForm.findOne({ slug: slug.toLowerCase() }).lean();
+    let form = await ContributionForm.findOne({ slug: slug.toLowerCase() }).lean();
+
+    if (!form && slug.toLowerCase() === "area-details") {
+      await ensureAreaDetailsForm();
+      form = await ContributionForm.findOne({ slug: "area-details" }).lean();
+    }
 
     if (!form) {
       return res.status(404).json({ message: "Form not found or URL is incorrect." });

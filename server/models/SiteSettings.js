@@ -21,6 +21,10 @@ const statItemSchema = new mongoose.Schema({
   displayOrder: { type: Number, default: 0 },
 });
 
+const contributionFormSettingsSchema = new mongoose.Schema({
+  hideNavbarAndFooter: { type: Boolean, default: false },
+});
+
 const sectionVisibilitySchema = new mongoose.Schema({
   announcementBanner: { type: Boolean, default: true },
   heroCarousel: { type: Boolean, default: true },
@@ -244,6 +248,11 @@ const siteSettingsSchema = new mongoose.Schema(
     sections: {
       type: sectionVisibilitySchema,
       default: () => ({}),
+    },
+    // Contribution Form Layout Settings
+    contributionFormSettings: {
+      type: contributionFormSettingsSchema,
+      default: () => ({ hideNavbarAndFooter: false }),
     },
     // Footer configuration
     footer: {
