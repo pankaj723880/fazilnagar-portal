@@ -24,15 +24,15 @@ export default function EmptyState({
     <div
       className={`p-10 sm:p-14 text-center flex flex-col items-center justify-center space-y-3 ${className}`}
     >
-      <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 border border-slate-200/80 flex items-center justify-center shadow-2xs">
+      <div className="w-12 h-12 rounded-2xl bg-[#F8FAFC] text-[#64748B] border border-[#E5E7EB] flex items-center justify-center shadow-2xs">
         <Icon className="w-6 h-6" />
       </div>
 
       <div className="space-y-1 max-w-sm mx-auto">
-        <h4 className="text-sm sm:text-base font-extrabold text-[#18232E]">
+        <h4 className="text-sm sm:text-base font-extrabold text-[#111827]">
           {title}
         </h4>
-        <p className="text-xs text-slate-500 leading-relaxed">
+        <p className="text-xs text-[#64748B] leading-relaxed">
           {description}
         </p>
       </div>

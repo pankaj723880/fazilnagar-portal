@@ -195,22 +195,22 @@ export default function AdminSidebar({
   };
 
   const sidebarContent = (
-    <div className="h-full flex flex-col justify-between text-slate-300 font-sans select-none bg-[#14233B]">
+    <div className="h-full flex flex-col justify-between text-slate-300 font-sans select-none bg-[#111827]">
       {/* Brand Header */}
       <div>
-        <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800/80 bg-[#0F1B2F]">
+        <div className="h-16 px-4 flex items-center justify-between border-b border-[#1E293B] bg-[#0B0F19]">
           <Link
             to="/admin/review"
             onClick={() => handleSelect("dashboard")}
             className="flex items-center gap-3 group"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-md font-bold text-base shrink-0 group-hover:scale-105 transition">
+            <div className="w-9 h-9 rounded-xl bg-[#1E293B] border border-slate-700/80 flex items-center justify-center text-white shadow-md font-bold text-base shrink-0 group-hover:scale-105 transition">
               🏛️
             </div>
             {!isCollapsed && (
               <div className="leading-tight">
-                <div className="text-sm font-extrabold text-white tracking-wide flex items-center gap-1">
-                  <span>FAZIL<span className="text-blue-400">NAGAR</span></span>
+                <div className="text-sm font-extrabold text-white tracking-wide flex items-center gap-1 font-heading">
+                  <span>FAZIL<span className="text-[#B8323C]">NAGAR</span></span>
                 </div>
                 <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">
                   Civic Portal CMS
@@ -222,7 +222,7 @@ export default function AdminSidebar({
           {/* Mobile Close Button */}
           <button
             onClick={() => setIsMobileOpen(false)}
-            className="lg:hidden w-8 h-8 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer active:scale-95"
+            className="lg:hidden w-8 h-8 rounded-xl bg-[#1E293B] hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer active:scale-95"
             aria-label="Close navigation drawer"
           >
             <X className="w-5 h-5" />
@@ -253,16 +253,16 @@ export default function AdminSidebar({
                         isCollapsed ? "justify-center px-0 py-2.5" : "justify-between px-3 py-2"
                       } rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer group relative ${
                         isActive
-                          ? "bg-[#2563EB] text-white shadow-sm font-extrabold"
-                          : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                          ? "bg-[#1E293B] text-white shadow-xs font-black border-l-4 border-[#B8323C]"
+                          : "text-slate-300 hover:bg-[#1E293B]/70 hover:text-white"
                       }`}
                     >
                       <div className="flex items-center gap-2.5 truncate">
                         <Icon
                           className={`w-4 h-4 shrink-0 transition-colors ${
                             isActive
-                              ? "text-white"
-                              : "text-slate-400 group-hover:text-blue-400"
+                              ? "text-[#B8323C]"
+                              : "text-slate-400 group-hover:text-slate-200"
                           }`}
                         />
                         {!isCollapsed && <span className="truncate">{item.label}</span>}
@@ -294,14 +294,14 @@ export default function AdminSidebar({
       </div>
 
       {/* Footer / Toggle & Public Site Link */}
-      <div className="p-3 border-t border-slate-800/80 bg-[#0F1B2F] space-y-2">
+      <div className="p-3 border-t border-[#1E293B] bg-[#0B0F19] space-y-2">
         <a
           href="/"
           target="_blank"
           rel="noreferrer"
           className={`flex items-center ${
             isCollapsed ? "justify-center p-2" : "justify-between px-3 py-2"
-          } rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition group`}
+          } rounded-xl text-xs font-bold text-slate-300 hover:bg-[#1E293B] hover:text-white transition group`}
           title="Open Public Town Portal in New Tab"
         >
           <div className="flex items-center gap-2">
@@ -316,7 +316,7 @@ export default function AdminSidebar({
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={`hidden lg:flex w-full items-center ${
             isCollapsed ? "justify-center" : "justify-between px-3"
-          } py-1.5 rounded-xl text-[11px] font-bold text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition cursor-pointer`}
+          } py-1.5 rounded-xl text-[11px] font-bold text-slate-400 hover:bg-[#1E293B] hover:text-slate-200 transition cursor-pointer`}
           title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
         >
           {!isCollapsed && <span>Collapse Sidebar</span>}
@@ -334,7 +334,7 @@ export default function AdminSidebar({
     <>
       {/* Desktop Persistent Sidebar */}
       <aside
-        className={`hidden lg:block fixed top-0 bottom-0 left-0 z-30 transition-all duration-200 border-r border-slate-800 shadow-md ${
+        className={`hidden lg:block fixed top-0 bottom-0 left-0 z-30 transition-all duration-200 border-r border-[#1E293B] shadow-md ${
           isCollapsed ? "w-16" : "w-64"
         }`}
       >
@@ -350,7 +350,7 @@ export default function AdminSidebar({
         >
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity cursor-pointer"
+            className="fixed inset-0 bg-[#111827]/80 backdrop-blur-xs transition-opacity cursor-pointer"
             onClick={() => setIsMobileOpen(false)}
             aria-label="Close sidebar backdrop"
           />

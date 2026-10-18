@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
+import { ThemeProvider } from './context/ThemeContext'
 import './index.css'
 if (typeof window !== 'undefined' && window.__STARTUP_METRICS__) {
   window.__STARTUP_METRICS__.jsInit = performance.now();
@@ -11,7 +12,9 @@ if (typeof window !== 'undefined' && window.__STARTUP_METRICS__) {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
     </BrowserRouter>
   </React.StrictMode>
 )

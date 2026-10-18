@@ -13,7 +13,7 @@ export default function DataTable({
 }) {
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-2xs overflow-hidden">
         <div className="p-8 text-center space-y-3">
           <div className="h-6 w-32 bg-slate-100 animate-pulse rounded-lg mx-auto" />
           <div className="space-y-2 max-w-md mx-auto">
@@ -27,9 +27,9 @@ export default function DataTable({
 
   if (!data || data.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-2xs overflow-hidden">
         {emptyState || (
-          <div className="p-12 text-center text-slate-400 text-xs font-semibold">
+          <div className="p-12 text-center text-[#64748B] text-xs font-semibold">
             No records found.
           </div>
         )}
@@ -38,10 +38,10 @@ export default function DataTable({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
+    <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-2xs overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs text-slate-700 divide-y divide-slate-100">
-          <thead className="bg-slate-50/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+        <table className="w-full text-left text-xs text-[#111827] divide-y divide-[#E5E7EB]">
+          <thead className="bg-[#F8FAFC] text-[11px] font-extrabold uppercase tracking-wider text-[#64748B] border-b border-[#E5E7EB]">
             <tr>
               {columns.map((col, idx) => {
                 const isSortable = col.sortable && onSort;
@@ -56,7 +56,7 @@ export default function DataTable({
                         : col.align === "center"
                         ? "text-center"
                         : "text-left"
-                    } ${isSortable ? "cursor-pointer hover:text-slate-800 select-none" : ""}`}
+                    } ${isSortable ? "cursor-pointer hover:text-[#111827] select-none" : ""}`}
                     style={col.width ? { width: col.width } : undefined}
                     onClick={() => isSortable && onSort(col.key)}
                   >
@@ -73,9 +73,9 @@ export default function DataTable({
                       {isSortable && isCurrentSort && (
                         <span>
                           {sortDirection === "asc" ? (
-                            <ChevronUp className="w-3.5 h-3.5 text-blue-600" />
+                            <ChevronUp className="w-3.5 h-3.5 text-[#B8323C]" />
                           ) : (
-                            <ChevronDown className="w-3.5 h-3.5 text-blue-600" />
+                            <ChevronDown className="w-3.5 h-3.5 text-[#B8323C]" />
                           )}
                         </span>
                       )}
@@ -86,7 +86,7 @@ export default function DataTable({
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-slate-100 bg-white">
+          <tbody className="divide-y divide-[#E5E7EB] bg-white">
             {data.map((row, rowIdx) => {
               const rowKey = row[keyField] || row.id || rowIdx;
               return (
@@ -94,7 +94,7 @@ export default function DataTable({
                   key={rowKey}
                   onClick={() => onRowClick && onRowClick(row)}
                   className={`transition-colors ${
-                    onRowClick ? "cursor-pointer hover:bg-slate-50/80" : "hover:bg-slate-50/40"
+                    onRowClick ? "cursor-pointer hover:bg-[#F8FAFC]" : "hover:bg-[#F8FAFC]/50"
                   }`}
                 >
                   {columns.map((col, colIdx) => {

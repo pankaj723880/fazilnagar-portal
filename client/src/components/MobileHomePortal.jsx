@@ -34,6 +34,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import NotificationCenter from "./NotificationCenter";
+import ThemeToggle from "./ThemeToggle";
 import { openGoogleMapsDirections } from "../utils/directions";
 import { getAuthUser, isUserAdmin } from "../utils/authStorage";
 import {
@@ -490,6 +491,7 @@ export default function MobileHomePortal({
           </div>
         </Link>
         <div className="flex items-center gap-2">
+          <ThemeToggle compact={true} />
           <NotificationCenter lightMode={true} subtleDot={true} />
           {authUser ? (
             <Link

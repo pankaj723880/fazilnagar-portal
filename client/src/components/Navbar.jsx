@@ -42,10 +42,6 @@ export default function Navbar() {
               पावा नगर • Kushinagar
             </span>
           </div>
-
-          <Link to="/map" className="hover:text-red-400 transition-colors">
-  🗺️ Map Directory
-</Link>
         </Link>
 
         {/* Mobile Menu Toggle Button */}

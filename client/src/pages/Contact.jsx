@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Mail, Phone, MapPin, AlertTriangle, Send, CheckCircle2 } from "lucide-react";
+import { Mail, Phone, MapPin, AlertTriangle, Send, CheckCircle2, Loader2 } from "lucide-react";
 import { usePageSEO } from "../utils/seo";
+import API from "../api";
 
 export default function Contact() {
   usePageSEO({
@@ -19,11 +20,56 @@ export default function Contact() {
     correctionDetails: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const [referenceId, setReferenceId] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simulate submission handling
-    setSubmitted(true);
+    setSubmitError(null);
+
+    if (!formData.name.trim()) {
+      setSubmitError("Please enter your name.");
+      return;
+    }
+    if (!formData.emailOrPhone.trim()) {
+      setSubmitError("Please provide an email or phone number so we can verify the information.");
+      return;
+    }
+    if (formType === "report" && !formData.listingName.trim()) {
+      setSubmitError("Please specify the business or listing name to correct.");
+      return;
+    }
+    if (!formData.correctionDetails.trim()) {
+      setSubmitError("Please enter your message or correction details.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const res = await API.post("/submissions/correction", {
+        name: formData.name.trim(),
+        emailOrPhone: formData.emailOrPhone.trim(),
+        subject: formData.subject.trim(),
+        listingName: formData.listingName.trim(),
+        incorrectInfo: formData.incorrectInfo.trim(),
+        correctionDetails: formData.correctionDetails.trim(),
+        formType,
+      });
+
+      if (res.data?.success) {
+        setReferenceId(res.data.referenceId || "");
+        setSubmitted(true);
+      } else {
+        setSubmitError(res.data?.message || "Failed to submit report. Please check the fields.");
+      }
+    } catch (err) {
+      setSubmitError(
+        err.response?.data?.message || "Network error. Please check your connection and try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -89,16 +135,23 @@ export default function Contact() {
         {/* Correction / Message Form */}
         <div className="md:col-span-2 bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm">
           {submitted ? (
-            <div className="p-8 text-center space-y-3 bg-emerald-50 rounded-xl border border-emerald-200">
+            <div className="p-8 text-center space-y-3 bg-emerald-50 rounded-2xl border border-emerald-200">
               <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
               <h3 className="text-base font-bold text-emerald-950">Report Received!</h3>
               <p className="text-xs text-emerald-800 leading-relaxed max-w-md mx-auto">
                 Thank you for helping keep Fazilnagar informed. A portal volunteer will verify the submitted correction with ground truth data.
               </p>
+              {referenceId && (
+                <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-300 max-w-xs mx-auto text-xs">
+                  <span className="text-slate-500 block text-[10px] uppercase font-bold tracking-wider">Tracking Reference ID</span>
+                  <span className="font-mono font-bold text-emerald-900 text-sm select-all">{referenceId}</span>
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => {
                   setSubmitted(false);
+                  setReferenceId("");
                   setFormData({ name: "", emailOrPhone: "", subject: "", listingName: "", incorrectInfo: "", correctionDetails: "" });
                 }}
                 className="mt-3 text-xs font-bold text-emerald-700 underline cursor-pointer"
@@ -108,6 +161,13 @@ export default function Contact() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
+              {submitError && (
+                <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs flex items-start gap-2 animate-shake">
+                  <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                  <span className="font-semibold">{submitError}</span>
+                </div>
+              )}
+
               <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
                 <button
                   type="button"
@@ -138,10 +198,10 @@ export default function Contact() {
                     id="listingName"
                     type="text"
                     required
-                    placeholder="e.g., Community Health Centre, Hermitage School, etc."
+                    placeholder="e.g., Community Health Centre, Sarvodaya College, etc."
                     value={formData.listingName}
                     onChange={(e) => setFormData({ ...formData, listingName: e.target.value })}
-                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-[#B8323C]"
+                    className="w-full text-xs p-2.5 min-h-[44px] rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50/50 focus:bg-white"
                   />
                 </div>
               )}
@@ -149,53 +209,65 @@ export default function Contact() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="name" className="block text-xs font-bold text-slate-800 mb-1">
-                    Your Name (Optional)
+                    Your Name *
                   </label>
                   <input
                     id="name"
                     type="text"
+                    required
                     placeholder="e.g. Ramesh Singh"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-[#B8323C]"
+                    className="w-full text-xs p-2.5 min-h-[44px] rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50/50 focus:bg-white"
                   />
                 </div>
                 <div>
                   <label htmlFor="emailOrPhone" className="block text-xs font-bold text-slate-800 mb-1">
-                    Email or Phone (For follow-up)
+                    Email or Mobile (For verification) *
                   </label>
                   <input
                     id="emailOrPhone"
                     type="text"
-                    placeholder="user@example.com or mobile"
+                    required
+                    placeholder="mobile number or email"
                     value={formData.emailOrPhone}
                     onChange={(e) => setFormData({ ...formData, emailOrPhone: e.target.value })}
-                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-[#B8323C]"
+                    className="w-full text-xs p-2.5 min-h-[44px] rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50/50 focus:bg-white"
                   />
                 </div>
               </div>
 
               <div>
                 <label htmlFor="correctionDetails" className="block text-xs font-bold text-slate-800 mb-1">
-                  {formType === "report" ? "What is wrong and what is the correct information? *" : "Message *"}
+                  {formType === "report" ? "What is wrong and what is the correct information? *" : "Message / Details *"}
                 </label>
                 <textarea
                   id="correctionDetails"
                   rows={4}
                   required
-                  placeholder={formType === "report" ? "Please detail what phone number, address, or service is wrong and provide the verified correct detail..." : "Your inquiry or feedback..."}
+                  placeholder={formType === "report" ? "Please detail what phone number, address, or service is wrong and provide the verified correct detail..." : "Your civic inquiry or feedback..."}
                   value={formData.correctionDetails}
                   onChange={(e) => setFormData({ ...formData, correctionDetails: e.target.value })}
-                  className="w-full text-xs p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-[#B8323C]"
+                  className="w-full text-xs p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50/50 focus:bg-white"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-[#18232E] hover:bg-[#B8323C] text-white text-xs font-bold py-3 rounded-xl transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                disabled={isSubmitting}
+                className="w-full bg-[#18232E] hover:bg-[#B8323C] disabled:opacity-60 text-white text-xs font-bold py-3 min-h-[44px] rounded-xl transition shadow-xs flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Send className="w-4 h-4" />
-                <span>Submit to Volunteer Verification Desk</span>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Submitting to Volunteer Desk...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>Submit to Volunteer Verification Desk</span>
+                  </>
+                )}
               </button>
             </form>
           )}

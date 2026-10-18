@@ -141,16 +141,16 @@ export default function AdminDashboardOverview({
                 fetchExtras();
               }}
               disabled={loading || loadingExtras}
-              className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-2xs flex items-center gap-1.5 cursor-pointer"
+              className="bg-white hover:bg-slate-50 text-[#1E293B] border border-[#E5E7EB] text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-2xs flex items-center gap-1.5 cursor-pointer"
               title="Refresh live portal stats"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading || loadingExtras ? "animate-spin text-blue-600" : ""}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${loading || loadingExtras ? "animate-spin text-[#B8323C]" : ""}`} />
               <span className="hidden sm:inline">Refresh Data</span>
             </button>
 
             <button
               onClick={handleOpenCreateAd}
-              className="bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer"
+              className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
               <Megaphone className="w-3.5 h-3.5" />
               <span>+ New Ad</span>
@@ -158,7 +158,7 @@ export default function AdminDashboardOverview({
 
             <button
               onClick={handleOpenCreateNews}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer"
+              className="bg-[#111827] hover:bg-[#1E293B] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>+ New Story</span>
@@ -185,7 +185,7 @@ export default function AdminDashboardOverview({
           label="Pending Review"
           value={stats.pendingSubmissionsCount || 0}
           icon={Clock}
-          color={stats.pendingSubmissionsCount > 0 ? "amber" : "blue"}
+          color={stats.pendingSubmissionsCount > 0 ? "amber" : "navy"}
           subtitle={
             stats.pendingSubmissionsCount > 0
               ? "Requires Admin Audit"
@@ -200,7 +200,7 @@ export default function AdminDashboardOverview({
           label="Live Advertisements"
           value={stats.liveAdsCount || 0}
           icon={Megaphone}
-          color="purple"
+          color="crimson"
           subtitle={`${stats.totalAdsCount || 0} total scheduled ads`}
           onClick={() => navigateTab("ads")}
           loading={loading}
@@ -211,7 +211,7 @@ export default function AdminDashboardOverview({
           label="Published News"
           value={stats.publishedNewsCount || 4}
           icon={Newspaper}
-          color="blue"
+          color="navy"
           subtitle={`${stats.totalNewsCount || 4} stories in registry`}
           onClick={() => navigateTab("news-manage")}
           loading={loading}
@@ -222,7 +222,7 @@ export default function AdminDashboardOverview({
           label="Registered Users"
           value={stats.usersCount ?? 8}
           icon={Users}
-          color="indigo"
+          color="navy"
           subtitle="Citizen & Reporter accounts"
           onClick={() => navigateTab("manage-users")}
           loading={loading}
@@ -230,70 +230,70 @@ export default function AdminDashboardOverview({
       </div>
 
       {/* 5.2 VISUAL QUICK ACTION CAROUSEL */}
-      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs space-y-2.5">
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-            <h2 className="text-xs font-black uppercase tracking-wider text-slate-600">
+            <span className="w-2 h-2 rounded-full bg-[#B8323C] animate-pulse" />
+            <h2 className="text-xs font-black uppercase tracking-wider text-[#64748B]">
               Administrative Quick Actions
             </h2>
           </div>
-          <span className="text-[10px] text-slate-400 font-medium">Swipe to launch module →</span>
+          <span className="text-[10px] text-[#64748B] font-medium">Swipe to launch module →</span>
         </div>
 
         <div className="flex gap-2.5 overflow-x-auto pb-1 sm:grid sm:grid-cols-3 md:grid-cols-6 no-scrollbar">
           <button
             onClick={() => navigateTab("manage-entities")}
-            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer active:scale-95"
+            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-[#E5E7EB] hover:border-slate-400 hover:bg-slate-50 text-left transition group cursor-pointer active:scale-95"
           >
             <span className="text-xl block mb-1.5 group-hover:scale-110 transition">🏥</span>
-            <span className="text-xs font-bold text-[#18232E] block truncate">Add Entity</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">Town registry</span>
+            <span className="text-xs font-bold text-[#111827] block truncate">Add Entity</span>
+            <span className="text-[10px] text-[#64748B] block mt-0.5">Town registry</span>
           </button>
 
           <button
             onClick={() => navigateTab("cms-settings")}
-            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer active:scale-95"
+            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-[#E5E7EB] hover:border-slate-400 hover:bg-slate-50 text-left transition group cursor-pointer active:scale-95"
           >
             <span className="text-xl block mb-1.5 group-hover:scale-110 transition">⚙️</span>
-            <span className="text-xs font-bold text-[#18232E] block truncate">Manage Site</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">12 sections</span>
+            <span className="text-xs font-bold text-[#111827] block truncate">Manage Site</span>
+            <span className="text-[10px] text-[#64748B] block mt-0.5">12 sections</span>
           </button>
 
           <button
             onClick={() => navigateTab("cms-media")}
-            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer active:scale-95"
+            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-[#E5E7EB] hover:border-slate-400 hover:bg-slate-50 text-left transition group cursor-pointer active:scale-95"
           >
             <span className="text-xl block mb-1.5 group-hover:scale-110 transition">📁</span>
-            <span className="text-xs font-bold text-[#18232E] block truncate">Upload Media</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">Assets CDN</span>
+            <span className="text-xs font-bold text-[#111827] block truncate">Upload Media</span>
+            <span className="text-[10px] text-[#64748B] block mt-0.5">Assets CDN</span>
           </button>
 
           <button
             onClick={handleOpenCreateAd}
-            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer active:scale-95"
+            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-[#E5E7EB] hover:border-slate-400 hover:bg-slate-50 text-left transition group cursor-pointer active:scale-95"
           >
             <span className="text-xl block mb-1.5 group-hover:scale-110 transition">📢</span>
-            <span className="text-xs font-bold text-[#18232E] block truncate">New Ad</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">Town banner</span>
+            <span className="text-xs font-bold text-[#111827] block truncate">New Ad</span>
+            <span className="text-[10px] text-[#64748B] block mt-0.5">Town banner</span>
           </button>
 
           <button
             onClick={handleOpenCreateNews}
-            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer active:scale-95"
+            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-[#E5E7EB] hover:border-slate-400 hover:bg-slate-50 text-left transition group cursor-pointer active:scale-95"
           >
             <span className="text-xl block mb-1.5 group-hover:scale-110 transition">✍️</span>
-            <span className="text-xs font-bold text-[#18232E] block truncate">New Story</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">Local news</span>
+            <span className="text-xs font-bold text-[#111827] block truncate">New Story</span>
+            <span className="text-[10px] text-[#64748B] block mt-0.5">Local news</span>
           </button>
 
           <button
             onClick={() => navigateTab("cms-events")}
-            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 text-left transition group cursor-pointer active:scale-95"
+            className="w-[130px] sm:w-auto shrink-0 p-3 rounded-xl border border-[#E5E7EB] hover:border-slate-400 hover:bg-slate-50 text-left transition group cursor-pointer active:scale-95"
           >
             <span className="text-xl block mb-1.5 group-hover:scale-110 transition">📅</span>
-            <span className="text-xs font-bold text-[#18232E] block truncate">Add Event</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">Melas &amp; festivals</span>
+            <span className="text-xs font-bold text-[#111827] block truncate">Add Event</span>
+            <span className="text-[10px] text-[#64748B] block mt-0.5">Melas &amp; festivals</span>
           </button>
         </div>
       </div>
@@ -301,17 +301,17 @@ export default function AdminDashboardOverview({
       {/* SPLIT WORKSPACE: Moderation Review Queue & Live Audit Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column: Citizen Review Queue */}
-        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 flex items-center justify-center">
                 <Clock className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-sm font-extrabold text-[#18232E]">
+                <h3 className="text-sm font-extrabold text-[#111827]">
                   Pending Citizen Submissions Queue
                 </h3>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-[#64748B]">
                   New community places and corrections waiting for verification
                 </p>
               </div>
@@ -319,7 +319,7 @@ export default function AdminDashboardOverview({
 
             <button
               onClick={() => navigateTab("community-places")}
-              className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+              className="text-xs font-bold text-[#B8323C] hover:text-[#991B1B] flex items-center gap-1 cursor-pointer"
             >
               <span>View All</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -371,17 +371,17 @@ export default function AdminDashboardOverview({
         </div>
 
         {/* Right Column: Recent Admin Audit Trail */}
-        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-slate-100 text-[#111827] border border-[#E5E7EB] flex items-center justify-center">
                 <Activity className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-sm font-extrabold text-[#18232E]">
+                <h3 className="text-sm font-extrabold text-[#111827]">
                   Recent Activity & Audit Trail
                 </h3>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-[#64748B]">
                   Immutable administrative actions logged across the portal
                 </p>
               </div>
@@ -389,7 +389,7 @@ export default function AdminDashboardOverview({
 
             <button
               onClick={() => navigateTab("cms-audit")}
-              className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+              className="text-xs font-bold text-[#B8323C] hover:text-[#991B1B] flex items-center gap-1 cursor-pointer"
             >
               <span>Full Audit Logs</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -408,32 +408,32 @@ export default function AdminDashboardOverview({
               description="Actions performed by authorized administrators will appear here in chronological order."
             />
           ) : (
-            <div className="relative pl-6 space-y-3.5 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+            <div className="relative pl-6 space-y-3.5 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#E5E7EB]">
               {recentLogs.filter(Boolean).map((log, idx) => {
                 const actionName = (log?.action || "Update").toUpperCase();
                 const isUpdate = actionName.includes("UPDATE") || actionName.includes("EDIT");
                 const isDelete = actionName.includes("DELETE") || actionName.includes("REMOVE");
-                const dotColor = isDelete ? "bg-rose-500" : isUpdate ? "bg-blue-500" : "bg-emerald-500";
-                const badgeColor = isDelete ? "bg-rose-100 text-rose-800" : isUpdate ? "bg-blue-100 text-blue-800" : "bg-emerald-100 text-emerald-800";
+                const dotColor = isDelete ? "bg-[#B8323C]" : isUpdate ? "bg-[#111827]" : "bg-emerald-600";
+                const badgeColor = isDelete ? "bg-red-50 text-red-900 border border-red-200" : isUpdate ? "bg-slate-100 text-[#1E293B] border border-slate-200" : "bg-emerald-50 text-emerald-900 border border-emerald-200";
 
                 return (
                   <div key={log._id || log.id || idx} className="relative group">
-                    {/* 5.3 Connected dot marker */}
+                    {/* Connected dot marker */}
                     <div className={`absolute -left-6 top-2 w-3 h-3 rounded-full ${dotColor} border-2 border-white shadow-xs`} />
-                    <div className="p-3 rounded-xl border border-slate-100 bg-slate-50/70 hover:bg-slate-100/70 transition flex items-center justify-between gap-3 text-xs">
+                    <div className="p-3 rounded-xl border border-[#E5E7EB] bg-[#F8FAFC] hover:bg-slate-100/70 transition flex items-center justify-between gap-3 text-xs">
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-extrabold text-slate-900 truncate">
+                          <span className="font-extrabold text-[#111827] truncate">
                             {log?.details || log?.entityType || "System Action"}
                           </span>
                           <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${badgeColor}`}>
                             {log?.action || "Settings_Update"}
                           </span>
-                          <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">
+                          <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-200 text-slate-800">
                             {log?.entityType || "SITESETTINGS"}
                           </span>
                         </div>
-                        <div className="text-[10px] text-slate-400 mt-1 flex items-center gap-2">
+                        <div className="text-[10px] text-[#64748B] mt-1 flex items-center gap-2">
                           <span>by {log?.adminEmail || log?.adminUser?.email || "admin@fazilnagar.com"}</span>
                           <span>•</span>
                           <span>{timeAgo(log?.createdAt || log?.timestamp)}</span>
@@ -450,17 +450,17 @@ export default function AdminDashboardOverview({
 
       {/* UPCOMING COMMUNITY EVENTS SNAPSHOT */}
       {upcomingEvents.length > 0 && (
-        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-700 border border-purple-200 flex items-center justify-center">
                 <Calendar className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-sm font-extrabold text-[#18232E]">
+                <h3 className="text-sm font-extrabold text-[#111827]">
                   Upcoming Melas & Cultural Events
                 </h3>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-[#64748B]">
                   Active events scheduled to appear on the town calendar
                 </p>
               </div>
@@ -468,7 +468,7 @@ export default function AdminDashboardOverview({
 
             <button
               onClick={() => navigateTab("cms-events")}
-              className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+              className="text-xs font-bold text-[#B8323C] hover:text-[#991B1B] flex items-center gap-1 cursor-pointer"
             >
               <span>Manage Events</span>
               <ArrowRight className="w-3.5 h-3.5" />

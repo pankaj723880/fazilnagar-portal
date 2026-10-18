@@ -17,49 +17,49 @@ export default function StatusBadge({
 
   if (norm === "published" || norm === "live" || norm === "active" || norm === "approved") {
     config = {
-      bg: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      bg: "bg-emerald-50 text-emerald-800 border-emerald-300",
       icon: CheckCircle2,
       defaultLabel: norm === "live" ? "Live" : norm === "approved" ? "Approved" : "Published",
     };
   } else if (norm === "pending" || norm === "review" || norm === "in_review") {
     config = {
-      bg: "bg-amber-50 text-amber-700 border-amber-200",
+      bg: "bg-amber-50 text-amber-900 border-amber-300",
       icon: Clock,
       defaultLabel: "Pending Review",
     };
   } else if (norm === "rejected" || norm === "declined" || norm === "error") {
     config = {
-      bg: "bg-red-50 text-red-700 border-red-200",
+      bg: "bg-red-50 text-red-900 border-red-300",
       icon: XCircle,
       defaultLabel: "Rejected",
     };
   } else if (norm === "draft" || norm === "inactive" || norm === "unpublished") {
     config = {
-      bg: "bg-slate-100 text-slate-600 border-slate-200",
+      bg: "bg-slate-100 text-slate-700 border-[#E5E7EB]",
       icon: AlertCircle,
       defaultLabel: norm === "inactive" ? "Inactive" : "Draft",
     };
   } else if (norm === "archived") {
     config = {
-      bg: "bg-slate-100 text-slate-500 border-slate-200",
+      bg: "bg-slate-100 text-[#64748B] border-[#E5E7EB]",
       icon: null,
       defaultLabel: "Archived",
     };
   } else if (norm === "expired") {
     config = {
-      bg: "bg-amber-50 text-amber-800 border-amber-200",
+      bg: "bg-amber-50 text-amber-900 border-amber-300",
       icon: Clock,
       defaultLabel: "Expired Schedule",
     };
   } else if (norm === "permanent") {
     config = {
-      bg: "bg-amber-100 text-amber-900 border-amber-300 font-extrabold",
+      bg: "bg-amber-100 text-amber-950 border-amber-400 font-extrabold",
       icon: Star,
       defaultLabel: "Permanent (स्थाई)",
     };
   } else if (norm === "verified") {
     config = {
-      bg: "bg-emerald-50 text-emerald-700 border-emerald-200 font-bold",
+      bg: "bg-emerald-50 text-emerald-800 border-emerald-300 font-bold",
       icon: ShieldCheck,
       defaultLabel: "Verified",
     };

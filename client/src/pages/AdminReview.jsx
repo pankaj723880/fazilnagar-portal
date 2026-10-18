@@ -393,7 +393,9 @@ export default function AdminReview({ user: propUser }) {
       onRefresh={fetchBadgeCounts}
     >
       <Suspense fallback={<AdminTabSkeleton />}>
-        {renderActiveModule()}
+        <div key={activeTab} className="animate-admin-tab-enter w-full">
+          {renderActiveModule()}
+        </div>
       </Suspense>
     </AdminLayout>
   );

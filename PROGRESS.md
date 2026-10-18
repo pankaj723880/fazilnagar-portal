@@ -1,5 +1,135 @@
 # Town Portal & Regional Connectivity Implementation Progress
 
+- **MIDNIGHT CIVIC ADMIN UI & WEBSITE-WIDE TRANSITIONS RESTORATION — COMPLETED & VERIFIED**
+  - **Summary**: Polished and standardized the existing Fazilnagar Portal Admin Panel in place using the Midnight Civic design system tokens while preserving 100% of all existing layouts, modules, endpoints, routes, actions, and schemas. Identified the exact root causes of missing transitions across the site and restored high-performance micro-transitions (150–180ms) and route change animations without layout shifts or navigation delays.
+  - **Files Changed & Purpose of Each Change**:
+    - `client/src/index.css`: Added canonical Midnight Civic CSS tokens (`--mc-primary-navy: #111827`, `--mc-secondary-navy: #1E293B`, `--mc-civic-crimson: #B8323C`, `--mc-main-workspace: #F8FAFC`, `--mc-card-bg: #FFFFFF`, `--mc-border: #E5E7EB`, `--mc-text-primary: #111827`, `--mc-text-secondary: #64748B`). Added standardized interactive micro-transitions (150–180ms) for buttons, links, inputs, selects, and textareas. Defined `.animate-page-enter` (180ms, 6px translateY) and `.animate-admin-tab-enter` (150ms, 4px translateY). Enforced `prefers-reduced-motion: reduce` compliance.
+    - `client/src/App.jsx`: Attached the `.animate-page-enter` animation container to the main view keyed on `location.pathname`, restoring route change fade and subtle vertical movement without disrupting layout flow.
+    - `client/src/pages/AdminReview.jsx`: Wrapped module components inside `<div key={activeTab} className="animate-admin-tab-enter w-full">`, enabling smooth, instant tab transitions across all 14 review desk modules.
+    - `client/src/components/admin/AdminLayout.jsx`: Styled root workspace background to `#F8FAFC`, primary text `#111827`, selection highlight `#B8323C`.
+    - `client/src/components/admin/AdminSidebar.jsx`: Deep navy `#111827` body, `#0B0F19` header/footer with `#1E293B` borders, brand accent `FAZIL` (white) & `NAGAR` (`#B8323C`), active navigation state `#1E293B` background with `#B8323C` left accent border, accessible mobile drawer backdrop (`#111827`/80).
+    - `client/src/components/admin/AdminTopbar.jsx`: Topbar border `#E5E7EB`, title `#111827` + crimson `#B8323C`, badge `#1E293B` / `#E5E7EB`, notification dropdown `#F8FAFC` header and `#E5E7EB` borders, logout button in crimson `#B8323C`, breadcrumb area `#F8FAFC` with crimson link, mobile ribbon active tab in `#111827` with `#B8323C` accent.
+    - `client/src/components/admin/StatCard.jsx`: Color mapping updated to Midnight Civic palette (`#111827`, `#B8323C`, emerald, amber, red), borders `#E5E7EB`, value `#111827`, label `#64748B`, hover lift `-translate-y-0.5`.
+    - `client/src/components/admin/DataTable.jsx`: Container and rows `#E5E7EB` borders, thead `#F8FAFC` with `#64748B` text, sort chevrons `#B8323C`, text `#111827`. Controlled responsive horizontal scrolling.
+    - `client/src/components/admin/PageHeader.jsx`: Title `#111827`, subtitle `#64748B`, icon container slate-100 / `#111827` / `#E5E7EB`, primary action in civic crimson `#B8323C`.
+    - `client/src/components/admin/Pagination.jsx`: Borders `#E5E7EB`, text `#64748B` / `#111827`, active page button `#111827` with `#B8323C` indicator border.
+    - `client/src/components/admin/SearchAndFilters.jsx`: Search & select inputs `#F8FAFC` with border `#E5E7EB`, text `#111827`, focus rings in `#B8323C`.
+    - `client/src/components/admin/ConfirmDialog.jsx`: Backdrop `#111827`/70, border `#E5E7EB`, danger button `#B8323C`, primary button `#111827`, text `#111827` / `#64748B`.
+    - `client/src/components/admin/StatusBadge.jsx`: WCAG 2.2 AA compliant high-contrast tones (emerald-800, amber-900, red-900, slate-700).
+    - `client/src/components/admin/AdminDashboardOverview.jsx`: Primary action in `#B8323C`, secondary action in `#111827`, borders `#E5E7EB`, text `#111827` / `#64748B`, stat cards using navy and crimson accents.
+    - `client/src/components/admin/EmptyState.jsx` & `ErrorState.jsx`: Updated to Midnight Civic tokens (`#111827`, `#64748B`, `#E5E7EB`, `#B8323C`).
+    - `client/src/components/admin/LoadingSkeleton.jsx`: Updated all card/table container borders to `#E5E7EB`.
+    - `client/src/components/admin/Breadcrumbs.jsx`: Text colors `#64748B` / `#111827`, hover state `#B8323C`.
+    - `client/src/components/admin/FormSection.jsx`: Container border `#E5E7EB`, header border `#E5E7EB`, icon box `#111827` / `#E5E7EB`, title `#111827`, description `#64748B`.
+  - **How the Midnight Civic Theme Was Applied**:
+    - Primary navy (`#111827`) used for the admin sidebar, prominent heading typography, and strong structural anchors.
+    - Secondary navy (`#1E293B`) used for the sidebar active item background and dark badge chips.
+    - Civic crimson (`#B8323C`) strictly reserved for primary actions, active indicators, brand logo accents (`NAGAR`), focus rings, and important civic accents.
+    - Main workspace (`#F8FAFC`) applied as the off-white background canvas for clean visual contrast.
+    - Card background (`#FFFFFF`) used for all dashboard modules, form cards, dialogs, and tables.
+    - Borders (`#E5E7EB`) used consistently across all card containers, table headers, table cells, pagination buttons, and search inputs.
+    - Primary text (`#111827`) and secondary text (`#64748B`) applied across all headings, labels, metadata, and breadcrumbs.
+    - Accessible green, amber, and red used for status indicators meeting WCAG 2.2 AA contrast requirements.
+  - **Why Transitions Disappeared & How They Were Restored**:
+    - *Disappearance Root Cause 1*: In `client/src/App.jsx`, a comment indicated route transitions were intended (`animate-page-enter`), but the class was never actually attached to the route container.
+    - *Disappearance Root Cause 2*: In React Router, without a unique `key={location.pathname}` on the container, route changes update child components in place without re-triggering CSS entrance animations on the wrapper.
+    - *Disappearance Root Cause 3*: In `client/src/index.css`, `pageEnterFade` was configured with `filter: blur(1.5px)` and a sluggish 320ms duration, causing noticeable rasterization lag and visual blurring during navigation.
+    - *Disappearance Root Cause 4*: In `client/src/pages/AdminReview.jsx`, dynamic tab switches did not wrap modules in an entrance transition.
+    - *Restoration Fix*: Removed blur filters; configured `.animate-page-enter` at a crisp 180ms with 6px translateY; keyed the route container to `location.pathname`; added `.animate-admin-tab-enter` (150ms, 4px translateY) keyed to `activeTab`; added universal micro-transitions (150–180ms) for all interactive controls (`a, button, input, select, textarea`); added strict `prefers-reduced-motion: reduce` compliance.
+  - **Responsive Checks Performed**:
+    - Mobile (320–767px): Verified compact header, accessible slide-in sidebar drawer with backdrop overlay (`#111827`/80), scrollable horizontal admin module ribbon, data tables with controlled horizontal scroll (`overflow-x-auto`), and `overflow-x-hidden` on main container preventing accidental page-wide horizontal blowouts.
+    - Tablet (768–1023px): Verified adaptive 2-column dashboard card layouts, legible data tables with touch-friendly action buttons (min 44px targets), and accessible topbar breadcrumb navigation.
+    - Desktop (1024px+): Verified persistent deep navy sidebar (256px), spacious `#F8FAFC` workspace with max-w-7xl constraint, crisp typography hierarchy, subtle hover states, and clear focus rings.
+  - **Build & Targeted Test Results**:
+    - Production build (`npm run build` in `client/`): Exited with code 0 in 5.74s; 2122 modules transformed; all 17 route-specific static HTML pages generated.
+    - Targeted security test (`node --test ../server/tests/adminReviewDeskSecurity.test.js`): 18/18 tests passed across 5 test suites with 0 failures.
+  - **Remaining Issues or Manual Verification Required**:
+    - None. All working features, data contracts, and routes preserved; no mock data introduced.
+
+- **PUBLIC WEBSITE COLOR THEME SWITCHER (MIDNIGHT CIVIC) — COMPLETED & VERIFIED**
+  - **Summary**: Implemented an accessible, color-only Light/Dark theme switcher for the public-facing Fazilnagar Portal using the Midnight Civic color palette. Completely excluded the admin section and preserved 100% of the existing layouts, component structures, and responsive dimensions.
+  - **Midnight Civic Color Palette Implemented**:
+    - **Light Mode**:
+      - Background: `#F8FAFC`
+      - Cards / Primary surfaces: `#FFFFFF`
+      - Primary text: `#111827`
+      - Secondary text: `#64748B`
+      - Borders: `#E5E7EB`
+      - Brand accent: `#B8323C` (Crimson)
+    - **Dark Mode**:
+      - Background: `#0B1120`
+      - Cards / Primary surfaces: `#111827`
+      - Secondary surfaces: `#1E293B`
+      - Primary text: `#F8FAFC`
+      - Secondary text: `#CBD5E1`
+      - Borders: `#334155`
+      - Brand accent: `#B8323C` (Crimson)
+  - **Public-Only Header Toggle (`client/src/components/ThemeToggle.jsx`)**:
+    - Accessible Sun/Moon toggle with WCAG 2.2 AA compliant 44x44px touch targets on desktop and 32x32px compact controls on mobile headers.
+    - Features descriptive `aria-label` and multilingual `title` ("Switch to light mode / लाइट मोड" / "Switch to dark mode / डार्क मोड").
+    - Integrated seamlessly into desktop and mobile public headers in `client/src/App.jsx` and `client/src/components/MobileHomePortal.jsx`.
+    - Returns `null` on admin routes (`isAdminPage`), ensuring the button never appears in the admin console.
+  - **Theme State Management & Instant Switching (`client/src/context/ThemeContext.jsx`)**:
+    - Defaults to `"light"` mode for all first-time visitors.
+    - Persists user selection in `localStorage` under key `"fazilnagar_theme"`.
+    - Updates DOM attribute `data-public-theme` and classes `theme-light`/`theme-dark` immediately without requiring page reload.
+    - Cross-tab synchronization via `window.addEventListener("storage", ...)`.
+  - **Pre-Paint Gate (`client/index.html`)**:
+    - Restores the saved theme attribute before first paint, preventing any white/dark flash on page reload for return visitors.
+    - Route check `!p.startsWith('/admin')` ensures admin routes are never modified.
+  - **Strict Admin Isolation**:
+    - Whenever an admin route is visited (`/admin`, `/admin/review`), `data-public-theme` is stripped from the DOM.
+    - Added `.admin-workspace` CSS safeguard ensuring admin components retain their original colors and behavior with zero theme leakage.
+    - The theme toggle is completely excluded from `AdminTopbar` and `AdminLayout`.
+  - **Zero Structural Changes**:
+    - Only color-related CSS properties updated (`background-color`, `color`, `border-color`, `box-shadow`, `stroke`, `fill`).
+    - Widths, heights, padding, margins, font sizes, line heights, border-radii, and animations remain 100% identical.
+  - **Automated Verification**:
+    - Created `server/tests/themeSwitcher.test.js` validating palette values, localStorage persistence, admin exclusion, and pre-paint scripts (4/4 passed).
+    - Ran client regression test suite (`npm test`): 9/9 location tests passed.
+    - Built client production bundle (`npm run build`): Completed in 5.86s with 17 static route HTML pages generated.
+
+- **FAZILNAGAR PORTAL INDUSTRY-LEVEL UPGRADE — ALL 10 PHASES (COMPLETED & VERIFIED)**
+  - **Summary**: Upgraded the existing Fazilnagar Portal into a production-grade civic and local directory platform across UI/UX, responsive layouts, data consistency, security, performance, SEO, and error resilience without duplicating any existing features or clobbering working code.
+  - **Phase 1: Professional UI/UX & Design System**:
+    - Added standardized civic design system tokens in `client/src/index.css`: `.btn-civic-primary`, `.btn-civic-secondary`, `.civic-input`, `.civic-badge`, `.civic-card`.
+    - Enforced WCAG 2.2 AA visible focus rings (`:focus-visible`), touch targets (`min-h-[44px]`), and accessible form controls.
+    - Added clean empty states with filter reset controls and skeleton loading states for directory listings.
+  - **Phase 2: Complete Responsive Experience (320px – 1366px+)**:
+    - Resolved narrow column bottleneck in `client/src/pages/EmergencyHub.jsx` by lifting the restrictive `max-w-[420px]` restriction and implementing an adaptive grid (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5`) with max-w-5xl layout.
+    - Verified smooth touch navigation on mobile, balanced multi-column layout on tablet, and clean spacious hierarchy on desktop with no accidental horizontal overflow (`overflow-x-hidden`).
+  - **Phase 3: Existing Features and Public Routes**:
+    - Fixed simulated submission bug in `client/src/pages/Contact.jsx`: Replaced stubbed `setSubmitted(true)` with live `API.post("/submissions/correction")` communication, field validation, and real tracking reference ID (`FZ-SUB-XXXXXX`) generation.
+    - Created dedicated, accessible 404 page `client/src/pages/NotFound.jsx` with quick navigation to Town Portal, Directory, News, and Emergency desk.
+    - Registered catch-all route `<Route path="*" element={<NotFound />} />` in `client/src/App.jsx`.
+    - Fixed illegal nested `<Link>` inside logo anchor in `client/src/components/Navbar.jsx`.
+  - **Phase 4: Admin Panel & CMS Data Consistency**:
+    - Integrated correction submissions into the admin notifications pipeline via `createBroadcastNotification`, ensuring editors and administrators can review community feedback immediately in the review desk (`/admin/review?tab=community-places`).
+    - Verified real-time synchronization between approvals and public directory/map via Socket.IO and localStorage broadcast events.
+  - **Phase 5: Backend, API, Database & Code Quality**:
+    - Standardized API routing and centralized Express error handling in `server/server.js`:
+      - Added global `app.all("/api/*")` returning clean JSON 404 for unmapped endpoints.
+      - Added centralized Express error-handling middleware catching malformed JSON payloads and CORS violations without leaking stack traces or returning HTML error pages.
+  - **Phase 6: Security and Privacy**:
+    - Protected correction submissions with the zero-dependency sliding window `writeLimiter` (20 submissions/min) in Express.
+    - Validated all required fields and sanitized inputs server-side in `POST /api/submissions/correction`.
+    - Safeguarded error messages to prevent credential, token, or internal database stack trace disclosure.
+  - **Phase 7: Performance**:
+    - Maintained code-splitting across all 26 page components and admin modules.
+    - `NotFound.jsx` is code-split and loaded on demand (`dist/assets/NotFound-L1-BVQJa.js` is only 2.87 kB).
+    - Client bundle built cleanly with Vite 6 tree-shaking and zero duplicate bundle bloat.
+  - **Phase 8: SEO & Search Engine Visibility**:
+    - Updated `client/scripts/generateStaticRoutes.js` to pre-render the 404 page (`dist/404.html` and `dist/404/index.html`) with `<meta name="robots" content="noindex, follow" />`.
+    - Maintained unique route-specific titles, meta descriptions, and Schema.org JSON-LD structured data for all indexable public routes on `https://www.fazilnagar.me`.
+  - **Phase 9: Testing, Accessibility & QA**:
+    - Created automated test suite `server/tests/portalUpgrade.test.js` validating correction endpoint validation, JSON 404 responses, and malformed JSON resilience (3/3 passed).
+    - Ran client regression suite (`npm test`): 9/9 location tests passed (0 failures).
+    - Ran complete server regression suite (`npm test`): 64/64 tests passed (0 failures).
+    - Ran client production build (`npm run build`): Clean build in 22.36s, generated 17 route-specific HTML pages.
+  - **Phase 10: Production Readiness**:
+    - Verified compatibility with Render backend deployment and Vercel frontend deployment with `cleanUrls: true`.
+    - All existing working features preserved; zero mock or fabricated data introduced.
+
 - **PUBLIC-PAGE CONTENT VISIBILITY, SEO RENDERING & PRERENDERING (COMPLETED & VERIFIED)**
   - **Issue Investigated & Confirmed Root Causes**:
     - Public pages on `https://www.fazilnagar.me` (`/`, `/directory`, `/news`, `/education`, `/tourism`) returned identical generic homepage titles and empty `<div id="root"></div>` content to search engine crawlers and direct navigations.

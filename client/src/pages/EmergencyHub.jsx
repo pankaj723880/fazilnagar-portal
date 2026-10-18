@@ -19,9 +19,9 @@ export default function EmergencyHub() {
       : EMERGENCY_SERVICES.filter((s) => s.category === filter);
 
   return (
-    <div className="w-full max-w-[420px] mx-auto min-h-screen bg-slate-50/60 pb-28 pt-2">
-      {/* 3.1 Compact Mobile App Bar */}
-      <div className="sticky top-0 z-30 h-[54px] bg-white/95 backdrop-blur-md border-b border-slate-100 px-3 flex items-center justify-between mb-3 shadow-2xs">
+    <div className="w-full max-w-5xl mx-auto min-h-screen bg-slate-50/60 pb-28 pt-2 px-3 sm:px-6">
+      {/* 3.1 Compact App Bar (Mobile & Desktop) */}
+      <div className="sticky top-0 z-30 h-[54px] bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-2xl px-3.5 flex items-center justify-between mb-3 shadow-2xs">
         <div className="flex items-center gap-2">
           <Link
             to="/"
@@ -43,22 +43,22 @@ export default function EmergencyHub() {
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 animate-pulse">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 animate-pulse">
             ● 24/7 LIVE
           </span>
         </div>
       </div>
 
-      <div className="px-3 space-y-3.5">
+      <div className="space-y-4">
         {/* 3.1 Crimson Tint Banner */}
-        <div className="p-4 rounded-2xl border border-rose-200/90 bg-rose-50 text-rose-950 shadow-2xs">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🚨</span>
+        <div className="p-4 sm:p-5 rounded-2xl border border-rose-200/90 bg-rose-50 text-rose-950 shadow-2xs">
+          <div className="flex items-center gap-2.5">
+            <span className="text-2xl">🚨</span>
             <div>
               <span className="text-[9px] font-extrabold uppercase tracking-wider text-rose-700 bg-rose-200/60 px-2 py-0.5 rounded-md">
                 24/7 Resident Support
               </span>
-              <h1 className="text-base font-black tracking-tight mt-1 text-slate-900">
+              <h1 className="text-base sm:text-lg font-black tracking-tight mt-1 text-slate-900">
                 Fazilnagar Emergency Numbers &amp; 24/7 Helplines
               </h1>
             </div>
@@ -85,8 +85,8 @@ export default function EmergencyHub() {
           ))}
         </div>
 
-        {/* 3.2 Standard High-Priority Dialing Cards */}
-        <div className="space-y-3">
+        {/* 3.2 Standard High-Priority Dialing Cards (Responsive Grid) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {filteredServices.map((item) => (
             <div
               key={item.id}

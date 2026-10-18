@@ -887,6 +887,86 @@ router.patch("/:id", verifyToken, requireAdmin, handleStatusUpdate);
 router.put("/:id/status", verifyToken, requireAdmin, handleStatusUpdate);
 router.put("/:id", verifyToken, requireAdmin, handleStatusUpdate);
 
+// @route   POST /api/submissions/correction
+// @desc    Submit a verified listing correction or civic inquiry from Contact/Report page
+// @access  Public (Subject to writeLimiter)
+router.post("/correction", async (req, res) => {
+  try {
+    const {
+      name,
+      emailOrPhone,
+      subject,
+      listingName,
+      incorrectInfo,
+      correctionDetails,
+      formType = "report",
+    } = req.body || {};
+
+    if (!name || typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({ success: false, message: "Your name is required." });
+    }
+    if (!emailOrPhone || typeof emailOrPhone !== "string" || !emailOrPhone.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "A valid phone number or email is required for editorial follow-up.",
+      });
+    }
+    if (formType === "report" && (!listingName || !listingName.trim())) {
+      return res.status(400).json({
+        success: false,
+        message: "Please specify the business or listing name that requires correction.",
+      });
+    }
+    const details = (correctionDetails || incorrectInfo || subject || "").trim();
+    if (!details) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide details regarding the inquiry or incorrect information.",
+      });
+    }
+
+    const title =
+      formType === "report"
+        ? `Correction: ${listingName.trim()}`
+        : `Civic Inquiry: ${(subject || "General Inquiry").trim()}`;
+
+    const submission = await Submission.create({
+      type: "correction",
+      title,
+      category: "Directory Correction",
+      description: details,
+      details,
+      ownerName: name.trim(),
+      phone: emailOrPhone.trim(),
+      status: "pending",
+      consentConfirmed: true,
+      townBoundaryStatus: "confirmed",
+      submittedBy: {
+        name: name.trim(),
+        email: emailOrPhone.includes("@") ? emailOrPhone.trim() : "",
+        phone: !emailOrPhone.includes("@") ? emailOrPhone.trim() : "",
+        ipAddress: req.ip || "",
+      },
+    });
+
+    createBroadcastNotification({
+      title: "New Civic Report / Correction Received",
+      message: `${name.trim()} submitted a report: "${title}". Reference ID: ${submission.referenceId}`,
+      link: "/admin/review?tab=community-places",
+      targetAudience: "admin",
+    }).catch(() => {});
+
+    return res.status(201).json({
+      success: true,
+      referenceId: submission.referenceId,
+      message: `Thank you! Your report has been submitted to the Fazilnagar editorial volunteer desk. Reference ID: ${submission.referenceId}`,
+    });
+  } catch (err) {
+    console.error("Correction Submission Error:", err);
+    return res.status(500).json({ success: false, message: "Failed to submit correction. Please try again." });
+  }
+});
+
 // @route   DELETE /api/submissions/:id
 // @desc    Admin deletes a submission
 // @access  Private (Admin)

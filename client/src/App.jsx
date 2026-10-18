@@ -31,9 +31,12 @@ const AdminReview = lazy(() => import("./pages/AdminReview"));
 const Messages = lazy(() => import("./pages/Messages"));
 const ProfileEdit = lazy(() => import("./pages/ProfileEdit"));
 const PublicContributionForm = lazy(() => import("./pages/PublicContributionForm"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 import AdminRoute from "./components/AdminRoute";
 import RequireMessagingAuth from "./components/RequireMessagingAuth";
 import InstallButton from "./components/InstallButton";
+import ThemeToggle from "./components/ThemeToggle";
+import { useTheme } from "./context/ThemeContext";
 const DirectionsModal = lazy(() => import("./components/DirectionsModal"));
 const NotificationCenter = lazy(() => import("./components/NotificationCenter"));
 const GlobalFloatingAndStickyAds = lazy(() =>
@@ -124,6 +127,7 @@ function CivicRouteSkeleton() {
 }
 
 export default function App() {
+  const { isDark } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const location = useLocation();
@@ -251,7 +255,15 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#F5F7F8] text-[#18232E] flex flex-col font-sans selection:bg-[#B8323C] selection:text-white">
+    <div
+      id="public-portal-root"
+      data-public-theme={isAdminPage ? undefined : (isDark ? "dark" : "light")}
+      className={`min-h-screen w-full max-w-full overflow-x-hidden flex flex-col font-sans selection:bg-[#B8323C] selection:text-white transition-colors duration-200 ${
+        !isAdminPage && isDark
+          ? "bg-[#0B1120] text-[#F8FAFC]"
+          : "bg-[#F8FAFC] text-[#111827]"
+      }`}
+    >
       {/* Skip to Main Content Link for WCAG 2.2 AA Keyboard Accessibility */}
       <a
         href="#main-content"
@@ -360,6 +372,9 @@ export default function App() {
                 <NotificationCenter />
               </Suspense>
 
+              {/* Theme Switcher Toggle (Public Website Only) */}
+              <ThemeToggle />
+
               {/* Messages / नगर संवाद */}
               <Link
                 to="/messages"
@@ -434,11 +449,12 @@ export default function App() {
               )}
             </div>
 
-            {/* Mobile Actions: Notification Bell + Messages + Review Desk + Add Story (Icon-Only Controls) */}
+            {/* Mobile Actions: Notification Bell + Theme Toggle + Messages + Review Desk + Add Story (Icon-Only Controls) */}
             <div className="flex sm:hidden items-center gap-1.5">
               <Suspense fallback={<div className="w-11 h-11 shrink-0" />}>
                 <NotificationCenter />
               </Suspense>
+              <ThemeToggle />
               <Link
                 to="/messages"
                 className={`min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl border flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-[#B8323C]/30 cursor-pointer ${
@@ -535,87 +551,98 @@ export default function App() {
       >
         <div className={isNewsPage || isMessagesPage ? "w-full flex-1 min-h-0 flex flex-col overflow-hidden" : isPortalPage ? "w-full" : "w-full"}>
           <Suspense fallback={<CivicRouteSkeleton />}>
-            <Routes>
-              <Route path="/" element={<TownPortal />} />
-              <Route path="/news" element={<ReelsNewsFeed />} />
-              <Route path="/news/:id" element={<ReelsNewsFeed />} />
-              <Route path="/local-updates" element={<ReelsNewsFeed />} />
-              <Route path="/directory/news" element={<ReelsNewsFeed />} />
-              <Route path="/news/classic" element={<News />} />
-              <Route path="/directory" element={<Directory user={user} />} />
-              <Route path="/local-directory" element={<Directory user={user} />} />
-              <Route path="/town" element={<TownPortal />} />
-              <Route path="/portal" element={<TownPortal />} />
-              <Route path="/fazilnagar" element={<TownPortal />} />
-              <Route path="/emergency" element={<EmergencyHub />} />
-              <Route path="/healthcare" element={<HealthcareDirectory />} />
-              <Route path="/education" element={<EducationHub />} />
-              <Route path="/jobs" element={<JobsAndBusiness />} />
-              <Route path="/tourism" element={<Tourism />} />
-              <Route path="/food" element={<FoodGuide />} />
-              <Route path="/marketplace" element={<Marketplace />} />
-              <Route path="/transport" element={<Transportation />} />
-              <Route path="/govt" element={<GovtServices />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/report" element={<Contact />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms" element={<TermsOfService />} />
-              <Route path="/terms-of-service" element={<TermsOfService />} />
-              <Route path="/disclaimer" element={<TermsOfService />} />
+            <div
+              key={location.pathname}
+              className={
+                isNewsPage || isMessagesPage
+                  ? "w-full flex-1 min-h-0 flex flex-col overflow-hidden animate-page-enter"
+                  : "w-full animate-page-enter"
+              }
+            >
+              <Routes>
+                <Route path="/" element={<TownPortal />} />
+                <Route path="/news" element={<ReelsNewsFeed />} />
+                <Route path="/news/:id" element={<ReelsNewsFeed />} />
+                <Route path="/local-updates" element={<ReelsNewsFeed />} />
+                <Route path="/directory/news" element={<ReelsNewsFeed />} />
+                <Route path="/news/classic" element={<News />} />
+                <Route path="/directory" element={<Directory user={user} />} />
+                <Route path="/local-directory" element={<Directory user={user} />} />
+                <Route path="/town" element={<TownPortal />} />
+                <Route path="/portal" element={<TownPortal />} />
+                <Route path="/fazilnagar" element={<TownPortal />} />
+                <Route path="/emergency" element={<EmergencyHub />} />
+                <Route path="/healthcare" element={<HealthcareDirectory />} />
+                <Route path="/education" element={<EducationHub />} />
+                <Route path="/jobs" element={<JobsAndBusiness />} />
+                <Route path="/tourism" element={<Tourism />} />
+                <Route path="/food" element={<FoodGuide />} />
+                <Route path="/marketplace" element={<Marketplace />} />
+                <Route path="/transport" element={<Transportation />} />
+                <Route path="/govt" element={<GovtServices />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/report" element={<Contact />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/disclaimer" element={<TermsOfService />} />
 
-              {/* Dynamic Public Contribution Forms */}
-              <Route path="/contribute/:slug" element={<PublicContributionForm />} />
-              <Route path="/forms/:slug" element={<PublicContributionForm />} />
+                {/* Dynamic Public Contribution Forms */}
+                <Route path="/contribute/:slug" element={<PublicContributionForm />} />
+                <Route path="/forms/:slug" element={<PublicContributionForm />} />
 
-              {/* Auth & Admin Routes */}
-              <Route path="/login" element={<Login setUser={setUser} />} />
-              <Route path="/register" element={<Register setUser={setUser} />} />
-              <Route path="/create-news" element={<CreateNews user={user} />} />
-              <Route path="/upload" element={<CreateNews user={user} />} />
-              <Route
-                path="/admin/review"
-                element={
-                  <AdminRoute>
-                    <AdminReview user={user} />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/admin"
-                element={
-                  <AdminRoute>
-                    <AdminReview user={user} />
-                  </AdminRoute>
-                }
-              />
-              {/* Town Messaging & Profile Routes (Protected, noindex) */}
-              <Route
-                path="/messages"
-                element={
-                  <RequireMessagingAuth>
-                    <Messages />
-                  </RequireMessagingAuth>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <RequireMessagingAuth>
-                    <ProfileEdit />
-                  </RequireMessagingAuth>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <RequireMessagingAuth>
-                    <ProfileEdit />
-                  </RequireMessagingAuth>
-                }
-              />
-            </Routes>
+                {/* Auth & Admin Routes */}
+                <Route path="/login" element={<Login setUser={setUser} />} />
+                <Route path="/register" element={<Register setUser={setUser} />} />
+                <Route path="/create-news" element={<CreateNews user={user} />} />
+                <Route path="/upload" element={<CreateNews user={user} />} />
+                <Route
+                  path="/admin/review"
+                  element={
+                    <AdminRoute>
+                      <AdminReview user={user} />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/admin"
+                  element={
+                    <AdminRoute>
+                      <AdminReview user={user} />
+                    </AdminRoute>
+                  }
+                />
+                {/* Town Messaging & Profile Routes (Protected, noindex) */}
+                <Route
+                  path="/messages"
+                  element={
+                    <RequireMessagingAuth>
+                      <Messages />
+                    </RequireMessagingAuth>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <RequireMessagingAuth>
+                      <ProfileEdit />
+                    </RequireMessagingAuth>
+                  }
+                />
+                <Route
+                  path="/settings"
+                  element={
+                    <RequireMessagingAuth>
+                      <ProfileEdit />
+                    </RequireMessagingAuth>
+                  }
+                />
+                {/* Civic 404 Catch-All Route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
           </Suspense>
         </div>
       </main>

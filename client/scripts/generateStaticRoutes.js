@@ -744,6 +744,30 @@ const ROUTES = [
         <p class="text-xs text-slate-600">Operated independently for Fazilnagar PIN 274401, Kushinagar, Uttar Pradesh.</p>
       </main>
     `
+  },
+  {
+    path: "404",
+    title: "Page Not Found (404) | Fazilnagar Town Civic & Directory Portal",
+    description: "The requested civic page, listing, or route could not be found on Fazilnagar Town Portal.",
+    h1: "Page Not Found",
+    schemaType: "WebPage",
+    noIndex: true,
+    schemaContent: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "Page Not Found (404)",
+      "url": `${BASE_URL}/404`
+    },
+    renderBody: () => `
+      <main class="w-full max-w-md mx-auto min-h-[60vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
+        <div class="w-16 h-16 rounded-2xl bg-red-50 text-[#B8323C] border border-red-200 flex items-center justify-center text-2xl font-black">
+          404
+        </div>
+        <h1 class="text-2xl font-black text-slate-900">Page Not Found / पृष्ठ नहीं मिला</h1>
+        <p class="text-sm text-slate-600">The requested civic page or resource is not available.</p>
+        <a href="/" class="px-5 py-2.5 bg-[#18232E] text-white text-xs font-bold rounded-xl hover:bg-[#B8323C] transition">Return to Homepage / मुख्य पृष्ठ</a>
+      </main>
+    `
   }
 ];
 
@@ -762,6 +786,10 @@ for (const route of ROUTES) {
 
   // Replace Canonical Link
   html = html.replace(/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i, `<link rel="canonical" href="${canonicalUrl}" />`);
+
+  if (route.noIndex) {
+    html = html.replace(/<meta\s+name="robots"\s+content="[^"]*"\s*\/?>/i, '<meta name="robots" content="noindex, follow" />');
+  }
 
   // Replace Open Graph Tags
   html = html.replace(/<meta\s+property="og:url"\s+content="[^"]*"\s*\/?>/i, `<meta property="og:url" content="${canonicalUrl}" />`);

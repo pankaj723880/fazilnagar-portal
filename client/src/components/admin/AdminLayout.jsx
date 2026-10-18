@@ -33,7 +33,7 @@ export default function AdminLayout({
       : pendingSubmissions.filter((s) => s.status === "pending").length;
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] flex text-[#18232E] font-sans antialiased selection:bg-blue-600 selection:text-white">
+    <div className="admin-workspace min-h-screen bg-[#F8FAFC] flex text-[#111827] font-sans antialiased selection:bg-[#B8323C] selection:text-white">
       {/* Sidebar Navigation */}
       <AdminSidebar
         activeTab={activeTab}

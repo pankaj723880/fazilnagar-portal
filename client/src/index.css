@@ -9,6 +9,27 @@
     --pure-white: #FFFFFF;
     --border-grey: #E1E6EA;
     --secondary-text: #647180;
+
+    /* Midnight Civic Design System Tokens */
+    --admin-navy-primary: #111827;
+    --admin-navy-secondary: #1E293B;
+    --admin-crimson: #B8323C;
+    --admin-crimson-hover: #991B1B;
+    --admin-workspace: #F8FAFC;
+    --admin-card: #FFFFFF;
+    --admin-border: #E5E7EB;
+    --admin-border-hover: #CBD5E1;
+    --admin-text-primary: #111827;
+    --admin-text-secondary: #64748B;
+    --admin-success: #15803D;
+    --admin-success-bg: #F0FDF4;
+    --admin-success-border: #BBF7D0;
+    --admin-warning: #B45309;
+    --admin-warning-bg: #FFFBEB;
+    --admin-warning-border: #FDE68A;
+    --admin-error: #B91C1C;
+    --admin-error-bg: #FEF2F2;
+    --admin-error-border: #FECACA;
   }
 
   html {
@@ -23,6 +44,22 @@
     overscroll-behavior-x: none;
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Universal Restrained Interactive Micro-Transitions (150-180ms) */
+  a,
+  button {
+    transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    transition-duration: 180ms;
+  }
+
+  input,
+  select,
+  textarea {
+    transition-property: border-color, box-shadow, background-color;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    transition-duration: 150ms;
   }
 
   /* WCAG 2.2 AA Visible Keyboard Focus Rings */
@@ -142,6 +179,328 @@ h1, h2, h3, h4, h5, h6, .civic-card, .civic-card * {
   box-shadow: 0 4px 12px 0 rgba(24, 35, 46, 0.08);
 }
 
+/* ========================================================
+   MIDNIGHT CIVIC PUBLIC THEME SYSTEM
+   Strictly scoped to public pages via [data-public-theme]
+   Completely excluded from the Admin section
+   ======================================================== */
+
+:root {
+  --civic-bg: #F8FAFC;
+  --civic-surface: #FFFFFF;
+  --civic-surface-secondary: #F1F5F9;
+  --civic-text-primary: #111827;
+  --civic-text-secondary: #64748B;
+  --civic-border: #E5E7EB;
+  --civic-accent: #B8323C;
+  --civic-shadow: 0 1px 3px 0 rgba(17, 24, 39, 0.05);
+  --civic-shadow-hover: 0 4px 12px 0 rgba(17, 24, 39, 0.08);
+}
+
+html[data-public-theme="dark"] {
+  --civic-bg: #0B1120;
+  --civic-surface: #111827;
+  --civic-surface-secondary: #1E293B;
+  --civic-text-primary: #F8FAFC;
+  --civic-text-secondary: #CBD5E1;
+  --civic-border: #334155;
+  --civic-accent: #B8323C;
+  --civic-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+  --civic-shadow-hover: 0 4px 12px 0 rgba(0, 0, 0, 0.6);
+}
+
+/* Light mode default root styles for public portal */
+html[data-public-theme="light"] body {
+  background-color: var(--civic-bg);
+  color: var(--civic-text-primary);
+}
+
+/* Dark mode overrides: strictly active only when html[data-public-theme="dark"] */
+html[data-public-theme="dark"] body {
+  background-color: #0B1120 !important;
+  color: #F8FAFC !important;
+}
+
+html[data-public-theme="dark"] #public-portal-root {
+  background-color: #0B1120 !important;
+  color: #F8FAFC !important;
+}
+
+/* Public Primary Surfaces & Cards (Midnight Civic: #111827, border: #334155) */
+html[data-public-theme="dark"] .civic-card,
+html[data-public-theme="dark"] .bg-white,
+html[data-public-theme="dark"] .bg-\[\#FFFFFF\],
+html[data-public-theme="dark"] .bg-\[\#ffffff\],
+html[data-public-theme="dark"] .bg-white\/95,
+html[data-public-theme="dark"] .bg-white\/90,
+html[data-public-theme="dark"] .bg-white\/80 {
+  background-color: #111827 !important;
+  border-color: #334155 !important;
+  color: #F8FAFC;
+}
+
+/* Public Secondary Surfaces & Backgrounds (Midnight Civic: #1E293B) */
+html[data-public-theme="dark"] .bg-slate-50,
+html[data-public-theme="dark"] .bg-slate-100,
+html[data-public-theme="dark"] .bg-slate-200,
+html[data-public-theme="dark"] .bg-\[\#F5F7F8\],
+html[data-public-theme="dark"] .bg-\[\#F8FAFC\],
+html[data-public-theme="dark"] .bg-soft-white,
+html[data-public-theme="dark"] .bg-slate-50\/80,
+html[data-public-theme="dark"] .bg-slate-50\/70,
+html[data-public-theme="dark"] .bg-slate-100\/80 {
+  background-color: #1E293B !important;
+  border-color: #334155 !important;
+}
+
+/* Secondary Button & Dark Surfaces */
+html[data-public-theme="dark"] .btn-civic-secondary,
+html[data-public-theme="dark"] .bg-deep-slate {
+  background-color: #1E293B !important;
+  border-color: #334155 !important;
+  color: #F8FAFC !important;
+}
+
+html[data-public-theme="dark"] .btn-civic-secondary:hover {
+  background-color: #334155 !important;
+}
+
+/* Card hover glow and subtle border in dark mode */
+html[data-public-theme="dark"] .civic-card:hover {
+  border-color: #475569 !important;
+  box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Primary Text (Midnight Civic: #F8FAFC) */
+html[data-public-theme="dark"] .text-slate-900,
+html[data-public-theme="dark"] .text-slate-800,
+html[data-public-theme="dark"] .text-slate-700,
+html[data-public-theme="dark"] .text-\[\#18232E\],
+html[data-public-theme="dark"] .text-\[\#111827\],
+html[data-public-theme="dark"] .text-deep-slate {
+  color: #F8FAFC !important;
+}
+
+/* Secondary Text (Midnight Civic: #CBD5E1) */
+html[data-public-theme="dark"] .text-slate-600,
+html[data-public-theme="dark"] .text-slate-500,
+html[data-public-theme="dark"] .text-slate-400,
+html[data-public-theme="dark"] .text-\[\#647180\],
+html[data-public-theme="dark"] .text-\[\#64748B\],
+html[data-public-theme="dark"] .text-secondary {
+  color: #CBD5E1 !important;
+}
+
+/* Borders (Midnight Civic: #334155) */
+html[data-public-theme="dark"] .border-slate-100,
+html[data-public-theme="dark"] .border-slate-200,
+html[data-public-theme="dark"] .border-slate-300,
+html[data-public-theme="dark"] .border-slate-200\/90,
+html[data-public-theme="dark"] .border-slate-200\/80,
+html[data-public-theme="dark"] .border-slate-200\/60,
+html[data-public-theme="dark"] .border-\[\#E1E6EA\],
+html[data-public-theme="dark"] .border-\[\#E5E7EB\],
+html[data-public-theme="dark"] .border-civic {
+  border-color: #334155 !important;
+}
+
+html[data-public-theme="dark"] .divide-slate-100 > * + *,
+html[data-public-theme="dark"] .divide-slate-200 > * + * {
+  border-color: #334155 !important;
+}
+
+/* Inputs, Textareas, Selects & Placeholders */
+html[data-public-theme="dark"] .civic-input,
+html[data-public-theme="dark"] input[type="text"],
+html[data-public-theme="dark"] input[type="search"],
+html[data-public-theme="dark"] input[type="tel"],
+html[data-public-theme="dark"] input[type="email"],
+html[data-public-theme="dark"] input[type="password"],
+html[data-public-theme="dark"] select,
+html[data-public-theme="dark"] textarea {
+  background-color: #1E293B !important;
+  color: #F8FAFC !important;
+  border-color: #334155 !important;
+}
+
+html[data-public-theme="dark"] input::placeholder,
+html[data-public-theme="dark"] textarea::placeholder,
+html[data-public-theme="dark"] .civic-input::placeholder {
+  color: #64748B !important;
+}
+
+html[data-public-theme="dark"] option {
+  background-color: #111827;
+  color: #F8FAFC;
+}
+
+/* Skeletons */
+html[data-public-theme="dark"] .animate-pulse .bg-slate-200,
+html[data-public-theme="dark"] .animate-pulse .bg-slate-200\/90,
+html[data-public-theme="dark"] .animate-pulse .bg-slate-200\/80,
+html[data-public-theme="dark"] .animate-pulse .bg-slate-200\/70,
+html[data-public-theme="dark"] .animate-pulse .bg-slate-200\/60,
+html[data-public-theme="dark"] .animate-pulse .bg-slate-200\/40 {
+  background-color: #1E293B !important;
+}
+
+html[data-public-theme="dark"] .animate-pulse .bg-slate-300,
+html[data-public-theme="dark"] .animate-pulse .bg-slate-300\/80 {
+  background-color: #334155 !important;
+}
+
+/* Scrollbars */
+html[data-public-theme="dark"] .civic-scrollbar::-webkit-scrollbar-track {
+  background: #111827;
+}
+
+html[data-public-theme="dark"] .civic-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+html[data-public-theme="dark"] .civic-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Leaflet Map Popups & Controls in Dark Mode */
+html[data-public-theme="dark"] .leaflet-popup-content-wrapper,
+html[data-public-theme="dark"] .leaflet-popup-tip {
+  background-color: #111827 !important;
+  color: #F8FAFC !important;
+  border: 1px solid #334155;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+}
+
+html[data-public-theme="dark"] .leaflet-popup-content {
+  color: #F8FAFC !important;
+}
+
+html[data-public-theme="dark"] .leaflet-container {
+  background-color: #0B1120 !important;
+}
+
+html[data-public-theme="dark"] .leaflet-bar a {
+  background-color: #1E293B !important;
+  color: #F8FAFC !important;
+  border-color: #334155 !important;
+}
+
+/* Modals & Dialogs */
+html[data-public-theme="dark"] [role="dialog"] .bg-white,
+html[data-public-theme="dark"] .modal-content {
+  background-color: #111827 !important;
+  border-color: #334155 !important;
+  color: #F8FAFC !important;
+}
+
+/* Strict Admin Isolation Safeguard: ensure admin workspace is never affected */
+html[data-public-theme="dark"] .admin-workspace,
+html[data-public-theme="dark"] .admin-workspace * {
+  /* Revert to native styles if ever encountered */
+  background-color: revert;
+  color: revert;
+  border-color: revert;
+}
+
+.admin-workspace,
+.admin-workspace * {
+  /* Retain original admin styles intact */
+}
+
+/* Standardized Civic Design System Buttons & Inputs */
+.btn-civic-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  background-color: #B8323C;
+  color: #FFFFFF;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 2px 0 rgba(184, 50, 60, 0.2);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+.btn-civic-primary:hover {
+  background-color: #991B1B;
+  box-shadow: 0 4px 12px 0 rgba(184, 50, 60, 0.3);
+}
+.btn-civic-primary:active {
+  transform: scale(0.98);
+}
+.btn-civic-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-civic-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  background-color: #18232E;
+  color: #FFFFFF;
+  border: 1px solid #334155;
+  box-shadow: 0 1px 2px 0 rgba(24, 35, 46, 0.2);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+.btn-civic-secondary:hover {
+  background-color: #243444;
+  border-color: #475569;
+}
+.btn-civic-secondary:active {
+  transform: scale(0.98);
+}
+.btn-civic-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.civic-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  border-radius: 0.75rem;
+  border: 1px solid #E1E6EA;
+  background-color: #FFFFFF;
+  color: #18232E;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.civic-input:focus {
+  outline: none;
+  border-color: #B8323C;
+  box-shadow: 0 0 0 3px rgba(184, 50, 60, 0.15);
+}
+.civic-input::placeholder {
+  color: #94A3B8;
+}
+
+.civic-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
 /* Minimal editorial scrollbar */
 .civic-scrollbar::-webkit-scrollbar {
   height: 5px;
@@ -259,23 +618,48 @@ h1, h2, h3, h4, h5, h6, .civic-card, .civic-card * {
   animation: kenBurnsSlow 20s ease-in-out infinite alternate;
 }
 
-/* Silky Smooth Page Transition Animation */
+/* Silky Smooth Restrained Page Transition Animation (No blur, 180ms) */
 @keyframes pageEnterFade {
   0% {
     opacity: 0;
-    transform: translateY(10px);
-    filter: blur(1.5px);
+    transform: translateY(6px);
   }
   100% {
     opacity: 1;
     transform: translateY(0);
-    filter: blur(0);
   }
 }
 
 .animate-page-enter {
-  animation: pageEnterFade 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: opacity, transform, filter;
+  animation: pageEnterFade 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Admin Module & Tab Entrance Transition (150ms) */
+@keyframes tabEnterFade {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-admin-tab-enter {
+  animation: tabEnterFade 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Accessible prefers-reduced-motion compliance */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Hide scrollbar completely while maintaining full scroll ability */

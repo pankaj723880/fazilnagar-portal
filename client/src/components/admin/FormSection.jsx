@@ -16,30 +16,30 @@ export default function FormSection({
 
   return (
     <div
-      className={`bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden transition-all ${className}`}
+      className={`bg-white rounded-2xl border border-[#E5E7EB] shadow-2xs overflow-hidden transition-all ${className}`}
     >
       {(title || description || actions) && (
         <div
-          className={`p-5 sm:p-6 border-b border-slate-100 flex items-start sm:items-center justify-between gap-4 ${
-            collapsible ? "cursor-pointer select-none hover:bg-slate-50/50" : ""
+          className={`p-5 sm:p-6 border-b border-[#E5E7EB] flex items-start sm:items-center justify-between gap-4 ${
+            collapsible ? "cursor-pointer select-none hover:bg-slate-50/70" : ""
           }`}
           onClick={collapsible ? () => setIsOpen((prev) => !prev) : undefined}
         >
           <div className="flex items-start gap-3 min-w-0">
             {Icon && (
-              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0 mt-0.5">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 text-[#111827] border border-[#E5E7EB] flex items-center justify-center shrink-0 mt-0.5">
                 <Icon className="w-4 h-4" />
               </div>
             )}
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm sm:text-base font-extrabold text-[#18232E] font-heading">
+                <h3 className="text-sm sm:text-base font-extrabold text-[#111827] font-heading">
                   {title}
                 </h3>
                 {badge}
               </div>
               {description && (
-                <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                <p className="text-xs text-[#64748B] mt-0.5 leading-relaxed">
                   {description}
                 </p>
               )}

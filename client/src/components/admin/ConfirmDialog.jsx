@@ -33,18 +33,18 @@ export default function ConfirmDialog({
 
   const variantStyles = {
     danger: {
-      btn: "bg-red-600 hover:bg-red-700 text-white shadow-xs focus:ring-red-400",
-      iconBg: "bg-red-50 text-red-600 border-red-100",
+      btn: "bg-[#B8323C] hover:bg-[#991B1B] text-white shadow-xs focus:ring-[#B8323C]/30",
+      iconBg: "bg-red-50 text-[#B8323C] border-red-200",
       icon: Trash2,
     },
     primary: {
-      btn: "bg-[#2563EB] hover:bg-blue-700 text-white shadow-xs focus:ring-blue-400",
-      iconBg: "bg-blue-50 text-blue-600 border-blue-100",
+      btn: "bg-[#111827] hover:bg-[#1E293B] text-white shadow-xs focus:ring-[#111827]/30",
+      iconBg: "bg-slate-100 text-[#111827] border-slate-200",
       icon: AlertTriangle,
     },
     warning: {
-      btn: "bg-amber-600 hover:bg-amber-700 text-white shadow-xs focus:ring-amber-400",
-      iconBg: "bg-amber-50 text-amber-600 border-amber-100",
+      btn: "bg-amber-700 hover:bg-amber-800 text-white shadow-xs focus:ring-amber-400",
+      iconBg: "bg-amber-50 text-amber-700 border-amber-200",
       icon: AlertTriangle,
     },
   };
@@ -56,11 +56,11 @@ export default function ConfirmDialog({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#111827]/70 backdrop-blur-xs animate-in fade-in duration-150"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-2xl p-6 space-y-4 animate-in zoom-in-95 duration-150"
+        className="w-full max-w-md bg-white rounded-2xl border border-[#E5E7EB] shadow-2xl p-6 space-y-4 animate-in zoom-in-95 duration-150"
       >
         <div className="flex items-start gap-3.5">
           <div
@@ -70,10 +70,10 @@ export default function ConfirmDialog({
           </div>
 
           <div className="flex-1 min-w-0">
-            <h3 className="text-base font-extrabold text-[#18232E]">
+            <h3 className="text-base font-extrabold text-[#111827]">
               {title}
             </h3>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+            <p className="text-xs text-[#64748B] mt-1 leading-relaxed">
               {message}
             </p>
           </div>
@@ -81,7 +81,7 @@ export default function ConfirmDialog({
           <button
             onClick={onCancel}
             disabled={loading}
-            className="text-slate-400 hover:text-slate-600 p-1 rounded-lg transition"
+            className="text-[#64748B] hover:text-[#111827] p-1 rounded-lg transition"
             aria-label="Close dialog"
           >
             <X className="w-4 h-4" />

@@ -5,7 +5,7 @@ export default function LoadingSkeleton({ type = "table", count = 3 }) {
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
-            className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs space-y-3"
+            className="bg-white p-5 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-3"
           >
             <div className="h-3 w-20 bg-slate-100 animate-pulse rounded" />
             <div className="h-8 w-16 bg-slate-100 animate-pulse rounded-lg" />

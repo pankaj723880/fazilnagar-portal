@@ -33,19 +33,19 @@ export default function Pagination({
 
   return (
     <div
-      className={`bg-white px-4 py-3 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3 text-xs select-none ${className}`}
+      className={`bg-white px-4 py-3 rounded-2xl border border-[#E5E7EB] shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3 text-xs select-none ${className}`}
     >
-      <div className="text-slate-500 font-medium">
+      <div className="text-[#64748B] font-medium">
         {totalItems !== undefined ? (
           <>
-            Showing <span className="font-bold text-slate-800">{startItem}</span> to{" "}
-            <span className="font-bold text-slate-800">{endItem}</span> of{" "}
-            <span className="font-bold text-slate-800">{totalItems}</span> records
+            Showing <span className="font-bold text-[#111827]">{startItem}</span> to{" "}
+            <span className="font-bold text-[#111827]">{endItem}</span> of{" "}
+            <span className="font-bold text-[#111827]">{totalItems}</span> records
           </>
         ) : (
           <>
-            Page <span className="font-bold text-slate-800">{currentPage}</span> of{" "}
-            <span className="font-bold text-slate-800">{totalPages}</span>
+            Page <span className="font-bold text-[#111827]">{currentPage}</span> of{" "}
+            <span className="font-bold text-[#111827]">{totalPages}</span>
           </>
         )}
       </div>
@@ -54,7 +54,7 @@ export default function Pagination({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
-          className="p-1.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          className="p-1.5 rounded-xl border border-[#E5E7EB] text-[#1E293B] hover:bg-[#F8FAFC] hover:text-[#111827] transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           title="Previous page"
           aria-label="Previous page"
         >
@@ -70,8 +70,8 @@ export default function Pagination({
                 onClick={() => onPageChange(pg)}
                 className={`min-w-8 h-8 px-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center ${
                   isActive
-                    ? "bg-[#2563EB] text-white shadow-xs"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-transparent"
+                    ? "bg-[#111827] text-white shadow-xs font-black border-b-2 border-[#B8323C]"
+                    : "text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#111827] border border-transparent"
                 }`}
               >
                 {pg}

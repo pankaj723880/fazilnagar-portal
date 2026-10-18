@@ -160,34 +160,34 @@ export default function AdminTopbar({
   return (
     <div className="sticky top-0 z-30">
       {/* SECTION 1: COMMON ADMIN HEADER (Sticky, 54px h) */}
-      <header className="h-[54px] bg-white/95 backdrop-blur-md border-b border-slate-100 px-3 sm:px-4 flex items-center justify-between shadow-2xs">
+      <header className="h-[54px] bg-white/95 backdrop-blur-md border-b border-[#E5E7EB] px-3 sm:px-4 flex items-center justify-between shadow-2xs">
         {/* Left: Hamburger Menu trigger (for mobile), Brand mark [F], and Admin ⚙️ badge */}
         <div className="flex items-center gap-2 min-w-0">
           {/* Mobile Explicit Sidebar Drawer Button with Hamburger Icon */}
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="lg:hidden p-1.5 -ml-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 flex items-center justify-center active:scale-95 transition cursor-pointer shrink-0"
+            className="lg:hidden p-1.5 -ml-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#111827] flex items-center justify-center active:scale-95 transition cursor-pointer shrink-0"
             title="Open Admin Sidebar Navigation"
             aria-label="Open Admin Sidebar Navigation"
           >
-            <Menu className="w-5 h-5 text-slate-800" />
+            <Menu className="w-5 h-5 text-[#111827]" />
           </button>
 
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="w-8 h-8 rounded-xl bg-slate-900 text-white font-black text-sm flex items-center justify-center shadow-xs active:scale-95 transition cursor-pointer shrink-0"
+            className="w-8 h-8 rounded-xl bg-[#111827] hover:bg-[#1E293B] text-white font-black text-sm flex items-center justify-center shadow-xs active:scale-95 transition cursor-pointer shrink-0"
             title="Toggle Sidebar"
             aria-label="Toggle Sidebar"
           >
             F
           </button>
           <div className="flex items-center gap-1.5 min-w-0">
-            <span className="font-extrabold text-[14px] text-slate-900 tracking-tight font-heading truncate">
-              FAZILNAGAR
+            <span className="font-extrabold text-[14px] text-[#111827] tracking-tight font-heading truncate">
+              FAZIL<span className="text-[#B8323C]">NAGAR</span>
             </span>
-            <span className="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200/80 px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shrink-0">
+            <span className="text-[10px] font-bold text-[#1E293B] bg-slate-100 border border-[#E5E7EB] px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shrink-0">
               Admin ⚙️
             </span>
           </div>
@@ -201,42 +201,42 @@ export default function AdminTopbar({
               if (typeof onRefresh === "function") onRefresh();
             }}
             disabled={loading}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
+            className="p-1.5 rounded-lg text-[#64748B] hover:text-[#111827] hover:bg-slate-100 transition cursor-pointer"
             title="Refresh Data"
             aria-label="Refresh Data from Server"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-blue-600" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-[#B8323C]" : ""}`} />
           </button>
 
           {/* Notifications Dropdown */}
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => setNotifDropdownOpen((prev) => !prev)}
-              className="relative p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
+              className="relative p-1.5 rounded-lg text-[#64748B] hover:text-[#111827] hover:bg-slate-100 transition cursor-pointer"
               title="Notifications & Review Queue"
               aria-label="Notifications"
             >
               <Bell className="w-4 h-4" />
               {pendingCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-600 animate-pulse" />
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#B8323C] animate-pulse" />
               )}
             </button>
 
             {notifDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-50 text-xs animate-in fade-in slide-in-from-top-2">
-                <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                  <span className="font-extrabold text-[#18232E]">Review Queue</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+              <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-80 bg-white rounded-2xl shadow-xl border border-[#E5E7EB] overflow-hidden z-50 text-xs animate-in fade-in slide-in-from-top-2">
+                <div className="px-4 py-3 bg-[#F8FAFC] border-b border-[#E5E7EB] flex items-center justify-between">
+                  <span className="font-extrabold text-[#111827]">Review Queue</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
                     {pendingCount} Pending
                   </span>
                 </div>
 
-                <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
+                <div className="max-h-72 overflow-y-auto divide-y divide-[#E5E7EB]">
                   {pendingSubmissions.length === 0 ? (
-                    <div className="p-6 text-center text-slate-400">
-                      <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-500 mb-1.5" />
-                      <p className="font-semibold text-slate-700">Queue is clear</p>
-                      <p className="text-[11px] text-slate-400">All submissions have been verified.</p>
+                    <div className="p-6 text-center text-[#64748B]">
+                      <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-600 mb-1.5" />
+                      <p className="font-semibold text-[#111827]">Queue is clear</p>
+                      <p className="text-[11px] text-[#64748B]">All submissions have been verified.</p>
                     </div>
                   ) : (
                     pendingSubmissions.slice(0, 6).map((sub) => (
@@ -246,14 +246,14 @@ export default function AdminTopbar({
                           handleTabChange("community-places");
                           setNotifDropdownOpen(false);
                         }}
-                        className="p-3 hover:bg-slate-50 transition cursor-pointer flex items-start gap-2.5"
+                        className="p-3 hover:bg-[#F8FAFC] transition cursor-pointer flex items-start gap-2.5"
                       >
-                        <Clock className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
+                        <Clock className="w-3.5 h-3.5 text-amber-600 mt-0.5 shrink-0" />
                         <div className="min-w-0 flex-1">
-                          <p className="font-bold text-[#18232E] truncate">
+                          <p className="font-bold text-[#111827] truncate">
                             {sub.title || sub.name || "Place Submission"}
                           </p>
-                          <p className="text-[10px] text-slate-500">
+                          <p className="text-[10px] text-[#64748B]">
                             {sub.category || "Listing"}
                           </p>
                         </div>
@@ -265,12 +265,12 @@ export default function AdminTopbar({
             )}
           </div>
 
-          {/* Tiny Logout button with red text */}
+          {/* Logout button */}
           <button
             onClick={() => {
               if (typeof onLogout === "function") onLogout();
             }}
-            className="text-red-600 hover:text-red-700 active:scale-95 text-xs font-bold px-2 py-1 rounded-lg hover:bg-red-50 transition cursor-pointer"
+            className="text-[#B8323C] hover:text-[#991B1B] active:scale-95 text-xs font-bold px-2.5 py-1.5 rounded-xl hover:bg-red-50 transition cursor-pointer"
           >
             Logout
           </button>
@@ -278,19 +278,19 @@ export default function AdminTopbar({
       </header>
 
       {/* Breadcrumb Area (Immediately below header, 32px h) */}
-      <div className="h-8 bg-slate-50/90 backdrop-blur-xs border-b border-slate-100 px-3 sm:px-4 flex items-center justify-between text-xs">
-        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 truncate">
+      <div className="h-8 bg-[#F8FAFC] border-b border-[#E5E7EB] px-3 sm:px-4 flex items-center justify-between text-xs">
+        <div className="flex items-center gap-1.5 text-[11px] text-[#64748B] truncate">
           <span className="font-medium text-slate-400 hidden sm:inline">Fazilnagar Portal</span>
           <span className="text-slate-300 hidden sm:inline">/</span>
-          <span className="font-semibold text-slate-600 truncate">{breadcrumb.group || "Website"}</span>
+          <span className="font-semibold text-[#1E293B] truncate">{breadcrumb.group || "Website"}</span>
           <span className="text-slate-300">/</span>
-          <span className="font-extrabold text-slate-900 truncate">{breadcrumb.label}</span>
+          <span className="font-extrabold text-[#111827] truncate">{breadcrumb.label}</span>
         </div>
         <a
           href="/"
           target="_blank"
           rel="noreferrer"
-          className="flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 shrink-0 cursor-pointer pl-2"
+          className="flex items-center gap-1 text-[11px] font-bold text-[#B8323C] hover:text-[#991B1B] shrink-0 cursor-pointer pl-2"
           title="Open Public Town Portal in New Tab"
         >
           <span>View Website</span>
@@ -299,11 +299,11 @@ export default function AdminTopbar({
       </div>
 
       {/* Mobile Fast-Switch Module Ribbon (lg:hidden) */}
-      <div className="lg:hidden bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-2.5 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar shadow-2xs">
+      <div className="lg:hidden bg-white/95 backdrop-blur-md border-b border-[#E5E7EB] px-2.5 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar shadow-2xs">
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 text-white flex items-center shrink-0 active:scale-95 transition shadow-xs cursor-pointer"
+          className="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#111827] text-white flex items-center shrink-0 active:scale-95 transition shadow-xs cursor-pointer"
         >
           <span>All Modules</span>
         </button>
@@ -316,8 +316,8 @@ export default function AdminTopbar({
               onClick={() => handleTabChange(item.tab)}
               className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition active:scale-95 cursor-pointer ${
                 isActive
-                  ? "bg-blue-600 text-white shadow-xs font-black"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/60"
+                  ? "bg-[#111827] text-white shadow-xs font-black border-b-2 border-[#B8323C]"
+                  : "bg-slate-100 text-[#1E293B] hover:bg-slate-200 border border-[#E5E7EB]"
               }`}
             >
               {item.label}

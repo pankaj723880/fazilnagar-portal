@@ -12,51 +12,59 @@ export default function StatCard({
 }) {
   const colorMap = {
     blue: {
-      bg: "bg-blue-50 text-blue-600 border-blue-100",
-      accent: "hover:border-blue-300",
+      bg: "bg-slate-100 text-[#1E293B] border-slate-200",
+      accent: "hover:border-slate-400",
+    },
+    navy: {
+      bg: "bg-slate-100 text-[#111827] border-slate-200",
+      accent: "hover:border-slate-400",
+    },
+    crimson: {
+      bg: "bg-red-50 text-[#B8323C] border-red-200",
+      accent: "hover:border-red-300",
     },
     emerald: {
-      bg: "bg-emerald-50 text-emerald-600 border-emerald-100",
+      bg: "bg-emerald-50 text-emerald-800 border-emerald-200",
       accent: "hover:border-emerald-300",
     },
     amber: {
-      bg: "bg-amber-50 text-amber-600 border-amber-100",
+      bg: "bg-amber-50 text-amber-800 border-amber-200",
       accent: "hover:border-amber-300",
     },
     red: {
-      bg: "bg-red-50 text-red-600 border-red-100",
+      bg: "bg-red-50 text-red-800 border-red-200",
       accent: "hover:border-red-300",
     },
     purple: {
-      bg: "bg-purple-50 text-purple-600 border-purple-100",
+      bg: "bg-purple-50 text-purple-800 border-purple-200",
       accent: "hover:border-purple-300",
     },
     indigo: {
-      bg: "bg-indigo-50 text-indigo-600 border-indigo-100",
-      accent: "hover:border-indigo-300",
+      bg: "bg-slate-100 text-[#111827] border-slate-200",
+      accent: "hover:border-slate-400",
     },
   };
 
-  const currentTheme = colorMap[color] || colorMap.blue;
+  const currentTheme = colorMap[color] || colorMap.navy || colorMap.blue;
 
   return (
     <div
       onClick={typeof onClick === "function" ? onClick : undefined}
-      className={`bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs transition-all duration-200 flex flex-col justify-between ${
+      className={`bg-white p-5 rounded-2xl border border-[#E5E7EB] shadow-2xs transition-all duration-200 flex flex-col justify-between ${
         typeof onClick === "function"
-          ? `cursor-pointer hover:shadow-sm ${currentTheme.accent} hover:-translate-y-0.5`
+          ? `cursor-pointer hover:shadow-xs hover:border-[#CBD5E1] hover:-translate-y-0.5`
           : ""
       }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B] block">
             {label}
           </span>
           {loading ? (
             <div className="h-8 w-20 bg-slate-100 animate-pulse rounded-lg mt-1" />
           ) : (
-            <h3 className="text-2xl font-black text-[#18232E] tracking-tight font-heading">
+            <h3 className="text-2xl font-black text-[#111827] tracking-tight font-heading">
               {value ?? "—"}
             </h3>
           )}
@@ -71,7 +79,7 @@ export default function StatCard({
         )}
       </div>
 
-      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+      <div className="mt-4 pt-3 border-t border-[#E5E7EB] flex items-center justify-between text-xs">
         {trend ? (
           <div className="flex items-center gap-1 font-bold">
             {trend.isPositive ? (

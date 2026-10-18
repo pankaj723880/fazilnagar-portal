@@ -230,6 +230,43 @@ app.use("/civic-directory", civicDirectoryRoutes);
 app.use("/profile", profileRoutes);
 app.use("/messages", messagesRoutes);
 
+// 404 JSON handler for unmapped API routes
+app.all("/api/*", (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `API endpoint ${req.method} ${req.originalUrl} not found.`,
+  });
+});
+
+// Centralized Express Error Handler
+// Prevents unhandled exceptions, CORS violations, or malformed JSON from returning raw HTML stack traces
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+    return res.status(400).json({
+      success: false,
+      message: "Malformed JSON payload received.",
+    });
+  }
+
+  if (err.message && err.message.includes("CORS")) {
+    return res.status(403).json({
+      success: false,
+      message: err.message,
+    });
+  }
+
+  const statusCode = err.status || err.statusCode || 500;
+  if (process.env.NODE_ENV !== "test") {
+    console.error(`[API Error] ${req.method} ${req.originalUrl} - ${err.message}`);
+  }
+
+  res.status(statusCode).json({
+    success: false,
+    message: err.message || "An unexpected internal server error occurred.",
+    ...(process.env.NODE_ENV === "development" ? { stack: err.stack } : {}),
+  });
+});
+
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 initSocket(server);
