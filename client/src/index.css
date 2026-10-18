@@ -1173,6 +1173,44 @@ html[data-public-theme="dark"] #about-fazilnagar-section .bg-slate-800\/60 {
   color: #B6B4B0 !important;
 }
 
+/* ========================================================
+   DIRECTORY PAGE: HIGH CONTRAST & BRIGHT TEXTS (DARK MODE)
+   ======================================================== */
+html[data-public-theme="dark"] #directory-page .text-slate-500,
+html[data-public-theme="dark"] #directory-page .text-slate-600,
+html[data-public-theme="dark"] #directory-page .text-slate-700 {
+  color: #E4E0D8 !important;
+}
+
+html[data-public-theme="dark"] #directory-page .text-slate-400 {
+  color: #D5D0C5 !important;
+}
+
+html[data-public-theme="dark"] #directory-page .text-slate-900,
+html[data-public-theme="dark"] #directory-page .text-slate-800 {
+  color: #FFFFFF !important;
+}
+
+html[data-public-theme="dark"] #directory-page .text-emerald-700,
+html[data-public-theme="dark"] #directory-page .text-emerald-600 {
+  color: #4ADE80 !important;
+}
+
+html[data-public-theme="dark"] #directory-page .bg-red-50 {
+  background-color: #322A1E !important;
+  color: #F3BA63 !important;
+  border-color: #5C4523 !important;
+}
+
+html[data-public-theme="dark"] #directory-page .bg-slate-50,
+html[data-public-theme="dark"] #directory-page .bg-slate-50\/60,
+html[data-public-theme="dark"] #directory-page .bg-slate-50\/70,
+html[data-public-theme="dark"] #directory-page .bg-slate-50\/80,
+html[data-public-theme="dark"] #directory-page .bg-slate-50\/90 {
+  background-color: #24242A !important;
+  border-color: #38383E !important;
+}
+
 /* Strict Admin Isolation Safeguard: ensure admin workspace is never affected */
 html[data-public-theme="dark"] .admin-workspace,
 html[data-public-theme="dark"] .admin-workspace *,

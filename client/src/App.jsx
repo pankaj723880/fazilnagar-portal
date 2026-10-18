@@ -74,8 +74,9 @@ const isExcludedNavItem = (item) => {
 
 const DIRECTORY_SUB_NAV = [
   { path: "/directory", label: "Town Directory", icon: "🗺️", badge: "Verified" },
+  { path: "/news", label: "Local Updates", icon: "📰", badge: "Live" },
+  { path: "/emergency", label: "24/7 Aid", icon: "🚨", badge: "24/7" },
   { path: "/education", label: "Education", icon: "🎓" },
-  { path: "/emergency", label: "Emergency", icon: "🚨", badge: "24/7" },
   { path: "/healthcare", label: "Healthcare", icon: "🏥" },
   { path: "/jobs", label: "Jobs & Directory", icon: "💼" },
   { path: "/tourism", label: "Tourism", icon: "🏨" },
@@ -88,6 +89,8 @@ const DIRECTORY_SUB_NAV = [
 const DIRECTORY_SUB_NAV_PATHS = [
   "/directory",
   "/local-directory",
+  "/news",
+  "/local-updates",
   "/education",
   "/emergency",
   "/healthcare",
@@ -523,9 +526,9 @@ export default function App() {
 
         {/* Secondary Sub-Navbar - Visible across Directory & all Civic Hub pages */}
         {hasSubNav && (
-          <div className="bg-[#FFFFFF] border-b border-[#E1E6EA] py-1.5 px-4 shadow-2xs">
+          <div className="bg-[#FFFFFF] dark:bg-[#101114] border-b border-[#E1E6EA] dark:border-[#38383E] py-1.5 px-4 shadow-2xs">
             <div className="max-w-7xl mx-auto flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#647180] shrink-0 mr-1 hidden sm:inline">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#647180] dark:text-[#C5A46D] shrink-0 mr-1 hidden sm:inline">
                 Civic Hubs:
               </span>
               {DIRECTORY_SUB_NAV.map((item) => (
@@ -536,15 +539,15 @@ export default function App() {
                   className={({ isActive }) =>
                     `px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
                       isActive
-                        ? "bg-[#B8323C] text-white shadow-xs font-bold"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200/60 bg-slate-50/70"
+                        ? "bg-[#B8323C] dark:bg-[#C5A46D] text-white dark:text-[#101114] shadow-xs font-bold"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-[#E4E0D8] dark:hover:text-white dark:hover:bg-[#2C2C34] border border-slate-200/60 dark:border-[#38383E] bg-slate-50/70 dark:bg-[#24242A]"
                     }`
                   }
                 >
                   <span className="text-xs">{item.icon}</span>
                   <span>{item.label}</span>
                   {item.badge && (
-                    <span className="bg-[#168568] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">
+                    <span className="bg-[#168568] dark:bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">
                       {item.badge}
                     </span>
                   )}
@@ -1154,23 +1157,23 @@ export default function App() {
           Provides effortless 1-thumb native app navigation across the portal
           ======================================================== */}
       {!isAdminPage && !isMessagesPage && (
-        <nav className={`fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.07)] pb-[max(0.5rem,env(safe-area-inset-bottom))] ${isMobilePreview ? "block" : "sm:hidden"}`}>
+        <nav className={`fixed bottom-0 left-0 right-0 z-[1050] bg-white/95 dark:bg-[#101114]/95 backdrop-blur-md border-t border-slate-200/90 dark:border-[#38383E] shadow-[0_-4px_20px_rgba(0,0,0,0.12)] pb-[max(0.5rem,env(safe-area-inset-bottom))] ${isMobilePreview ? "block" : "sm:hidden"}`}>
           <div className="max-w-[420px] mx-auto w-full px-1 py-1 flex items-center justify-around">
             <NavLink
               to="/"
               end
               onMouseEnter={() => prefetchRoute("/")}
-              onTouchStart={() => prefetchRoute("/")}
+              onFocus={() => prefetchRoute("/")}
               onClick={() => {
                 if (location.pathname === "/") {
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }
               }}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold touch-manipulation ${
+                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold touch-manipulation cursor-pointer ${
                   isActive && location.pathname === "/"
-                    ? "text-[#B8323C]"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "text-[#B8323C] dark:text-[#C5A46D]"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
                 }`
               }
             >
@@ -1181,29 +1184,29 @@ export default function App() {
             <NavLink
               to="/directory"
               onMouseEnter={() => prefetchRoute("/directory")}
-              onTouchStart={() => prefetchRoute("/directory")}
+              onFocus={() => prefetchRoute("/directory")}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold relative touch-manipulation ${
+                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold relative touch-manipulation cursor-pointer ${
                   isActive || location.pathname.startsWith("/directory")
-                    ? "text-[#B8323C]"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "text-[#B8323C] dark:text-[#C5A46D]"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
                 }`
               }
             >
               <Compass className="w-5 h-5 mb-0.5" />
               <span>Directory</span>
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#0D5E49]"></span>
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#0D5E49] dark:bg-emerald-400"></span>
             </NavLink>
 
             <NavLink
               to="/messages"
               onMouseEnter={() => prefetchRoute("/messages")}
-              onTouchStart={() => prefetchRoute("/messages")}
+              onFocus={() => prefetchRoute("/messages")}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold relative touch-manipulation ${
+                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold relative touch-manipulation cursor-pointer ${
                   isActive || location.pathname.startsWith("/messages")
-                    ? "text-[#B8323C]"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "text-[#B8323C] dark:text-[#C5A46D]"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
                 }`
               }
             >
@@ -1214,12 +1217,12 @@ export default function App() {
             <NavLink
               to="/news"
               onMouseEnter={() => prefetchRoute("/news")}
-              onTouchStart={() => prefetchRoute("/news")}
+              onFocus={() => prefetchRoute("/news")}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold touch-manipulation ${
-                  isActive
-                    ? "text-[#B8323C]"
-                    : "text-slate-600 hover:text-slate-900"
+                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold touch-manipulation cursor-pointer ${
+                  isActive || location.pathname.startsWith("/news") || location.pathname.startsWith("/local-updates")
+                    ? "text-[#B8323C] dark:text-[#C5A46D]"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
                 }`
               }
             >
@@ -1230,16 +1233,16 @@ export default function App() {
             <NavLink
               to="/emergency"
               onMouseEnter={() => prefetchRoute("/emergency")}
-              onTouchStart={() => prefetchRoute("/emergency")}
+              onFocus={() => prefetchRoute("/emergency")}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold touch-manipulation ${
-                  isActive
-                    ? "text-[#B8323C]"
-                    : "text-slate-600 hover:text-slate-900"
+                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold touch-manipulation cursor-pointer ${
+                  isActive || location.pathname.startsWith("/emergency")
+                    ? "text-[#B8323C] dark:text-[#C5A46D]"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
                 }`
               }
             >
-              <PhoneCall className="w-5 h-5 mb-0.5 text-red-500" />
+              <PhoneCall className="w-5 h-5 mb-0.5 text-red-500 dark:text-red-400" />
               <span>24/7 Aid</span>
             </NavLink>
 
@@ -1248,13 +1251,13 @@ export default function App() {
               onClick={() => setMobileMenuOpen((prev) => !prev)}
               className={`flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold cursor-pointer touch-manipulation ${
                 mobileMenuOpen
-                  ? "text-[#B8323C]"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "text-[#B8323C] dark:text-[#C5A46D]"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
               }`}
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? (
-                <X className="w-5 h-5 mb-0.5 text-[#B8323C]" />
+                <X className="w-5 h-5 mb-0.5 text-[#B8323C] dark:text-[#C5A46D]" />
               ) : (
                 <Menu className="w-5 h-5 mb-0.5" />
               )}

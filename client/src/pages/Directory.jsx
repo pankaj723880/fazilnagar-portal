@@ -547,7 +547,7 @@ export default function Directory({ user }) {
   const localities = Array.from(new Set(allMasterPlaces.map((p) => p.locality).filter(Boolean)));
 
   return (
-    <div className="space-y-3.5 sm:space-y-5 pb-24 sm:pb-16 font-sans max-w-7xl mx-auto px-2.5 sm:px-4 lg:px-6">
+    <div id="directory-page" className="space-y-3.5 sm:space-y-5 pb-24 sm:pb-16 font-sans max-w-7xl mx-auto px-2.5 sm:px-4 lg:px-6">
       {/* ========================================================
           1. SIMPLIFIED HEADER & HERO (Compact on Mobile)
           ======================================================== */}
