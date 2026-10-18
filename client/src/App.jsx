@@ -39,6 +39,7 @@ import ThemeToggle from "./components/ThemeToggle";
 import { useTheme } from "./context/ThemeContext";
 import EditProfileModal from "./components/EditProfileModal";
 import SplashScreen from "./components/SplashScreen";
+import ErrorBoundary from "./components/ErrorBoundary";
 const DirectionsModal = lazy(() => import("./components/DirectionsModal"));
 const NotificationCenter = lazy(() => import("./components/NotificationCenter"));
 const GlobalFloatingAndStickyAds = lazy(() =>
@@ -136,6 +137,7 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [siteSettings, setSiteSettings] = useState(() => getCachedSettings() || DEFAULT_SITE_SETTINGS);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -241,7 +243,6 @@ export default function App() {
   }, []);
 
   // Synchronize dynamic site settings for top civic alert bar & live navigation
-  const [siteSettings, setSiteSettings] = useState(() => getCachedSettings() || DEFAULT_SITE_SETTINGS);
   useEffect(() => {
     getSiteSettings().then((s) => {
       if (s) setSiteSettings(s);
@@ -300,9 +301,9 @@ export default function App() {
           : "bg-[#F7F6F2] text-[#202124] selection:bg-[#A78650] selection:text-white"
       }`}
     >
-      {/* Native App-Style Ultra-Premium Splash Screen (Increased display duration ~3.8s) */}
+      {/* Native App-Style Ultra-Premium Splash Screen (Fast, responsive 1.4s reveal) */}
       {showSplash && (
-        <SplashScreen onComplete={() => setShowSplash(false)} duration={3800} />
+        <SplashScreen onComplete={() => setShowSplash(false)} duration={1400} />
       )}
 
       {/* Skip to Main Content Link for WCAG 2.2 AA Keyboard Accessibility */}
@@ -609,7 +610,8 @@ export default function App() {
         }`}
       >
         <div className={isNewsPage || isMessagesPage ? "w-full flex-1 min-h-0 flex flex-col overflow-hidden" : isPortalPage ? "w-full" : "w-full"}>
-          <Suspense fallback={<CivicRouteSkeleton />}>
+          <ErrorBoundary>
+            <Suspense fallback={<CivicRouteSkeleton />}>
             <div
               key={location.pathname}
               className={
@@ -703,7 +705,8 @@ export default function App() {
               </Routes>
             </div>
           </Suspense>
-        </div>
+        </ErrorBoundary>
+      </div>
       </main>
 
       {/* ========================================================

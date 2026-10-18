@@ -1,5 +1,6 @@
 // Fazilnagar Town Portal High-Performance Service Worker
-const CACHE_NAME = 'fazilnagar-portal-v3';
+const CACHE_NAME = 'fazilnagar-portal-v4';
+const CORE_SHELL_ASSETS = ['/', '/index.html', '/icon-192.svg', '/manifest.json'];
 
 // Private and non-cacheable paths that should always bypass the service worker
 const PRIVATE_OR_DYNAMIC_PREFIXES = [
@@ -16,20 +17,31 @@ const PRIVATE_OR_DYNAMIC_PREFIXES = [
 ];
 
 self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(CORE_SHELL_ASSETS))
+      .catch((err) => {
+        console.warn('[SW] Core precache non-fatal warning:', err);
+      })
+  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys.map((key) => {
+            if (key !== CACHE_NAME) {
+              return caches.delete(key);
+            }
+          })
+        )
       )
-    ).then(() => self.clients.claim())
+      .then(() => self.clients.claim())
   );
 });
 
@@ -73,46 +85,62 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(event.request).then((cached) => {
         if (cached) return cached;
-        return fetch(event.request).then((response) => {
-          if (response && response.status === 200) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return response;
-        });
+        return fetch(event.request)
+          .then((response) => {
+            if (response && response.status === 200) {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            }
+            return response;
+          })
+          .catch(() => {
+            return new Response('', { status: 404, statusText: 'Asset not found' });
+          });
       })
     );
     return;
   }
 
-  // 2. Navigation Requests (Public HTML pages): Network-First with Cache / Shell Fallback
+  // 2. Navigation Requests (Public HTML pages): Fast Network-First with 2.5s Timeout & Instant Cache Fallback
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const clone = response.clone();
+      (async () => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+
+        try {
+          const networkResponse = await fetch(event.request, {
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }
-          return response;
-        })
-        .catch(async () => {
+          return networkResponse;
+        } catch (_) {
+          clearTimeout(timeoutId);
+          // If network stalls (>2.5s), times out, or fails: immediately serve cached shell
           const cached = await caches.match(event.request);
           if (cached) return cached;
-          const indexFallback = await caches.match('/index.html');
-          return (
-            indexFallback ||
-            new Response('Offline - Please reconnect to view this page.', {
-              status: 503,
-              headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-            })
-          );
-        })
+
+          const indexFallback =
+            (await caches.match('/index.html')) ||
+            (await caches.match('/'));
+          if (indexFallback) return indexFallback;
+
+          return new Response('Offline - Please reconnect to view this page.', {
+            status: 503,
+            headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+          });
+        }
+      })()
     );
     return;
   }
 
-  // 3. General public static requests: Stale-While-Revalidate
+  // 3. General public static requests: Stale-While-Revalidate with Safe Error Catching
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const fetchPromise = fetch(event.request)

@@ -324,7 +324,7 @@ export async function getSiteSettings(forceFresh = false) {
       const res = await API.get("/settings", {
         params: forceFresh ? { _t: Date.now() } : undefined,
         headers: forceFresh ? { "Cache-Control": "no-cache", Pragma: "no-cache" } : undefined,
-        timeout: 30000,
+        timeout: 6000,
       });
       if (res.data?.success && res.data?.settings) {
         const merged = deepMerge(DEFAULT_SITE_SETTINGS, res.data.settings);
@@ -349,7 +349,7 @@ export async function getPublicServices({ category = "All", search = "" } = {}) 
     if (category && category !== "All") params.category = category;
     if (search) params.search = search;
 
-    const res = await API.get("/services", { params, timeout: 30000 });
+    const res = await API.get("/services", { params, timeout: 6000 });
     if (res.data?.success && Array.isArray(res.data?.services)) {
       return res.data.services;
     }
@@ -652,7 +652,7 @@ export async function getEvents({ category = "All", search = "", timeFilter = ""
       const res = await API.get("/events", {
         params,
         headers: forceFresh ? { "Cache-Control": "no-cache", Pragma: "no-cache" } : undefined,
-        timeout: 30000,
+        timeout: 6000,
       });
       if (res.data?.success && Array.isArray(res.data?.events)) {
         setPersistentCache("events", res.data.events);
@@ -680,7 +680,7 @@ export async function getHeritageSites(forceFresh = false) {
       const res = await API.get("/heritage", {
         params: forceFresh ? { _t: Date.now() } : undefined,
         headers: forceFresh ? { "Cache-Control": "no-cache", Pragma: "no-cache" } : undefined,
-        timeout: 30000,
+        timeout: 6000,
       });
       if (res.data?.success && Array.isArray(res.data?.sites)) {
         setPersistentCache("heritage", res.data.sites);
@@ -851,7 +851,7 @@ export async function getCivicDirectory(forceFresh = false, includeAll = false) 
       const res = await API.get("/civic-directory", {
         params,
         headers: forceFresh ? { "Cache-Control": "no-cache", Pragma: "no-cache" } : undefined,
-        timeout: 30000,
+        timeout: 6000,
       });
 
       const items = res.data?.items || (Array.isArray(res.data) ? res.data : []);

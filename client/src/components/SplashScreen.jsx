@@ -11,8 +11,17 @@ import { useState, useEffect } from "react";
  * 5. GPU-accelerated exit fade & scale (400ms) with seamless homepage reveal.
  * 6. Body scroll locked during mount, pointer-events-none during exit, touch-none.
  */
-export default function SplashScreen({ onComplete, duration = 3800 }) {
+export default function SplashScreen({ onComplete, duration = 1400 }) {
   const [stage, setStage] = useState("active"); // 'active' | 'exit' | 'done'
+
+  const handleDismiss = () => {
+    if (stage === "done") return;
+    setStage("exit");
+    setTimeout(() => {
+      setStage("done");
+      if (onComplete) onComplete();
+    }, 150);
+  };
 
   useEffect(() => {
     // Lock background scrolling while splash screen is mounted
@@ -21,10 +30,10 @@ export default function SplashScreen({ onComplete, duration = 3800 }) {
     document.body.style.overflow = "hidden";
     document.body.style.touchAction = "none";
 
-    // Trigger smooth opacity cross-fade (400ms before completion)
+    // Trigger smooth opacity cross-fade (300ms before completion)
     const exitTimer = setTimeout(() => {
       setStage("exit");
-    }, Math.max(1000, duration - 400));
+    }, Math.max(800, duration - 300));
 
     // Fully complete & unmount
     const doneTimer = setTimeout(() => {
@@ -32,9 +41,14 @@ export default function SplashScreen({ onComplete, duration = 3800 }) {
       if (onComplete) onComplete();
     }, duration);
 
+    // Allow user to instantly dismiss by pressing any key or clicking anywhere
+    const onKeyDown = () => handleDismiss();
+    window.addEventListener("keydown", onKeyDown);
+
     return () => {
       clearTimeout(exitTimer);
       clearTimeout(doneTimer);
+      window.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = originalOverflow;
       document.body.style.touchAction = originalTouchAction;
     };
@@ -47,11 +61,12 @@ export default function SplashScreen({ onComplete, duration = 3800 }) {
   return (
     <aside
       role="status"
-      aria-label="Loading Fazilnagar Town Portal"
+      aria-label="Loading Fazilnagar Town Portal - Tap anywhere to skip"
       aria-live="polite"
-      className={`fixed inset-0 z-[999999] h-[100dvh] w-full flex flex-col items-center justify-center select-none overflow-hidden touch-none ${
+      onClick={handleDismiss}
+      className={`fixed inset-0 z-[999999] h-[100dvh] w-full flex flex-col items-center justify-center select-none overflow-hidden cursor-pointer ${
         isExiting ? "pointer-events-none opacity-0" : "pointer-events-auto opacity-100"
-      } transition-opacity duration-400 ease-out bg-[#18232E] bg-gradient-to-b from-[#18232E] via-[#131d27] to-[#0f171e]`}
+      } transition-opacity duration-300 ease-out bg-[#18232E] bg-gradient-to-b from-[#18232E] via-[#131d27] to-[#0f171e]`}
       style={{
         WebkitTapHighlightColor: "transparent",
         willChange: "opacity",
@@ -99,6 +114,10 @@ export default function SplashScreen({ onComplete, duration = 3800 }) {
         <div className="mt-6 h-0.5 w-32 bg-white/10 rounded-full overflow-hidden relative shadow-[0_0_8px_rgba(255,255,255,0.15)]">
           <div className="splash-shimmer-indicator absolute inset-y-0 w-16 bg-gradient-to-r from-transparent via-white/80 to-transparent rounded-full" />
         </div>
+
+        <span className="text-[10px] text-slate-500 font-medium mt-3.5 opacity-60 tracking-wider">
+          Tap anywhere to skip
+        </span>
       </div>
 
       <style>{`
