@@ -23,6 +23,27 @@ const verifyToken = async (req, res, next) => {
 
     const secretKey = process.env.JWT_SECRET || "fallback_secret_key";
     const verified = jwt.verify(token, secretKey);
+
+    // If user exists and recently reset password, invalidate tokens issued prior to reset
+    if (verified.id && verified.iat) {
+      try {
+        const userDoc = await User.findById(verified.id).select("passwordChangedAt status");
+        if (userDoc) {
+          if (userDoc.status === "inactive" || userDoc.status === "suspended") {
+            return res.status(403).json({ message: "Account is inactive or suspended." });
+          }
+          if (userDoc.passwordChangedAt) {
+            const issuedAtMs = verified.authTime || ((verified.iat || 0) * 1000);
+            if (issuedAtMs < userDoc.passwordChangedAt.getTime()) {
+              return res.status(401).json({ message: "Password was recently changed. Please log in again." });
+            }
+          }
+        }
+      } catch {
+        // Continue on DB lookup error to prevent transient failure
+      }
+    }
+
     req.user = verified;
     req.token = token;
     next();

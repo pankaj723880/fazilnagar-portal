@@ -22,6 +22,7 @@ const routeLoaders = {
   "/messages": () => import("../pages/Messages"),
   "/login": () => import("../pages/Login"),
   "/register": () => import("../pages/Register"),
+  "/forgot-password": () => import("../pages/ForgotPassword"),
   "/create-news": () => import("../pages/CreateNews"),
   "/about": () => import("../pages/About"),
   "/contact": () => import("../pages/Contact"),

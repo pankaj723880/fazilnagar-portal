@@ -120,12 +120,18 @@ async function seedAdminUser() {
         email: adminEmail,
         password: hashedPassword,
         role: "admin",
+        isEmailVerified: true,
+        authProvider: "local",
       });
       console.log(`[AdminSeed] Default Admin created successfully (${adminEmail}).`);
     } else {
       let needsSave = false;
       if (existingAdmin.role !== "admin") {
         existingAdmin.role = "admin";
+        needsSave = true;
+      }
+      if (!existingAdmin.isEmailVerified) {
+        existingAdmin.isEmailVerified = true;
         needsSave = true;
       }
       if (existingAdmin.name === "Fazilnagar Portal Administrator") {

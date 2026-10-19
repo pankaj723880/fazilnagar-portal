@@ -34,6 +34,56 @@ export const validateRegisterInput = (req, res, next) => {
   next();
 };
 
+export const validateGoogleAuthInput = (req, res, next) => {
+  const { credential } = req.body || {};
+  if (!credential || typeof credential !== "string" || !credential.trim()) {
+    return res.status(400).json({ success: false, message: "Google ID credential token is required." });
+  }
+  req.body.credential = credential.trim();
+  next();
+};
+
+export const validateOtpInput = (req, res, next) => {
+  const { email, otp } = req.body || {};
+  if (!email || typeof email !== "string" || !EMAIL_REGEX.test(email.trim())) {
+    return res.status(400).json({ success: false, message: "A valid email address is required." });
+  }
+  if (!otp || typeof otp !== "string" || !/^\d{6}$/.test(otp.trim())) {
+    return res.status(400).json({ success: false, message: "A 6-digit numeric verification code is required." });
+  }
+  req.body.email = email.trim().toLowerCase();
+  req.body.otp = otp.trim();
+  next();
+};
+
+export const validateForgotPasswordInput = (req, res, next) => {
+  const { email } = req.body || {};
+  if (!email || typeof email !== "string" || !EMAIL_REGEX.test(email.trim())) {
+    return res.status(400).json({ success: false, message: "A valid email address is required." });
+  }
+  req.body.email = email.trim().toLowerCase();
+  next();
+};
+
+export const validateResetPasswordInput = (req, res, next) => {
+  const { email, resetToken, newPassword, confirmPassword } = req.body || {};
+  if (!email || typeof email !== "string" || !EMAIL_REGEX.test(email.trim())) {
+    return res.status(400).json({ success: false, message: "A valid email address is required." });
+  }
+  if (!resetToken || typeof resetToken !== "string" || !resetToken.trim()) {
+    return res.status(400).json({ success: false, message: "A valid reset authorization token is required." });
+  }
+  if (!newPassword || typeof newPassword !== "string" || newPassword.length < 6 || newPassword.length > 128) {
+    return res.status(400).json({ success: false, message: "New password must be between 6 and 128 characters long." });
+  }
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ success: false, message: "Passwords do not match." });
+  }
+  req.body.email = email.trim().toLowerCase();
+  req.body.resetToken = resetToken.trim();
+  next();
+};
+
 export const validateSearchQuery = (req, res, next) => {
   if (req.query.q) {
     const q = String(req.query.q).slice(0, 100).replace(/[\x00-\x1F\x7F]/g, "").trim();

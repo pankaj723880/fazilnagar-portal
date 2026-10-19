@@ -21,6 +21,7 @@ const Transportation = lazy(() => import("./pages/Transportation"));
 const GovtServices = lazy(() => import("./pages/GovtServices"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const CreateNews = lazy(() => import("./pages/CreateNews"));
 const Directory = lazy(() => import("./pages/Directory"));
 const About = lazy(() => import("./pages/About"));
@@ -657,6 +658,7 @@ export default function App() {
                 {/* Auth & Admin Routes */}
                 <Route path="/login" element={<Login setUser={setUser} />} />
                 <Route path="/register" element={<Register setUser={setUser} />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/create-news" element={<CreateNews user={user} />} />
                 <Route path="/upload" element={<CreateNews user={user} />} />
                 <Route

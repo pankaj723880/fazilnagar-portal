@@ -9,10 +9,12 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, "../.env") });
+process.env.NODE_ENV = "test";
 
 import authRoutes from "../routes/auth.js";
 import profileRoutes from "../routes/profile.js";
 import User from "../models/User.js";
+import { getTestSentEmails } from "../utils/emailService.js";
 
 const TEST_PORT = 5110;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/fazilnagar_db";
@@ -32,6 +34,24 @@ describe("Global Uniqueness Suite for Username and Mobile Phone", () => {
 
   let u1Token;
   let u2Token;
+
+  const registerAndVerify = async (data) => {
+    const initRes = await fetch(`http://127.0.0.1:${TEST_PORT}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (initRes.status !== 200) {
+      return initRes;
+    }
+    const emails = getTestSentEmails();
+    const otp = emails[emails.length - 1].otp;
+    return fetch(`http://127.0.0.1:${TEST_PORT}/api/auth/register/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: data.email, otp }),
+    });
+  };
 
   before(async () => {
     if (mongoose.connection.readyState === 0) {
@@ -56,19 +76,18 @@ describe("Global Uniqueness Suite for Username and Mobile Phone", () => {
     if (server) {
       await new Promise((resolve) => server.close(resolve));
     }
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
+    }
   });
 
   it("1. Successfully registers User 1 with unique username and phone", async () => {
-    const res = await fetch(`http://127.0.0.1:${TEST_PORT}/api/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: "Test User 1",
-        email: u1Email,
-        password: "password123",
-        username: u1Username,
-        phone: `+91 ${u1Phone}`, // with country code
-      }),
+    const res = await registerAndVerify({
+      name: "Test User 1",
+      email: u1Email,
+      password: "password123",
+      username: u1Username,
+      phone: `+91 ${u1Phone}`, // with country code
     });
 
     const body = await res.json();
@@ -118,16 +137,12 @@ describe("Global Uniqueness Suite for Username and Mobile Phone", () => {
   });
 
   it("4. Allows User 2 to register with unique credentials", async () => {
-    const res = await fetch(`http://127.0.0.1:${TEST_PORT}/api/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: "Test User 2",
-        email: u2Email,
-        password: "password123",
-        username: u2Username,
-        phone: u2Phone,
-      }),
+    const res = await registerAndVerify({
+      name: "Test User 2",
+      email: u2Email,
+      password: "password123",
+      username: u2Username,
+      phone: u2Phone,
     });
 
     const body = await res.json();

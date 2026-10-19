@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import API from "../api";
 import { setAuthSession } from "../utils/authStorage";
 import { usePageSEO } from "../utils/seo";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 
 export default function Login({ setUser }) {
   usePageSEO({
@@ -51,27 +52,53 @@ export default function Login({ setUser }) {
         </div>
       )}
 
+      {/* Google Login */}
+      <div className="mb-5">
+        <GoogleSignInButton
+          setUser={setUser}
+          redirectPath={redirectPath}
+          onError={setError}
+        />
+      </div>
+
+      <div className="relative my-5">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-slate-200" />
+        </div>
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-white px-3 text-slate-400 font-medium">Or continue with email / या ईमेल द्वारा</span>
+        </div>
+      </div>
+
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">Email</label>
+          <label className="block text-xs font-semibold text-slate-600 mb-1">Email / ईमेल</label>
           <input
             type="email"
             value={email}
             autoComplete="email"
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-red-600"
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-red-600 text-sm"
             required
           />
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">Password</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-xs font-semibold text-slate-600">Password / पासवर्ड</label>
+            <Link
+              to="/forgot-password"
+              className="text-xs text-red-700 hover:underline font-semibold"
+            >
+              Forgot Password? / भूल गए?
+            </Link>
+          </div>
           <input
             type="password"
             value={password}
             autoComplete="current-password"
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-red-600"
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-red-600 text-sm"
             required
           />
         </div>
@@ -79,7 +106,7 @@ export default function Login({ setUser }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-red-700 hover:bg-red-800 text-white font-bold rounded-xl transition-colors shadow-md disabled:opacity-50"
+          className="w-full py-3 bg-red-700 hover:bg-red-800 text-white font-bold rounded-xl transition-colors shadow-md disabled:opacity-50 text-sm cursor-pointer"
         >
           {loading ? "Signing in..." : "Sign In / लॉगिन"}
         </button>
@@ -92,7 +119,7 @@ export default function Login({ setUser }) {
           state={{ from: redirectPath }} 
           className="text-red-700 font-bold hover:underline"
         >
-          Register here
+          Register here / नया खाता बनाएं
         </Link>
       </p>
     </div>

@@ -76,5 +76,14 @@ export const searchLimiter = new InMemoryRateLimiter(60 * 1000, 60, "Too many se
 // 2. Form submission and write endpoints: 20 submissions per minute
 export const writeLimiter = new InMemoryRateLimiter(60 * 1000, 20, "Too many submission attempts. Please wait a moment before trying again.").middleware();
 
-// 3. Sensitive auth endpoints (login / register): 10 attempts per minute
-export const authLimiter = new InMemoryRateLimiter(60 * 1000, 10, "Too many login attempts. Please wait 1 minute before retrying.").middleware();
+// 3. Sensitive auth endpoints (login / register): 15 attempts per minute
+export const authLimiter = new InMemoryRateLimiter(60 * 1000, 15, "Too many login attempts. Please wait 1 minute before retrying.").middleware();
+
+// 4. OTP generation and resend rate limit: 6 requests per 5 minutes
+export const otpRequestLimiter = new InMemoryRateLimiter(5 * 60 * 1000, 6, "Too many verification code requests. Please wait before requesting another code.").middleware();
+
+// 5. OTP verification rate limit: 12 attempts per minute
+export const otpVerifyLimiter = new InMemoryRateLimiter(60 * 1000, 12, "Too many verification attempts. Please wait 1 minute before trying again.").middleware();
+
+// 6. Password reset operations: 6 attempts per 5 minutes
+export const passwordResetLimiter = new InMemoryRateLimiter(5 * 60 * 1000, 6, "Too many password reset attempts. Please wait a few minutes.").middleware();
