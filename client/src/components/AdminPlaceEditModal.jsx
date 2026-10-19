@@ -417,16 +417,16 @@ export default function AdminPlaceEditModal({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[90dvh] my-auto flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="px-5 py-4 bg-[#18232E] text-white flex items-center justify-between shrink-0">
+        <div className="px-4 py-3 sm:px-5 sm:py-3.5 bg-[#18232E] text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#B8323C] flex items-center justify-center text-white">
+            <div className="w-8 h-8 rounded-xl bg-[#B8323C] flex items-center justify-center text-white shrink-0">
               {isEditMode ? <Building className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-bold leading-tight">
+                <h2 className="text-sm sm:text-base font-bold leading-tight">
                   {isEditMode ? `Edit Entity: ${place.name}` : "Create New Map Entity"}
                 </h2>
                 {hasUnsavedChanges && (
@@ -435,7 +435,7 @@ export default function AdminPlaceEditModal({
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-300">
+              <p className="text-[10.5px] text-slate-300">
                 {isEditMode
                   ? "Update exact GPS coordinates, local Hindi name, and category details"
                   : "Add village, locality, town, city, landmark, or establishment to Fazilnagar map"}
@@ -454,7 +454,7 @@ export default function AdminPlaceEditModal({
 
         {/* Error Alert */}
         {errorMsg && (
-          <div className="bg-red-50 border-b border-red-200 px-5 py-2.5 flex items-center gap-2 text-xs font-semibold text-red-700">
+          <div className="bg-red-50 border-b border-red-200 px-4 py-2 flex items-center gap-2 text-xs font-semibold text-red-700">
             <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" />
             <span>{errorMsg}</span>
           </div>
@@ -462,7 +462,7 @@ export default function AdminPlaceEditModal({
 
         {/* Duplicate Warning Alert */}
         {duplicateEntity && !isEditMode && (
-          <div className="bg-amber-50 border-b border-amber-200 px-5 py-2 flex items-center justify-between text-xs text-amber-800">
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-between text-xs text-amber-800">
             <div className="flex items-center gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
               <span>
@@ -476,10 +476,10 @@ export default function AdminPlaceEditModal({
         )}
 
         {/* Form Body */}
-        <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Left Column: Entity Details */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1">
                   Entity Name (English) *
@@ -493,7 +493,7 @@ export default function AdminPlaceEditModal({
                     setHasUnsavedChanges(true);
                   }}
                   placeholder="e.g. Lavkush Purab Patti, Kasya, CHC Fazilnagar"
-                  className="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white transition"
+                  className="w-full text-xs px-3 h-10 sm:h-10.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white transition"
                 />
               </div>
 
@@ -509,17 +509,17 @@ export default function AdminPlaceEditModal({
                     setHasUnsavedChanges(true);
                   }}
                   placeholder="उदा. लवकुश पूरब पट्टी, करमैनी"
-                  className="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white transition"
+                  className="w-full text-xs px-3 h-10 sm:h-10.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white transition"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-xs font-bold text-slate-800 mb-1">Category / Type *</label>
                   <select
                     value={category}
                     onChange={handleCategoryChange}
-                    className="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white transition font-medium"
+                    className="w-full text-xs px-3 h-10 sm:h-10.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white transition font-medium"
                   >
                     {CATEGORIES.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -537,7 +537,7 @@ export default function AdminPlaceEditModal({
                       setVerificationStatus(e.target.value);
                       setHasUnsavedChanges(true);
                     }}
-                    className="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white transition font-medium"
+                    className="w-full text-xs px-3 h-10 sm:h-10.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white transition font-medium"
                   >
                     <option value="verified">✓ Verified Settlement</option>
                     <option value="needs_verification">⚠️ Needs Field Review</option>
@@ -558,11 +558,11 @@ export default function AdminPlaceEditModal({
                     setHasUnsavedChanges(true);
                   }}
                   placeholder="e.g. Census of India 2011 / LGD Code 189499"
-                  className="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white transition"
+                  className="w-full text-xs px-3 h-10 sm:h-10.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white transition"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-xs font-bold text-slate-800 mb-1">Locality / Block</label>
                   <input
@@ -573,7 +573,7 @@ export default function AdminPlaceEditModal({
                       setHasUnsavedChanges(true);
                     }}
                     placeholder="e.g. Fazilnagar, Tamkuhi Raj"
-                    className="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white transition"
+                    className="w-full text-xs px-3 h-10 sm:h-10.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white transition"
                   />
                 </div>
 
@@ -589,7 +589,7 @@ export default function AdminPlaceEditModal({
                       setHasUnsavedChanges(true);
                     }}
                     placeholder="Kushinagar, Uttar Pradesh"
-                    className="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white transition"
+                    className="w-full text-xs px-3 h-10 sm:h-10.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white transition"
                   />
                 </div>
               </div>
@@ -604,7 +604,7 @@ export default function AdminPlaceEditModal({
                     setHasUnsavedChanges(true);
                   }}
                   placeholder="e.g. Lavkush Purab Patti, Fazilnagar Block, Kushinagar, UP"
-                  className="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white transition"
+                  className="w-full text-xs px-3 h-10 sm:h-10.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white transition"
                 />
               </div>
 
@@ -648,7 +648,7 @@ export default function AdminPlaceEditModal({
                         setHasUnsavedChanges(true);
                       }}
                       placeholder="e.g. 26.7095"
-                      className="w-full text-xs font-mono px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white"
+                      className="w-full text-xs font-mono px-3 h-10 sm:h-10.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white"
                     />
                   </div>
                   <div>
@@ -663,7 +663,7 @@ export default function AdminPlaceEditModal({
                         setHasUnsavedChanges(true);
                       }}
                       placeholder="e.g. 84.0507"
-                      className="w-full text-xs font-mono px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white"
+                      className="w-full text-xs font-mono px-3 h-10 sm:h-10.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B8323C] bg-slate-50 focus:bg-white"
                     />
                   </div>
                 </div>

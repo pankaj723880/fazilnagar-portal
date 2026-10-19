@@ -255,8 +255,8 @@ export default function AdminCommunityPlaces({ token: propToken, onStatsChange }
 
       {/* Reject Reason Modal */}
       {rejectingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white max-w-md w-full rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white max-w-md w-full my-auto rounded-2xl shadow-2xl border border-slate-200 p-5 sm:p-6 space-y-4">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center">
                 <XCircle className="w-5 h-5" />
@@ -301,10 +301,10 @@ export default function AdminCommunityPlaces({ token: propToken, onStatsChange }
 
       {/* Edit Details & Location Modal */}
       {editingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
           <form
             onSubmit={handleSaveEditLocation}
-            className="bg-white max-w-lg w-full rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4 text-xs"
+            className="bg-white max-w-lg w-full my-auto max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border border-slate-200 p-5 sm:p-6 space-y-4 text-xs"
           >
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">

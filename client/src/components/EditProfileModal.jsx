@@ -250,12 +250,12 @@ export default function EditProfileModal({ isOpen, onClose, initialTab = "profil
       role="dialog"
       aria-modal="true"
       aria-labelledby="edit-profile-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-3xl max-w-[480px] w-full max-h-[90dvh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 duration-200">
         {/* Modal Top Header */}
         <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
           <div className="flex items-center gap-2.5">
@@ -403,84 +403,88 @@ export default function EditProfileModal({ isOpen, onClose, initialTab = "profil
                 </div>
               </div>
 
-              {/* Display Name */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Display Name / नाम <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  maxLength={50}
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="e.g. Ramesh Chandra / रमेश चंद्र"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs text-slate-900 focus:ring-2 focus:ring-[#B8323C] outline-none"
-                />
-              </div>
-
-              {/* Username (@handle) */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Username / यूज़रनेम (@handle) <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-2 text-xs text-slate-400 font-mono">
-                    <AtSign className="w-3.5 h-3.5 inline" />
-                  </span>
+              {/* Two Column Grid: Name & Username */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* Display Name */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Display Name / नाम <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     required
-                    maxLength={20}
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
-                    placeholder="admin_fazilnagar"
-                    className="w-full pl-8 pr-3.5 py-2 rounded-xl border border-slate-300 text-xs font-mono text-slate-900 focus:ring-2 focus:ring-[#B8323C] outline-none"
+                    maxLength={50}
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="e.g. Ramesh Chandra"
+                    className="w-full h-10 sm:h-10.5 px-3 rounded-xl border border-slate-300 text-xs text-slate-900 focus:ring-2 focus:ring-[#B8323C] outline-none"
                   />
                 </div>
-                <span className="text-[10px] text-slate-400">3-20 lowercase letters, numbers, and underscores.</span>
-              </div>
 
-              {/* Mobile Phone Number */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
-                  <span>Mobile Phone / मोबाइल नंबर</span>
-                  <span className="text-[10px] text-slate-400 font-normal">Optional</span>
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-2 text-xs text-slate-400 flex items-center">
-                    <Phone className="w-3.5 h-3.5 text-emerald-600" />
-                  </span>
-                  <input
-                    type="tel"
-                    maxLength={15}
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/[^\d+\s-]/g, ""))}
-                    placeholder="e.g. 9876543210"
-                    className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-300 text-xs font-mono text-slate-900 focus:ring-2 focus:ring-[#B8323C] outline-none"
-                  />
+                {/* Username (@handle) */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Username / यूज़रनेम <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-mono flex items-center">
+                      <AtSign className="w-3.5 h-3.5 inline" />
+                    </span>
+                    <input
+                      type="text"
+                      required
+                      maxLength={20}
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                      placeholder="admin_fazilnagar"
+                      className="w-full h-10 sm:h-10.5 pl-7 pr-3 rounded-xl border border-slate-300 text-xs font-mono text-slate-900 focus:ring-2 focus:ring-[#B8323C] outline-none"
+                    />
+                  </div>
                 </div>
-                <span className="text-[10px] text-slate-400">Used for citizen identification &amp; SMS notifications.</span>
               </div>
 
-              {/* Area / Ward */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
-                  <span>Area / मोहल्ला / वार्ड</span>
-                  <span className="text-[10px] text-slate-400 font-normal">Optional</span>
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-2 text-xs text-slate-400 flex items-center">
-                    <MapPin className="w-3.5 h-3.5 text-blue-500" />
-                  </span>
-                  <input
-                    type="text"
-                    maxLength={60}
-                    value={area}
-                    onChange={(e) => setArea(e.target.value)}
-                    placeholder="e.g. Ward 4, Main Market, Fazilnagar"
-                    className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-300 text-xs text-slate-900 focus:ring-2 focus:ring-[#B8323C] outline-none"
-                  />
+              {/* Two Column Grid: Phone & Area */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* Mobile Phone Number */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                    <span>Mobile Phone / फ़ोन</span>
+                    <span className="text-[10px] text-slate-400 font-normal">Optional</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 flex items-center">
+                      <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                    </span>
+                    <input
+                      type="tel"
+                      maxLength={15}
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value.replace(/[^\d+\s-]/g, ""))}
+                      placeholder="e.g. 9876543210"
+                      className="w-full h-10 sm:h-10.5 pl-8 pr-3 rounded-xl border border-slate-300 text-xs font-mono text-slate-900 focus:ring-2 focus:ring-[#B8323C] outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Area / Ward */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                    <span>Area / वार्ड</span>
+                    <span className="text-[10px] text-slate-400 font-normal">Optional</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 flex items-center">
+                      <MapPin className="w-3.5 h-3.5 text-blue-500" />
+                    </span>
+                    <input
+                      type="text"
+                      maxLength={60}
+                      value={area}
+                      onChange={(e) => setArea(e.target.value)}
+                      placeholder="Ward 4, Fazilnagar"
+                      className="w-full h-10 sm:h-10.5 pl-8 pr-3 rounded-xl border border-slate-300 text-xs text-slate-900 focus:ring-2 focus:ring-[#B8323C] outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -661,11 +665,11 @@ export default function EditProfileModal({ isOpen, onClose, initialTab = "profil
         </div>
 
         {/* Modal Bottom Actions */}
-        <div className="p-4 sm:p-5 border-t border-slate-100 flex items-center justify-between bg-slate-50/60">
+        <div className="p-3.5 sm:p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/60">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+            className="px-3.5 h-9 sm:h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
           >
             Cancel / बंद करें
           </button>
@@ -675,7 +679,7 @@ export default function EditProfileModal({ isOpen, onClose, initialTab = "profil
               type="submit"
               form="edit-profile-form"
               disabled={saving || loading || avatarUploading}
-              className="px-5 py-2 rounded-xl bg-[#B8323C] hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
+              className="px-4.5 h-9 sm:h-10 rounded-xl bg-[#B8323C] hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
             >
               {saving || avatarUploading ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -688,7 +692,7 @@ export default function EditProfileModal({ isOpen, onClose, initialTab = "profil
             <Link
               to="/admin/review"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition flex items-center gap-1 shadow-xs"
+              className="px-4 h-9 sm:h-10 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition flex items-center gap-1 shadow-xs"
             >
               <span>Open Admin Desk</span>
               <ExternalLink className="w-3.5 h-3.5" />

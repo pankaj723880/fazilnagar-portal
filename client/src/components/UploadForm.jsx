@@ -216,14 +216,14 @@ export default function UploadForm() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-white p-5 sm:p-8 rounded-3xl shadow-sm border border-slate-200 my-6">
-      <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+    <div className="max-w-[520px] mx-auto bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl shadow-xs border border-slate-200 my-3 sm:my-5">
+      <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
         <div>
           <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 mb-1">
             <Sparkles className="w-2.5 h-2.5" />
             <span>Citizen Reporter Open Desk</span>
           </span>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-[#18232E]">
+          <h2 className="text-lg sm:text-xl font-extrabold text-[#18232E]">
             Post Town News / समाचार जोड़ें
           </h2>
           <p className="text-xs text-slate-500">
@@ -234,7 +234,7 @@ export default function UploadForm() {
 
       {message && (
         <div
-          className={`p-3.5 rounded-2xl text-xs font-bold mb-4 flex items-center gap-2 ${
+          className={`p-3 rounded-xl text-xs font-bold mb-3 flex items-center gap-2 ${
             isSuccess
               ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
               : "bg-red-50 text-red-800 border border-red-200"
@@ -250,13 +250,13 @@ export default function UploadForm() {
       )}
 
       {validationError && (
-        <div className="p-3 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 text-xs font-semibold mb-4 flex items-center gap-2">
+        <div className="p-3 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 text-xs font-semibold mb-3 flex items-center gap-2">
           <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
           <span>{validationError}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+      <form onSubmit={handleSubmit} className="space-y-3 text-xs">
         <div>
           <label className="block font-bold text-[#18232E] mb-1">
             News Headline (शीर्षक) <span className="text-red-500">*</span>
@@ -266,7 +266,7 @@ export default function UploadForm() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Major Market Gathering or Road Construction near Fazilnagar Crossing"
-            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-[#B8323C] text-xs bg-[#F5F7F8]"
+            className="w-full h-10 sm:h-10.5 px-3.5 rounded-xl border border-slate-300 focus:outline-none focus:border-[#B8323C] text-xs bg-[#F5F7F8]"
             required
             disabled={loading}
           />
@@ -281,18 +281,18 @@ export default function UploadForm() {
             value={titleHi}
             onChange={(e) => setTitleHi(e.target.value)}
             placeholder="उदा. फाजिलनगर चौराहे पर सड़क निर्माण कार्य पूर्ण"
-            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-[#B8323C] text-xs bg-[#F5F7F8]"
+            className="w-full h-10 sm:h-10.5 px-3.5 rounded-xl border border-slate-300 focus:outline-none focus:border-[#B8323C] text-xs bg-[#F5F7F8]"
             disabled={loading}
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           <div>
             <label className="block font-bold text-[#18232E] mb-1">Category</label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-[#B8323C] text-xs bg-[#F5F7F8]"
+              className="w-full h-10 sm:h-10.5 px-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-[#B8323C] text-xs bg-[#F5F7F8]"
               disabled={loading}
             >
               <option value="General">General (सामान्य)</option>
@@ -313,7 +313,7 @@ export default function UploadForm() {
               value={reporterName}
               onChange={(e) => setReporterName(e.target.value)}
               placeholder="e.g. Ramesh Singh / Ward 5"
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-[#B8323C] text-xs bg-[#F5F7F8]"
+              className="w-full h-10 sm:h-10.5 px-3 rounded-xl border border-slate-300 focus:outline-none focus:border-[#B8323C] text-xs bg-[#F5F7F8]"
               disabled={loading}
             />
           </div>
@@ -325,7 +325,7 @@ export default function UploadForm() {
               value={locationName}
               onChange={(e) => setLocationName(e.target.value)}
               placeholder="e.g. College Road, Fazilnagar"
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-[#B8323C] text-xs bg-[#F5F7F8]"
+              className="w-full h-10 sm:h-10.5 px-3 rounded-xl border border-slate-300 focus:outline-none focus:border-[#B8323C] text-xs bg-[#F5F7F8]"
               disabled={loading}
             />
           </div>
@@ -547,7 +547,7 @@ export default function UploadForm() {
         <button
           type="submit"
           disabled={loading}
-          className={`w-full py-3.5 text-white font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-2 ${
+          className={`w-full h-10 sm:h-11 text-white font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-2 ${
             loading
               ? "bg-slate-400 cursor-not-allowed"
               : "bg-[#B8323C] hover:bg-red-700 cursor-pointer active:scale-[0.99]"

@@ -40,18 +40,18 @@ export default function ReportModal({ targetUser, targetMessage, onClose, onRepo
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-md w-full p-6 relative shadow-2xl border border-slate-200">
+    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full p-4 sm:p-5 relative shadow-2xl border border-slate-200 max-h-[90dvh] overflow-y-auto my-auto">
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 p-1.5 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition"
+          className="absolute right-3.5 top-3.5 p-1.5 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition cursor-pointer"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
 
-        <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-          <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
-            <Flag className="w-5 h-5" />
+        <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+          <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+            <Flag className="w-4 h-4" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-slate-900">
@@ -64,8 +64,8 @@ export default function ReportModal({ targetUser, targetMessage, onClose, onRepo
         </div>
 
         {success ? (
-          <div className="py-8 text-center space-y-2">
-            <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
+          <div className="py-6 text-center space-y-2">
+            <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
             <p className="text-xs font-bold text-slate-800">
               Report submitted successfully / शिकायत दर्ज हो गई
             </p>
@@ -74,7 +74,7 @@ export default function ReportModal({ targetUser, targetMessage, onClose, onRepo
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-3 space-y-3">
             {error && (
               <div className="p-2.5 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
@@ -92,13 +92,13 @@ export default function ReportModal({ targetUser, targetMessage, onClose, onRepo
             )}
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Reason for reporting / शिकायत का कारण
               </label>
               <select
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#B8323C]/20 focus:border-[#B8323C]"
+                className="w-full px-3 h-10 sm:h-10.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#B8323C]/20 focus:border-[#B8323C]"
               >
                 <option value="spam">Spam or Unsolicited Commercial / स्पैम</option>
                 <option value="harassment">Harassment or Abuse / उत्पीड़न</option>
@@ -109,31 +109,31 @@ export default function ReportModal({ targetUser, targetMessage, onClose, onRepo
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Additional Details (Optional) / विवरण
               </label>
               <textarea
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
                 maxLength={1000}
-                rows={3}
+                rows={2}
                 placeholder="Explain what happened... / संक्षेप में बताएं..."
-                className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#B8323C]/20 focus:border-[#B8323C]"
+                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#B8323C]/20 focus:border-[#B8323C]"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="flex items-center justify-end gap-2 pt-1.5">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+                className="px-3.5 h-9 sm:h-10 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-4 py-2 rounded-xl bg-[#B8323C] hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
+                className="px-4 h-9 sm:h-10 rounded-xl bg-[#B8323C] hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
               >
                 {submitting ? (
                   <>

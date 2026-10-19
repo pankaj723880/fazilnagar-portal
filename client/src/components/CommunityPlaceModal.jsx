@@ -533,20 +533,20 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/80 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/80 backdrop-blur-xs overflow-y-auto">
+      <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90dvh] my-auto animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="bg-[#18232E] text-white px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-800 shrink-0">
+        <div className="bg-[#18232E] text-white px-4 sm:px-5 py-3 flex items-center justify-between border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#0D5E49] flex items-center justify-center text-white shadow-xs">
-              <Store className="w-5 h-5 text-amber-300" />
+            <div className="w-8 h-8 rounded-xl bg-[#0D5E49] flex items-center justify-center text-white shadow-xs shrink-0">
+              <Store className="w-4 h-4 text-amber-300" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold leading-tight">
+              <h2 className="text-sm sm:text-base font-bold leading-tight">
                 Add Your Business / Place
               </h2>
-              <p className="text-[11px] text-slate-300">
-                Fazilnagar Town Directory & Official Map Pinning
+              <p className="text-[10.5px] text-slate-300">
+                Fazilnagar Town Directory &amp; Official Map Pinning
               </p>
             </div>
           </div>
@@ -555,7 +555,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
             aria-label="Close form"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -691,7 +691,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
             </div>
 
             {/* Content Body */}
-            <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1">
+            <div className="p-4 sm:p-5 overflow-y-auto space-y-3.5 flex-1">
               {submitError && (
                 <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-xl text-xs flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
@@ -721,7 +721,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                         placeholder="e.g. Gupta General Store, Hotel Milan, Sharma Electronics"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-10 sm:h-10.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium"
                         required
                       />
                     </div>
@@ -733,7 +733,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                       <select
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium cursor-pointer"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-10 sm:h-10.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium cursor-pointer"
                         required
                       >
                         <option value="">Select Category...</option>
@@ -752,7 +752,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                       <select
                         value={locality}
                         onChange={(e) => setLocality(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium cursor-pointer"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-10 sm:h-10.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium cursor-pointer"
                         required
                       >
                         <option value="">Select Ward / Area (26 town options)...</option>
@@ -773,7 +773,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                         placeholder="e.g. Shop No. 12, Main Market, Opp. SBI Link Road, Fazilnagar - 274401"
                         value={addressFull}
                         onChange={(e) => setAddressFull(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-10 sm:h-10.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium"
                         required
                       />
                     </div>
@@ -787,7 +787,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                         placeholder="e.g. Near Bus Stand, Opp. Pawanagar Gate"
                         value={streetOrLandmark}
                         onChange={(e) => setStreetOrLandmark(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-10 sm:h-10.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium"
                       />
                     </div>
 
@@ -800,7 +800,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                         placeholder="e.g. Ramesh Kumar Gupta"
                         value={ownerName}
                         onChange={(e) => setOwnerName(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-10 sm:h-10.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium"
                       />
                     </div>
 
@@ -813,7 +813,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                         placeholder="10-digit mobile number"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-10 sm:h-10.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium"
                         required
                       />
                     </div>
@@ -827,7 +827,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                         placeholder="WhatsApp contact"
                         value={whatsapp}
                         onChange={(e) => setWhatsapp(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-10 sm:h-10.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium"
                       />
                     </div>
 
@@ -840,7 +840,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                         placeholder="e.g. 09:00 AM – 08:30 PM (Sunday Closed)"
                         value={openingHours}
                         onChange={(e) => setOpeningHours(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-10 sm:h-10.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium"
                       />
                     </div>
 
@@ -853,7 +853,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                         placeholder="https://..."
                         value={website}
                         onChange={(e) => setWebsite(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-10 sm:h-10.5 outline-none focus:border-[#B8323C] focus:bg-white text-xs font-medium"
                       />
                     </div>
 
@@ -940,7 +940,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                   )}
 
                   {/* Leaflet Map Embed */}
-                  <div className="relative w-full h-72 sm:h-80 rounded-2xl overflow-hidden border-2 border-slate-200 shadow-inner">
+                  <div className="relative w-full h-56 sm:h-64 rounded-xl overflow-hidden border-2 border-slate-200 shadow-inner">
                     <div ref={mapContainerRef} className="w-full h-full z-10" />
                   </div>
 
@@ -1174,13 +1174,13 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
             </div>
 
             {/* Modal Footer Controls */}
-            <div className="bg-slate-50 px-4 sm:px-6 py-3 border-t border-slate-200 flex items-center justify-between shrink-0">
+            <div className="bg-slate-50 px-4 sm:px-5 py-2.5 border-t border-slate-200 flex items-center justify-between shrink-0">
               {currentStep > 1 ? (
                 <button
                   type="button"
                   onClick={() => setCurrentStep((prev) => prev - 1)}
                   disabled={submitting}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 transition cursor-pointer"
+                  className="px-3.5 h-9 sm:h-10 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 transition cursor-pointer"
                 >
                   Back
                 </button>
@@ -1188,7 +1188,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 transition cursor-pointer"
+                  className="px-3.5 h-9 sm:h-10 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 transition cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1212,7 +1212,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                     }
                     setCurrentStep((prev) => prev + 1);
                   }}
-                  className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-[#18232E] hover:bg-[#B8323C] transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                  className="px-4.5 h-9 sm:h-10 rounded-xl text-xs font-bold text-white bg-[#18232E] hover:bg-[#B8323C] transition shadow-xs cursor-pointer flex items-center gap-1.5"
                 >
                   <span>Continue</span>
                   <span>→</span>
@@ -1222,7 +1222,7 @@ export default function CommunityPlaceModal({ isOpen, onClose, onSuccess }) {
                   type="button"
                   onClick={handleFinalSubmit}
                   disabled={!canSubmitFinal() || submitting}
-                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-[#0D5E49] hover:bg-emerald-800 transition shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-5 h-9 sm:h-10 rounded-xl text-xs font-bold text-white bg-[#0D5E49] hover:bg-emerald-800 transition shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {submitting ? (
                     <>

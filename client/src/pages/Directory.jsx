@@ -1255,8 +1255,8 @@ export default function Directory({ user }) {
 
       {/* Place Detail & Audit Modal */}
       {detailModalPlace && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-white rounded-t-3xl sm:rounded-2xl max-w-lg w-full p-4 sm:p-5 shadow-2xl relative max-h-[85vh] overflow-y-auto animate-fade-in-up sm:animate-modal-pop">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl max-w-lg w-full sm:my-auto p-4 sm:p-5 shadow-2xl relative max-h-[85vh] overflow-y-auto animate-fade-in-up sm:animate-modal-pop">
             <button
               onClick={() => setDetailModalPlace(null)}
               className="absolute top-3 right-3 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 cursor-pointer"

@@ -64,14 +64,15 @@ export default function Login({ setUser }) {
       title="Citizen Sign In / नागरिक लॉगिन"
       subtitle="Access your Fazilnagar Town Portal account to post verified local news, participate in town discussions, and access civic directory services."
       error={error}
+      maxWidth="max-w-[420px]"
       illustration={
-        <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-red-600/10 via-amber-500/15 to-red-700/15 border border-red-200/80 dark:border-red-900/50 flex items-center justify-center text-red-700 dark:text-red-400 shadow-xs">
-          <UserCheck className="w-7 h-7" />
+        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-linear-to-br from-red-600/10 via-amber-500/15 to-red-700/15 border border-red-200/80 dark:border-red-900/50 flex items-center justify-center text-red-700 dark:text-red-400 shadow-2xs">
+          <UserCheck className="w-5 h-5" />
         </div>
       }
     >
       {/* Google Login Section */}
-      <div className="mb-6">
+      <div className="mb-2 sm:mb-2.5">
         <GoogleSignInButton
           setUser={setUser}
           redirectPath={redirectPath}
@@ -80,25 +81,25 @@ export default function Login({ setUser }) {
       </div>
 
       {/* Modern SaaS-style Divider */}
-      <div className="relative my-6">
+      <div className="relative my-2 sm:my-2.5">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
           <div className="w-full border-t border-slate-200 dark:border-slate-800" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-white/90 dark:bg-[#151F2E]/90 px-3 text-slate-400 dark:text-slate-500 font-medium">
+          <span className="bg-white/90 dark:bg-[#151F2E]/90 px-2.5 text-slate-400 dark:text-slate-500 font-medium text-[10.5px]">
             Or sign in with email / या ईमेल द्वारा
           </span>
         </div>
       </div>
 
-      <form onSubmit={handleLogin} className="space-y-4">
+      <form onSubmit={handleLogin} className="space-y-2.5">
         {/* Email Field */}
         <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+          <label className="block text-[11.5px] sm:text-xs font-semibold text-slate-700 dark:text-slate-300 mb-0.5">
             Email Address / ईमेल पता
           </label>
           <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
               <Mail className="w-4 h-4" />
             </span>
             <input
@@ -107,7 +108,7 @@ export default function Login({ setUser }) {
               autoComplete="email"
               placeholder="citizen@fazilnagar.me"
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full h-11 sm:h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1A2637] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-red-600 focus:ring-4 focus:ring-red-600/15 text-sm transition-all"
+              className="w-full h-10 sm:h-10.5 pl-9 pr-3.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1A2637] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-red-600 focus:ring-3 focus:ring-red-600/15 text-xs sm:text-sm transition-all"
               required
             />
           </div>
@@ -115,19 +116,19 @@ export default function Login({ setUser }) {
 
         {/* Password Field */}
         <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <div className="flex items-center justify-between mb-0.5">
+            <label className="block text-[11.5px] sm:text-xs font-semibold text-slate-700 dark:text-slate-300">
               Password / पासवर्ड
             </label>
             <Link
               to="/forgot-password"
-              className="text-xs text-red-700 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 hover:underline font-semibold transition-colors"
+              className="text-[11px] text-red-700 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 hover:underline font-semibold transition-colors"
             >
               Forgot Password? / भूल गए?
             </Link>
           </div>
           <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
               <Lock className="w-4 h-4" />
             </span>
             <input
@@ -136,14 +137,14 @@ export default function Login({ setUser }) {
               autoComplete="current-password"
               placeholder="••••••••"
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full h-11 sm:h-12 pl-10 pr-11 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1A2637] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-red-600 focus:ring-4 focus:ring-red-600/15 text-sm transition-all"
+              className="w-full h-10 sm:h-10.5 pl-9 pr-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1A2637] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-red-600 focus:ring-3 focus:ring-red-600/15 text-xs sm:text-sm transition-all"
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer transition-colors"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer transition-colors"
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -154,7 +155,7 @@ export default function Login({ setUser }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full h-11 sm:h-12 mt-2 bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold rounded-xl transition-all shadow-sm hover:shadow-md hover:shadow-red-900/20 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none text-sm cursor-pointer flex items-center justify-center gap-2"
+          className="w-full h-10 sm:h-10.5 mt-0.5 bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold rounded-xl transition-all shadow-xs hover:shadow-sm active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none text-xs sm:text-sm cursor-pointer flex items-center justify-center gap-2"
         >
           {loading ? (
             <>
@@ -171,7 +172,7 @@ export default function Login({ setUser }) {
       </form>
 
       {/* Switch to Registration Link */}
-      <div className="text-center text-xs text-slate-500 dark:text-slate-400 mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">
+      <div className="text-center text-xs text-slate-500 dark:text-slate-400 mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
         <span>Don't have a citizen account? / खाता नहीं है? </span>
         <Link
           to="/register"
@@ -183,7 +184,7 @@ export default function Login({ setUser }) {
       </div>
 
       {/* Small Security / Shield Illustration near bottom */}
-      <div className="mt-4 pt-3 flex items-center justify-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500">
+      <div className="mt-2.5 pt-1 flex items-center justify-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500">
         <Shield className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
         <span>Protected by Fazilnagar Municipal Security Protocol</span>
       </div>

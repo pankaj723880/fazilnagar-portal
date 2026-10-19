@@ -56,11 +56,11 @@ export default function ConfirmDialog({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#111827]/70 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-[#111827]/70 backdrop-blur-xs animate-in fade-in duration-150"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md bg-white rounded-2xl border border-[#E5E7EB] shadow-2xl p-6 space-y-4 animate-in zoom-in-95 duration-150"
+        className="w-full max-w-md my-auto bg-white rounded-2xl border border-[#E5E7EB] shadow-2xl p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150"
       >
         <div className="flex items-start gap-3.5">
           <div

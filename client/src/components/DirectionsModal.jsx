@@ -181,39 +181,39 @@ export default function DirectionsModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto animate-fade-in">
       <div
-        className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 flex flex-col max-h-[90vh]"
+        className="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 flex flex-col max-h-[90dvh] my-auto"
         role="dialog"
         aria-modal="true"
         aria-labelledby="directions-modal-title"
       >
         {/* Modal Header */}
-        <div className="bg-[#18232E] text-white p-5 flex items-start justify-between gap-3">
+        <div className="bg-[#18232E] text-white p-3.5 sm:p-4 flex items-start justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300">
-              <Navigation className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300 shrink-0">
+              <Navigation className="w-4 h-4" />
             </div>
             <div>
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-teal-400 block">
                 Turn-by-Turn Navigation
               </span>
-              <h2 id="directions-modal-title" className="text-base sm:text-lg font-bold text-white line-clamp-1">
+              <h2 id="directions-modal-title" className="text-sm sm:text-base font-bold text-white line-clamp-1">
                 Directions to {place.name}
               </h2>
             </div>
           </div>
           <button
             onClick={handleClose}
-            className="text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-slate-800 transition"
+            className="text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-slate-800 transition cursor-pointer"
             aria-label="Close directions modal"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 overflow-y-auto space-y-4">
+        <div className="p-3.5 sm:p-4 overflow-y-auto space-y-3">
           {/* Destination Details Box */}
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
             <div className="flex items-center justify-between">
@@ -334,27 +334,27 @@ export default function DirectionsModal() {
 
           {/* Primary Action: Use My Current Location */}
           {status !== "locating" && status !== "success" && (
-            <div className="space-y-3 pt-2">
+            <div className="space-y-2.5 pt-1">
               <button
                 type="button"
                 onClick={requestCurrentLocationAndNavigate}
-                className="w-full inline-flex items-center justify-center gap-2.5 bg-[#168568] hover:bg-emerald-700 text-white font-bold text-sm py-3.5 rounded-2xl transition shadow-xs cursor-pointer group"
+                className="w-full inline-flex items-center justify-center gap-2 bg-[#168568] hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm h-10 sm:h-11 rounded-xl transition shadow-xs cursor-pointer group"
               >
                 <LocateFixed className="w-4 h-4 group-hover:scale-110 transition-transform" />
                 <span>🧭 Directions from My Current Location</span>
               </button>
-              <p className="text-[11px] text-center text-slate-500">
+              <p className="text-[10.5px] text-center text-slate-500">
                 Detects your live device GPS coordinates to create an accurate driving or walking route.
               </p>
 
               {/* Alternate Option: Manual Starting Point */}
-              <div className="pt-3 border-t border-slate-200">
+              <div className="pt-2.5 border-t border-slate-200">
                 {!showManualInput ? (
                   <div className="flex items-center justify-between text-xs">
                     <button
                       type="button"
                       onClick={() => setShowManualInput(true)}
-                      className="text-slate-700 font-semibold hover:text-[#B8323C] flex items-center gap-1.5 cursor-pointer"
+                      className="text-slate-700 font-semibold hover:text-[#B8323C] flex items-center gap-1.5 cursor-pointer text-xs"
                     >
                       <Route className="w-3.5 h-3.5 text-slate-400" />
                       <span>Choose a different starting point</span>
@@ -362,7 +362,7 @@ export default function DirectionsModal() {
                     <button
                       type="button"
                       onClick={handleOpenDestinationInMaps}
-                      className="text-teal-700 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                      className="text-teal-700 font-bold hover:underline flex items-center gap-1 cursor-pointer text-xs"
                     >
                       <span>Choose in Google Maps</span>
                       <ExternalLink className="w-3 h-3" />
@@ -379,13 +379,13 @@ export default function DirectionsModal() {
                         placeholder="e.g. Kasia, Gorakhpur, Fazilnagar Bus Stand..."
                         value={manualStart}
                         onChange={(e) => setManualStart(e.target.value)}
-                        className="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 h-10 sm:h-10.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
                         autoFocus
                       />
                       <button
                         type="submit"
                         disabled={!manualStart.trim()}
-                        className="bg-[#18232E] hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition cursor-pointer"
+                        className="bg-[#18232E] hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs px-3.5 h-10 sm:h-10.5 rounded-xl transition cursor-pointer"
                       >
                         Route
                       </button>

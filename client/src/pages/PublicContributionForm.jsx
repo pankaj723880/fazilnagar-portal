@@ -389,8 +389,8 @@ export default function PublicContributionForm() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] py-8 px-4 sm:px-6">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#F5F7FA] py-4 sm:py-6 px-3 sm:px-6">
+      <div className="max-w-[520px] mx-auto space-y-3.5">
         {/* Back Link */}
         {!hideNavbarAndFooter && (
           <Link
@@ -404,16 +404,16 @@ export default function PublicContributionForm() {
 
         {/* Success Confirmation Card */}
         {submissionSuccess ? (
-          <div className="bg-white rounded-3xl border border-emerald-200 shadow-xl p-8 text-center space-y-4 animate-in fade-in zoom-in-95 duration-200">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-8 h-8" />
+          <div className="bg-white rounded-2xl sm:rounded-3xl border border-emerald-200 shadow-xl p-5 sm:p-7 text-center space-y-3.5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-6 h-6" />
             </div>
 
-            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100/80 px-3 py-1 rounded-full inline-block">
+            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100/80 px-2.5 py-0.5 rounded-full inline-block">
               Submission Received &bull; Verification Pending
             </span>
 
-            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 font-heading">
+            <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 font-heading">
               Thank You for Your Contribution!
             </h1>
 
@@ -421,19 +421,19 @@ export default function PublicContributionForm() {
               Your proposal has been submitted to the Fazilnagar Town Portal administration. To ensure highest data integrity, live records will only be updated after an authorized administrator verifies the information and Google Maps coordinates.
             </p>
 
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 max-w-sm mx-auto">
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 max-w-sm mx-auto">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                 Your Submission Reference ID:
               </span>
-              <span className="font-mono text-base font-black text-slate-900 select-all block mt-1">
+              <span className="font-mono text-base font-black text-slate-900 select-all block mt-0.5">
                 {submissionSuccess.referenceId}
               </span>
-              <span className="text-[10px] text-slate-500 mt-1 block">
+              <span className="text-[10px] text-slate-500 mt-0.5 block">
                 Save this reference code for your records or follow-up.
               </span>
             </div>
 
-            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2.5">
               <button
                 type="button"
                 onClick={() => {
@@ -442,7 +442,7 @@ export default function PublicContributionForm() {
                   setEvidenceNotes("");
                   setAttachments([]);
                 }}
-                className="w-full sm:w-auto px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition"
+                className="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition cursor-pointer"
               >
                 Submit Another Contribution
               </button>
@@ -450,7 +450,7 @@ export default function PublicContributionForm() {
               {!hideNavbarAndFooter && (
                 <Link
                   to="/"
-                  className="w-full sm:w-auto px-5 py-2.5 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition shadow-xs"
+                  className="w-full sm:w-auto px-4 py-2 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition shadow-xs"
                 >
                   Return to Town Portal
                 </Link>
@@ -459,11 +459,11 @@ export default function PublicContributionForm() {
           </div>
         ) : (
           /* Contribution Form Card */
-          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl overflow-hidden">
+          <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-xl overflow-hidden">
             {/* Form Hero Banner */}
-            <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white p-6 sm:p-8">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-black uppercase tracking-wider bg-[#0D5E49] text-white px-2.5 py-0.5 rounded-full">
+            <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] font-black uppercase tracking-wider bg-[#0D5E49] text-white px-2 py-0.5 rounded-full">
                   {form.targetModule === "map" ? "🗺️ Town Map Contribution" : "🏢 Directory Contribution"}
                 </span>
                 <span className="text-[10px] font-bold text-slate-300">
@@ -471,9 +471,9 @@ export default function PublicContributionForm() {
                 </span>
               </div>
 
-              <h1 className="text-xl sm:text-2xl font-black font-heading tracking-tight">{form.title}</h1>
+              <h1 className="text-base sm:text-lg font-black font-heading tracking-tight">{form.title}</h1>
               {form.description && (
-                <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
+                <p className="text-xs text-slate-300 mt-1 leading-relaxed">
                   {form.description}
                 </p>
               )}
@@ -509,23 +509,23 @@ export default function PublicContributionForm() {
             )}
 
             {/* Form Fields */}
-            <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
+            <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-3.5">
               {Object.keys(formErrors).length > 0 && (
                 <div
                   id="form-validation-summary"
                   role="alert"
                   tabIndex={-1}
-                  className="p-4 bg-red-50 border-2 border-red-300 rounded-2xl text-xs text-red-900 space-y-2.5 shadow-xs"
+                  className="p-3.5 bg-red-50 border-2 border-red-300 rounded-xl text-xs text-red-900 space-y-2 shadow-xs"
                 >
-                  <div className="flex items-center gap-2 font-extrabold text-red-800 text-sm">
-                    <AlertCircle className="w-4.5 h-4.5 text-red-600 shrink-0" />
+                  <div className="flex items-center gap-2 font-extrabold text-red-800 text-xs sm:text-sm">
+                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
                     <span>
                       {Object.keys(formErrors).length === 1
                         ? "Please check and correct the 1 highlighted field below:"
                         : `Please check and correct the ${Object.keys(formErrors).length} highlighted fields below:`}
                     </span>
                   </div>
-                  <ul className="list-disc pl-5 space-y-1.5 text-slate-700 text-xs">
+                  <ul className="list-disc pl-5 space-y-1 text-slate-700 text-xs">
                     {Object.entries(formErrors).map(([key, msg]) => {
                       const matchingField = form.fields.find((f) => f.name === key);
                       const label = matchingField ? matchingField.label : key === "_server" ? "Server Notice" : key === "_general" ? "Notice" : key;
@@ -555,7 +555,7 @@ export default function PublicContributionForm() {
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {form.fields.map((field) => {
                   const errorMsg = formErrors[field.name];
                   const isLatitude = field.type === "latitude" || field.name === "latitude";
@@ -569,9 +569,9 @@ export default function PublicContributionForm() {
                       id={`contrib-container-${field.name}`}
                       className={
                         errorMsg
-                          ? "p-4 rounded-2xl border-2 border-red-500 bg-red-50/50 shadow-xs space-y-2.5 transition-all ring-2 ring-red-200"
+                          ? "p-3 rounded-xl border-2 border-red-500 bg-red-50/50 shadow-xs space-y-1.5 transition-all ring-2 ring-red-200"
                           : isLocationField
-                          ? `p-4 rounded-2xl border space-y-2.5 transition ${
+                          ? `p-3 rounded-xl border space-y-1.5 transition ${
                               isLatitude
                                 ? "bg-emerald-50/50 border-emerald-200"
                                 : isLongitude
@@ -616,7 +616,7 @@ export default function PublicContributionForm() {
 
                       {/* Location Helper Instructions for Google Maps URL */}
                       {isGoogleMaps && (
-                        <div className="p-3 bg-white/90 border border-rose-200 rounded-xl text-[11px] text-slate-700 space-y-1 shadow-2xs">
+                        <div className="p-2.5 bg-white/90 border border-rose-200 rounded-xl text-[11px] text-slate-700 space-y-1 shadow-2xs">
                           <p className="font-bold flex items-center gap-1 text-rose-900">
                             <span>🧭 How to get your Google Maps Share Link:</span>
                           </p>
@@ -625,7 +625,7 @@ export default function PublicContributionForm() {
                             <li>Search or drop a pin at the exact location.</li>
                             <li>Tap <strong>Share</strong> &rarr; <strong>Copy Link</strong> and paste the link below.</li>
                           </ol>
-                          <p className="text-[10px] text-amber-800 font-semibold bg-amber-50 px-2 py-1 rounded border border-amber-200/80 mt-1">
+                          <p className="text-[10px] text-amber-800 font-semibold bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80 mt-0.5">
                             Note: Google Maps is strictly the only permitted location source. Links from other map services are rejected.
                           </p>
                         </div>
@@ -642,11 +642,11 @@ export default function PublicContributionForm() {
                           value={formData[field.name] || ""}
                           onChange={(e) => handleInputChange(field.name, e.target.value)}
                           placeholder={`Enter ${field.label.toLowerCase()}...`}
-                          className={`w-full px-3.5 py-2.5 bg-white border ${
+                          className={`w-full px-3 py-2 bg-white border ${
                             errorMsg
                               ? "border-red-500 ring-2 ring-red-300 bg-red-50/40 text-red-950 font-medium"
                               : "border-slate-300 text-slate-800"
-                          } rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                          } rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all`}
                         />
                       ) : field.type === "select" ? (
                         <select
@@ -656,11 +656,11 @@ export default function PublicContributionForm() {
                           aria-describedby={errorMsg ? `error-${field.name}` : undefined}
                           value={formData[field.name] || ""}
                           onChange={(e) => handleInputChange(field.name, e.target.value)}
-                          className={`w-full px-3.5 py-2.5 bg-white border ${
+                          className={`w-full px-3 h-10 sm:h-10.5 bg-white border ${
                             errorMsg
                               ? "border-red-500 ring-2 ring-red-300 bg-red-50/40 text-red-950 font-medium"
                               : "border-slate-300 text-slate-800"
-                          } rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                          } rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all`}
                         >
                           <option value="">-- Select an option --</option>
                           {(field.options || []).map((opt) => (
@@ -670,7 +670,7 @@ export default function PublicContributionForm() {
                           ))}
                         </select>
                       ) : (
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                           <input
                             id={`contrib-field-${field.name}`}
                             name={field.name}
@@ -691,11 +691,11 @@ export default function PublicContributionForm() {
                                 ? "e.g. 84.0507 (between -180 and 180)"
                                 : `Enter ${field.label.toLowerCase()}...`
                             }
-                            className={`w-full px-3.5 py-2.5 bg-white border ${
+                            className={`w-full px-3 h-10 sm:h-10.5 bg-white border ${
                               errorMsg
                                 ? "border-red-500 ring-2 ring-red-300 bg-red-50/40 text-red-950 font-medium"
                                 : "border-slate-300 text-slate-800"
-                            } rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                            } rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all`}
                           />
 
                           {/* Quick helper button under Google Maps link */}
@@ -717,7 +717,7 @@ export default function PublicContributionForm() {
                         <p
                           id={`error-${field.name}`}
                           role="alert"
-                          className="text-[11px] font-bold text-red-600 mt-1.5 flex items-center gap-1.5"
+                          className="text-[11px] font-bold text-red-600 mt-1 flex items-center gap-1.5"
                         >
                           <AlertCircle className="w-3.5 h-3.5 shrink-0 text-red-600" />
                           <span>{errorMsg}</span>
@@ -730,7 +730,7 @@ export default function PublicContributionForm() {
 
               {/* Attachments Section */}
               {form.attachmentsConfig?.enabled && (
-                <div className="pt-4 border-t border-slate-200 space-y-3">
+                <div className="pt-3 border-t border-slate-200 space-y-2.5">
                   <h4 className="text-xs font-bold text-slate-800">
                     Supporting Documents / Place Photos
                   </h4>
@@ -738,7 +738,7 @@ export default function PublicContributionForm() {
                     Upload photos, shop board images, or official document proofs (up to {form.attachmentsConfig.maxFiles} images, max {form.attachmentsConfig.maxSizeMb}MB each).
                   </p>
 
-                  <div className="p-4 bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl text-center space-y-2">
+                  <div className="p-3 bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl text-center space-y-2">
                     <input
                       type="file"
                       id="contrib-file-input"
@@ -749,7 +749,7 @@ export default function PublicContributionForm() {
                     />
                     <label
                       htmlFor="contrib-file-input"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-100 transition cursor-pointer shadow-2xs"
+                      className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-100 transition cursor-pointer shadow-2xs"
                     >
                       {uploadingFiles ? (
                         <>
@@ -765,11 +765,11 @@ export default function PublicContributionForm() {
                     </label>
 
                     {attachments.length > 0 && (
-                      <div className="flex flex-wrap gap-2 justify-center mt-3">
+                      <div className="flex flex-wrap gap-1.5 justify-center mt-2">
                         {attachments.map((url, idx) => (
                           <div
                             key={idx}
-                            className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1.5"
+                            className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 flex items-center gap-1.5"
                           >
                             <span>✓ Attached Photo #{idx + 1}</span>
                           </div>
@@ -781,9 +781,9 @@ export default function PublicContributionForm() {
               )}
 
               {/* Submitter Details & Evidence Notes */}
-              <div className="pt-4 border-t border-slate-200 space-y-4">
+              <div className="pt-3 border-t border-slate-200 space-y-2.5">
                 <h4 className="text-xs font-bold text-slate-800">Your Contact &amp; Verification Note</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">Your Name (Optional)</label>
                     <input
@@ -791,7 +791,7 @@ export default function PublicContributionForm() {
                       value={submitterName}
                       onChange={(e) => setSubmitterName(e.target.value)}
                       placeholder="e.g. Ramesh Kumar"
-                      className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      className="w-full px-3 h-10 sm:h-10.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
                     />
                   </div>
 
@@ -802,7 +802,7 @@ export default function PublicContributionForm() {
                       value={submitterContact}
                       onChange={(e) => setSubmitterContact(e.target.value)}
                       placeholder="For verification follow-up if needed"
-                      className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      className="w-full px-3 h-10 sm:h-10.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -814,17 +814,17 @@ export default function PublicContributionForm() {
                     value={evidenceNotes}
                     onChange={(e) => setEvidenceNotes(e.target.value)}
                     placeholder="Provide any details that will help the administrator verify your proposed coordinates or information (e.g. 'I am the shop owner', 'Census 2011 code', etc.)"
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
                   />
                 </div>
               </div>
 
               {/* Submit Button */}
-              <div className="pt-4 border-t border-slate-200">
+              <div className="pt-3 border-t border-slate-200">
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-3.5 bg-[#0D5E49] hover:bg-emerald-800 text-white text-sm font-extrabold rounded-2xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="w-full h-10 sm:h-11 bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs sm:text-sm font-extrabold rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {submitting ? (
                     <>
@@ -838,7 +838,7 @@ export default function PublicContributionForm() {
                     </>
                   )}
                 </button>
-                <p className="text-[11px] text-slate-500 text-center mt-2">
+                <p className="text-[10px] text-slate-500 text-center mt-1.5">
                   Submissions are reviewed by town administrators. Live data will update once verified.
                 </p>
               </div>

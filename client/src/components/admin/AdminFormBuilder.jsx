@@ -509,7 +509,7 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
     if (!previewForm) return null;
     return (
       <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in duration-150">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full my-auto max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in duration-150">
           <div className="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-emerald-400" />

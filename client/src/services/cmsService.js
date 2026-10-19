@@ -504,29 +504,36 @@ export const DEFAULT_EVENTS = [
 /**
  * Invalidates the in-memory cache and broadcasts an immediate update event.
  */
+let isClearingCache = false;
 export function clearCMSCache(key, broadcast = true) {
-  if (key && memoryCache[key]) {
-    memoryCache[key] = { data: null, timestamp: 0 };
-    try {
-      localStorage.removeItem(`fazilnagar_cms_${key}`);
-    } catch (_) {}
-  } else if (!key) {
-    Object.keys(memoryCache).forEach((k) => {
-      memoryCache[k] = { data: null, timestamp: 0 };
-      try {
-        localStorage.removeItem(`fazilnagar_cms_${k}`);
-      } catch (_) {}
-    });
-  }
-
+  if (isClearingCache) return;
+  isClearingCache = true;
   try {
-    const stamp = Date.now().toString();
-    localStorage.setItem("fazilnagar_cms_cache_bust", stamp);
-    window.dispatchEvent(new CustomEvent("cms-cache-cleared", { detail: { key, stamp } }));
-    if (broadcast && liveBroadcastChannel) {
-      liveBroadcastChannel.postMessage({ type: "CMS_UPDATE", key, stamp });
+    if (key && memoryCache[key]) {
+      memoryCache[key] = { data: null, timestamp: 0 };
+      try {
+        localStorage.removeItem(`fazilnagar_cms_${key}`);
+      } catch (_) {}
+    } else if (!key) {
+      Object.keys(memoryCache).forEach((k) => {
+        memoryCache[k] = { data: null, timestamp: 0 };
+        try {
+          localStorage.removeItem(`fazilnagar_cms_${k}`);
+        } catch (_) {}
+      });
     }
-  } catch (_) {}
+
+    try {
+      const stamp = Date.now().toString();
+      localStorage.setItem("fazilnagar_cms_cache_bust", stamp);
+      window.dispatchEvent(new CustomEvent("cms-cache-cleared", { detail: { key, stamp } }));
+      if (broadcast && liveBroadcastChannel) {
+        liveBroadcastChannel.postMessage({ type: "CMS_UPDATE", key, stamp });
+      }
+    } catch (_) {}
+  } finally {
+    isClearingCache = false;
+  }
 }
 
 /**
@@ -554,7 +561,11 @@ const handleVisibility = () => {
 };
 
 function triggerAll(info) {
-  clearCMSCache(undefined, false);
+  if (info.source !== "local") {
+    Object.keys(memoryCache).forEach((k) => {
+      memoryCache[k] = { data: null, timestamp: 0 };
+    });
+  }
   liveSubscribers.forEach((cb) => {
     try {
       cb(info);

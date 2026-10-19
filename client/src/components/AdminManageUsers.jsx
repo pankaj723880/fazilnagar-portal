@@ -477,8 +477,8 @@ export default function AdminManageUsers({ token, currentAdminUser }) {
 
       {/* Edit Profile Modal */}
       {editingUser && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 max-w-md w-full my-auto max-h-[90vh] shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <Edit className="w-4 h-4 text-[#18232E]" />
@@ -499,7 +499,7 @@ export default function AdminManageUsers({ token, currentAdminUser }) {
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-[#18232E] focus:bg-white text-xs font-medium"
+                  className="w-full h-10 sm:h-10.5 px-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#18232E] focus:bg-white text-xs font-medium"
                   required
                 />
               </div>
@@ -510,7 +510,7 @@ export default function AdminManageUsers({ token, currentAdminUser }) {
                   type="email"
                   value={editingUser.email}
                   disabled
-                  className="w-full bg-slate-100 border border-slate-200 rounded-xl p-2.5 text-slate-500 text-xs font-mono"
+                  className="w-full h-10 sm:h-10.5 px-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 text-xs font-mono"
                   title="Email cannot be changed"
                 />
               </div>
@@ -522,7 +522,7 @@ export default function AdminManageUsers({ token, currentAdminUser }) {
                   placeholder="e.g. +91 98765 43210"
                   value={editPhone}
                   onChange={(e) => setEditPhone(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-[#18232E] focus:bg-white text-xs font-medium"
+                  className="w-full h-10 sm:h-10.5 px-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#18232E] focus:bg-white text-xs font-medium"
                 />
               </div>
 
@@ -532,7 +532,7 @@ export default function AdminManageUsers({ token, currentAdminUser }) {
                   <select
                     value={editRole}
                     onChange={(e) => setEditRole(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none text-xs font-medium cursor-pointer"
+                    className="w-full h-10 sm:h-10.5 px-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-medium cursor-pointer"
                   >
                     <option value="user">Citizen (User)</option>
                     <option value="admin">Administrator</option>
@@ -544,7 +544,7 @@ export default function AdminManageUsers({ token, currentAdminUser }) {
                   <select
                     value={editStatus}
                     onChange={(e) => setEditStatus(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none text-xs font-medium cursor-pointer"
+                    className="w-full h-10 sm:h-10.5 px-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-medium cursor-pointer"
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -577,8 +577,8 @@ export default function AdminManageUsers({ token, currentAdminUser }) {
 
       {/* Delete User Confirm Modal */}
       {deleteConfirmUser && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 text-center space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 max-w-sm w-full my-auto shadow-2xl border border-slate-200 text-center space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto">
               <ShieldAlert className="w-6 h-6" />
             </div>
@@ -618,8 +618,8 @@ export default function AdminManageUsers({ token, currentAdminUser }) {
 
       {/* User Submissions Drawer */}
       {viewingUserSubmissions && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-slate-200 space-y-4 max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 max-w-lg w-full my-auto shadow-2xl border border-slate-200 space-y-4 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 className="text-base font-extrabold text-slate-900">Submitted Community Places</h3>

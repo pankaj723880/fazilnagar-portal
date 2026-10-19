@@ -2310,8 +2310,8 @@ export default function TownPortal() {
           INTERACTIVE MODALS: SUGGESTION, CORRECTION & EVENT
           ======================================================== */}
       {modalType && (
-        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 transition-all duration-300">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative border border-[#E1E6EA] animate-modal-pop">
+        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto transition-all duration-300">
+          <div className="bg-white rounded-2xl max-w-md sm:max-w-lg w-full my-auto p-4 sm:p-5 shadow-2xl relative border border-[#E1E6EA] animate-modal-pop max-h-[90dvh] overflow-y-auto">
             <button
               onClick={() => setModalType(null)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1 rounded-full hover:bg-slate-100"
@@ -2374,13 +2374,13 @@ export default function TownPortal() {
                       name="title"
                       required
                       placeholder="e.g. Mahavir Peda Bhandar, Sharma Optical"
-                      className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#B8323C]"
+                      className="w-full h-10 sm:h-10.5 px-3 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#B8323C]"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block font-semibold text-[#18232E] mb-1">Category *</label>
-                      <select name="category" required className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none bg-white">
+                      <select name="category" required className="w-full h-10 sm:h-10.5 px-2.5 rounded-xl border border-[#E1E6EA] outline-none bg-white">
                         <option value="">Select Category</option>
                         {EXPLORE_21_CATEGORIES.map((c) => (
                           <option key={c.id} value={c.name}>{c.name}</option>
@@ -2393,7 +2393,7 @@ export default function TownPortal() {
                         type="tel"
                         name="phone"
                         placeholder="Verified 10 digits"
-                        className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#B8323C]"
+                        className="w-full h-10 sm:h-10.5 px-3 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#B8323C]"
                       />
                     </div>
                   </div>
@@ -2404,13 +2404,13 @@ export default function TownPortal() {
                       name="landmark"
                       required
                       placeholder="e.g. Near Kasya Highway Crossing, Babu Bazar"
-                      className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#B8323C]"
+                      className="w-full h-10 sm:h-10.5 px-3 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#B8323C]"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-[#18232E] hover:bg-[#B8323C] text-white font-bold py-2.5 rounded-xl transition mt-2 shadow-xs cursor-pointer disabled:opacity-50"
+                    className="w-full h-10 sm:h-10.5 flex items-center justify-center bg-[#18232E] hover:bg-[#B8323C] text-white font-bold rounded-xl transition mt-2 shadow-xs cursor-pointer disabled:opacity-50"
                   >
                     {isSubmitting ? "Submitting for Moderation..." : "Submit Place for Moderation"}
                   </button>
@@ -2438,7 +2438,7 @@ export default function TownPortal() {
                       name="title"
                       required
                       placeholder="Name of school, clinic, or shop"
-                      className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-amber-600"
+                      className="w-full h-10 sm:h-10.5 px-3 rounded-xl border border-[#E1E6EA] outline-none focus:border-amber-600"
                     />
                   </div>
                   <div>
@@ -2454,7 +2454,7 @@ export default function TownPortal() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-[#18232E] hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl transition shadow-xs cursor-pointer disabled:opacity-50"
+                    className="w-full h-10 sm:h-10.5 flex items-center justify-center bg-[#18232E] hover:bg-amber-700 text-white font-bold rounded-xl transition shadow-xs cursor-pointer disabled:opacity-50"
                   >
                     {isSubmitting ? "Sending Report..." : "Send Correction Report"}
                   </button>
@@ -2482,7 +2482,7 @@ export default function TownPortal() {
                       name="title"
                       required
                       placeholder="e.g. Free Blood Donation Camp, Sports Meet"
-                      className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#0D5E49]"
+                      className="w-full h-10 sm:h-10.5 px-3 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#0D5E49]"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -2492,7 +2492,7 @@ export default function TownPortal() {
                         type="date"
                         name="eventDate"
                         required
-                        className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#0D5E49]"
+                        className="w-full h-10 sm:h-10.5 px-3 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#0D5E49]"
                       />
                     </div>
                     <div>
@@ -2502,7 +2502,7 @@ export default function TownPortal() {
                         name="venue"
                         required
                         placeholder="e.g. College Ground, CHC"
-                        className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#0D5E49]"
+                        className="w-full h-10 sm:h-10.5 px-3 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#0D5E49]"
                       />
                     </div>
                   </div>
@@ -2513,13 +2513,13 @@ export default function TownPortal() {
                       name="organizer"
                       required
                       placeholder="Name of school, hospital, or trust"
-                      className="w-full p-2.5 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#0D5E49]"
+                      className="w-full h-10 sm:h-10.5 px-3 rounded-xl border border-[#E1E6EA] outline-none focus:border-[#0D5E49]"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-[#0D5E49] hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition shadow-xs cursor-pointer disabled:opacity-50"
+                    className="w-full h-10 sm:h-10.5 flex items-center justify-center bg-[#0D5E49] hover:bg-emerald-700 text-white font-bold rounded-xl transition shadow-xs cursor-pointer disabled:opacity-50"
                   >
                     {isSubmitting ? "Broadcasting Event..." : "Broadcast Event"}
                   </button>
