@@ -170,6 +170,11 @@ export default function App() {
   const isAdminPage = location.pathname.startsWith("/admin");
   const isMessagesPage = location.pathname.startsWith("/messages");
 
+  const isAuthPage =
+    location.pathname === "/login" ||
+    location.pathname === "/register" ||
+    location.pathname === "/forgot-password";
+
   const isPublicFormPage =
     !isAdminPage &&
     (location.pathname.startsWith("/contribute") ||
@@ -603,6 +608,8 @@ export default function App() {
             ? "pt-16 sm:pt-[96px] pb-14 sm:pb-0 p-0 m-0 overflow-hidden"
             : isMessagesPage
             ? "pt-16 sm:pt-[96px] pb-0 p-0 m-0 overflow-hidden h-[100dvh] max-h-[100dvh] box-border flex flex-col"
+            : isAuthPage || isPublicFormPage
+            ? "pt-16 sm:pt-[96px] pb-0 p-0 m-0 w-full max-w-full flex-1 flex flex-col"
             : isPortalPage
             ? (isMobilePreview ? "pt-0 pb-16" : "pt-0 md:pt-[96px] pb-16 sm:pb-8")
             : hasSubNav
@@ -610,7 +617,7 @@ export default function App() {
             : "pt-[76px] sm:pt-[112px] pb-24 sm:pb-8 max-w-7xl mx-auto px-3 sm:px-6"
         }`}
       >
-        <div className={isNewsPage || isMessagesPage ? "w-full flex-1 min-h-0 flex flex-col overflow-hidden" : isPortalPage ? "w-full" : "w-full"}>
+        <div className={isNewsPage || isMessagesPage ? "w-full flex-1 min-h-0 flex flex-col overflow-hidden" : isAuthPage || isPublicFormPage ? "w-full flex-1 min-h-0 flex flex-col" : "w-full"}>
           <ErrorBoundary>
             <Suspense fallback={<CivicRouteSkeleton />}>
             <div
@@ -618,6 +625,8 @@ export default function App() {
               className={
                 isNewsPage || isMessagesPage
                   ? "w-full flex-1 min-h-0 flex flex-col overflow-hidden animate-page-enter"
+                  : isAuthPage || isPublicFormPage
+                  ? "w-full flex-1 min-h-0 flex flex-col animate-page-enter"
                   : "w-full animate-page-enter"
               }
             >
@@ -716,7 +725,7 @@ export default function App() {
           (Hidden on /news full-screen reels page and TownPortal homepage which has its own footer)
           ======================================================== */}
       {!isNewsPage && !isPortalPage && !isAdminPage && !isMessagesPage && !hideLayoutOnAreaDetails && (
-        <footer className="bg-[#18232E] text-slate-400 text-xs mt-12 border-t border-slate-800 pb-28 sm:pb-8">
+        <footer className={`bg-[#18232E] text-slate-400 text-xs border-t border-slate-800 pb-28 sm:pb-8 ${isAuthPage || isPublicFormPage ? "mt-0" : "mt-12"}`}>
           {/* Mobile Collapsible Accordions (md:hidden) */}
           <div className="md:hidden max-w-lg mx-auto px-4 py-6 space-y-2.5">
             {/* Custom Brand Title Block */}

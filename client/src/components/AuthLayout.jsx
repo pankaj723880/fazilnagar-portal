@@ -22,8 +22,12 @@ export default function AuthLayout({
 }) {
   return (
     <div
-      className="min-h-[calc(100dvh-64px)] w-full flex-1 flex flex-col items-center justify-center py-4 sm:py-6 px-3.5 sm:px-6 relative bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: "url('/images/fzn.png')" }}
+      className="min-h-[calc(100dvh-64px)] sm:min-h-[calc(100dvh-96px)] w-full flex-1 flex flex-col items-center justify-center py-4 sm:py-6 px-3.5 sm:px-6 relative bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: "url('/images/fzn.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
     >
       {/* Subtle translucent warm cream overlay in light mode, deep navy overlay in dark mode */}
       <div
