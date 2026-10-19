@@ -87,14 +87,18 @@ export default function GoogleSignInButton({ setUser, redirectPath = "/", onErro
 
         if (buttonRef.current) {
           buttonRef.current.innerHTML = "";
+          const containerWidth = buttonRef.current.offsetWidth || (window.innerWidth ? Math.min(360, window.innerWidth - 64) : 340);
+          const computedWidth = Math.min(380, Math.max(220, containerWidth));
+          const isDark = document.documentElement.classList.contains("theme-dark");
+
           window.google.accounts.id.renderButton(buttonRef.current, {
             type: "standard",
             shape: "rectangular",
-            theme: "outline",
+            theme: isDark ? "filled_black" : "outline",
             text: "continue_with",
             size: "large",
             logo_alignment: "left",
-            width: 380,
+            width: computedWidth,
           });
         }
         setGoogleScriptReady(true);
@@ -139,15 +143,16 @@ export default function GoogleSignInButton({ setUser, redirectPath = "/", onErro
   return (
     <div className="w-full flex flex-col items-center">
       {loading && (
-        <div className="text-xs text-slate-500 font-medium my-2 animate-pulse">
-          Authenticating with Google...
+        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium my-2 animate-pulse flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-red-700 animate-ping" />
+          <span>Authenticating with Google...</span>
         </div>
       )}
 
       {/* Official Google Button Container */}
       <div
         ref={buttonRef}
-        className={`w-full flex justify-center ${loading ? "opacity-50 pointer-events-none" : ""}`}
+        className={`w-full flex justify-center max-w-full overflow-hidden ${loading ? "opacity-50 pointer-events-none" : ""}`}
       />
 
       {/* Fallback Custom Button if GIS standard button has not mounted */}
@@ -156,9 +161,9 @@ export default function GoogleSignInButton({ setUser, redirectPath = "/", onErro
           type="button"
           onClick={handleFallbackClick}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 transition shadow-sm hover:shadow"
+          className="w-full h-11 flex items-center justify-center gap-3 px-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 transition shadow-sm hover:shadow active:scale-[0.99] cursor-pointer"
         >
-          <svg className="w-4 h-4" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"

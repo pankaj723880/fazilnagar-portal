@@ -1,9 +1,28 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
+import {
+  User,
+  AtSign,
+  Phone,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Loader2,
+  ArrowRight,
+  Clock,
+  RotateCcw,
+  CheckCircle2,
+  Edit2,
+  Users,
+  ShieldCheck,
+  MailCheck,
+} from "lucide-react";
 import API from "../api";
 import { setAuthSession } from "../utils/authStorage";
 import { usePageSEO } from "../utils/seo";
 import GoogleSignInButton from "../components/GoogleSignInButton";
+import AuthLayout from "../components/AuthLayout";
 
 export default function Register({ setUser }) {
   usePageSEO({
@@ -21,6 +40,7 @@ export default function Register({ setUser }) {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const [otp, setOtp] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -67,13 +87,14 @@ export default function Register({ setUser }) {
         password,
       });
 
-      setSuccessMsg(res.data.message || "Verification code sent to your email.");
+      setSuccessMsg(res.data?.message || "Verification code dispatched to your email address.");
       setStep("otp");
       setResendCooldown(60);
       setExpirySeconds(600);
     } catch (err) {
+      setSuccessMsg(""); // Ensure success is never shown on delivery or validation failure
       const serverMessage =
-        err.response?.data?.message || err.message || "Registration failed. Try again.";
+        err.response?.data?.message || err.message || "Registration failed. Please check your details and try again.";
       setError(serverMessage);
     } finally {
       setLoading(false);
@@ -100,7 +121,7 @@ export default function Register({ setUser }) {
       navigate(redirectPath, { replace: true });
     } catch (err) {
       const serverMessage =
-        err.response?.data?.message || err.message || "Invalid verification code.";
+        err.response?.data?.message || err.message || "Invalid or expired verification code.";
       setError(serverMessage);
     } finally {
       setLoading(false);
@@ -118,11 +139,13 @@ export default function Register({ setUser }) {
       const res = await API.post("/auth/register/resend", {
         email: email.trim(),
       });
-      setSuccessMsg(res.data.message || "A new verification code has been sent.");
+      setSuccessMsg(res.data?.message || "A new 6-digit verification code has been sent.");
       setResendCooldown(60);
       setExpirySeconds(600);
+      setOtp("");
     } catch (err) {
-      const msg = err.response?.data?.message || "Failed to resend verification code.";
+      setSuccessMsg("");
+      const msg = err.response?.data?.message || err.message || "Failed to resend verification code.";
       setError(msg);
     } finally {
       setLoading(false);
@@ -136,32 +159,35 @@ export default function Register({ setUser }) {
   };
 
   return (
-    <div className="max-w-md mx-auto my-10 bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
-      <h2 className="text-2xl font-bold text-center text-slate-800 mb-2">
-        {step === "form" ? "Create Account / नया खाता" : "Verify Email / ईमेल सत्यापन"}
-      </h2>
-      <p className="text-xs text-center text-slate-500 mb-6">
-        {step === "form"
-          ? "Join Fazilnagar Town Portal community as a verified citizen"
-          : `Enter the 6-digit verification code sent to ${email}`}
-      </p>
-
-      {error && (
-        <div className="bg-red-50 text-red-600 p-3 rounded-xl text-xs font-semibold mb-4 text-center border border-red-100">
-          {error}
-        </div>
-      )}
-
-      {successMsg && (
-        <div className="bg-emerald-50 text-emerald-700 p-3 rounded-xl text-xs font-semibold mb-4 text-center border border-emerald-100">
-          {successMsg}
-        </div>
-      )}
-
+    <AuthLayout
+      title={step === "form" ? "Create Citizen Account / नया खाता" : "Verify Email / ईमेल सत्यापन"}
+      subtitle={
+        step === "form"
+          ? "Join Fazilnagar Town Portal community as a verified citizen to submit local updates and access civic resources."
+          : `We dispatched a 6-digit security code to verify your account registration.`
+      }
+      currentStep={step === "form" ? 1 : 2}
+      totalSteps={2}
+      stepLabel={step === "form" ? "Citizen Details" : "Email Verification"}
+      error={error}
+      success={successMsg}
+      maxWidth={step === "form" ? "max-w-lg" : "max-w-md"}
+      illustration={
+        step === "form" ? (
+          <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-red-600/10 via-amber-500/15 to-red-700/15 border border-red-200/80 dark:border-red-900/50 flex items-center justify-center text-red-700 dark:text-red-400 shadow-xs">
+            <Users className="w-7 h-7" />
+          </div>
+        ) : (
+          <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-amber-500/15 via-red-500/10 to-amber-600/15 border border-amber-200/80 dark:border-amber-900/50 flex items-center justify-center text-red-700 dark:text-amber-400 shadow-xs">
+            <Mail className="w-7 h-7" />
+          </div>
+        )
+      }
+    >
       {step === "form" ? (
         <>
           {/* Google Sign-in */}
-          <div className="mb-5">
+          <div className="mb-6">
             <GoogleSignInButton
               setUser={setUser}
               redirectPath={redirectPath}
@@ -169,111 +195,195 @@ export default function Register({ setUser }) {
             />
           </div>
 
-          <div className="relative my-5">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200" />
+          {/* SaaS Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center" aria-hidden="true">
+              <div className="w-full border-t border-slate-200 dark:border-slate-800" />
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-white px-3 text-slate-400 font-medium">Or register with email / या ईमेल से</span>
+              <span className="bg-white/90 dark:bg-[#151F2E]/90 px-3 text-slate-400 dark:text-slate-500 font-medium">
+                Or register with email / या ईमेल द्वारा
+              </span>
             </div>
           </div>
 
           <form onSubmit={handleInitiateRegister} className="space-y-4">
+            {/* Full Name */}
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Full Name / पूरा नाम</label>
-              <input
-                type="text"
-                value={name}
-                autoComplete="name"
-                maxLength={50}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-red-600 text-sm"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Username / यूज़रनेम (@handle)</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                Full Name / पूरा नाम <span className="text-red-600 dark:text-red-400">*</span>
+              </label>
               <div className="relative">
-                <span className="absolute left-3.5 top-2.5 text-xs text-slate-400 font-mono">@</span>
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                  <User className="w-4 h-4" />
+                </span>
                 <input
                   type="text"
-                  value={username}
-                  autoComplete="username"
-                  maxLength={20}
-                  placeholder="e.g. rahul_kumar"
-                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
-                  className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-red-600 text-sm font-mono"
+                  value={name}
+                  autoComplete="name"
+                  maxLength={50}
+                  placeholder="e.g. Ramesh Kumar"
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full h-11 sm:h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1A2637] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-red-600 focus:ring-4 focus:ring-red-600/15 text-sm transition-all"
+                  required
                 />
               </div>
-              <span className="text-[10px] text-slate-400">Used for Fazilnagar town messaging handle.</span>
             </div>
 
+            {/* Username & Mobile Number (2-Column Grid on sm+ screens) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Username */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Username / यूज़रनेम
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500 font-mono text-xs">
+                    @
+                  </span>
+                  <input
+                    type="text"
+                    value={username}
+                    autoComplete="username"
+                    maxLength={20}
+                    placeholder="ramesh_kumar"
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                    className="w-full h-11 sm:h-12 pl-8 pr-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1A2637] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-red-600 focus:ring-4 focus:ring-red-600/15 text-sm font-mono transition-all"
+                  />
+                </div>
+                <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                  Unique handle (3-20 chars)
+                </span>
+              </div>
+
+              {/* Mobile Phone */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Mobile / मोबाइल नंबर
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500 font-mono text-xs">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    value={phone}
+                    autoComplete="tel"
+                    maxLength={15}
+                    placeholder="9876543210"
+                    onChange={(e) => setPhone(e.target.value.replace(/[^0-9+\s-]/g, ""))}
+                    className="w-full h-11 sm:h-12 pl-12 pr-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1A2637] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-red-600 focus:ring-4 focus:ring-red-600/15 text-sm font-mono transition-all"
+                  />
+                </div>
+                <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                  Optional: For local alerts
+                </span>
+              </div>
+            </div>
+
+            {/* Email Field */}
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Mobile Number / मोबाइल नंबर</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                Email Address / ईमेल पता <span className="text-red-600 dark:text-red-400">*</span>
+              </label>
               <div className="relative">
-                <span className="absolute left-3.5 top-2.5 text-xs text-slate-400 font-mono">+91</span>
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                  <Mail className="w-4 h-4" />
+                </span>
                 <input
-                  type="tel"
-                  value={phone}
-                  autoComplete="tel"
-                  maxLength={15}
-                  placeholder="9876543210"
-                  onChange={(e) => setPhone(e.target.value.replace(/[^0-9+\s-]/g, ""))}
-                  className="w-full pl-12 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-red-600 text-sm font-mono"
+                  type="email"
+                  value={email}
+                  autoComplete="email"
+                  placeholder="name@example.com"
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full h-11 sm:h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1A2637] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-red-600 focus:ring-4 focus:ring-red-600/15 text-sm transition-all"
+                  required
                 />
               </div>
-              <span className="text-[10px] text-slate-400">Optional: Must be unique if provided.</span>
             </div>
 
+            {/* Password Field */}
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Email Address / ईमेल</label>
-              <input
-                type="email"
-                value={email}
-                autoComplete="email"
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-red-600 text-sm"
-                required
-              />
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                Password / पासवर्ड <span className="text-red-600 dark:text-red-400">*</span>
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                  <Lock className="w-4 h-4" />
+                </span>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  autoComplete="new-password"
+                  minLength={6}
+                  placeholder="••••••••"
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full h-11 sm:h-12 pl-10 pr-11 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1A2637] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-red-600 focus:ring-4 focus:ring-red-600/15 text-sm transition-all"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                Must be at least 6 characters long
+              </span>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Password / पासवर्ड</label>
-              <input
-                type="password"
-                value={password}
-                autoComplete="new-password"
-                minLength={6}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-red-600 text-sm"
-                required
-              />
-              <span className="text-[10px] text-slate-400">Must be at least 6 characters long.</span>
-            </div>
-
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-colors shadow-md disabled:opacity-50 text-sm cursor-pointer"
+              className="w-full h-11 sm:h-12 mt-2 bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold rounded-xl transition-all shadow-sm hover:shadow-md hover:shadow-red-950/10 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none text-sm cursor-pointer flex items-center justify-center gap-2"
             >
-              {loading ? "Sending verification code..." : "Send Verification Code / कोड भेजें"}
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Sending verification code...</span>
+                </>
+              ) : (
+                <>
+                  <span>Send Verification Code / कोड भेजें</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
+
+            {/* Email verification helper badge */}
+            <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 pt-1">
+              <MailCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>A 6-digit verification code will be sent to your email</span>
+            </div>
           </form>
 
-          <p className="text-center text-xs text-slate-500 mt-6">
-            Already have an account?{" "}
-            <Link to="/login" className="text-red-700 font-bold hover:underline">
+          {/* Switch to Login Link */}
+          <div className="text-center text-xs text-slate-500 dark:text-slate-400 mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">
+            <span>Already have an account? / पहले से खाता है? </span>
+            <Link
+              to="/login"
+              className="text-red-700 dark:text-red-400 font-bold hover:underline inline-flex items-center gap-1 transition-colors"
+            >
               Login here / लॉगिन करें
             </Link>
-          </p>
+          </div>
         </>
       ) : (
         /* STEP 2: OTP VERIFICATION UI */
         <div className="space-y-5">
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center">
-            <span className="text-[11px] text-slate-500 uppercase font-semibold">Verification Code Sent To</span>
-            <div className="text-sm font-bold text-slate-800 mt-0.5">{email}</div>
+          {/* Destination Email Summary Card */}
+          <div className="bg-slate-50 dark:bg-[#1A2637] p-4 rounded-2xl border border-slate-200 dark:border-slate-700/80 text-center transition-colors">
+            <div className="flex items-center justify-center gap-1.5 text-[11px] uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400">
+              <Mail className="w-3.5 h-3.5" />
+              <span>Verification Code Dispatched To</span>
+            </div>
+            <div className="text-sm font-bold text-slate-900 dark:text-white mt-1 break-all">
+              {email}
+            </div>
             <button
               type="button"
               onClick={() => {
@@ -281,56 +391,79 @@ export default function Register({ setUser }) {
                 setError("");
                 setSuccessMsg("");
               }}
-              className="text-xs text-red-700 font-medium hover:underline mt-1"
+              className="inline-flex items-center gap-1 text-xs text-red-700 dark:text-red-400 font-semibold hover:underline mt-2 cursor-pointer transition-colors"
             >
-              Change Email / ईमेल बदलें
+              <Edit2 className="w-3 h-3" />
+              <span>Change Email / ईमेल बदलें</span>
             </button>
           </div>
 
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-semibold text-slate-700">6-Digit Code / 6-अंकों का कोड</label>
-                <span className="text-xs font-mono font-bold text-slate-500">
-                  Expires in: {formatTime(expirySeconds)}
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  6-Digit Security Code / 6-अंकों का कोड
+                </label>
+                <span className="inline-flex items-center gap-1 text-xs font-mono font-bold text-slate-500 dark:text-slate-400">
+                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Expires in: {formatTime(expirySeconds)}</span>
                 </span>
               </div>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={6}
-                value={otp}
-                autoFocus
-                placeholder="123456"
-                onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
-                className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:border-red-600 text-center text-2xl font-mono tracking-[0.5em] font-extrabold text-slate-800"
-                required
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  value={otp}
+                  autoFocus
+                  placeholder="••••••"
+                  onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
+                  className="w-full h-14 sm:h-16 px-4 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1A2637] text-slate-900 dark:text-white focus:outline-none focus:border-red-600 focus:ring-4 focus:ring-red-600/15 text-center text-3xl font-mono tracking-[0.4em] sm:tracking-[0.6em] font-extrabold transition-all"
+                  required
+                />
+              </div>
+              <span className="block text-[11px] text-slate-400 dark:text-slate-500 text-center mt-1.5">
+                Check your inbox or spam folder for your 6-digit registration code.
+              </span>
             </div>
 
             <button
               type="submit"
               disabled={loading || otp.length !== 6 || expirySeconds <= 0}
-              className="w-full py-3 bg-red-700 hover:bg-red-800 text-white font-bold rounded-xl transition-colors shadow-md disabled:opacity-50 text-sm cursor-pointer"
+              className="w-full h-11 sm:h-12 bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold rounded-xl transition-all shadow-sm hover:shadow-md hover:shadow-red-950/10 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none text-sm cursor-pointer flex items-center justify-center gap-2"
             >
-              {loading ? "Verifying..." : "Verify & Activate Account / खाता सक्रिय करें"}
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Activating Account...</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-4 h-4 text-emerald-300" />
+                  <span>Verify & Activate Account / खाता सक्रिय करें</span>
+                </>
+              )}
             </button>
           </form>
 
-          <div className="flex items-center justify-between pt-2 text-xs border-t border-slate-100">
-            <span className="text-slate-500">Didn't receive the code?</span>
+          {/* Resend Cooldown Section */}
+          <div className="flex items-center justify-between pt-3 text-xs border-t border-slate-100 dark:border-slate-800">
+            <span className="text-slate-500 dark:text-slate-400">Didn't receive the code?</span>
             <button
               type="button"
               onClick={handleResendOtp}
               disabled={resendCooldown > 0 || loading}
-              className="text-red-700 font-bold hover:underline disabled:text-slate-400 disabled:no-underline cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-red-700 dark:text-red-400 font-bold hover:underline disabled:text-slate-400 dark:disabled:text-slate-600 disabled:no-underline cursor-pointer transition-colors"
             >
-              {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend Code / पुनः भेजें"}
+              <RotateCcw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+              <span>
+                {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend Code / पुनः भेजें"}
+              </span>
             </button>
           </div>
         </div>
       )}
-    </div>
+    </AuthLayout>
   );
 }
