@@ -341,17 +341,385 @@ html[data-public-theme="dark"] {
   --civic-shadow-hover: 0 6px 22px rgba(0, 0, 0, 0.6);
 }
 
+/* ==========================================================================
+   12 CURATED THEMES SYSTEM (Light & Dark Mode Overrides)
+   ========================================================================== */
+
+/* 1. Heritage Ivory + Terracotta (Canonical Default - declared above) */
+html[data-theme-id="heritage-terracotta"][data-public-theme="light"] {
+  --heritage-bg: #F7F3EB;
+  --heritage-surface: #FFFFFF;
+  --heritage-surface-secondary: #EEE7DA;
+  --heritage-text-primary: #292722;
+  --heritage-text-secondary: #6F6A61;
+  --heritage-action: #A83D32;
+  --heritage-action-hover: #873027;
+  --heritage-accent: #B3945B;
+  --heritage-border: #DED5C7;
+}
+html[data-theme-id="heritage-terracotta"][data-public-theme="dark"] {
+  --heritage-bg: #191916;
+  --heritage-surface: #24231F;
+  --heritage-surface-secondary: #302D27;
+  --heritage-text-primary: #F5F0E7;
+  --heritage-text-secondary: #C0B8AA;
+  --heritage-action: #C45A4C;
+  --heritage-action-hover: #D36B5D;
+  --heritage-accent: #C5A66A;
+  --heritage-border: #484238;
+}
+
+/* 2. Graphite Royale */
+html[data-theme-id="graphite-royale"][data-public-theme="light"] {
+  --heritage-bg: #F7F6F2;
+  --heritage-surface: #FFFFFF;
+  --heritage-surface-secondary: #EFEEE9;
+  --heritage-text-primary: #202124;
+  --heritage-text-secondary: #626262;
+  --heritage-action: #A78650;
+  --heritage-action-hover: #8E7042;
+  --heritage-accent: #D4AF37;
+  --heritage-border: #E4E0D8;
+}
+html[data-theme-id="graphite-royale"][data-public-theme="dark"] {
+  --heritage-bg: #101114;
+  --heritage-surface: #24242A;
+  --heritage-surface-secondary: #19191E;
+  --heritage-text-primary: #F5F1E9;
+  --heritage-text-secondary: #B6B4B0;
+  --heritage-action: #C5A46D;
+  --heritage-action-hover: #D8BA85;
+  --heritage-accent: #E2C889;
+  --heritage-border: #38383E;
+}
+
+/* 3. Pawanagar Emerald */
+html[data-theme-id="pawanagar-emerald"][data-public-theme="light"] {
+  --heritage-bg: #F4F8F5;
+  --heritage-surface: #FFFFFF;
+  --heritage-surface-secondary: #E5EFE8;
+  --heritage-text-primary: #182C22;
+  --heritage-text-secondary: #586F62;
+  --heritage-action: #1B6E4A;
+  --heritage-action-hover: #145538;
+  --heritage-accent: #C99700;
+  --heritage-border: #CFE1D5;
+}
+html[data-theme-id="pawanagar-emerald"][data-public-theme="dark"] {
+  --heritage-bg: #0E1B14;
+  --heritage-surface: #162A1F;
+  --heritage-surface-secondary: #1F3A2C;
+  --heritage-text-primary: #EBF7F0;
+  --heritage-text-secondary: #A6C9B4;
+  --heritage-action: #2E9E6D;
+  --heritage-action-hover: #3CC489;
+  --heritage-accent: #E5B32A;
+  --heritage-border: #2C523E;
+}
+
+/* 4. Kushinagar Ochre */
+html[data-theme-id="kushinagar-ochre"][data-public-theme="light"] {
+  --heritage-bg: #FDF8F0;
+  --heritage-surface: #FFFFFF;
+  --heritage-surface-secondary: #F6ECE0;
+  --heritage-text-primary: #2C1E14;
+  --heritage-text-secondary: #7A6658;
+  --heritage-action: #C0681A;
+  --heritage-action-hover: #9F5310;
+  --heritage-accent: #9E3D22;
+  --heritage-border: #EAD7C5;
+}
+html[data-theme-id="kushinagar-ochre"][data-public-theme="dark"] {
+  --heritage-bg: #1B140E;
+  --heritage-surface: #281E15;
+  --heritage-surface-secondary: #35291E;
+  --heritage-text-primary: #FDF1E6;
+  --heritage-text-secondary: #CBB29E;
+  --heritage-action: #E08534;
+  --heritage-action-hover: #F39B4B;
+  --heritage-accent: #D66245;
+  --heritage-border: #4B3827;
+}
+
+/* 5. Vedic Indigo */
+html[data-theme-id="vedic-indigo"][data-public-theme="light"] {
+  --heritage-bg: #F2F5FA;
+  --heritage-surface: #FFFFFF;
+  --heritage-surface-secondary: #E4EBF5;
+  --heritage-text-primary: #152238;
+  --heritage-text-secondary: #596B85;
+  --heritage-action: #25528C;
+  --heritage-action-hover: #1C3E6B;
+  --heritage-accent: #C59B27;
+  --heritage-border: #CCD8EB;
+}
+html[data-theme-id="vedic-indigo"][data-public-theme="dark"] {
+  --heritage-bg: #0D1522;
+  --heritage-surface: #152134;
+  --heritage-surface-secondary: #1D2D46;
+  --heritage-text-primary: #EDF3FC;
+  --heritage-text-secondary: #A4B6CE;
+  --heritage-action: #4A7EC4;
+  --heritage-action-hover: #6296DE;
+  --heritage-accent: #E5BA42;
+  --heritage-border: #2B3E5C;
+}
+
+/* 6. Saffron Suncity */
+html[data-theme-id="saffron-suncity"][data-public-theme="light"] {
+  --heritage-bg: #FFF9F2;
+  --heritage-surface: #FFFFFF;
+  --heritage-surface-secondary: #FCEFD8;
+  --heritage-text-primary: #2E1E12;
+  --heritage-text-secondary: #7B6250;
+  --heritage-action: #D9650B;
+  --heritage-action-hover: #B55005;
+  --heritage-accent: #B8323C;
+  --heritage-border: #F3DFC0;
+}
+html[data-theme-id="saffron-suncity"][data-public-theme="dark"] {
+  --heritage-bg: #1D1309;
+  --heritage-surface: #2A1C0E;
+  --heritage-surface-secondary: #382715;
+  --heritage-text-primary: #FFF3E6;
+  --heritage-text-secondary: #D2B79E;
+  --heritage-action: #F58728;
+  --heritage-action-hover: #FB9C4B;
+  --heritage-accent: #E55660;
+  --heritage-border: #523A21;
+}
+
+/* 7. Banyan Olive */
+html[data-theme-id="banyan-olive"][data-public-theme="light"] {
+  --heritage-bg: #F6F7F2;
+  --heritage-surface: #FFFFFF;
+  --heritage-surface-secondary: #EAEDE0;
+  --heritage-text-primary: #1F2617;
+  --heritage-text-secondary: #5F6B52;
+  --heritage-action: #4D6A34;
+  --heritage-action-hover: #3C5328;
+  --heritage-accent: #B08337;
+  --heritage-border: #D5DCB8;
+}
+html[data-theme-id="banyan-olive"][data-public-theme="dark"] {
+  --heritage-bg: #12170E;
+  --heritage-surface: #1D2417;
+  --heritage-surface-secondary: #283220;
+  --heritage-text-primary: #EFF5E9;
+  --heritage-text-secondary: #B4C3A6;
+  --heritage-action: #759E52;
+  --heritage-action-hover: #8EB868;
+  --heritage-accent: #D4A759;
+  --heritage-border: #3B4830;
+}
+
+/* 8. Jaipur Sandstone */
+html[data-theme-id="jaipur-sandstone"][data-public-theme="light"] {
+  --heritage-bg: #FAF4F2;
+  --heritage-surface: #FFFFFF;
+  --heritage-surface-secondary: #F3E6E2;
+  --heritage-text-primary: #2D1C1B;
+  --heritage-text-secondary: #755E5C;
+  --heritage-action: #A64B3E;
+  --heritage-action-hover: #85362C;
+  --heritage-accent: #5A7A6E;
+  --heritage-border: #E4CECA;
+}
+html[data-theme-id="jaipur-sandstone"][data-public-theme="dark"] {
+  --heritage-bg: #1A1110;
+  --heritage-surface: #261A19;
+  --heritage-surface-secondary: #332322;
+  --heritage-text-primary: #FBEFED;
+  --heritage-text-secondary: #CBB0AE;
+  --heritage-action: #CF685A;
+  --heritage-action-hover: #DF7D6F;
+  --heritage-accent: #7CA093;
+  --heritage-border: #4D3331;
+}
+
+/* 9. Lotus Silk */
+html[data-theme-id="lotus-silk"][data-public-theme="light"] {
+  --heritage-bg: #FBF5F7;
+  --heritage-surface: #FFFFFF;
+  --heritage-surface-secondary: #F5E5EA;
+  --heritage-text-primary: #2B151F;
+  --heritage-text-secondary: #735663;
+  --heritage-action: #A3385E;
+  --heritage-action-hover: #822949;
+  --heritage-accent: #9E7B35;
+  --heritage-border: #E8CED7;
+}
+html[data-theme-id="lotus-silk"][data-public-theme="dark"] {
+  --heritage-bg: #1B0E14;
+  --heritage-surface: #28161F;
+  --heritage-surface-secondary: #361F2B;
+  --heritage-text-primary: #FDF0F5;
+  --heritage-text-secondary: #CFB1C0;
+  --heritage-action: #CD5580;
+  --heritage-action-hover: #DE6C96;
+  --heritage-accent: #C29F55;
+  --heritage-border: #4E2A3C;
+}
+
+/* 10. Ganga Mist */
+html[data-theme-id="ganga-mist"][data-public-theme="light"] {
+  --heritage-bg: #F1F7F8;
+  --heritage-surface: #FFFFFF;
+  --heritage-surface-secondary: #E1EFF1;
+  --heritage-text-primary: #10262B;
+  --heritage-text-secondary: #4F676C;
+  --heritage-action: #1E6B7B;
+  --heritage-action-hover: #15515E;
+  --heritage-accent: #BF7B2B;
+  --heritage-border: #C6DEE2;
+}
+html[data-theme-id="ganga-mist"][data-public-theme="dark"] {
+  --heritage-bg: #091619;
+  --heritage-surface: #122327;
+  --heritage-surface-secondary: #1A3035;
+  --heritage-text-primary: #E8F6F8;
+  --heritage-text-secondary: #97B8BD;
+  --heritage-action: #3A96A9;
+  --heritage-action-hover: #4EADC1;
+  --heritage-accent: #DE9747;
+  --heritage-border: #27484F;
+}
+
+/* 11. Kashi Copper */
+html[data-theme-id="kashi-copper"][data-public-theme="light"] {
+  --heritage-bg: #F9F5F0;
+  --heritage-surface: #FFFFFF;
+  --heritage-surface-secondary: #EFE6DC;
+  --heritage-text-primary: #2A1910;
+  --heritage-text-secondary: #70594D;
+  --heritage-action: #9E4720;
+  --heritage-action-hover: #7E3514;
+  --heritage-accent: #7A8B42;
+  --heritage-border: #DECFC1;
+}
+html[data-theme-id="kashi-copper"][data-public-theme="dark"] {
+  --heritage-bg: #170F0A;
+  --heritage-surface: #241811;
+  --heritage-surface-secondary: #312218;
+  --heritage-text-primary: #FBF2EB;
+  --heritage-text-secondary: #C3ACA0;
+  --heritage-action: #C96738;
+  --heritage-action-hover: #DA7C4C;
+  --heritage-accent: #98AA5B;
+  --heritage-border: #483124;
+}
+
+/* 12. Nirvana Monolith */
+html[data-theme-id="nirvana-monolith"][data-public-theme="light"] {
+  --heritage-bg: #F4F4F6;
+  --heritage-surface: #FFFFFF;
+  --heritage-surface-secondary: #E6E6EB;
+  --heritage-text-primary: #111827;
+  --heritage-text-secondary: #4B5563;
+  --heritage-action: #374151;
+  --heritage-action-hover: #1F2937;
+  --heritage-accent: #7C3AED;
+  --heritage-border: #D1D5DB;
+}
+html[data-theme-id="nirvana-monolith"][data-public-theme="dark"] {
+  --heritage-bg: #0F1115;
+  --heritage-surface: #1A1D24;
+  --heritage-surface-secondary: #232731;
+  --heritage-text-primary: #F3F4F6;
+  --heritage-text-secondary: #9CA3AF;
+  --heritage-action: #60A5FA;
+  --heritage-action-hover: #93C5FD;
+  --heritage-accent: #C084FC;
+  --heritage-border: #374151;
+}
+
+/* ==========================================================================
+   SIGNATURE RADIAL THEME REVEAL (View Transitions API)
+   ========================================================================== */
+::view-transition-group(root) {
+  animation-duration: 550ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-theme-transition="active"]::view-transition-old(root),
+[data-theme-transition="active"]::view-transition-new(root) {
+  animation: none !important;
+  mix-blend-mode: normal !important;
+}
+
+[data-theme-transition="active"]::view-transition-old(root) {
+  z-index: 1 !important;
+}
+
+[data-theme-transition="active"]::view-transition-new(root) {
+  z-index: 9999 !important;
+}
+
+/* Ensure clean, instant snapshot capture for the new view */
+[data-theme-transition="active"] *,
+[data-theme-transition="active"] *::before,
+[data-theme-transition="active"] *::after {
+  transition: none !important;
+}
+
+/* ==========================================================================
+   GLOBAL THEME COLOR MORPH (Fallback & Standard Transition)
+   ========================================================================== */
+html[data-public-theme]:not([data-theme-transition="active"]) body,
+html[data-public-theme]:not([data-theme-transition="active"]) #public-portal-root,
+html[data-public-theme]:not([data-theme-transition="active"]) header,
+html[data-public-theme]:not([data-theme-transition="active"]) nav,
+html[data-public-theme]:not([data-theme-transition="active"]) footer,
+html[data-public-theme]:not([data-theme-transition="active"]) main,
+html[data-public-theme]:not([data-theme-transition="active"]) section,
+html[data-public-theme]:not([data-theme-transition="active"]) article,
+html[data-public-theme]:not([data-theme-transition="active"]) aside,
+html[data-public-theme]:not([data-theme-transition="active"]) .civic-card,
+html[data-public-theme]:not([data-theme-transition="active"]) .civic-card-interactive,
+html[data-public-theme]:not([data-theme-transition="active"]) .civic-input,
+html[data-public-theme]:not([data-theme-transition="active"]) .btn-civic-primary,
+html[data-public-theme]:not([data-theme-transition="active"]) .btn-civic-secondary,
+html[data-public-theme]:not([data-theme-transition="active"]) .theme-morph {
+  transition: background-color 500ms cubic-bezier(0.22, 1, 0.36, 1),
+              color 500ms cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 500ms cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Accessibility: respect user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(root),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+
+  html[data-public-theme] body,
+  html[data-public-theme] #public-portal-root,
+  html[data-public-theme] header,
+  html[data-public-theme] nav,
+  html[data-public-theme] footer,
+  html[data-public-theme] .civic-card,
+  html[data-public-theme] .civic-card-interactive,
+  html[data-public-theme] .civic-input,
+  html[data-public-theme] .btn-civic-primary,
+  html[data-public-theme] .btn-civic-secondary,
+  html[data-public-theme] .theme-morph {
+    transition: none !important;
+  }
+}
+
 /* ========================================================
    LIGHT MODE: HERITAGE IVORY + TERRACOTTA PUBLIC STYLING
    ======================================================== */
 html[data-public-theme="light"] body {
-  background-color: #F7F3EB !important;
-  color: #292722 !important;
+  background-color: var(--heritage-bg) !important;
+  color: var(--heritage-text-primary) !important;
 }
 
 html[data-public-theme="light"] #public-portal-root {
-  background-color: #F7F3EB !important;
-  color: #292722 !important;
+  background-color: var(--heritage-bg) !important;
+  color: var(--heritage-text-primary) !important;
 }
 
 /* Headings in Light Mode: Warm, Refined Editorial Charcoal */
@@ -361,7 +729,7 @@ html[data-public-theme="light"] h3,
 html[data-public-theme="light"] h4,
 html[data-public-theme="light"] h5,
 html[data-public-theme="light"] h6 {
-  color: #292722 !important;
+  color: var(--heritage-text-primary) !important;
 }
 
 /* Paragraphs in Light Mode: High-Legibility Heritage Secondary */
@@ -825,13 +1193,13 @@ html[data-public-theme="light"] #about-fazilnagar-section .bg-slate-800\/60 {
    DARK MODE: COORDINATED DARK HERITAGE SYSTEM
    ======================================================== */
 html[data-public-theme="dark"] body {
-  background-color: #191916 !important;
-  color: #F5F0E7 !important;
+  background-color: var(--heritage-bg) !important;
+  color: var(--heritage-text-primary) !important;
 }
 
 html[data-public-theme="dark"] #public-portal-root {
-  background-color: #191916 !important;
-  color: #F5F0E7 !important;
+  background-color: var(--heritage-bg) !important;
+  color: var(--heritage-text-primary) !important;
 }
 
 /* Headings in Dark Mode: Crisp Warm Ivory */
@@ -841,7 +1209,7 @@ html[data-public-theme="dark"] h3,
 html[data-public-theme="dark"] h4,
 html[data-public-theme="dark"] h5,
 html[data-public-theme="dark"] h6 {
-  color: #F5F0E7 !important;
+  color: var(--heritage-text-primary) !important;
 }
 
 /* Paragraphs in Dark Mode: Muted Sandstone Gray */

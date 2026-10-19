@@ -21,6 +21,34 @@ const statItemSchema = new mongoose.Schema({
   displayOrder: { type: Number, default: 0 },
 });
 
+export const ALLOWED_THEME_IDS = [
+  "heritage-terracotta",
+  "graphite-royale",
+  "pawanagar-emerald",
+  "kushinagar-ochre",
+  "vedic-indigo",
+  "saffron-suncity",
+  "banyan-olive",
+  "jaipur-sandstone",
+  "lotus-silk",
+  "ganga-mist",
+  "kashi-copper",
+  "nirvana-monolith",
+];
+
+const themeConfigSchema = new mongoose.Schema({
+  themeId: {
+    type: String,
+    enum: ALLOWED_THEME_IDS,
+    default: "heritage-terracotta",
+  },
+  mode: {
+    type: String,
+    enum: ["light", "dark"],
+    default: "light",
+  },
+});
+
 const contributionFormSettingsSchema = new mongoose.Schema({
   hideNavbarAndFooter: { type: Boolean, default: false },
 });
@@ -253,6 +281,14 @@ const siteSettingsSchema = new mongoose.Schema(
     contributionFormSettings: {
       type: contributionFormSettingsSchema,
       default: () => ({ hideNavbarAndFooter: false }),
+    },
+    // Global Theme & Appearance Configuration (Admin-Controlled Only)
+    themeConfig: {
+      type: themeConfigSchema,
+      default: () => ({
+        themeId: "heritage-terracotta",
+        mode: "light",
+      }),
     },
     // Footer configuration
     footer: {

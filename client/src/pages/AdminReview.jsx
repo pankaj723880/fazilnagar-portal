@@ -28,6 +28,7 @@ const AdminCivicDirectoryCMS = lazy(() => import("../components/AdminCivicDirect
 const AdminModerationCMS = lazy(() => import("../components/admin/AdminModerationCMS")); // Citizen Messaging Moderation CMS
 const AdminFormBuilder = lazy(() => import("../components/admin/AdminFormBuilder")); // Dynamic Form Builder
 const AdminContributionReview = lazy(() => import("../components/admin/AdminContributionReview")); // Public Contributions Review Desk
+const AdminThemeGallery = lazy(() => import("../components/admin/AdminThemeGallery")); // Module 14: Theme Gallery & Visual Identity
 
 function AdminTabSkeleton() {
   return (
@@ -284,6 +285,11 @@ export default function AdminReview({ user: propUser }) {
       case "cms-settings":
       case "settings":
         return <AdminSettingsCMS />;
+
+      case "cms-themes":
+      case "themes":
+      case "theme-gallery":
+        return <AdminThemeGallery />;
 
       case "cms-hero":
       case "hero":

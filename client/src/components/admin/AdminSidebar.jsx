@@ -24,6 +24,7 @@ import {
   Flag,
   FileText,
   CheckSquare,
+  Palette,
 } from "lucide-react";
 
 export default function AdminSidebar({
@@ -65,6 +66,13 @@ export default function AdminSidebar({
           id: "cms-settings",
           label: "Site Settings",
           icon: Settings,
+        },
+        {
+          id: "cms-themes",
+          label: "Theme Gallery",
+          icon: Palette,
+          badge: "12 Themes",
+          badgeColor: "bg-amber-950 text-amber-300 border border-amber-800/80 font-bold",
         },
         {
           id: "cms-hero",

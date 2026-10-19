@@ -36,7 +36,6 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 import AdminRoute from "./components/AdminRoute";
 import RequireMessagingAuth from "./components/RequireMessagingAuth";
 import InstallButton from "./components/InstallButton";
-import ThemeToggle from "./components/ThemeToggle";
 import { useTheme } from "./context/ThemeContext";
 import EditProfileModal from "./components/EditProfileModal";
 import SplashScreen from "./components/SplashScreen";
@@ -393,9 +392,6 @@ export default function App() {
                 <NotificationCenter />
               </Suspense>
 
-              {/* Theme Switcher Toggle (Public Website Only) */}
-              <ThemeToggle />
-
               {/* Messages / नगर संवाद */}
               <Link
                 to="/messages"
@@ -475,12 +471,11 @@ export default function App() {
               )}
             </div>
 
-            {/* Mobile Actions: Notification Bell + Theme Toggle + User/Admin Profile + Review Desk + Add Story */}
+            {/* Mobile Actions: Notification Bell + User/Admin Profile + Review Desk + Add Story */}
             <div className="flex sm:hidden items-center gap-1.5">
               <Suspense fallback={<div className="w-11 h-11 shrink-0" />}>
                 <NotificationCenter />
               </Suspense>
-              <ThemeToggle />
               {user ? (
                 <button
                   type="button"

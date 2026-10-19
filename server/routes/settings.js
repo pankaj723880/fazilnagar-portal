@@ -1,5 +1,6 @@
 import express from "express";
 import SiteSettings, {
+  ALLOWED_THEME_IDS,
   DEFAULT_NAV_ITEMS,
   DEFAULT_TRUST_BADGES,
   DEFAULT_ACTION_BUTTONS,
@@ -50,9 +51,20 @@ async function getOrCreateSettings(bypassCache = false) {
       contributionFormSettings: {
         hideNavbarAndFooter: false,
       },
+      themeConfig: {
+        themeId: "heritage-terracotta",
+        mode: "light",
+      },
     });
   } else {
     let changed = false;
+    if (!settings.themeConfig || !settings.themeConfig.themeId) {
+      settings.themeConfig = {
+        themeId: "heritage-terracotta",
+        mode: "light",
+      };
+      changed = true;
+    }
     if (!settings.contributionFormSettings) {
       settings.contributionFormSettings = {
         hideNavbarAndFooter: false,
@@ -246,6 +258,18 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
       };
     }
 
+    if (updateData.themeConfig && typeof updateData.themeConfig === "object") {
+      const { themeId, mode } = updateData.themeConfig;
+      const targetThemeId = ALLOWED_THEME_IDS.includes(themeId)
+        ? themeId
+        : settings.themeConfig?.themeId || "heritage-terracotta";
+      const targetMode = mode === "dark" || mode === "light" ? mode : settings.themeConfig?.mode || "light";
+      settings.themeConfig = {
+        themeId: targetThemeId,
+        mode: targetMode,
+      };
+    }
+
     if (updateData.heroSettings && typeof updateData.heroSettings === "object") {
       const existingHero = safeObj(settings.heroSettings);
       settings.heroSettings = {
@@ -374,6 +398,55 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
   } catch (err) {
     console.error("[Settings] Update error:", err);
     res.status(500).json({ message: "Failed to update website settings." });
+  }
+});
+
+// @route   PUT /api/settings/theme
+// @desc    Update global website theme & appearance mode (Admin Only)
+// @access  Private (Admin)
+router.put("/theme", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const { themeId, mode } = req.body;
+    if (!themeId || !ALLOWED_THEME_IDS.includes(themeId)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid themeId '${themeId}'. Must be one of: ${ALLOWED_THEME_IDS.join(", ")}`,
+      });
+    }
+    if (!mode || (mode !== "light" && mode !== "dark")) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid mode. Must be 'light' or 'dark'.",
+      });
+    }
+
+    const settings = await getOrCreateSettings();
+    settings.themeConfig = { themeId, mode };
+    settings.markModified("themeConfig");
+    await settings.save();
+
+    invalidateServerSettingsCache();
+
+    await logAdminAction({
+      adminUser: req.user.id,
+      adminEmail: req.user.email,
+      action: "SETTINGS_UPDATE",
+      entityType: "SiteSettings",
+      entityId: settings._id,
+      entityTitle: `Theme: ${themeId} (${mode})`,
+      changesSummary: `Updated global portal theme to ${themeId} in ${mode} mode`,
+      ipAddress: req.ip,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Global website theme set to ${themeId} (${mode} mode) successfully.`,
+      themeConfig: settings.themeConfig,
+      settings,
+    });
+  } catch (err) {
+    console.error("[Settings] Theme update error:", err);
+    res.status(500).json({ success: false, message: "Failed to update theme configuration." });
   }
 });
 

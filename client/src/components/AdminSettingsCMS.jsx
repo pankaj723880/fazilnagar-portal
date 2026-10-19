@@ -8,6 +8,7 @@ import MediaPicker from "./admin/MediaPicker";
 import StatusBadge from "./admin/StatusBadge";
 import ConfirmDialog from "./admin/ConfirmDialog";
 import ToastNotification from "./admin/ToastNotification";
+import AdminThemeGallery from "./admin/AdminThemeGallery";
 import {
   Sliders,
   Save,
@@ -140,6 +141,7 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
 
   const tabs = [
     { id: "general", label: "General Identity", icon: Globe },
+    { id: "themes", label: "Theme Gallery", icon: Palette },
     { id: "announcement", label: "Announcement Ticker", icon: Megaphone },
     { id: "contact", label: "Official Contacts", icon: Phone },
     { id: "sections", label: "Homepage Visibility", icon: Eye },
@@ -154,50 +156,56 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight truncate font-heading">
-              Site Settings &amp; Controls
+              {activeTab === "themes" ? "Theme Gallery & Visual Identity" : "Site Settings & Controls"}
             </h1>
-            {isDirty ? (
-              <span className="bg-amber-100 text-amber-900 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-300 shrink-0">
-                ● Unsaved
-              </span>
-            ) : (
-              <span className="bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200 shrink-0 flex items-center gap-1">
-                <span>✔</span> Synced
-              </span>
+            {activeTab !== "themes" && (
+              isDirty ? (
+                <span className="bg-amber-100 text-amber-900 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-300 shrink-0">
+                  ● Unsaved
+                </span>
+              ) : (
+                <span className="bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200 shrink-0 flex items-center gap-1">
+                  <span>✔</span> Synced
+                </span>
+              )
             )}
           </div>
           <p className="text-[11px] text-slate-500 truncate hidden sm:block">
-            Brand identity, announcement ticker, official helplines, and homepage visibility
+            {activeTab === "themes"
+              ? "12 themes with Light/Dark appearance mode. Saved to database and applied across public portal."
+              : "Brand identity, announcement ticker, official helplines, and homepage visibility"}
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          {isDirty && (
-            <button
-              type="button"
-              onClick={() => setResetDialogOpen(true)}
-              disabled={saving}
-              className="h-10 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1 cursor-pointer active:scale-95"
-              title="Reset Changes"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Reset</span>
-            </button>
-          )}
-
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="h-10 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-50"
-          >
-            {saving ? (
-              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Save className="w-3.5 h-3.5" />
+        {activeTab !== "themes" && (
+          <div className="flex items-center gap-2 shrink-0">
+            {isDirty && (
+              <button
+                type="button"
+                onClick={() => setResetDialogOpen(true)}
+                disabled={saving}
+                className="h-10 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1 cursor-pointer active:scale-95"
+                title="Reset Changes"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Reset</span>
+              </button>
             )}
-            <span>{saving ? "Saving..." : "Save Settings"}</span>
-          </button>
-        </div>
+
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="h-10 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-50"
+            >
+              {saving ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5" />
+              )}
+              <span>{saving ? "Saving..." : "Save Settings"}</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 2.2 Horizontal Navigation Carousel (Swipeable row for settings panels) */}
@@ -222,9 +230,12 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
         })}
       </div>
 
-      {/* Form Container */}
-      <form onSubmit={handleSave} className="space-y-4">
-        {/* SUBTAB 1: GENERAL IDENTITY (Single-Column Form Card) */}
+      {/* Form Container or Theme Gallery */}
+      {activeTab === "themes" ? (
+        <AdminThemeGallery onSaveSuccess={() => showToast("Website theme updated successfully!", "success")} />
+      ) : (
+        <form onSubmit={handleSave} className="space-y-4">
+          {/* SUBTAB 1: GENERAL IDENTITY (Single-Column Form Card) */}
         {activeTab === "general" && (
           <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-5 space-y-3.5 shadow-2xs">
             <div className="border-b border-slate-100 pb-2.5">
@@ -860,6 +871,7 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
           </FormSection>
         )}
       </form>
+      )}
 
       {/* Media Picker Modal */}
       <MediaPicker

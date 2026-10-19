@@ -110,13 +110,22 @@
             document.documentElement.classList.add('is-homepage-launch');
           }
           if (!p.startsWith('/admin')) {
-            var savedTheme = localStorage.getItem('fazilnagar_theme');
-            if (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-              savedTheme = 'dark';
+            var rawTheme = localStorage.getItem('fazilnagar_global_theme');
+            var themeId = 'heritage-terracotta';
+            var mode = 'light';
+            if (rawTheme) {
+              try {
+                var parsed = JSON.parse(rawTheme);
+                if (parsed && parsed.themeId) themeId = parsed.themeId;
+                if (parsed && (parsed.mode === 'dark' || parsed.mode === 'light')) mode = parsed.mode;
+              } catch (_) {}
+            } else {
+              var legacyTheme = localStorage.getItem('fazilnagar_theme');
+              if (legacyTheme === 'dark') mode = 'dark';
             }
-            if (!savedTheme) savedTheme = 'light';
-            document.documentElement.setAttribute('data-public-theme', savedTheme);
-            if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme-id', themeId);
+            document.documentElement.setAttribute('data-public-theme', mode);
+            if (mode === 'dark') {
               document.documentElement.classList.add('dark', 'theme-dark');
               document.documentElement.classList.remove('theme-light');
             } else {
