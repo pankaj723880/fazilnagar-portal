@@ -303,8 +303,8 @@ export default function App() {
       data-public-theme={isAdminPage ? undefined : (isDark ? "dark" : "light")}
       className={`min-h-screen w-full max-w-full overflow-x-hidden flex flex-col font-sans transition-colors duration-200 ${
         !isAdminPage && isDark
-          ? "bg-[#0B0F17] text-[#F8FAFC] selection:bg-[#F8FAFC] selection:text-[#0B0F17]"
-          : "bg-[#F8FAFC] text-[#0F172A] selection:bg-[#0F172A] selection:text-white"
+          ? "bg-[#101114] text-[#F5F1E9] selection:bg-[#C5A46D] selection:text-[#101114]"
+          : "bg-[#F7F6F2] text-[#202124] selection:bg-[#A78650] selection:text-white"
       }`}
     >
       {/* Native App-Style Ultra-Premium Splash Screen (Fast, responsive 1.4s reveal) */}
@@ -315,7 +315,7 @@ export default function App() {
       {/* Skip to Main Content Link for WCAG 2.2 AA Keyboard Accessibility */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2.5 focus:bg-[#0F172A] focus:text-white focus:rounded-xl focus:shadow-2xl focus:ring-2 focus:ring-[#0F172A] text-xs font-bold"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2.5 focus:bg-[#18232E] focus:text-white focus:rounded-xl focus:shadow-2xl focus:ring-2 focus:ring-[#B8323C] text-xs font-bold"
       >
         Skip to main content / मुख्य सामग्री पर जाएं
       </a>
@@ -323,11 +323,37 @@ export default function App() {
       {/* ========================================================
           PERMANENT FIXED TOP SHELL (Desktop / Non-Portal Pages)
           ======================================================== */}
-      <header className={`fixed top-0 left-0 right-0 z-50 bg-[#FFFFFF] shadow-[0_2px_16px_rgba(0,0,0,0.03)] ${isAdminPage || hideLayoutOnAreaDetails ? "hidden" : isPortalPage || isMobilePreview ? "hidden md:block" : ""}`}>
+      <header className={`fixed top-0 left-0 right-0 z-50 bg-[#FFFFFF] shadow-xs ${isAdminPage || hideLayoutOnAreaDetails ? "hidden" : isPortalPage || isMobilePreview ? "hidden md:block" : ""}`}>
+        {/* Top Alert & User Status Bar - Modern Civic Deep Slate & Crimson (Desktop / Tablet) */}
+        {siteSettings?.topAlertBar?.enabled !== false && (
+          <div className="hidden sm:flex h-8 bg-[#18232E] text-slate-300 text-[11px] font-semibold px-4 justify-between items-center border-b border-slate-800 shadow-xs">
+            <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
+              <span className="bg-[#B8323C] text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-xs">
+                {siteSettings?.topAlertBar?.badgeText || "LIVE CIVIC"}
+              </span>
+              <span className="truncate text-slate-300">
+                {siteSettings?.topAlertBar?.text || siteSettings?.siteName || "Fazilnagar Town Official Civic & Local Directory Portal (PIN 274401)"}
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
+              <a
+                href={`tel:${siteSettings?.topAlertBar?.helplineNumber || (siteSettings?.contact?.emergencyPhone ? siteSettings.contact.emergencyPhone.split("/")[0].trim() : "112")}`}
+                className="inline-flex items-center gap-1 text-red-400 hover:text-red-300 font-bold whitespace-nowrap"
+              >
+                <span>{siteSettings?.topAlertBar?.helplineLabel || "📞 Helpline"}: {siteSettings?.topAlertBar?.helplineNumber || siteSettings?.contact?.emergencyPhone || "112"}</span>
+              </a>
+              {user && (
+                <span className="text-[#168568] font-bold hidden md:inline">
+                  👤 Logged in as: {user.role === "admin" ? "Admin" : (user.name || user.email)}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Main Header & Navigation */}
-        <div className="bg-[#FFFFFF]/95 dark:bg-[#0B0F17]/95 backdrop-blur-md border-b border-slate-200/60 dark:border-white/10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 flex items-center justify-between h-18 sm:h-20 gap-4">
+        <div className="bg-[#FFFFFF]/95 backdrop-blur-md border-b border-[#E1E6EA]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16 gap-4">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
               <div className="w-9 h-9 rounded-xl bg-[#18232E] flex items-center justify-center text-white font-extrabold text-base border border-slate-700 shadow-xs group-hover:scale-105 transition-transform">
@@ -579,16 +605,16 @@ export default function App() {
           isAdminPage || hideLayoutOnAreaDetails
             ? "pt-0 pb-0 p-0 m-0 w-full max-w-full"
             : isNewsPage
-            ? "pt-18 sm:pt-22 pb-16 sm:pb-0 p-0 m-0 overflow-hidden"
+            ? "pt-16 sm:pt-[96px] pb-14 sm:pb-0 p-0 m-0 overflow-hidden"
             : isMessagesPage
-            ? "pt-18 sm:pt-22 pb-0 p-0 m-0 overflow-hidden h-[100dvh] max-h-[100dvh] box-border flex flex-col"
+            ? "pt-16 sm:pt-[96px] pb-0 p-0 m-0 overflow-hidden h-[100dvh] max-h-[100dvh] box-border flex flex-col"
             : isAuthPage || isPublicFormPage
-            ? "pt-18 sm:pt-22 pb-0 p-0 m-0 w-full max-w-full flex-1 flex flex-col"
+            ? "pt-16 sm:pt-[96px] pb-0 p-0 m-0 w-full max-w-full flex-1 flex flex-col"
             : isPortalPage
-            ? (isMobilePreview ? "pt-0 pb-32 sm:pb-24" : "pt-0 md:pt-20 pb-32 sm:pb-24")
+            ? (isMobilePreview ? "pt-0 pb-16" : "pt-0 md:pt-[96px] pb-16 sm:pb-8")
             : hasSubNav
-            ? "pt-[124px] sm:pt-[136px] pb-32 sm:pb-24 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12"
-            : "pt-20 sm:pt-24 pb-32 sm:pb-24 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12"
+            ? "pt-[110px] sm:pt-[144px] pb-24 sm:pb-8 max-w-7xl mx-auto px-3 sm:px-6"
+            : "pt-[76px] sm:pt-[112px] pb-24 sm:pb-8 max-w-7xl mx-auto px-3 sm:px-6"
         }`}
       >
         <div className={isNewsPage || isMessagesPage ? "w-full flex-1 min-h-0 flex flex-col overflow-hidden" : isAuthPage || isPublicFormPage ? "w-full flex-1 min-h-0 flex flex-col" : "w-full"}>
