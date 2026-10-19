@@ -113,9 +113,11 @@
             var savedTheme = localStorage.getItem('fazilnagar_theme') || 'light';
             document.documentElement.setAttribute('data-public-theme', savedTheme);
             if (savedTheme === 'dark') {
-              document.documentElement.classList.add('theme-dark');
+              document.documentElement.classList.add('dark', 'theme-dark');
+              document.documentElement.classList.remove('theme-light');
             } else {
               document.documentElement.classList.add('theme-light');
+              document.documentElement.classList.remove('dark', 'theme-dark');
             }
           }
         } catch (_) {}
@@ -125,12 +127,15 @@
     <!-- Critical CSS for Instant Above-the-fold Layout & Zero CLS -->
     <style>
       html, body {
-        background-color: #18232E;
+        background-color: #F8FAFC;
         margin: 0;
         padding: 0;
         width: 100%;
         height: 100%;
         overflow-x: hidden;
+      }
+      html.dark, html.dark body, html[data-public-theme="dark"], html[data-public-theme="dark"] body {
+        background-color: #0B0F17 !important;
       }
       #hero-section { min-height: 440px; position: relative; background-color: #18232E; }
       .font-heading { font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; }
@@ -158,7 +163,7 @@
       };
     </script>
   </head>
-  <body class="font-sans antialiased text-slate-800" style="background-color:#18232E;margin:0;padding:0;">
+  <body class="font-sans antialiased text-slate-900" style="margin:0;padding:0;">
     <div id="root"></div>
 
     <noscript id="fallback-noscript">

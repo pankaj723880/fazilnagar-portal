@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *, [data-public-theme="dark"], [data-public-theme="dark"] *));
+
 @layer base {
   :root {
     --deep-slate: #18232E;

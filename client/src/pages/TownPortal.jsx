@@ -613,31 +613,7 @@ export default function TownPortal() {
         <div className="w-full max-w-full overflow-x-hidden bg-[#F5F7F8] font-sans text-[#18232E] selection:bg-[#B8323C] selection:text-white">
 
 
-      {/* Dynamic Civic Announcement Ticker Banner */}
-      {siteSettings.sections?.announcementBanner !== false &&
-        siteSettings.announcement?.enabled &&
-        siteSettings.announcement?.text && (
-          <aside
-            aria-label="Civic Announcement Banner"
-            style={{
-              backgroundColor: siteSettings.announcement.bgColor || "#0D5E49",
-              color: siteSettings.announcement.textColor || "#FFFFFF",
-            }}
-            className="w-full px-4 py-2.5 text-center text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition z-30 relative"
-          >
-            <Sparkles className="w-3.5 h-3.5 shrink-0 text-amber-300 animate-pulse" />
-            <span>{siteSettings.announcement.text}</span>
-            {siteSettings.announcement.link && (
-              <Link
-                to={siteSettings.announcement.link}
-                className="underline hover:opacity-80 ml-2 inline-flex items-center gap-0.5 text-amber-200 font-extrabold"
-              >
-                <span>View Details</span>
-                <ChevronRight className="w-3 h-3" />
-              </Link>
-            )}
-          </aside>
-        )}
+
 
       {/* ========================================================
           SECTION 2: HERO SECTION (Dynamic Kushinagar & Fazilnagar Carousel)

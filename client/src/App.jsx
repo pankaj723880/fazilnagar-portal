@@ -324,33 +324,6 @@ export default function App() {
           PERMANENT FIXED TOP SHELL (Desktop / Non-Portal Pages)
           ======================================================== */}
       <header className={`fixed top-0 left-0 right-0 z-50 bg-[#FFFFFF] shadow-xs ${isAdminPage || hideLayoutOnAreaDetails ? "hidden" : isPortalPage || isMobilePreview ? "hidden md:block" : ""}`}>
-        {/* Top Alert & User Status Bar - Modern Civic Deep Slate & Crimson (Desktop / Tablet) */}
-        {siteSettings?.topAlertBar?.enabled !== false && (
-          <div className="hidden sm:flex h-8 bg-[#18232E] text-slate-300 text-[11px] font-semibold px-4 justify-between items-center border-b border-slate-800 shadow-xs">
-            <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
-              <span className="bg-[#B8323C] text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-xs">
-                {siteSettings?.topAlertBar?.badgeText || "LIVE CIVIC"}
-              </span>
-              <span className="truncate text-slate-300">
-                {siteSettings?.topAlertBar?.text || siteSettings?.siteName || "Fazilnagar Town Official Civic & Local Directory Portal (PIN 274401)"}
-              </span>
-            </div>
-            <div className="flex items-center gap-4">
-              <a
-                href={`tel:${siteSettings?.topAlertBar?.helplineNumber || (siteSettings?.contact?.emergencyPhone ? siteSettings.contact.emergencyPhone.split("/")[0].trim() : "112")}`}
-                className="inline-flex items-center gap-1 text-red-400 hover:text-red-300 font-bold whitespace-nowrap"
-              >
-                <span>{siteSettings?.topAlertBar?.helplineLabel || "📞 Helpline"}: {siteSettings?.topAlertBar?.helplineNumber || siteSettings?.contact?.emergencyPhone || "112"}</span>
-              </a>
-              {user && (
-                <span className="text-[#168568] font-bold hidden md:inline">
-                  👤 Logged in as: {user.role === "admin" ? "Admin" : (user.name || user.email)}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
         {/* Main Header & Navigation */}
         <div className="bg-[#FFFFFF]/95 dark:bg-[#0B0F17]/95 backdrop-blur-md border-b border-slate-200/60 dark:border-white/8">
           <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 flex items-center justify-between h-16 gap-4">
@@ -605,16 +578,16 @@ export default function App() {
           isAdminPage || hideLayoutOnAreaDetails
             ? "pt-0 pb-0 p-0 m-0 w-full max-w-full"
             : isNewsPage
-            ? "pt-16 sm:pt-[96px] pb-14 sm:pb-0 p-0 m-0 overflow-hidden"
+            ? "pt-16 pb-14 sm:pb-0 p-0 m-0 overflow-hidden"
             : isMessagesPage
-            ? "pt-16 sm:pt-[96px] pb-0 p-0 m-0 overflow-hidden h-[100dvh] max-h-[100dvh] box-border flex flex-col"
+            ? "pt-16 pb-0 p-0 m-0 overflow-hidden h-[100dvh] max-h-[100dvh] box-border flex flex-col"
             : isAuthPage || isPublicFormPage
-            ? "pt-16 sm:pt-[96px] pb-0 p-0 m-0 w-full max-w-full flex-1 flex flex-col"
+            ? "pt-16 pb-0 p-0 m-0 w-full max-w-full flex-1 flex flex-col"
             : isPortalPage
-            ? (isMobilePreview ? "pt-0 pb-28" : "pt-0 md:pt-[96px] pb-28 sm:pb-32")
+            ? (isMobilePreview ? "pt-0 pb-28" : "pt-0 md:pt-16 pb-28 sm:pb-32")
             : hasSubNav
-            ? "pt-[116px] sm:pt-[148px] pb-32 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12"
-            : "pt-[80px] sm:pt-[116px] pb-32 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12"
+            ? "pt-[116px] pb-32 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12"
+            : "pt-20 sm:pt-24 pb-32 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12"
         }`}
       >
         <div className={isNewsPage || isMessagesPage ? "w-full flex-1 min-h-0 flex flex-col overflow-hidden" : isAuthPage || isPublicFormPage ? "w-full flex-1 min-h-0 flex flex-col" : "w-full"}>

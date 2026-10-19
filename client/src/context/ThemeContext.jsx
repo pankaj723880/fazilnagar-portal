@@ -45,16 +45,16 @@ export function ThemeProvider({ children }) {
     if (isAdminPage) {
       // Completely exclude admin: strip public theme attributes and classes
       root.removeAttribute("data-public-theme");
-      root.classList.remove("theme-dark", "theme-light");
+      root.classList.remove("theme-dark", "theme-light", "dark");
     } else {
       // Apply strictly to public layout
       root.setAttribute("data-public-theme", theme);
       if (theme === "dark") {
-        root.classList.add("theme-dark");
+        root.classList.add("dark", "theme-dark");
         root.classList.remove("theme-light");
       } else {
         root.classList.add("theme-light");
-        root.classList.remove("theme-dark");
+        root.classList.remove("dark", "theme-dark");
       }
     }
   }, [theme, isAdminPage]);
