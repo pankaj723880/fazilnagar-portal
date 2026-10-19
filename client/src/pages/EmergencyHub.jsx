@@ -19,13 +19,13 @@ export default function EmergencyHub() {
       : EMERGENCY_SERVICES.filter((s) => s.category === filter);
 
   return (
-    <div className="w-full max-w-5xl mx-auto min-h-screen bg-slate-50/60 pb-28 pt-2 px-3 sm:px-6">
+    <div className="w-full max-w-7xl mx-auto min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F17] pb-32 pt-4 sm:pt-6 px-4 sm:px-8 lg:px-12 space-y-6 sm:space-y-8 font-sans">
       {/* 3.1 Compact App Bar (Mobile & Desktop) */}
-      <div className="sticky top-0 z-30 h-[54px] bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-2xl px-3.5 flex items-center justify-between mb-3 shadow-2xs">
-        <div className="flex items-center gap-2">
+      <div className="sticky top-0 z-30 h-[58px] bg-white/95 dark:bg-[#131823]/95 backdrop-blur-md border border-slate-200/60 dark:border-white/8 rounded-2xl px-4 flex items-center justify-between mb-4 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
+        <div className="flex items-center gap-2.5">
           <Link
             to="/"
-            className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition active:scale-95 cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 transition active:scale-95 cursor-pointer"
             aria-label="Back to home"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -34,10 +34,10 @@ export default function EmergencyHub() {
             F
           </div>
           <div className="leading-tight">
-            <h2 className="font-extrabold text-sm tracking-tight text-slate-900 font-heading">
+            <h2 className="font-extrabold text-sm tracking-tight text-slate-900 dark:text-white font-heading">
               FAZILNAGAR
             </h2>
-            <p className="text-[9px] text-slate-500 font-semibold tracking-wide">
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold tracking-wide">
               PIN 274401 • 24/7 Emergency Hub
             </p>
           </div>
@@ -49,35 +49,35 @@ export default function EmergencyHub() {
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-6 sm:space-y-8">
         {/* 3.1 Crimson Tint Banner */}
-        <div className="p-4 sm:p-5 rounded-2xl border border-rose-200/90 bg-rose-50 text-rose-950 shadow-2xs">
-          <div className="flex items-center gap-2.5">
-            <span className="text-2xl">🚨</span>
+        <div className="p-6 sm:p-8 rounded-3xl border border-rose-200/60 dark:border-rose-900/40 bg-rose-50/70 dark:bg-rose-950/20 text-rose-950 dark:text-rose-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">🚨</span>
             <div>
-              <span className="text-[9px] font-extrabold uppercase tracking-wider text-rose-700 bg-rose-200/60 px-2 py-0.5 rounded-md">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-700 dark:text-rose-400 bg-rose-200/60 dark:bg-rose-900/50 px-2.5 py-0.5 rounded-full border border-rose-300/40">
                 24/7 Resident Support
               </span>
-              <h1 className="text-base sm:text-lg font-black tracking-tight mt-1 text-slate-900">
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight mt-1.5 text-slate-900 dark:text-white">
                 Fazilnagar Emergency Numbers &amp; 24/7 Helplines
               </h1>
             </div>
           </div>
-          <p className="text-xs text-rose-900/80 mt-1.5 leading-relaxed font-medium">
+          <p className="text-xs sm:text-sm text-rose-900/80 dark:text-rose-300 mt-2 leading-relaxed font-medium max-w-3xl">
             Verified instant-dial emergency contacts for Fazilnagar police, medical trauma, fire, women safety, and utility breakdowns.
           </p>
         </div>
 
         {/* 3.1 Category Filter List */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
               onClick={() => setFilter(cat)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 cursor-pointer ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 cursor-pointer ${
                 filter === cat
-                  ? "bg-slate-900 text-white shadow-xs"
-                  : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+                  ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
+                  : "bg-white dark:bg-[#131823] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/8 hover:bg-slate-50 dark:hover:bg-[#1A2234]"
               }`}
             >
               {cat}
@@ -86,11 +86,11 @@ export default function EmergencyHub() {
         </div>
 
         {/* 3.2 Standard High-Priority Dialing Cards (Responsive Grid) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {filteredServices.map((item) => (
             <div
               key={item.id}
-              className={`p-4 rounded-2xl border shadow-2xs flex flex-col justify-between space-y-3 bg-white ${item.color}`}
+              className={`p-6 sm:p-7 rounded-3xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] flex flex-col justify-between space-y-4 bg-white dark:bg-[#131823] ${item.color}`}
             >
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">

@@ -352,8 +352,8 @@ export default function App() {
         )}
 
         {/* Main Header & Navigation */}
-        <div className="bg-[#FFFFFF]/95 backdrop-blur-md border-b border-[#E1E6EA]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16 gap-4">
+        <div className="bg-[#FFFFFF]/95 dark:bg-[#0B0F17]/95 backdrop-blur-md border-b border-slate-200/60 dark:border-white/8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 flex items-center justify-between h-16 gap-4">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
               <div className="w-9 h-9 rounded-xl bg-[#18232E] flex items-center justify-center text-white font-extrabold text-base border border-slate-700 shadow-xs group-hover:scale-105 transition-transform">
@@ -562,8 +562,8 @@ export default function App() {
 
         {/* Secondary Sub-Navbar - Visible across Directory & all Civic Hub pages */}
         {hasSubNav && (
-          <div className="bg-[#FFFFFF] dark:bg-[#101114] border-b border-[#E1E6EA] dark:border-[#38383E] py-1.5 px-4 shadow-2xs">
-            <div className="max-w-7xl mx-auto flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+          <div className="bg-[#FFFFFF]/95 dark:bg-[#0B0F17]/95 backdrop-blur-md border-b border-slate-200/60 dark:border-white/8 py-2 px-4 shadow-[0_2px_16px_rgba(0,0,0,0.02)]">
+            <div className="max-w-7xl mx-auto px-0 sm:px-4 lg:px-8 flex items-center gap-2 overflow-x-auto scrollbar-none py-0.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#647180] dark:text-[#C5A46D] shrink-0 mr-1 hidden sm:inline">
                 Civic Hubs:
               </span>
@@ -573,10 +573,10 @@ export default function App() {
                   to={item.path}
                   end={item.path === "/directory"}
                   className={({ isActive }) =>
-                    `px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+                    `px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
                       isActive
                         ? "bg-[#B8323C] dark:bg-[#C5A46D] text-white dark:text-[#101114] shadow-xs font-bold"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-[#E4E0D8] dark:hover:text-white dark:hover:bg-[#2C2C34] border border-slate-200/60 dark:border-[#38383E] bg-slate-50/70 dark:bg-[#24242A]"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-[#E4E0D8] dark:hover:text-white dark:hover:bg-[#2C2C34] border border-slate-200/60 dark:border-white/8 bg-slate-50/70 dark:bg-[#131823]"
                     }`
                   }
                 >
@@ -611,10 +611,10 @@ export default function App() {
             : isAuthPage || isPublicFormPage
             ? "pt-16 sm:pt-[96px] pb-0 p-0 m-0 w-full max-w-full flex-1 flex flex-col"
             : isPortalPage
-            ? (isMobilePreview ? "pt-0 pb-16" : "pt-0 md:pt-[96px] pb-16 sm:pb-8")
+            ? (isMobilePreview ? "pt-0 pb-28" : "pt-0 md:pt-[96px] pb-28 sm:pb-32")
             : hasSubNav
-            ? "pt-[110px] sm:pt-[144px] pb-24 sm:pb-8 max-w-7xl mx-auto px-3 sm:px-6"
-            : "pt-[76px] sm:pt-[112px] pb-24 sm:pb-8 max-w-7xl mx-auto px-3 sm:px-6"
+            ? "pt-[116px] sm:pt-[148px] pb-32 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12"
+            : "pt-[80px] sm:pt-[116px] pb-32 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12"
         }`}
       >
         <div className={isNewsPage || isMessagesPage ? "w-full flex-1 min-h-0 flex flex-col overflow-hidden" : isAuthPage || isPublicFormPage ? "w-full flex-1 min-h-0 flex flex-col" : "w-full"}>
@@ -846,7 +846,7 @@ export default function App() {
           </div>
 
           {/* Desktop 4-Column Grid (hidden md:grid) */}
-          <div className="hidden md:grid max-w-7xl mx-auto px-4 sm:px-6 py-10 grid-cols-4 gap-8">
+          <div className="hidden md:grid max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-16 lg:py-20 grid-cols-4 gap-8 lg:gap-10">
             <div className="space-y-3">
               <h3 className="text-white font-extrabold text-base tracking-tight font-heading">
                 FAZIL<span className="text-[#B8323C]">NAGAR</span> Civic Portal
@@ -1200,7 +1200,7 @@ export default function App() {
           Provides effortless 1-thumb native app navigation across the portal
           ======================================================== */}
       {!isAdminPage && !isMessagesPage && !hideLayoutOnAreaDetails && (
-        <nav className={`fixed bottom-0 left-0 right-0 z-[1050] bg-white/95 dark:bg-[#101114]/95 backdrop-blur-md border-t border-slate-200/90 dark:border-[#38383E] shadow-[0_-4px_20px_rgba(0,0,0,0.12)] pb-[max(0.5rem,env(safe-area-inset-bottom))] ${isMobilePreview ? "block" : "sm:hidden"}`}>
+        <nav className={`fixed bottom-0 left-0 right-0 z-[1050] bg-white/95 dark:bg-[#0B0F17]/95 backdrop-blur-md border-t border-slate-200/60 dark:border-white/8 shadow-[0_-2px_16px_rgba(0,0,0,0.04)] pb-[max(0.5rem,env(safe-area-inset-bottom))] ${isMobilePreview ? "block" : "sm:hidden"}`}>
           <div className="max-w-[420px] mx-auto w-full px-1 py-1 flex items-center justify-around">
             <NavLink
               to="/"

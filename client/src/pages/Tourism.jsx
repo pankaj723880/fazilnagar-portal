@@ -102,14 +102,14 @@ export default function Tourism() {
   }, []);
 
   return (
-    <div className="space-y-6 pb-16 max-w-7xl mx-auto px-4 sm:px-6">
+    <div className="space-y-8 sm:space-y-10 pb-32 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 font-sans">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-[#18232E] to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-2 border border-slate-800">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-600/90 text-white text-xs font-bold uppercase tracking-wider">
+      <div className="bg-gradient-to-r from-slate-900 via-[#18232E] to-slate-900 text-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.04)] space-y-3 border border-slate-800/80">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-600/90 text-white text-[10px] font-bold uppercase tracking-wider">
           <Compass className="w-3.5 h-3.5" />
           <span>Sacred Twin Heritage Circuit</span>
         </div>
-        <h1 className="text-2xl sm:text-4xl font-extrabold font-heading text-white">
+        <h1 className="text-2xl sm:text-4xl font-extrabold font-heading text-white tracking-tight">
           Fazilnagar Tourism &amp; Ancient Pawanagar Heritage
         </h1>
         <p className="text-slate-300 text-xs sm:text-sm max-w-3xl leading-relaxed">
@@ -118,13 +118,13 @@ export default function Tourism() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1.5 bg-slate-200/80 p-1.5 rounded-2xl w-full max-w-md overflow-x-auto scrollbar-none">
+      <div className="flex items-center gap-1.5 bg-slate-200/70 dark:bg-slate-800/60 p-1.5 rounded-2xl w-full max-w-md overflow-x-auto scrollbar-none border border-slate-200/60 dark:border-white/8 shadow-xs">
         <button
           onClick={() => setActiveTab("places")}
           className={`flex-1 min-w-[100px] py-2 px-2.5 text-xs font-bold rounded-xl transition cursor-pointer min-h-[44px] flex items-center justify-center text-center whitespace-nowrap ${
             activeTab === "places"
               ? "bg-[#0D5E49] text-white shadow-xs font-black"
-              : "text-slate-600 hover:text-slate-900"
+              : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
           }`}
         >
           🏰 Sites ({heritageSites.length})
@@ -134,7 +134,7 @@ export default function Tourism() {
           className={`flex-1 min-w-[100px] py-2 px-2.5 text-xs font-bold rounded-xl transition cursor-pointer min-h-[44px] flex items-center justify-center text-center whitespace-nowrap ${
             activeTab === "itinerary"
               ? "bg-[#0D5E49] text-white shadow-xs font-black"
-              : "text-slate-600 hover:text-slate-900"
+              : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
           }`}
         >
           🧭 1-Day Circuit
@@ -144,7 +144,7 @@ export default function Tourism() {
           className={`flex-1 min-w-[100px] py-2 px-2.5 text-xs font-bold rounded-xl transition cursor-pointer min-h-[44px] flex items-center justify-center text-center whitespace-nowrap ${
             activeTab === "stays"
               ? "bg-[#0D5E49] text-white shadow-xs font-black"
-              : "text-slate-600 hover:text-slate-900"
+              : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
           }`}
         >
           🛌 Hotels & Dining
@@ -152,11 +152,11 @@ export default function Tourism() {
       </div>
 
       {activeTab === "places" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
           {heritageSites.map((item, idx) => (
             <div
               key={item._id || item.id || idx}
-              className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between hover:border-slate-300 transition"
+              className="bg-white dark:bg-[#131823] rounded-3xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col justify-between hover:border-slate-300 dark:hover:border-white/20 transition"
             >
               <div>
                 <div className="relative h-56 bg-slate-100 overflow-hidden">

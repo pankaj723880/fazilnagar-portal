@@ -80,14 +80,14 @@ export default function About() {
     : DEFAULT_HERITAGE_SITES.filter((s) => s.heritageZone === "kushinagar");
 
   return (
-    <div className="space-y-10 pb-16">
+    <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-8 sm:py-12 space-y-12 sm:space-y-16 lg:space-y-20 pb-32 font-sans">
       {/* Unofficial Community-Operated Declaration Banner */}
-      <div className="bg-amber-50 border border-amber-300/80 rounded-2xl p-4 sm:p-5 text-amber-950 text-xs shadow-xs space-y-1.5">
-        <div className="flex items-center gap-2 font-black text-amber-900 uppercase tracking-wider text-[11px]">
+      <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-300/60 dark:border-amber-900/40 rounded-3xl p-6 sm:p-7 text-amber-950 dark:text-amber-200 text-xs shadow-[0_2px_16px_rgba(0,0,0,0.04)] space-y-2">
+        <div className="flex items-center gap-2 font-black text-amber-900 dark:text-amber-300 uppercase tracking-wider text-[11px]">
           <span className="text-base">📢</span>
           <span>Unofficial, Community-Operated Civic Portal Notice</span>
         </div>
-        <p className="leading-relaxed text-amber-900/90">
+        <p className="leading-relaxed text-amber-900/90 dark:text-amber-200/90">
           This portal is an independent civic initiative operated by local volunteers and citizens of Fazilnagar (PIN 274401). 
           <strong> It is NOT run, authorized, or maintained by Nagar Panchayat Fazilnagar or any government department.</strong> 
           All information is curated for community welfare and peer-reviewed by local residents.
@@ -95,7 +95,7 @@ export default function About() {
       </div>
 
       {/* Hero Header */}
-      <div className="bg-gradient-to-br from-[#18232E] via-slate-900 to-black text-white p-8 sm:p-12 rounded-3xl shadow-xl relative overflow-hidden border border-slate-800">
+      <div className="bg-gradient-to-br from-[#18232E] via-slate-900 to-black text-white p-8 sm:p-12 lg:p-16 rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.04)] relative overflow-hidden border border-slate-800/80">
         <div className="max-w-3xl space-y-4 relative z-10">
           <div className="inline-flex items-center gap-2 bg-[#B8323C] text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
             <BookOpen className="w-3.5 h-3.5" />
@@ -132,7 +132,7 @@ export default function About() {
 
       {/* Interactive Tabs */}
       <div id="heritage-showcase" className="scroll-mt-24 space-y-8">
-        <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center justify-center gap-2 p-1.5 bg-[#F5F7F8] rounded-2xl border border-[#E1E6EA] max-w-xl mx-auto">
+        <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center justify-center gap-2 p-1.5 bg-[#F8FAFC] dark:bg-[#131823] rounded-2xl border border-slate-200/60 dark:border-white/8 max-w-xl mx-auto shadow-xs">
           <button
             type="button"
             onClick={() => setActiveTab("fazilnagar")}
@@ -544,21 +544,21 @@ export default function About() {
       </div>
 
       {/* HOW WE VERIFY LISTINGS & CRITERIA SECTION */}
-      <section id="verification-criteria" className="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-sm space-y-6">
-        <div className="space-y-2">
+      <section id="verification-criteria" className="bg-white dark:bg-[#131823] rounded-3xl p-8 sm:p-12 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] space-y-8">
+        <div className="space-y-2.5">
           <span className="text-xs font-bold text-[#B8323C] uppercase tracking-wider">
             Transparency &amp; Trust Standards
           </span>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 font-heading">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">
             How We Verify Directory Listings
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-3xl">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-3xl">
             To prevent fraud, outdated telephone numbers, and ghost listings, every entry in the Fazilnagar Civic Directory undergoes a 4-step physical and telephone audit before receiving the verified badge.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-slate-50/70 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-200/60 dark:border-white/8 space-y-2.5">
             <span className="text-xl">📍</span>
             <h3 className="text-xs font-bold text-slate-900">1. Physical GPS Ground Truth</h3>
             <p className="text-[11px] text-slate-600 leading-relaxed">

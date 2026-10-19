@@ -73,11 +73,11 @@ export default function Contact() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-12 px-4">
+    <div className="max-w-6xl mx-auto space-y-8 sm:space-y-10 pb-32 px-4 sm:px-8 lg:px-12 py-8 sm:py-12 font-sans">
       {/* Disclaimer Banner */}
-      <div className="bg-amber-50 border-l-4 border-amber-500 p-3.5 rounded-xl text-amber-900 text-xs">
-        <p className="font-bold flex items-center gap-1.5 mb-1">
-          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+      <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-300/60 dark:border-amber-900/40 p-5 rounded-2xl text-amber-950 dark:text-amber-200 text-xs shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
+        <p className="font-bold flex items-center gap-1.5 mb-1 text-amber-900 dark:text-amber-300">
+          <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
           <span>Independent Community Portal Notice</span>
         </p>
         <p className="leading-relaxed">
@@ -86,54 +86,54 @@ export default function Contact() {
       </div>
 
       {/* Header */}
-      <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-2">
-        <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 font-heading">
+      <div className="bg-white dark:bg-[#131823] rounded-3xl p-6 sm:p-8 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] space-y-2">
+        <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">
           Contact Us &amp; Report Corrections
         </h1>
-        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl">
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
           Spotted an outdated telephone number, closed business, or incorrect location? Help us keep Fazilnagar’s civic directory 100% accurate.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
         {/* Contact Info Sidebar */}
-        <div className="space-y-4">
-          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-2.5">
-            <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-[#131823] rounded-3xl p-6 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] space-y-3">
+            <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
               Portal Volunteer Desk
             </h2>
-            <div className="space-y-2.5 text-xs text-slate-600">
-              <div className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Desk Address:</strong> Community Editorial Desk, Main NH-27 Corridor, Near Pawanagar Mahavir Chowk, Fazilnagar - 274401, Kushinagar, UP
+            <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+              <div className="flex items-start gap-2.5">
+                <MapPin className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">
+                  <strong className="text-slate-900 dark:text-white">Desk Address:</strong> Main NH-27 Corridor, Near Pawanagar Mahavir Chowk, Fazilnagar - 274401, Kushinagar, UP
                 </span>
               </div>
-              <div className="flex items-start gap-2">
-                <Mail className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Email:</strong> editorial@fazilnagar.me
+              <div className="flex items-start gap-2.5">
+                <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">
+                  <strong className="text-slate-900 dark:text-white">Email:</strong> editorial@fazilnagar.me
                 </span>
               </div>
-              <div className="flex items-start gap-2">
-                <Phone className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Community Helpline:</strong> +91 94520 89540
+              <div className="flex items-start gap-2.5">
+                <Phone className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">
+                  <strong className="text-slate-900 dark:text-white">Community Helpline:</strong> +91 94520 89540
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="bg-blue-50 rounded-2xl p-4 sm:p-5 border border-blue-200 text-blue-950 text-xs space-y-1.5">
-            <h3 className="font-bold">Government Helplines</h3>
-            <p className="text-[11px] leading-relaxed text-blue-900">
+          <div className="bg-blue-50/70 dark:bg-blue-950/20 rounded-3xl p-6 border border-blue-200/60 dark:border-blue-900/40 text-blue-950 dark:text-blue-200 text-xs space-y-2 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
+            <h3 className="font-bold text-sm">Government Helplines</h3>
+            <p className="text-xs leading-relaxed text-blue-900/80 dark:text-blue-300">
               For official administrative emergencies or municipal grievances, call National Emergency (112) or Nagar Panchayat helpline directly.
             </p>
           </div>
         </div>
 
         {/* Correction / Message Form */}
-        <div className="md:col-span-2 bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs">
+        <div className="md:col-span-2 bg-white dark:bg-[#131823] rounded-3xl p-6 sm:p-8 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
           {submitted ? (
             <div className="p-5 text-center space-y-2.5 bg-emerald-50 rounded-2xl border border-emerald-200">
               <CheckCircle2 className="w-9 h-9 text-emerald-600 mx-auto" />

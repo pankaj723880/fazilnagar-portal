@@ -868,23 +868,23 @@ export default function TownPortal() {
           ======================================================== */}
       {isBelowFoldReady && (
         <>
-      <section id="explore-categories" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+      <section id="explore-categories" className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-20 lg:py-28">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-6">
           <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B8323C] uppercase tracking-wider mb-1">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#B8323C] uppercase tracking-wider mb-2">
               <LayoutGrid className="w-3.5 h-3.5" />
               <span>{siteSettings?.homepageSections?.explore?.badge || "Civic Directory Index"}</span>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#18232E] tracking-tight font-heading">
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading leading-tight">
               {siteSettings?.homepageSections?.explore?.title || "Explore Fazilnagar"}
             </h2>
-            <p className="text-xs sm:text-sm text-[#647180] mt-1">
+            <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 mt-2 max-w-2xl leading-relaxed">
               {siteSettings?.homepageSections?.explore?.subtitle || "Verified institutions across schools, colleges, hospitals, and fuel stations."}
             </p>
           </div>
           <Link
             to="/directory"
-            className="text-xs font-bold px-4 py-2.5 rounded-xl bg-[#18232E] hover:bg-[#B8323C] text-white transition self-start md:self-auto cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-95 duration-150"
+            className="text-xs font-bold px-5 py-3 rounded-xl bg-[#0F172A] hover:bg-[#B8323C] text-white transition self-start md:self-auto cursor-pointer flex items-center gap-2 shadow-xs active:scale-95 duration-150"
           >
             <span>{siteSettings?.homepageSections?.explore?.viewAllText || "Open Full Directory"}</span>
             <ChevronRight className="w-3.5 h-3.5 text-amber-400" />
@@ -892,23 +892,23 @@ export default function TownPortal() {
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 transition-all duration-300">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 sm:gap-6 lg:gap-8 transition-all duration-300">
           {EXPLORE_21_CATEGORIES.map((cat) => {
             const Icon = cat.icon;
             return (
               <Link
                 key={cat.id}
                 to={cat.query === "all" ? "/directory" : `/directory?category=${encodeURIComponent(cat.query)}`}
-                className="group bg-white p-3.5 rounded-xl border border-[#E1E6EA] hover:border-[#CBD5E1] hover:shadow-md transition flex flex-col justify-between"
+                className="group bg-white dark:bg-[#131823] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] transition flex flex-col justify-between"
               >
-                <div className="w-9 h-9 rounded-lg bg-[#F5F7F8] text-[#18232E] flex items-center justify-center mb-2.5 group-hover:bg-[#18232E] group-hover:text-white transition">
-                  <Icon className="w-4 h-4" />
+                <div className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-white/10 text-[#0F172A] dark:text-white flex items-center justify-center mb-4 group-hover:bg-[#0F172A] group-hover:text-white transition">
+                  <Icon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold text-[#18232E] group-hover:text-[#B8323C] transition line-clamp-1 leading-snug">
+                  <h3 className="text-sm font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition line-clamp-1 leading-snug">
                     {cat.name}
                   </h3>
-                  <span className="text-[10px] text-[#647180] font-medium block mt-0.5">
+                  <span className="text-[11px] text-[#64748B] dark:text-slate-400 font-medium block mt-1">
                     {cat.count} listings
                   </span>
                 </div>
@@ -940,50 +940,50 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 4: ESSENTIAL SERVICES (High-Priority Civic Hub)
           ======================================================== */}
-      <section className="mobile-density-section bg-white py-16 border-y border-[#E1E6EA] content-visibility-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-10">
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0D5E49] uppercase tracking-wider mb-1">
+      <section className="mobile-density-section bg-white/70 dark:bg-[#131823]/50 py-20 lg:py-28 border-y border-slate-200/60 dark:border-white/10 content-visibility-auto">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+          <div className="mb-10 sm:mb-12">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0D5E49] dark:text-emerald-400 uppercase tracking-wider mb-2">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>{siteSettings?.homepageSections?.publicServices?.badge || "Public Welfare & Emergency"}</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#18232E] tracking-tight font-heading">
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading leading-tight">
               {siteSettings?.homepageSections?.publicServices?.title || "Essential Public Services"}
             </h2>
-            <p className="text-xs sm:text-sm text-[#647180] mt-1">
+            <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 mt-2 max-w-2xl leading-relaxed">
               {siteSettings?.homepageSections?.publicServices?.subtitle || "Emergency numbers, primary healthcare, pharmacy points, and administrative offices in Fazilnagar."}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {((siteSettings?.homepageSections?.publicServices?.cards && siteSettings.homepageSections.publicServices.cards.length > 0)
               ? siteSettings.homepageSections.publicServices.cards
               : DEFAULT_SITE_SETTINGS.homepageSections.publicServices.cards
             ).map((card, idx) => (
-              <div key={card.id || idx} className="group bg-[#F5F7F8] hover:bg-white p-5 rounded-2xl border border-[#E1E6EA] hover:border-slate-300 shadow-2xs hover:shadow-lg hover:-translate-y-2 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
+              <div key={card.id || idx} className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
                 <div>
-                  <span className="text-[10px] font-extrabold text-[#B8323C] uppercase tracking-wider block mb-1">
+                  <span className="text-[10px] font-extrabold text-[#B8323C] uppercase tracking-wider block mb-2">
                     {card.badge}
                   </span>
-                  <h3 className="text-sm font-bold text-[#18232E]">{card.title}</h3>
-                  <p className="text-xs text-[#647180] mt-1">{card.address}</p>
-                  <p className="text-[11px] text-slate-600 mt-2">
+                  <h3 className="text-base font-bold text-[#0F172A] dark:text-white">{card.title}</h3>
+                  <p className="text-xs text-[#64748B] dark:text-slate-400 mt-1">{card.address}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-3 leading-relaxed">
                     {card.description}
                   </p>
                 </div>
-                <div className="pt-4 border-t border-[#E1E6EA] mt-4 flex items-center justify-between">
+                <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between">
                   {card.phone ? (
-                    <a href={`tel:${card.phone.replace(/[^0-9+]/g, "")}`} className="text-xs font-bold text-[#18232E] hover:text-[#B8323C]">
+                    <a href={`tel:${card.phone.replace(/[^0-9+]/g, "")}`} className="text-xs font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
                       {card.phoneLabel || `📞 ${card.phone}`}
                     </a>
                   ) : (
-                    <span className="text-[10px] text-slate-400 font-semibold">{card.hours || "General"}</span>
+                    <span className="text-[11px] text-slate-400 font-semibold">{card.hours || "General"}</span>
                   )}
                   {card.directions && (
                     <button
                       type="button"
                       onClick={() => openGoogleMapsDirections({ name: card.title, landmark: card.address, lat: 26.6827, lng: 84.0498 })}
-                      className="text-xs font-bold text-[#0D5E49] hover:underline cursor-pointer"
+                      className="text-xs font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
                     >
                       Directions
                     </button>
@@ -998,23 +998,23 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 5: FAZILNAGAR & NEARBY PLACES (Regional Connectivity Map)
           ======================================================== */}
-      <section id="regional-connectivity-section" className="py-16 border-y content-visibility-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+      <section id="regional-connectivity-section" className="py-20 lg:py-28 border-y border-slate-200/60 dark:border-white/10 content-visibility-auto bg-[#F8FAFC] dark:bg-[#0B0F17]">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-6">
             <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#B8323C] dark:text-amber-400 uppercase tracking-wider mb-2">
                 <Compass className="w-3.5 h-3.5" />
                 <span>Geospatial Hub & Network</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight font-heading">
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading leading-tight">
                 Fazilnagar &amp; Nearby Places
               </h2>
-              <p className="text-xs sm:text-sm text-slate-300 mt-1">
+              <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 mt-2 max-w-2xl leading-relaxed">
                 फाजिलनगर और आसपास के गाँव एवं शहर &bull; Interactive regional hub showing all 126 verified block villages, nearby market towns &amp; connected cities.
               </p>
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-300 bg-slate-800/80 px-3.5 py-1.5 rounded-xl border border-slate-700/60 self-start md:self-auto shadow-xs">
+            <div className="flex items-center gap-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-[#131823] px-4 py-2.5 rounded-xl border border-slate-200/60 dark:border-white/10 self-start md:self-auto shadow-xs">
               <span className="w-2 h-2 rounded-full bg-[#B8323C] animate-ping" />
               <span>Fazilnagar Hub: 26.6827° N, 84.0498° E</span>
             </div>
@@ -1023,9 +1023,9 @@ export default function TownPortal() {
           {/* Regional Map Component */}
           <Suspense
             fallback={
-              <div className="w-full h-[460px] sm:h-[540px] bg-slate-900 rounded-3xl border border-slate-800 flex flex-col items-center justify-center text-slate-400 gap-2">
-                <div className="w-8 h-8 border-2 border-slate-700 border-t-[#B8323C] rounded-full animate-spin" />
-                <span className="text-xs font-bold text-slate-300">Loading Regional Connectivity Map…</span>
+              <div className="w-full h-[460px] sm:h-[540px] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800 flex flex-col items-center justify-center text-slate-400 gap-2 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
+                <div className="w-8 h-8 border-2 border-slate-300 dark:border-slate-700 border-t-[#B8323C] rounded-full animate-spin" />
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-300">Loading Regional Connectivity Map…</span>
               </div>
             }
           >
@@ -1037,49 +1037,49 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 6: DISCOVER LOCAL BUSINESSES (Verified Shops)
           ======================================================== */}
-      <section className="mobile-density-section bg-white py-16 border-b border-[#E1E6EA] content-visibility-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+      <section className="mobile-density-section bg-white/70 dark:bg-[#131823]/50 py-20 lg:py-28 border-b border-slate-200/60 dark:border-white/10 content-visibility-auto">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-6">
             <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B8323C] uppercase tracking-wider mb-1">
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#B8323C] uppercase tracking-wider mb-2">
                 <Store className="w-3.5 h-3.5" />
                 <span>Commerce & Retail</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#18232E] tracking-tight font-heading">
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading leading-tight">
                 Discover Local Businesses
               </h2>
-              <p className="text-xs sm:text-sm text-[#647180] mt-1">
+              <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 mt-2 max-w-2xl leading-relaxed">
                 Authentic sweet houses, bakeries, medical stores, and retail markets serving Fazilnagar town.
               </p>
             </div>
             <Link
               to="/directory?category=Sweet%20Shops%20%26%20Bakeries"
-              className="text-xs font-bold text-[#B8323C] hover:underline flex items-center gap-1"
+              className="text-xs font-bold text-[#B8323C] hover:underline flex items-center gap-1.5 py-2"
             >
               <span>View All Shops</span>
-              <ArrowRight className="w-3 h-3" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {/* Prashant Sweet House */}
-            <div className="group bg-[#F5F7F8] hover:bg-white p-5 rounded-2xl border border-[#E1E6EA] hover:border-slate-300 shadow-2xs hover:shadow-lg hover:-translate-y-2 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
+            <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
               <div>
-                <span className="text-[10px] font-bold text-[#B8323C] uppercase">Sweet Shop & Chaat</span>
-                <h3 className="text-sm font-bold text-[#18232E] group-hover:text-[#B8323C] transition-colors mt-1">Prashant Sweet House</h3>
-                <p className="text-xs text-[#647180] mt-0.5">Main Market, NH-27 Chowk</p>
-                <p className="text-xs text-slate-600 mt-2 line-clamp-2">
+                <span className="text-[10px] font-bold text-[#B8323C] uppercase tracking-wider">Sweet Shop & Chaat</span>
+                <h3 className="text-base font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition-colors mt-1.5">Prashant Sweet House</h3>
+                <p className="text-xs text-[#64748B] dark:text-slate-400 mt-1">Main Market, NH-27 Chowk</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-3 line-clamp-2 leading-relaxed">
                   Famous for pure desi ghee peda, rasgulla, morning kachori-jalebi, and evening chaat snacks.
                 </p>
               </div>
-              <div className="pt-3 border-t border-[#E1E6EA] mt-4 flex items-center justify-between text-xs">
-                <a href="tel:09839245678" className="font-bold text-[#18232E] hover:text-[#B8323C]">
+              <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
+                <a href="tel:09839245678" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
                   Call Shop
                 </a>
                 <button
                   type="button"
                   onClick={() => openGoogleMapsDirections({ name: "Prashant Sweet House", lat: 26.6833, lng: 84.0502, landmark: "Main Market, NH-27 Chowk, Fazilnagar" })}
-                  className="font-bold text-[#0D5E49] hover:underline cursor-pointer"
+                  className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
                 >
                   Directions
                 </button>
@@ -1087,23 +1087,23 @@ export default function TownPortal() {
             </div>
 
             {/* Kanha Sweets */}
-            <div className="group bg-[#F5F7F8] hover:bg-white p-5 rounded-2xl border border-[#E1E6EA] hover:border-slate-300 shadow-2xs hover:shadow-lg hover:-translate-y-2 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
+            <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
               <div>
-                <span className="text-[10px] font-bold text-[#B8323C] uppercase">Mithai & Snacks</span>
-                <h3 className="text-sm font-bold text-[#18232E] group-hover:text-[#B8323C] transition-colors mt-1">Kanha Sweets</h3>
-                <p className="text-xs text-[#647180] mt-0.5">College Road Crossing</p>
-                <p className="text-xs text-slate-600 mt-2 line-clamp-2">
+                <span className="text-[10px] font-bold text-[#B8323C] uppercase tracking-wider">Mithai & Snacks</span>
+                <h3 className="text-base font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition-colors mt-1.5">Kanha Sweets</h3>
+                <p className="text-xs text-[#64748B] dark:text-slate-400 mt-1">College Road Crossing</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-3 line-clamp-2 leading-relaxed">
                   Specialty sweets, fresh milk paneer, and authentic namkeen prepared daily with verified purity.
                 </p>
               </div>
-              <div className="pt-3 border-t border-[#E1E6EA] mt-4 flex items-center justify-between text-xs">
-                <a href="tel:09450987654" className="font-bold text-[#18232E] hover:text-[#B8323C]">
+              <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
+                <a href="tel:09450987654" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
                   Call Shop
                 </a>
                 <button
                   type="button"
                   onClick={() => openGoogleMapsDirections({ name: "Kanha Sweets", lat: 26.6844, lng: 84.0506, landmark: "College Road Crossing, Fazilnagar" })}
-                  className="font-bold text-[#0D5E49] hover:underline cursor-pointer"
+                  className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
                 >
                   Directions
                 </button>
@@ -1111,23 +1111,23 @@ export default function TownPortal() {
             </div>
 
             {/* Amit Medical Store */}
-            <div className="group bg-[#F5F7F8] hover:bg-white p-5 rounded-2xl border border-[#E1E6EA] hover:border-slate-300 shadow-2xs hover:shadow-lg hover:-translate-y-2 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
+            <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
               <div>
-                <span className="text-[10px] font-bold text-[#0D5E49] uppercase">Retail Pharmacy</span>
-                <h3 className="text-sm font-bold text-[#18232E] group-hover:text-[#B8323C] transition-colors mt-1">Amit Medical Store</h3>
-                <p className="text-xs text-[#647180] mt-0.5">College Road, Fazilnagar</p>
-                <p className="text-xs text-slate-600 mt-2 line-clamp-2">
+                <span className="text-[10px] font-bold text-[#0D5E49] dark:text-emerald-400 uppercase tracking-wider">Retail Pharmacy</span>
+                <h3 className="text-base font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition-colors mt-1.5">Amit Medical Store</h3>
+                <p className="text-xs text-[#64748B] dark:text-slate-400 mt-1">College Road, Fazilnagar</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-3 line-clamp-2 leading-relaxed">
                   Licensed retail chemist providing allopathic pharmaceuticals, surgical kits, and health monitors.
                 </p>
               </div>
-              <div className="pt-3 border-t border-[#E1E6EA] mt-4 flex items-center justify-between text-xs">
-                <a href="tel:09450812345" className="font-bold text-[#18232E] hover:text-[#B8323C]">
+              <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
+                <a href="tel:09450812345" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
                   Call Chemist
                 </a>
                 <button
                   type="button"
                   onClick={() => openGoogleMapsDirections({ name: "Amit Medical Store", lat: 26.6846, lng: 84.0503, landmark: "College Road, Fazilnagar" })}
-                  className="font-bold text-[#0D5E49] hover:underline cursor-pointer"
+                  className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
                 >
                   Directions
                 </button>
@@ -1135,23 +1135,23 @@ export default function TownPortal() {
             </div>
 
             {/* Maurya Electronics */}
-            <div className="group bg-[#F5F7F8] hover:bg-white p-5 rounded-2xl border border-[#E1E6EA] hover:border-slate-300 shadow-2xs hover:shadow-lg hover:-translate-y-2 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
+            <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
               <div>
-                <span className="text-[10px] font-bold text-[#647180] uppercase">Electronics & Mobile</span>
-                <h3 className="text-sm font-bold text-[#18232E] group-hover:text-[#B8323C] transition-colors mt-1">Maurya Electronics & Mobile</h3>
-                <p className="text-xs text-[#647180] mt-0.5">Babu Bazar, Fazilnagar</p>
-                <p className="text-xs text-slate-600 mt-2 line-clamp-2">
+                <span className="text-[10px] font-bold text-[#64748B] dark:text-slate-400 uppercase tracking-wider">Electronics & Mobile</span>
+                <h3 className="text-base font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition-colors mt-1.5">Maurya Electronics & Mobile</h3>
+                <p className="text-xs text-[#64748B] dark:text-slate-400 mt-1">Babu Bazar, Fazilnagar</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-3 line-clamp-2 leading-relaxed">
                   Smartphones, home appliances, inverter battery care, and chip-level device repair services.
                 </p>
               </div>
-              <div className="pt-3 border-t border-[#E1E6EA] mt-4 flex items-center justify-between text-xs">
-                <a href="tel:09838877665" className="font-bold text-[#18232E] hover:text-[#B8323C]">
+              <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
+                <a href="tel:09838877665" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
                   Call Store
                 </a>
                 <button
                   type="button"
                   onClick={() => openGoogleMapsDirections({ name: "Maurya Electronics & Mobile", lat: 26.6827, lng: 84.0486, landmark: "Babu Bazar, Fazilnagar" })}
-                  className="font-bold text-[#0D5E49] hover:underline cursor-pointer"
+                  className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
                 >
                   Directions
                 </button>
@@ -1164,53 +1164,56 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 7: SCHOOLS & COLLEGES (Education Preview)
           ======================================================== */}
-      <section className="mobile-density-section py-16 content-visibility-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+      {/* ========================================================
+          SECTION 7: SCHOOLS & COLLEGES (Education Preview)
+          ======================================================== */}
+      <section className="mobile-density-section py-20 lg:py-28 border-b border-slate-200/60 dark:border-white/10 content-visibility-auto">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-6">
             <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B8323C] uppercase tracking-wider mb-1">
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#B8323C] uppercase tracking-wider mb-2">
                 <GraduationCap className="w-3.5 h-3.5" />
                 <span>Education Directory</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#18232E] tracking-tight font-heading">
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading leading-tight">
                 Schools & Colleges in Town
               </h2>
-              <p className="text-xs sm:text-sm text-[#647180] mt-1">
+              <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 mt-2 max-w-2xl leading-relaxed">
                 Verified educational institutions located within Fazilnagar town boundary.
               </p>
             </div>
             <Link
               to="/directory?category=Schools%20%26%20Colleges"
-              className="text-xs font-bold bg-[#18232E] hover:bg-[#B8323C] text-white px-4 py-2.5 rounded-xl transition self-start md:self-auto"
+              className="text-xs font-bold bg-[#0F172A] hover:bg-[#B8323C] text-white px-5 py-3 rounded-xl transition self-start md:self-auto shadow-xs"
             >
               View All Schools & Colleges →
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {/* Sanskar Central Academy */}
-            <div className="bg-white p-5 rounded-2xl border border-[#E1E6EA] shadow-xs flex flex-col justify-between">
+            <div className="bg-white dark:bg-[#131823] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between text-xs mb-2">
-                  <span className="text-[10px] font-bold text-[#B8323C] uppercase bg-red-50 px-2 py-0.5 rounded">
+                <div className="flex items-center justify-between text-xs mb-3">
+                  <span className="text-[10px] font-bold text-[#B8323C] uppercase bg-red-50 dark:bg-red-950/40 px-2.5 py-1 rounded-full border border-red-200/60 dark:border-red-800/40">
                     CBSE English Medium
                   </span>
-                  <span className="text-[11px] text-[#0D5E49] font-bold">Nursery – Class XII</span>
+                  <span className="text-[11px] text-[#0D5E49] dark:text-emerald-400 font-bold">Nursery – Class XII</span>
                 </div>
-                <h3 className="text-base font-bold text-[#18232E] mb-1">Sanskar Central Academy</h3>
-                <p className="text-xs text-[#647180] mb-3">Durga Bhawan Campus, College Road</p>
-                <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+                <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-1.5">Sanskar Central Academy</h3>
+                <p className="text-xs text-[#64748B] dark:text-slate-400 mb-3">Durga Bhawan Campus, College Road</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed">
                   Established CBSE-affiliated co-educational academy with smart computer labs, audio-visual classes, and sports training.
                 </p>
               </div>
-              <div className="pt-4 border-t border-[#E1E6EA] mt-4 flex items-center justify-between text-xs">
-                <a href="tel:09452089540" className="font-bold text-[#18232E] hover:text-[#B8323C]">
+              <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
+                <a href="tel:09452089540" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
                   📞 094520 89540
                 </a>
                 <button
                   type="button"
                   onClick={() => openGoogleMapsDirections({ name: "Sanskar Central Academy", lat: 26.6852, lng: 84.0508, landmark: "Durga Bhawan Campus, College Road, Fazilnagar" })}
-                  className="font-bold text-[#0D5E49] hover:underline cursor-pointer"
+                  className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
                 >
                   Directions
                 </button>
@@ -1218,28 +1221,28 @@ export default function TownPortal() {
             </div>
 
             {/* Pawanagar Mahavir Inter College */}
-            <div className="bg-white p-5 rounded-2xl border border-[#E1E6EA] shadow-xs flex flex-col justify-between">
+            <div className="bg-white dark:bg-[#131823] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between text-xs mb-2">
-                  <span className="text-[10px] font-bold text-slate-700 uppercase bg-slate-100 px-2 py-0.5 rounded">
+                <div className="flex items-center justify-between text-xs mb-3">
+                  <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase bg-slate-100 dark:bg-white/10 px-2.5 py-1 rounded-full border border-slate-200/60 dark:border-white/10">
                     UP Board Sr. Secondary
                   </span>
-                  <span className="text-[11px] text-[#0D5E49] font-bold">Class VI – XII</span>
+                  <span className="text-[11px] text-[#0D5E49] dark:text-emerald-400 font-bold">Class VI – XII</span>
                 </div>
-                <h3 className="text-base font-bold text-[#18232E] mb-1">Pawanagar Mahavir Inter College</h3>
-                <p className="text-xs text-[#647180] mb-3">College Road, Fazilnagar</p>
-                <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+                <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-1.5">Pawanagar Mahavir Inter College</h3>
+                <p className="text-xs text-[#64748B] dark:text-slate-400 mb-3">College Road, Fazilnagar</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed">
                   Historic town anchor college offering Science, Commerce, and Arts streams with extensive athletic grounds.
                 </p>
               </div>
-              <div className="pt-4 border-t border-[#E1E6EA] mt-4 flex items-center justify-between text-xs">
-                <a href="tel:05564222115" className="font-bold text-[#18232E] hover:text-[#B8323C]">
+              <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
+                <a href="tel:05564222115" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
                   📞 05564-222115
                 </a>
                 <button
                   type="button"
                   onClick={() => openGoogleMapsDirections({ name: "Pawanagar Mahavir Inter College", lat: 26.6848, lng: 84.0510, landmark: "College Road, Fazilnagar" })}
-                  className="font-bold text-[#0D5E49] hover:underline cursor-pointer"
+                  className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
                 >
                   Directions
                 </button>
@@ -1247,28 +1250,28 @@ export default function TownPortal() {
             </div>
 
             {/* The Hermitage School */}
-            <div className="bg-white p-5 rounded-2xl border border-[#E1E6EA] shadow-xs flex flex-col justify-between">
+            <div className="bg-white dark:bg-[#131823] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between text-xs mb-2">
-                  <span className="text-[10px] font-bold text-blue-700 uppercase bg-blue-50 px-2 py-0.5 rounded">
+                <div className="flex items-center justify-between text-xs mb-3">
+                  <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-full border border-blue-200/60 dark:border-blue-800/40">
                     English Medium Primary
                   </span>
-                  <span className="text-[11px] text-[#0D5E49] font-bold">KG – Middle</span>
+                  <span className="text-[11px] text-[#0D5E49] dark:text-emerald-400 font-bold">KG – Middle</span>
                 </div>
-                <h3 className="text-base font-bold text-[#18232E] mb-1">The Hermitage School</h3>
-                <p className="text-xs text-[#647180] mb-3">Hospital Road (Near Sarkari Hospital)</p>
-                <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+                <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-1.5">The Hermitage School</h3>
+                <p className="text-xs text-[#64748B] dark:text-slate-400 mb-3">Hospital Road (Near Sarkari Hospital)</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed">
                   Quality foundational school focusing on language fluency, cognitive development, and creative extracurriculars.
                 </p>
               </div>
-              <div className="pt-4 border-t border-[#E1E6EA] mt-4 flex items-center justify-between text-xs">
-                <a href="tel:09919523411" className="font-bold text-[#18232E] hover:text-[#B8323C]">
+              <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
+                <a href="tel:09919523411" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
                   📞 099195 23411
                 </a>
                 <button
                   type="button"
                   onClick={() => openGoogleMapsDirections({ name: "The Hermitage School", lat: 26.6821, lng: 84.0526, landmark: "Hospital Road, Fazilnagar" })}
-                  className="font-bold text-[#0D5E49] hover:underline cursor-pointer"
+                  className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
                 >
                   Directions
                 </button>
@@ -1281,24 +1284,24 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION: UPCOMING EVENTS & TOWN MELAS (Religious Melas & Civic Festivals)
           ======================================================== */}
-      <section id="events-melas-section" className="mobile-density-section bg-white py-16 border-t border-[#E1E6EA]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="events-melas-section" className="mobile-density-section bg-white/70 dark:bg-[#131823]/50 py-20 lg:py-28 border-b border-slate-200/60 dark:border-white/10">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           {/* Header */}
-          <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-8 gap-4">
+          <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 sm:mb-12 gap-6">
             <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 uppercase tracking-wider mb-2 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
-                <Calendar className="w-3.5 h-3.5 text-amber-600" />
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2 bg-amber-50 dark:bg-amber-950/40 px-3 py-1 rounded-full border border-amber-200/60 dark:border-amber-800/40">
+                <Calendar className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>{siteSettings?.homepageSections?.events?.badge || "Town Fairs, Melas & Cultural Celebrations"}</span>
               </div>
-              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#18232E] tracking-tight font-heading">
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading leading-tight">
                 {siteSettings?.homepageSections?.events?.title || "Upcoming Events & Town Melas"}
               </h2>
-              <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
+              <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 mt-2 max-w-2xl leading-relaxed">
                 {siteSettings?.homepageSections?.events?.subtitle || "Experience the vibrant community life of Fazilnagar — from the sacred Pawapuri Nirvana Mela to civic festivals, devotional aartis, and annual town gatherings."}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={() => {
@@ -1307,16 +1310,16 @@ export default function TownPortal() {
                     setCommunityModalOpen(true);
                   }, "submit a local event or mela");
                 }}
-                className="inline-flex items-center gap-1.5 bg-[#0D5E49] hover:bg-[#0a4838] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-2 bg-[#0D5E49] hover:bg-[#0a4838] text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow-xs cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-4 h-4" />
                 <span>{siteSettings?.homepageSections?.events?.ctaText || "+ Submit Event / Mela"}</span>
               </button>
             </div>
           </div>
 
           {/* Category Filter Pills */}
-          <div className="flex flex-wrap items-center gap-2 mb-8 overflow-x-auto pb-2 scrollbar-none">
+          <div className="flex flex-wrap items-center gap-2.5 mb-10 overflow-x-auto pb-2 scrollbar-none">
             {eventCategories.map((cat) => {
               const count = cat === "All"
                 ? events.filter((e) => e.isPublished !== false && e.status !== "draft").length
@@ -1326,15 +1329,15 @@ export default function TownPortal() {
                   key={cat}
                   type="button"
                   onClick={() => setSelectedEventCategory(cat)}
-                  className={`text-xs font-bold px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
+                  className={`text-xs font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
                     selectedEventCategory === cat
-                      ? "bg-[#18232E] text-white shadow-xs"
-                      : "bg-[#F5F7F8] hover:bg-slate-200 text-slate-700 border border-[#E1E6EA]"
+                      ? "bg-[#0F172A] text-white shadow-xs dark:bg-white dark:text-[#0F172A]"
+                      : "bg-white dark:bg-[#131823] hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/10"
                   }`}
                 >
                   <span>{cat}</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-extrabold ${
-                    selectedEventCategory === cat ? "bg-white/20 text-white" : "bg-slate-200 text-slate-600"
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                    selectedEventCategory === cat ? "bg-white/20 dark:bg-black/20 text-white dark:text-black" : "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400"
                   }`}>
                     {count}
                   </span>
@@ -1345,7 +1348,7 @@ export default function TownPortal() {
 
           {/* Events Grid */}
           {filteredEvents.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
               {filteredEvents.map((evt) => {
                 const eventDate = evt.startDate ? new Date(evt.startDate) : null;
                 const monthStr = eventDate && !isNaN(eventDate.getTime())
@@ -1357,7 +1360,7 @@ export default function TownPortal() {
                 return (
                   <article
                     key={evt._id || evt.id}
-                    className="group bg-white rounded-2xl border border-[#E1E6EA] hover:border-amber-300 shadow-xs hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col justify-between"
+                    className="group bg-white dark:bg-[#131823] rounded-2xl sm:rounded-3xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] transition-all duration-300 overflow-hidden flex flex-col justify-between"
                   >
                     <div>
                       {/* Banner Image with Badges */}
@@ -1506,25 +1509,25 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 8: LOCAL NEWS & CIVIC BULLETINS (Dated & Credible)
           ======================================================== */}
-      <section id="local-updates-section" className="mobile-density-section py-16 border-y content-visibility-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-8 gap-4">
+      <section id="local-updates-section" className="mobile-density-section py-20 lg:py-28 border-y border-slate-200/60 dark:border-white/8 content-visibility-auto">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 lg:mb-12 gap-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-red-400 uppercase tracking-wider mb-1">
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-red-500 uppercase tracking-wider mb-2">
                 <Bell className="w-3.5 h-3.5" />
                 <span>Dated Community Bulletins</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-heading">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading">
                 Local News & Civic Bulletins
               </h2>
-              <p className="text-xs sm:text-sm text-slate-400 mt-1">
+              <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 mt-1.5 leading-relaxed">
                 Official notices and community happenings verified from local organizers.
               </p>
             </div>
             <div className="flex items-center gap-3">
               <Link
                 to="/news"
-                className="text-red-400 hover:text-white text-xs font-bold inline-flex items-center gap-1 transition"
+                className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 text-xs font-bold inline-flex items-center gap-1 transition"
               >
                 <span>View All Updates ({liveNews.length > 0 ? liveNews.length : 3}) →</span>
               </Link>
@@ -1538,38 +1541,38 @@ export default function TownPortal() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {liveNews.length > 0 ? (
               liveNews.slice(0, 3).map((item) => (
                 <div
                   key={item._id || item.id}
-                  className="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-slate-700 transition-all group"
+                  className="civic-card bg-white dark:bg-[#131823] border border-slate-200/60 dark:border-white/8 rounded-2xl overflow-hidden flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all group"
                 >
                   {(item.mediaType === "video" || item.video) ? (
-                    <Suspense fallback={<div className="h-40 w-full bg-slate-800/80 animate-pulse" />}>
+                    <Suspense fallback={<div className="h-44 w-full bg-slate-100 dark:bg-slate-800 animate-pulse" />}>
                       <StoryVideoPreview
                         story={item}
-                        className="h-40 w-full"
+                        className="h-44 w-full"
                         aspectRatio="aspect-auto"
                         fallbackPoster={item.image || ""}
                       />
                     </Suspense>
                   ) : item.image ? (
-                    <div className="h-40 w-full overflow-hidden bg-slate-950">
+                    <div className="h-44 w-full overflow-hidden bg-slate-100 dark:bg-slate-950">
                       <img
                         src={item.image}
                         alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     </div>
                   ) : null}
-                  <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between">
                     <div>
-                      <div className="flex items-center justify-between text-xs mb-2">
-                        <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider bg-red-950/60 px-2 py-0.5 rounded border border-red-800/40">
+                      <div className="flex items-center justify-between text-xs mb-3">
+                        <span className="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider bg-red-50 dark:bg-red-950/60 px-2.5 py-1 rounded-full border border-red-200/60 dark:border-red-800/40">
                           {item.category || "General"}
                         </span>
-                        <span className="text-[11px] text-slate-400">
+                        <span className="text-[11px] text-[#64748B] dark:text-slate-400">
                           {item.createdAt
                             ? new Date(item.createdAt).toLocaleDateString("en-IN", {
                                 day: "numeric",
@@ -1578,21 +1581,21 @@ export default function TownPortal() {
                             : "Recent"}
                         </span>
                       </div>
-                      <h3 className="text-sm font-bold text-white mb-1.5 group-hover:text-red-300 transition-colors line-clamp-2">
+                      <h3 className="text-sm sm:text-base font-bold text-[#0F172A] dark:text-white mb-2 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors line-clamp-2 leading-snug">
                         {item.title}
                       </h3>
                       {item.titleHi && (
-                        <p className="text-xs text-slate-400 font-serif line-clamp-1 mb-1">
+                        <p className="text-xs text-[#64748B] dark:text-slate-400 font-serif line-clamp-1 mb-2">
                           {item.titleHi}
                         </p>
                       )}
-                      <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">
+                      <p className="text-xs text-[#475569] dark:text-slate-300 leading-relaxed line-clamp-3">
                         {item.description}
                       </p>
                     </div>
-                    <div className="pt-4 border-t border-slate-800/80 mt-4 text-[11px] text-slate-400 flex items-center justify-between">
+                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 mt-5 text-[11px] text-[#64748B] dark:text-slate-400 flex items-center justify-between">
                       <span className="truncate">By {item.author?.name || "Local Reporter"}</span>
-                      <Link to="/news" className="text-red-400 hover:text-red-300 font-semibold shrink-0 ml-2">
+                      <Link to="/news" className="text-red-600 dark:text-red-400 hover:text-red-700 font-semibold shrink-0 ml-2">
                         Read Bulletin →
                       </Link>
                     </div>
@@ -1602,62 +1605,62 @@ export default function TownPortal() {
             ) : (
               <>
                 {/* Event 1 */}
-                <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+                <div className="civic-card bg-white dark:bg-[#131823] border border-slate-200/60 dark:border-white/8 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none">
                   <div>
-                    <div className="flex items-center justify-between text-xs mb-2">
-                      <span className="text-[10px] font-bold text-amber-400 uppercase">Cultural Heritage</span>
-                      <span className="text-[11px] text-slate-400">Annual Festival</span>
+                    <div className="flex items-center justify-between text-xs mb-3">
+                      <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200/60 dark:border-amber-800/40 px-2.5 py-1 rounded-full uppercase">Cultural Heritage</span>
+                      <span className="text-[11px] text-[#64748B] dark:text-slate-400">Annual Festival</span>
                     </div>
-                    <h3 className="text-sm font-bold text-white mb-1.5">
+                    <h3 className="text-sm sm:text-base font-bold text-[#0F172A] dark:text-white mb-2 leading-snug">
                       Kartik Poornima & Nirvana Mahotsav at Pawanagar
                     </h3>
-                    <p className="text-xs text-slate-300 leading-relaxed">
+                    <p className="text-xs text-[#475569] dark:text-slate-300 leading-relaxed">
                       Traditional annual pilgrimage gathering following Diwali celebrating the nirvana legacy of Lord Mahavira at the historic shrine.
                     </p>
                   </div>
-                  <div className="pt-4 border-t border-slate-800 mt-4 text-[11px] text-slate-400 flex items-center justify-between">
+                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-5 text-[11px] text-[#64748B] dark:text-slate-400 flex items-center justify-between">
                     <span>Source: Pawanagar Trust</span>
-                    <span className="text-emerald-400 font-semibold">Post-Diwali</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Post-Diwali</span>
                   </div>
                 </div>
 
                 {/* Event 2 */}
-                <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+                <div className="civic-card bg-white dark:bg-[#131823] border border-slate-200/60 dark:border-white/8 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none">
                   <div>
-                    <div className="flex items-center justify-between text-xs mb-2">
-                      <span className="text-[10px] font-bold text-[#0D5E49] uppercase">Healthcare Routine</span>
-                      <span className="text-[11px] text-slate-400">Every Wednesday</span>
+                    <div className="flex items-center justify-between text-xs mb-3">
+                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/40 px-2.5 py-1 rounded-full uppercase">Healthcare Routine</span>
+                      <span className="text-[11px] text-[#64748B] dark:text-slate-400">Every Wednesday</span>
                     </div>
-                    <h3 className="text-sm font-bold text-white mb-1.5">
+                    <h3 className="text-sm sm:text-base font-bold text-[#0F172A] dark:text-white mb-2 leading-snug">
                       Weekly Immunization & Maternal Day at CHC Fazilnagar
                     </h3>
-                    <p className="text-xs text-slate-300 leading-relaxed">
+                    <p className="text-xs text-[#475569] dark:text-slate-300 leading-relaxed">
                       Public health team conducts designated infant immunizations, maternal nutrition checkups, and child wellness counseling.
                     </p>
                   </div>
-                  <div className="pt-4 border-t border-slate-800 mt-4 text-[11px] text-slate-400 flex items-center justify-between">
+                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-5 text-[11px] text-[#64748B] dark:text-slate-400 flex items-center justify-between">
                     <span>Source: CHC Health Desk</span>
-                    <span className="text-emerald-400 font-semibold">Weekly</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Weekly</span>
                   </div>
                 </div>
 
                 {/* Event 3 */}
-                <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+                <div className="civic-card bg-white dark:bg-[#131823] border border-slate-200/60 dark:border-white/8 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none">
                   <div>
-                    <div className="flex items-center justify-between text-xs mb-2">
-                      <span className="text-[10px] font-bold text-blue-400 uppercase">Civic Works</span>
-                      <span className="text-[11px] text-slate-400">Highway Corridor</span>
+                    <div className="flex items-center justify-between text-xs mb-3">
+                      <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800/40 px-2.5 py-1 rounded-full uppercase">Civic Works</span>
+                      <span className="text-[11px] text-[#64748B] dark:text-slate-400">Highway Corridor</span>
                     </div>
-                    <h3 className="text-sm font-bold text-white mb-1.5">
+                    <h3 className="text-sm sm:text-base font-bold text-[#0F172A] dark:text-white mb-2 leading-snug">
                       NH-27 Highway Service Road Beautification & Lighting
                     </h3>
-                    <p className="text-xs text-slate-300 leading-relaxed">
+                    <p className="text-xs text-[#475569] dark:text-slate-300 leading-relaxed">
                       Town civic maintenance program underway for solar streetlight installation and pedestrian pathway clearing at Main Chowk.
                     </p>
                   </div>
-                  <div className="pt-4 border-t border-slate-800 mt-4 text-[11px] text-slate-400 flex items-center justify-between">
+                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-5 text-[11px] text-[#64748B] dark:text-slate-400 flex items-center justify-between">
                     <span>Source: Town Civic Circle</span>
-                    <span className="text-emerald-400 font-semibold">In Progress</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">In Progress</span>
                   </div>
                 </div>
               </>
@@ -1669,30 +1672,30 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 9: ABOUT FAZILNAGAR & KUSHINAGAR (History & Culture)
           ======================================================== */}
-      <section id="about-fazilnagar-section" className="mobile-density-section py-16 border-t content-visibility-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="about-fazilnagar-section" className="mobile-density-section py-20 lg:py-28 border-t border-slate-200/60 dark:border-white/8 content-visibility-auto">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           {/* Header */}
-          <div className="text-center max-w-3xl mx-auto mb-10">
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B8323C] uppercase tracking-wider mb-2 bg-red-50 px-3 py-1 rounded-full border border-red-100">
+          <div className="text-center max-w-3xl mx-auto mb-12 lg:mb-16">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B8323C] dark:text-red-400 uppercase tracking-wider mb-2.5 bg-red-50 dark:bg-red-950/60 px-3.5 py-1 rounded-full border border-red-200/60 dark:border-red-800/40">
               <BookOpen className="w-3.5 h-3.5" />
               <span>{siteSettings?.homepageSections?.heritage?.badge || "Town Profile, Antiquity & Sacred Heritage"}</span>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#18232E] tracking-tight mb-3 font-heading">
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight mb-3.5 font-heading">
               {siteSettings?.homepageSections?.heritage?.title || "Fazilnagar & Kushinagar: The Sacred Twin Heritage"}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 leading-relaxed">
               {siteSettings?.homepageSections?.heritage?.subtitle || "Explore the deep 2,600-year-old antiquity, sacred spiritual milestones of Bhagwan Mahavira and Lord Buddha, and modern civic significance of the two historic capitals of the ancient Malla Republic."}
             </p>
 
             {/* Interactive Tab Switcher */}
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-6 p-1.5 bg-[#F5F7F8] rounded-2xl border border-[#E1E6EA] max-w-xl mx-auto">
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-8 p-1.5 bg-slate-100/80 dark:bg-slate-900/80 rounded-2xl border border-slate-200/60 dark:border-white/8 max-w-xl mx-auto">
               <button
                 type="button"
                 onClick={() => setAboutTab("fazilnagar")}
                 className={`flex-1 min-w-[150px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                   aboutTab === "fazilnagar"
-                    ? "bg-[#18232E] text-white shadow-md"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                    ? "bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] shadow-sm"
+                    : "text-[#64748B] dark:text-slate-400 hover:text-[#0F172A] dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60"
                 }`}
               >
                 <span>{siteSettings?.homepageSections?.heritage?.tab1Label || "🏛️ Fazilnagar (Pawanagar)"}</span>
@@ -1702,8 +1705,8 @@ export default function TownPortal() {
                 onClick={() => setAboutTab("kushinagar")}
                 className={`flex-1 min-w-[150px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                   aboutTab === "kushinagar"
-                    ? "bg-[#18232E] text-white shadow-md"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                    ? "bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] shadow-sm"
+                    : "text-[#64748B] dark:text-slate-400 hover:text-[#0F172A] dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60"
                 }`}
               >
                 <span>{siteSettings?.homepageSections?.heritage?.tab2Label || "☸️ Kushinagar (Mahaparinirvana)"}</span>
@@ -1713,8 +1716,8 @@ export default function TownPortal() {
                 onClick={() => setAboutTab("connection")}
                 className={`flex-1 min-w-[150px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                   aboutTab === "connection"
-                    ? "bg-[#18232E] text-white shadow-md"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                    ? "bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] shadow-sm"
+                    : "text-[#64748B] dark:text-slate-400 hover:text-[#0F172A] dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60"
                 }`}
               >
                 <span>{siteSettings?.homepageSections?.heritage?.tab3Label || "✨ The Twin Sacred Bond"}</span>
@@ -1726,11 +1729,11 @@ export default function TownPortal() {
           {aboutTab === "fazilnagar" && (
             <div className="space-y-8 animate-fadeIn">
               {/* Dynamic Image Gallery Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
                 {fazilnagarSites.map((site) => (
                   <div
                     key={site._id || site.slug || site.name}
-                    className="group relative rounded-2xl overflow-hidden shadow-lg border border-[#E1E6EA] bg-slate-900 aspect-16/10 flex flex-col justify-end"
+                    className="group relative rounded-2xl overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.06)] border border-slate-200/60 dark:border-white/8 bg-slate-900 aspect-16/10 flex flex-col justify-end"
                   >
                     <img
                       src={site.primaryImage || "/images/fazilnagar_pawanagar.webp"}
@@ -1741,7 +1744,7 @@ export default function TownPortal() {
                       loading="lazy"
                       decoding="async"
                     />
-                    <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-5 flex flex-col justify-end space-y-1.5">
+                    <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-6 sm:p-7 flex flex-col justify-end space-y-1.5">
                       <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/85 border border-amber-600/50 px-2 py-0.5 rounded-full w-fit">
                           {site.category || "Jain Heritage"}
@@ -1768,7 +1771,7 @@ export default function TownPortal() {
                       <p className="text-slate-200 text-xs line-clamp-2 leading-relaxed">
                         {site.historicalSignificance || site.narrative}
                       </p>
-                      <div className="pt-2 flex items-center justify-between text-[11px] text-slate-300 border-t border-white/20 mt-1">
+                      <div className="pt-3 flex items-center justify-between text-[11px] text-slate-300 border-t border-white/20 mt-1.5">
                         <span className="truncate max-w-[200px]">
                           🕒 {site.visitingHours || "06:00 AM – 07:00 PM"} • {site.entryFee || "Free Entry"}
                         </span>
@@ -1791,16 +1794,16 @@ export default function TownPortal() {
               </div>
 
               {/* History & Importance Deep Dive */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-[#F5F7F8] p-6 sm:p-8 rounded-2xl border border-[#E1E6EA] space-y-4">
-                  <div className="flex items-center gap-2 text-xs font-bold text-[#B8323C] uppercase tracking-wide">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                <div className="lg:col-span-2 civic-card bg-white dark:bg-[#131823] p-6 sm:p-8 rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none space-y-5">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#B8323C] dark:text-red-400 uppercase tracking-wide">
                     <Landmark className="w-4 h-4" />
                     <span>Historical Significance of Fazilnagar (Pawanagar)</span>
                   </div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-[#18232E] font-heading">
+                  <h3 className="text-xl sm:text-2xl font-bold text-[#0F172A] dark:text-white font-heading">
                     Ancient Capital of the Malla Republic & Lord Mahavira's Nirvana
                   </h3>
-                  <div className="text-xs sm:text-sm text-slate-700 leading-relaxed space-y-3">
+                  <div className="text-xs sm:text-sm text-[#475569] dark:text-slate-300 leading-relaxed space-y-3">
                     <p>
                       <strong>Fazilnagar</strong> is historically identified with ancient <strong>Pawa (Pawanagar)</strong>,
                       one of the two sovereign capitals of the ancient democratic <strong>Malla Mahajanapada</strong> (6th century BCE).
@@ -1823,55 +1826,55 @@ export default function TownPortal() {
                   <button
                     type="button"
                     onClick={() => setIsHeritageExpanded((expanded) => !expanded)}
-                    className="text-xs font-bold text-[#B8323C] hover:underline"
+                    className="text-xs font-bold text-[#B8323C] dark:text-red-400 hover:underline cursor-pointer"
                   >
                     {isHeritageExpanded ? "Read Less" : "Read More"}
                   </button>
 
-                  <div className="pt-4 border-t border-[#E1E6EA] grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                    <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
-                      <span className="block text-[10px] text-slate-500 font-bold uppercase">Antiquity</span>
-                      <span className="text-xs font-extrabold text-[#18232E]">2,600+ Years</span>
+                  <div className="pt-5 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                    <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200/60 dark:border-white/8">
+                      <span className="block text-[10px] text-[#64748B] dark:text-slate-400 font-bold uppercase">Antiquity</span>
+                      <span className="text-xs font-extrabold text-[#0F172A] dark:text-white">2,600+ Years</span>
                     </div>
-                    <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
-                      <span className="block text-[10px] text-slate-500 font-bold uppercase">Ancient Dynasty</span>
-                      <span className="text-xs font-extrabold text-[#18232E]">Malla Republic</span>
+                    <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200/60 dark:border-white/8">
+                      <span className="block text-[10px] text-[#64748B] dark:text-slate-400 font-bold uppercase">Ancient Dynasty</span>
+                      <span className="text-xs font-extrabold text-[#0F172A] dark:text-white">Malla Republic</span>
                     </div>
-                    <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
-                      <span className="block text-[10px] text-slate-500 font-bold uppercase">PIN Code</span>
-                      <span className="text-xs font-extrabold text-[#18232E]">274401</span>
+                    <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200/60 dark:border-white/8">
+                      <span className="block text-[10px] text-[#64748B] dark:text-slate-400 font-bold uppercase">PIN Code</span>
+                      <span className="text-xs font-extrabold text-[#0F172A] dark:text-white">274401</span>
                     </div>
-                    <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
-                      <span className="block text-[10px] text-slate-500 font-bold uppercase">Highway</span>
-                      <span className="text-xs font-extrabold text-[#18232E]">NH-27 4-Lane</span>
+                    <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200/60 dark:border-white/8">
+                      <span className="block text-[10px] text-[#64748B] dark:text-slate-400 font-bold uppercase">Highway</span>
+                      <span className="text-xs font-extrabold text-[#0F172A] dark:text-white">NH-27 4-Lane</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Modern Importance Column */}
-                <div className="bg-white p-6 rounded-2xl border border-[#E1E6EA] space-y-4 flex flex-col justify-between">
+                <div className="civic-card bg-white dark:bg-[#131823] p-6 sm:p-8 rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none space-y-5 flex flex-col justify-between">
                   <div>
-                    <span className="text-[10px] font-bold uppercase text-[#0D5E49] tracking-wider block mb-1">
+                    <span className="text-[10px] font-bold uppercase text-[#0D5E49] dark:text-emerald-400 tracking-wider block mb-1">
                       Present-Day Importance
                     </span>
-                    <h3 className="text-base font-bold text-[#18232E] font-heading mb-3">
+                    <h3 className="text-base font-bold text-[#0F172A] dark:text-white font-heading mb-3.5">
                       Modern Civic, Educational & Commercial Hub
                     </h3>
-                    <ul className="space-y-3 text-xs text-slate-600 leading-relaxed">
+                    <ul className="space-y-3 text-xs text-[#475569] dark:text-slate-300 leading-relaxed">
                       <li className="flex items-start gap-2">
-                        <span className="text-[#0D5E49] font-bold text-sm">✓</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm">✓</span>
                         <span><strong>Education Center:</strong> Houses prominent institutions including Pawanagar Mahavir Inter College, Degree Colleges, and private academies serving 15+ surrounding gram panchayats.</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-[#0D5E49] font-bold text-sm">✓</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm">✓</span>
                         <span><strong>Strategic Highway Corridor:</strong> Directly situated on the Golden East-West corridor NH-27 (Old NH-28), connecting Gorakhpur with Bihar and Assam.</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-[#0D5E49] font-bold text-sm">✓</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm">✓</span>
                         <span><strong>Public Health Care:</strong> Community Health Centre (CHC) Fazilnagar provides 24/7 maternal, emergency ambulance, and immunization care.</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-[#0D5E49] font-bold text-sm">✓</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm">✓</span>
                         <span><strong>Grain & Trade Mandi:</strong> A prime marketplace for sugarcane, grains, electronics, fertilizers, and building materials.</span>
                       </li>
                     </ul>
@@ -1879,7 +1882,7 @@ export default function TownPortal() {
 
                   <a
                     href="#regional-connectivity-section"
-                    className="w-full bg-[#18232E] hover:bg-[#B8323C] text-white text-xs font-bold py-2.5 rounded-xl transition text-center block shadow-xs"
+                    className="w-full bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] hover:bg-[#B8323C] dark:hover:bg-slate-200 text-xs font-bold py-3 rounded-xl transition text-center block shadow-xs"
                   >
                     View Fazilnagar & Regional Map
                   </a>
@@ -1892,11 +1895,11 @@ export default function TownPortal() {
           {aboutTab === "kushinagar" && (
             <div className="space-y-8 animate-fadeIn">
               {/* Dynamic Image Gallery Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
                 {kushinagarSites.map((site) => (
                   <div
                     key={site._id || site.slug || site.name}
-                    className="group relative rounded-2xl overflow-hidden shadow-lg border border-[#E1E6EA] bg-slate-900 aspect-16/10 flex flex-col justify-end"
+                    className="group relative rounded-2xl overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.06)] border border-slate-200/60 dark:border-white/8 bg-slate-900 aspect-16/10 flex flex-col justify-end"
                   >
                     <img
                       src={site.primaryImage || "/images/kushinagar_mahaparinirvana.webp"}
@@ -1907,7 +1910,7 @@ export default function TownPortal() {
                       loading="lazy"
                       decoding="async"
                     />
-                    <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-5 flex flex-col justify-end space-y-1.5">
+                    <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-6 sm:p-7 flex flex-col justify-end space-y-1.5">
                       <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 bg-rose-950/85 border border-rose-600/50 px-2 py-0.5 rounded-full w-fit">
                           {site.category || "Buddhist Heritage"}
@@ -1934,7 +1937,7 @@ export default function TownPortal() {
                       <p className="text-slate-200 text-xs line-clamp-2 leading-relaxed">
                         {site.historicalSignificance || site.narrative}
                       </p>
-                      <div className="pt-2 flex items-center justify-between text-[11px] text-slate-300 border-t border-white/20 mt-1">
+                      <div className="pt-3 flex items-center justify-between text-[11px] text-slate-300 border-t border-white/20 mt-1.5">
                         <span className="truncate max-w-[200px]">
                           🕒 {site.visitingHours || "06:00 AM – 06:00 PM"} • {site.entryFee || "Free Entry"}
                         </span>
@@ -1957,16 +1960,16 @@ export default function TownPortal() {
               </div>
 
               {/* History & Importance Deep Dive */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-[#F5F7F8] p-6 sm:p-8 rounded-2xl border border-[#E1E6EA] space-y-4">
-                  <div className="flex items-center gap-2 text-xs font-bold text-[#B8323C] uppercase tracking-wide">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                <div className="lg:col-span-2 civic-card bg-white dark:bg-[#131823] p-6 sm:p-8 rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none space-y-5">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#B8323C] dark:text-red-400 uppercase tracking-wide">
                     <Landmark className="w-4 h-4" />
                     <span>Sacred Antiquity of Kushinagar (Kusinara)</span>
                   </div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-[#18232E] font-heading">
+                  <h3 className="text-xl sm:text-2xl font-bold text-[#0F172A] dark:text-white font-heading">
                     The Supreme Mahaparinirvana Sthal of Lord Gautam Buddha
                   </h3>
-                  <div className="text-xs sm:text-sm text-slate-700 leading-relaxed space-y-3">
+                  <div className="text-xs sm:text-sm text-[#475569] dark:text-slate-300 leading-relaxed space-y-3">
                     <p>
                       <strong>Kushinagar</strong> (anciently known as <em>Kushavati</em> and <em>Kusinara</em>) was the sister sovereign
                       seat of the Malla Republic, situated approximately <strong>18 km northwest of Fazilnagar</strong>.
@@ -1989,55 +1992,55 @@ export default function TownPortal() {
                   <button
                     type="button"
                     onClick={() => setIsHeritageExpanded((expanded) => !expanded)}
-                    className="text-xs font-bold text-[#B8323C] hover:underline"
+                    className="text-xs font-bold text-[#B8323C] dark:text-red-400 hover:underline cursor-pointer"
                   >
                     {isHeritageExpanded ? "Read Less" : "Read More"}
                   </button>
 
-                  <div className="pt-4 border-t border-[#E1E6EA] grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                    <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
-                      <span className="block text-[10px] text-slate-500 font-bold uppercase">Distance from Town</span>
-                      <span className="text-xs font-extrabold text-[#18232E]">18 km (~20 min)</span>
+                  <div className="pt-5 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                    <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200/60 dark:border-white/8">
+                      <span className="block text-[10px] text-[#64748B] dark:text-slate-400 font-bold uppercase">Distance from Town</span>
+                      <span className="text-xs font-extrabold text-[#0F172A] dark:text-white">18 km (~20 min)</span>
                     </div>
-                    <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
-                      <span className="block text-[10px] text-slate-500 font-bold uppercase">International Airport</span>
-                      <span className="text-xs font-extrabold text-[#18232E]">Operational</span>
+                    <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200/60 dark:border-white/8">
+                      <span className="block text-[10px] text-[#64748B] dark:text-slate-400 font-bold uppercase">International Airport</span>
+                      <span className="text-xs font-extrabold text-[#0F172A] dark:text-white">Operational</span>
                     </div>
-                    <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
-                      <span className="block text-[10px] text-slate-500 font-bold uppercase">Buddhist Circuit</span>
-                      <span className="text-xs font-extrabold text-[#18232E]">Global Hub</span>
+                    <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200/60 dark:border-white/8">
+                      <span className="block text-[10px] text-[#64748B] dark:text-slate-400 font-bold uppercase">Buddhist Circuit</span>
+                      <span className="text-xs font-extrabold text-[#0F172A] dark:text-white">Global Hub</span>
                     </div>
-                    <div className="bg-white p-3 rounded-xl border border-[#E1E6EA]">
-                      <span className="block text-[10px] text-slate-500 font-bold uppercase">District HQ</span>
-                      <span className="text-xs font-extrabold text-[#18232E]">Kushinagar</span>
+                    <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200/60 dark:border-white/8">
+                      <span className="block text-[10px] text-[#64748B] dark:text-slate-400 font-bold uppercase">District HQ</span>
+                      <span className="text-xs font-extrabold text-[#0F172A] dark:text-white">Kushinagar</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Key Monuments Column */}
-                <div className="bg-white p-6 rounded-2xl border border-[#E1E6EA] space-y-4 flex flex-col justify-between">
+                <div className="civic-card bg-white dark:bg-[#131823] p-6 sm:p-8 rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none space-y-5 flex flex-col justify-between">
                   <div>
-                    <span className="text-[10px] font-bold uppercase text-[#B8323C] tracking-wider block mb-1">
+                    <span className="text-[10px] font-bold uppercase text-[#B8323C] dark:text-red-400 tracking-wider block mb-1">
                       Key Pilgrimage Monuments
                     </span>
-                    <h3 className="text-base font-bold text-[#18232E] font-heading mb-3">
+                    <h3 className="text-base font-bold text-[#0F172A] dark:text-white font-heading mb-3.5">
                       World Heritage Archaeological Wonders
                     </h3>
-                    <ul className="space-y-3 text-xs text-slate-600 leading-relaxed">
+                    <ul className="space-y-3 text-xs text-[#475569] dark:text-slate-300 leading-relaxed">
                       <li className="flex items-start gap-2">
-                        <span className="text-[#B8323C] font-bold text-sm">☸</span>
+                        <span className="text-red-500 font-bold text-sm">☸</span>
                         <span><strong>Mahaparinirvana Temple:</strong> Rebuilt in 1956 for the 2500th Buddha Jayanti, housing the world-famous reclining Buddha.</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-[#B8323C] font-bold text-sm">☸</span>
+                        <span className="text-red-500 font-bold text-sm">☸</span>
                         <span><strong>Ramabhar Stupa:</strong> Monumental brick chaitya standing 49 feet tall at the Buddha's holy cremation site.</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-[#B8323C] font-bold text-sm">☸</span>
+                        <span className="text-red-500 font-bold text-sm">☸</span>
                         <span><strong>Matha Kuar Shrine:</strong> Features a colossal 10th-century blue-black stone Buddha in Bhumisparsha mudra.</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-[#B8323C] font-bold text-sm">☸</span>
+                        <span className="text-red-500 font-bold text-sm">☸</span>
                         <span><strong>International Monasteries:</strong> Cultural monasteries built by Thailand, Myanmar, Japan, Sri Lanka, Tibet, China, Vietnam, and Cambodia.</span>
                       </li>
                     </ul>
@@ -2045,7 +2048,7 @@ export default function TownPortal() {
 
                   <Link
                     to="/tourism"
-                    className="w-full bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold py-2.5 rounded-xl transition text-center block shadow-xs"
+                    className="w-full bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold py-3 rounded-xl transition text-center block shadow-xs"
                   >
                     Explore Tourism Guide & Itineraries
                   </Link>
@@ -2057,23 +2060,23 @@ export default function TownPortal() {
           {/* TAB 3: TWIN SACRED BOND */}
           {aboutTab === "connection" && (
             <div className="space-y-8 animate-fadeIn">
-              <div className="bg-gradient-to-br from-slate-900 to-[#18232E] text-white p-8 sm:p-10 rounded-3xl shadow-xl space-y-6">
+              <div className="bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white p-8 sm:p-12 rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-slate-700/60 space-y-8">
                 <div className="max-w-3xl">
                   <span className="text-xs font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/80 border border-amber-600/50 px-3 py-1 rounded-full">
                     A Confluence of Two World Religions
                   </span>
-                  <h3 className="text-2xl sm:text-3xl font-extrabold mt-3 font-heading text-white">
+                  <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold mt-4 font-heading text-white">
                     Pawa (Fazilnagar) & Kusinara (Kushinagar): The Twin Capitals of the Malla Republic
                   </h3>
-                  <p className="text-slate-300 text-xs sm:text-sm mt-3 leading-relaxed">
+                  <p className="text-slate-300 text-xs sm:text-sm mt-3.5 leading-relaxed">
                     Nowhere else on Earth are the ultimate mortal milestones of two supreme world spiritual luminaries—Lord Mahavira
                     (Jainism) and Lord Gautam Buddha (Buddhism)—located in such intimate geographic and historic proximity.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-800 text-xs">
-                  <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 space-y-2">
-                    <span className="text-lg">🏛️</span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-700/60 text-xs">
+                  <div className="bg-slate-800/70 p-6 rounded-2xl border border-slate-700/60 space-y-2.5">
+                    <span className="text-xl">🏛️</span>
                     <h3 className="font-bold text-amber-300 text-sm">The Malla Mahajanapada</h3>
                     <p className="text-slate-300 leading-relaxed text-[11px]">
                       Over 2,600 years ago, the Mallas established one of ancient India's earliest democratic oligarchic republics,
@@ -2081,8 +2084,8 @@ export default function TownPortal() {
                     </p>
                   </div>
 
-                  <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 space-y-2">
-                    <span className="text-lg">🕯️</span>
+                  <div className="bg-slate-800/70 p-6 rounded-2xl border border-slate-700/60 space-y-2.5">
+                    <span className="text-xl">🕯️</span>
                     <h3 className="font-bold text-amber-300 text-sm">Mahavira's Nirvana in Pawa</h3>
                     <p className="text-slate-300 leading-relaxed text-[11px]">
                       In 527 BCE, the 24th Tirthankara Bhagwan Mahavira attained Nirvana at Pawa. The Malla chieftains lit deepams
@@ -2090,8 +2093,8 @@ export default function TownPortal() {
                     </p>
                   </div>
 
-                  <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 space-y-2">
-                    <span className="text-lg">☸️</span>
+                  <div className="bg-slate-800/70 p-6 rounded-2xl border border-slate-700/60 space-y-2.5">
+                    <span className="text-xl">☸️</span>
                     <h3 className="font-bold text-amber-300 text-sm">Buddha's Parinirvana in Kusinara</h3>
                     <p className="text-slate-300 leading-relaxed text-[11px]">
                       In 483 BCE, Gautam Buddha accepted his final meal in Pawa's mango grove, rested by the Kakodha/Kukuttha river,
@@ -2100,7 +2103,7 @@ export default function TownPortal() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-800 text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-slate-700/60 text-xs">
                   <div className="flex items-center gap-2 text-slate-300">
                     <MapPin className="w-4 h-4 text-emerald-400" />
                     <span>Connected seamlessly by 4-lane NH-27 (Distance: 18 km / Travel Time: 20 minutes)</span>
@@ -2108,13 +2111,13 @@ export default function TownPortal() {
                   <div className="flex items-center gap-3">
                     <Link
                       to="/directory"
-                      className="bg-[#B8323C] hover:bg-[#991B1B] text-white font-bold px-4 py-2 rounded-xl transition"
+                      className="bg-[#B8323C] hover:bg-[#991B1B] text-white font-bold px-5 py-2.5 rounded-xl transition shadow-xs"
                     >
                       Browse Town Directory
                     </Link>
                     <Link
                       to="/tourism"
-                      className="bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-2 rounded-xl transition"
+                      className="bg-white/10 hover:bg-white/20 text-white font-bold px-5 py-2.5 rounded-xl transition border border-white/10"
                     >
                       View Tourism Route
                     </Link>
@@ -2129,36 +2132,36 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 10: CITIZEN CORNER (Actionable Forms)
           ======================================================== */}
-      <section id="citizen-corner-section" className="mobile-density-section bg-white py-16 border-t border-[#E1E6EA] content-visibility-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0D5E49] uppercase tracking-wider mb-1">
+      <section id="citizen-corner-section" className="mobile-density-section bg-[#F8FAFC] dark:bg-[#0B0F17] py-20 lg:py-28 border-t border-slate-200/60 dark:border-white/8 content-visibility-auto">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+          <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/40 px-3 py-1 rounded-full uppercase tracking-wider mb-2">
               <PlusCircle className="w-3.5 h-3.5" />
               <span>Community Participation</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#18232E] tracking-tight font-heading">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading">
               Citizen Corner
             </h2>
-            <p className="text-xs sm:text-sm text-[#647180] mt-1">
+            <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 mt-2 leading-relaxed">
               Help maintain accuracy by suggesting a local place, reporting an error, or broadcasting a town event.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {/* Action 1 */}
-            <div className="bg-[#F5F7F8] rounded-2xl p-6 border border-[#E1E6EA] flex flex-col justify-between">
+            <div className="civic-card bg-white dark:bg-[#131823] rounded-2xl p-6 sm:p-8 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between transition-all">
               <div>
-                <div className="w-11 h-11 rounded-xl bg-white text-[#18232E] flex items-center justify-center mb-3.5 border border-[#E1E6EA]">
+                <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-[#0F172A] dark:text-white flex items-center justify-center mb-4 border border-slate-200/60 dark:border-white/8">
                   <Store className="w-5 h-5" />
                 </div>
-                <h3 className="text-sm font-bold text-[#18232E] mb-1">Suggest a Business</h3>
-                <p className="text-xs text-[#647180] leading-relaxed mb-5">
+                <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-2">Suggest a Business</h3>
+                <p className="text-xs text-[#64748B] dark:text-slate-400 leading-relaxed mb-6">
                   Are you a shopkeeper, doctor, or trade operator inside Fazilnagar town limits? Submit your details for verification.
                 </p>
               </div>
               <button
                 onClick={() => handleRequireAuthAction(() => setModalType("business"), "suggest a business or place")}
-                className="w-full bg-[#18232E] hover:bg-[#B8323C] text-white font-bold text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs"
+                className="w-full bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] hover:bg-[#B8323C] dark:hover:bg-slate-200 font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
               >
                 <PlusCircle className="w-4 h-4" />
                 <span>Suggest Place</span>
@@ -2166,39 +2169,39 @@ export default function TownPortal() {
             </div>
 
             {/* Action 2 */}
-            <div className="bg-[#F5F7F8] rounded-2xl p-6 border border-[#E1E6EA] flex flex-col justify-between">
+            <div className="civic-card bg-white dark:bg-[#131823] rounded-2xl p-6 sm:p-8 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between transition-all">
               <div>
-                <div className="w-11 h-11 rounded-xl bg-white text-amber-600 flex items-center justify-center mb-3.5 border border-[#E1E6EA]">
+                <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4 border border-amber-200/60 dark:border-amber-800/40">
                   <Edit3 className="w-5 h-5" />
                 </div>
-                <h3 className="text-sm font-bold text-[#18232E] mb-1">Report Incorrect Info</h3>
-                <p className="text-xs text-[#647180] leading-relaxed mb-5">
+                <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-2">Report Incorrect Info</h3>
+                <p className="text-xs text-[#64748B] dark:text-slate-400 leading-relaxed mb-6">
                   Noticed a wrong phone number, closed establishment, or village listing inside town directory? Report it to moderators.
                 </p>
               </div>
               <button
                 onClick={() => handleRequireAuthAction(() => setModalType("correction"), "report incorrect information")}
-                className="w-full bg-white hover:bg-slate-50 text-[#18232E] border border-[#E1E6EA] font-bold text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs"
+                className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 text-[#0F172A] dark:text-white border border-slate-200/60 dark:border-white/8 font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
               >
-                <AlertCircle className="w-4 h-4 text-amber-600" />
+                <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                 <span>Report Error</span>
               </button>
             </div>
 
             {/* Action 3 */}
-            <div className="bg-[#F5F7F8] rounded-2xl p-6 border border-[#E1E6EA] flex flex-col justify-between">
+            <div className="civic-card bg-white dark:bg-[#131823] rounded-2xl p-6 sm:p-8 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between transition-all">
               <div>
-                <div className="w-11 h-11 rounded-xl bg-white text-[#0D5E49] flex items-center justify-center mb-3.5 border border-[#E1E6EA]">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mb-4 border border-emerald-200/60 dark:border-emerald-800/40">
                   <CalendarPlus className="w-5 h-5" />
                 </div>
-                <h3 className="text-sm font-bold text-[#18232E] mb-1">Submit a Local Event</h3>
-                <p className="text-xs text-[#647180] leading-relaxed mb-5">
+                <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-2">Submit a Local Event</h3>
+                <p className="text-xs text-[#64748B] dark:text-slate-400 leading-relaxed mb-6">
                   Organizing a public camp, inter-college competition, or cultural katha inside town? Submit the date and organizer.
                 </p>
               </div>
               <button
                 onClick={() => handleRequireAuthAction(() => setModalType("event"), "submit a local event")}
-                className="w-full bg-[#0D5E49] hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs"
+                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
               >
                 <CalendarPlus className="w-4 h-4" />
                 <span>Submit Event</span>
@@ -2211,12 +2214,12 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 11: FOOTER (Editorial Civic Footer)
           ======================================================== */}
-      <footer className="bg-[#18232E] text-slate-400 text-xs border-t border-slate-800 pb-16 lg:pb-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
+      <footer className="bg-[#0F172A] text-slate-400 text-xs border-t border-slate-800/80 pb-24 lg:pb-0">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 lg:py-20 grid grid-cols-1 md:grid-cols-4 gap-10 lg:gap-12">
           {/* Col 1: Wordmark & Tagline */}
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-white text-[#18232E] flex items-center justify-center font-extrabold text-sm">
+              <div className="w-8 h-8 rounded-lg bg-white text-[#0F172A] flex items-center justify-center font-extrabold text-sm">
                 F
               </div>
               <div>

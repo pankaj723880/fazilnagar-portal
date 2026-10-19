@@ -87,17 +87,17 @@ export default function HealthcareDirectory() {
   });
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-8 sm:py-10 space-y-8 sm:space-y-10 pb-32 font-sans">
       {/* Header */}
-      <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-slate-900 via-[#18232E] to-slate-900 text-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.04)] border border-slate-800/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div>
-          <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+          <span className="bg-red-600/90 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
             Verified Medical Registry
           </span>
-          <h1 className="text-2xl sm:text-4xl font-extrabold mt-2">
+          <h1 className="text-2xl sm:text-4xl font-extrabold mt-3 tracking-tight font-heading">
             🏥 Fazilnagar Healthcare &amp; Medical Directory
           </h1>
-          <p className="text-slate-300 text-sm mt-1">
+          <p className="text-slate-300 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed">
             Search Fazilnagar hospitals, Community Health Centre (CHC), clinics, pharmacies, and diagnostic labs.
           </p>
         </div>
@@ -107,7 +107,7 @@ export default function HealthcareDirectory() {
           placeholder="Search facility name or service..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full md:w-80 bg-slate-800 text-white placeholder-slate-400 px-4 py-3 rounded-2xl text-sm border border-slate-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+          className="w-full md:w-80 bg-slate-800/80 text-white placeholder-slate-400 px-4 py-3 rounded-2xl text-xs border border-slate-700/80 focus:outline-none focus:ring-2 focus:ring-red-500 font-medium"
         />
       </div>
 
@@ -119,8 +119,8 @@ export default function HealthcareDirectory() {
             onClick={() => setActiveType(type)}
             className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
               activeType === type
-                ? "bg-red-700 text-white shadow-md"
-                : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+                ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
+                : "bg-white dark:bg-[#131823] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/8 hover:bg-slate-50 dark:hover:bg-[#1A2234]"
             }`}
           >
             {type}
@@ -136,14 +136,14 @@ export default function HealthcareDirectory() {
       </div>
 
       {filteredHealthcare.length === 0 && (
-        <div className="bg-white p-8 rounded-3xl border border-slate-200 text-center max-w-md mx-auto my-6">
-          <p className="text-sm font-bold text-slate-800">No medical facilities found</p>
-          <p className="text-xs text-slate-500 mt-1">
+        <div className="bg-white dark:bg-[#131823] p-8 sm:p-12 rounded-3xl border border-slate-200/60 dark:border-white/8 text-center max-w-md mx-auto my-6 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
+          <p className="text-sm font-bold text-slate-800 dark:text-white">No medical facilities found</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {searchQuery ? `No healthcare results matching "${searchQuery}". Try searching in Hindi (e.g. 'अस्पताल', 'दवा') or reset filters.` : "No facilities found in this category."}
           </p>
           <button
             onClick={() => { setActiveType("All"); setSearchQuery(""); }}
-            className="mt-3 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold"
+            className="mt-4 px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-bold transition shadow-xs"
           >
             Reset Filters
           </button>
@@ -151,11 +151,11 @@ export default function HealthcareDirectory() {
       )}
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
         {filteredHealthcare.map((place) => (
           <div
             key={place.id}
-            className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 hover:border-red-300 transition-colors"
+            className="bg-white dark:bg-[#131823] p-6 sm:p-8 rounded-3xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] space-y-4 hover:border-slate-300 dark:hover:border-white/20 transition"
           >
             <div className="flex items-start justify-between">
               <div>

@@ -114,14 +114,14 @@ export default function GovtServices() {
   });
 
   return (
-    <div className="space-y-6 pb-16 max-w-7xl mx-auto px-4 sm:px-6">
+    <div className="space-y-8 sm:space-y-10 pb-32 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 font-sans">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-[#18232E] to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-2 border border-slate-800">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600/90 text-white text-xs font-bold uppercase tracking-wider">
+      <div className="bg-gradient-to-r from-slate-900 via-[#18232E] to-slate-900 text-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.04)] space-y-3 border border-slate-800/80">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600/90 text-white text-[10px] font-bold uppercase tracking-wider">
           <Landmark className="w-3.5 h-3.5" />
           <span>Public Administrative Portal</span>
         </div>
-        <h1 className="text-2xl sm:text-4xl font-extrabold font-heading text-white">
+        <h1 className="text-2xl sm:text-4xl font-extrabold font-heading text-white tracking-tight">
           Fazilnagar Public &amp; Civic Utilities Guide
         </h1>
         <p className="text-slate-300 text-xs sm:text-sm max-w-3xl leading-relaxed">
@@ -130,7 +130,7 @@ export default function GovtServices() {
       </div>
 
       {/* Search & Category Filter Bar */}
-      <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-center gap-3">
+      <div className="bg-white dark:bg-[#131823] p-4 sm:p-5 rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] flex flex-col md:flex-row items-center gap-3.5">
         <div className="relative flex-1 w-full">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -138,7 +138,7 @@ export default function GovtServices() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search citizen services (Birth certificate, Bhulekh, Electricity, Ration)..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm sm:text-xs min-h-[44px] focus:ring-2 focus:ring-indigo-500 font-medium"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200/80 dark:border-white/10 text-sm sm:text-xs min-h-[44px] focus:ring-2 focus:ring-indigo-500 font-medium bg-slate-50/50 dark:bg-slate-900/50 text-slate-900 dark:text-white"
           />
         </div>
 
@@ -147,7 +147,7 @@ export default function GovtServices() {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full md:w-auto px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm sm:text-xs min-h-[44px] focus:ring-2 focus:ring-indigo-500 bg-white font-medium"
+            className="w-full md:w-auto px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-white/10 text-sm sm:text-xs min-h-[44px] focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-[#131823] font-medium text-slate-900 dark:text-white cursor-pointer"
           >
             {categories.map((c) => (
               <option key={c} value={c}>
@@ -159,18 +159,18 @@ export default function GovtServices() {
       </div>
 
       {/* Services Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
         {filtered.length === 0 ? (
-          <div className="col-span-full py-16 text-center text-slate-400 bg-white rounded-3xl border border-slate-200 p-8">
-            <HelpCircle className="w-10 h-10 mx-auto text-slate-300 mb-2" />
-            <p className="text-sm font-bold text-slate-600">No public services matched your search.</p>
+          <div className="col-span-full py-16 text-center text-slate-400 bg-white dark:bg-[#131823] rounded-3xl border border-slate-200/60 dark:border-white/8 p-8 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
+            <HelpCircle className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+            <p className="text-sm font-bold text-slate-600 dark:text-slate-300">No public services matched your search.</p>
             <p className="text-xs text-slate-400 mt-1">Try selecting another category or resetting the search filter.</p>
           </div>
         ) : (
           filtered.map((srv, idx) => (
             <div
               key={srv._id || idx}
-              className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between hover:border-slate-300 transition"
+              className="bg-white dark:bg-[#131823] p-6 sm:p-8 rounded-3xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] space-y-4 flex flex-col justify-between hover:border-slate-300 dark:hover:border-white/20 transition"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-2">

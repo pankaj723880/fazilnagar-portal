@@ -547,11 +547,11 @@ export default function Directory({ user }) {
   const localities = Array.from(new Set(allMasterPlaces.map((p) => p.locality).filter(Boolean)));
 
   return (
-    <div id="directory-page" className="space-y-3.5 sm:space-y-5 pb-24 sm:pb-16 font-sans max-w-7xl mx-auto px-2.5 sm:px-4 lg:px-6">
+    <div id="directory-page" className="space-y-6 sm:space-y-8 lg:space-y-10 pb-32 font-sans max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
       {/* ========================================================
           1. SIMPLIFIED HEADER & HERO (Compact on Mobile)
           ======================================================== */}
-      <div className="bg-[#18232E] text-white p-3.5 sm:p-5 lg:p-6 rounded-2xl shadow-md border border-slate-800">
+      <div className="bg-gradient-to-r from-slate-900 via-[#18232E] to-slate-900 text-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.04)] border border-slate-800/80">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -656,7 +656,7 @@ export default function Directory({ user }) {
           2. COMPACT SUMMARY STATS ROW (Replaces 4 oversized cards)
           ======================================================== */}
       {stats && (
-        <div className="bg-white px-3 py-1.5 rounded-lg border border-slate-200/90 shadow-2xs flex items-center justify-between text-[11px] overflow-x-auto gap-2.5 scrollbar-none">
+        <div className="bg-white dark:bg-[#131823] px-4 py-2.5 rounded-xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] flex items-center justify-between text-xs overflow-x-auto gap-3 scrollbar-none">
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span className="font-extrabold text-slate-900 text-xs">{stats.published || places.length}</span>
@@ -690,7 +690,7 @@ export default function Directory({ user }) {
       {/* ========================================================
           3. SEARCH & CATEGORY FILTERS (Primary Action Block)
           ======================================================== */}
-      <div className="bg-white p-2.5 sm:p-3 rounded-xl border border-slate-200/90 shadow-2xs space-y-2">
+      <div className="bg-white dark:bg-[#131823] p-4 sm:p-5 lg:p-6 rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] space-y-3.5">
         {/* Search input + View Switcher */}
         <form onSubmit={handleSearchSubmit} className="flex flex-wrap sm:flex-nowrap items-center gap-2">
           <div className="relative flex-1 min-w-[180px]">
@@ -887,7 +887,7 @@ export default function Directory({ user }) {
         </div>
       ) : viewMode === "map" ? (
         /* Map View + Synchronized List */
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 sm:gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Lazy-Loaded Leaflet Map with Synchronized Skeleton */}
           <Suspense
             fallback={
@@ -913,7 +913,7 @@ export default function Directory({ user }) {
           </Suspense>
 
           {/* Synchronized Places Side List (Persistent List with Active Zoom & Pin Highlight) */}
-          <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs flex flex-col h-full min-h-[320px] sm:min-h-[420px]">
+          <div className="bg-white dark:bg-[#131823] rounded-2xl p-5 sm:p-6 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] flex flex-col h-full min-h-[360px] sm:min-h-[460px]">
             <div className="pb-2 border-b border-slate-100 mb-2 flex items-center justify-between">
               <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-[#B8323C]" />
@@ -1083,7 +1083,7 @@ export default function Directory({ user }) {
         </div>
       ) : (
         /* List View (Single-Open Accordion Layout) */
-        <div className="bg-white dark:bg-[#24242A] rounded-2xl border border-slate-200/90 dark:border-[#38383E] shadow-2xs divide-y divide-slate-100 dark:divide-[#38383E] overflow-hidden">
+        <div className="bg-white dark:bg-[#131823] rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] divide-y divide-slate-100 dark:divide-white/6 overflow-hidden">
           {places.map((place) => {
             const entityId = place._id || place.id || place.slug;
             const isExpanded = expandedEntityId === entityId;

@@ -54,26 +54,26 @@ export default function JobsAndBusiness() {
   const [activeTab, setActiveTab] = useState("jobs");
 
   return (
-    <div className="space-y-6 pb-12">
-      <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-8 sm:py-10 space-y-8 sm:space-y-10 pb-32 font-sans">
+      <div className="bg-gradient-to-r from-slate-900 via-[#18232E] to-slate-900 text-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.04)] border border-slate-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div>
-          <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+          <span className="bg-red-600/90 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
             Commerce & Employment
           </span>
-          <h1 className="text-2xl sm:text-4xl font-extrabold mt-2">
+          <h1 className="text-2xl sm:text-4xl font-extrabold mt-3 tracking-tight font-heading">
             💼 Fazilnagar Jobs &amp; Business Directory
           </h1>
-          <p className="text-slate-300 text-sm mt-1">
+          <p className="text-slate-300 text-xs sm:text-sm mt-1.5 leading-relaxed">
             Browse local openings or claim and list your business.
           </p>
         </div>
 
-        <div className="flex bg-slate-800 p-1.5 rounded-2xl border border-slate-700">
+        <div className="flex bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700/80 shadow-xs">
           <button
             onClick={() => setActiveTab("jobs")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === "jobs"
-                ? "bg-red-700 text-white shadow"
+                ? "bg-white text-slate-900 shadow-xs"
                 : "text-slate-400 hover:text-white"
             }`}
           >
@@ -81,9 +81,9 @@ export default function JobsAndBusiness() {
           </button>
           <button
             onClick={() => setActiveTab("directory")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === "directory"
-                ? "bg-red-700 text-white shadow"
+                ? "bg-white text-slate-900 shadow-xs"
                 : "text-slate-400 hover:text-white"
             }`}
           >
@@ -93,33 +93,33 @@ export default function JobsAndBusiness() {
       </div>
 
       {activeTab === "jobs" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
           {LOCAL_JOBS.map((job) => (
             <div
               key={job.id}
-              className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-3"
+              className="bg-white dark:bg-[#131823] p-6 sm:p-8 rounded-3xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] space-y-3"
             >
-              <span className="text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded border border-emerald-200">
+              <span className="text-[10px] font-bold uppercase bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/40">
                 {job.type}
               </span>
-              <h3 className="text-lg font-bold text-slate-900">{job.title}</h3>
-              <p className="text-xs text-slate-500 font-semibold">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{job.title}</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
                 {job.company} — 📍 {job.location}
               </p>
-              <p className="text-xs font-bold text-slate-800">💰 {job.salary}</p>
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">💰 {job.salary}</p>
             </div>
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
           {BUSINESS_DIRECTORY.map((biz) => (
             <div
               key={biz.id}
-              className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-2"
+              className="bg-white dark:bg-[#131823] p-6 sm:p-8 rounded-3xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] space-y-2.5"
             >
-              <h3 className="font-bold text-slate-900">{biz.name}</h3>
-              <p className="text-xs text-slate-500">📍 {biz.address}</p>
-              <p className="text-xs text-slate-700 font-medium">📞 {biz.phone}</p>
+              <h3 className="font-bold text-slate-900 dark:text-white text-base">{biz.name}</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">📍 {biz.address}</p>
+              <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">📞 {biz.phone}</p>
             </div>
           ))}
         </div>
