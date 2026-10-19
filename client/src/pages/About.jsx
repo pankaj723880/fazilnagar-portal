@@ -4,6 +4,7 @@ import { usePageSEO } from "../utils/seo";
 import { getHeritageSites, DEFAULT_HERITAGE_SITES } from "../services/cmsService";
 import { openGoogleMapsDirections } from "../utils/directions";
 import seedPlaces from "../data/places.json";
+import { ScrollReveal, ScrollStagger, ParallaxLayer } from "../components/ScrollReveal";
 import {
   BookOpen,
   Landmark,
@@ -82,53 +83,59 @@ export default function About() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-8 sm:py-12 space-y-12 sm:space-y-16 lg:space-y-20 pb-32 font-sans">
       {/* Unofficial Community-Operated Declaration Banner */}
-      <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-300/60 dark:border-amber-900/40 rounded-3xl p-6 sm:p-7 text-amber-950 dark:text-amber-200 text-xs shadow-[0_2px_16px_rgba(0,0,0,0.04)] space-y-2">
-        <div className="flex items-center gap-2 font-black text-amber-900 dark:text-amber-300 uppercase tracking-wider text-[11px]">
-          <span className="text-base">📢</span>
-          <span>Unofficial, Community-Operated Civic Portal Notice</span>
+      <ScrollReveal variant="fade-up" once={true}>
+        <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-300/60 dark:border-amber-900/40 rounded-3xl p-6 sm:p-7 text-amber-950 dark:text-amber-200 text-xs shadow-[0_2px_16px_rgba(0,0,0,0.04)] space-y-2">
+          <div className="flex items-center gap-2 font-black text-amber-900 dark:text-amber-300 uppercase tracking-wider text-[11px]">
+            <span className="text-base">📢</span>
+            <span>Unofficial, Community-Operated Civic Portal Notice</span>
+          </div>
+          <p className="leading-relaxed text-amber-900/90 dark:text-amber-200/90">
+            This portal is an independent civic initiative operated by local volunteers and citizens of Fazilnagar (PIN 274401). 
+            <strong> It is NOT run, authorized, or maintained by Nagar Panchayat Fazilnagar or any government department.</strong> 
+            All information is curated for community welfare and peer-reviewed by local residents.
+          </p>
         </div>
-        <p className="leading-relaxed text-amber-900/90 dark:text-amber-200/90">
-          This portal is an independent civic initiative operated by local volunteers and citizens of Fazilnagar (PIN 274401). 
-          <strong> It is NOT run, authorized, or maintained by Nagar Panchayat Fazilnagar or any government department.</strong> 
-          All information is curated for community welfare and peer-reviewed by local residents.
-        </p>
-      </div>
+      </ScrollReveal>
 
       {/* Hero Header */}
-      <div className="bg-gradient-to-br from-[#18232E] via-slate-900 to-black text-white p-8 sm:p-12 lg:p-16 rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.04)] relative overflow-hidden border border-slate-800/80">
-        <div className="max-w-3xl space-y-4 relative z-10">
-          <div className="inline-flex items-center gap-2 bg-[#B8323C] text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-            <BookOpen className="w-3.5 h-3.5" />
-            <span>Antiquity, Culture & Heritage</span>
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight font-heading leading-tight">
-            Fazilnagar & Kushinagar: 2,600 Years of Sacred Heritage
-          </h1>
-          <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-            The ancient sovereign capitals of the democratic Malla Mahajanapada — the sacred ground where Lord Mahavira
-            attained Nirvana and Gautam Buddha passed into Mahaparinirvana along the tranquil waters of the Kukuttha and Hiranyavati.
-          </p>
+      <ScrollReveal variant="fade-up" once={true}>
+        <div className="bg-gradient-to-br from-[#18232E] via-slate-900 to-black text-white p-8 sm:p-12 lg:p-16 rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.04)] relative overflow-hidden border border-slate-800/80">
+          <div className="max-w-3xl space-y-4 relative z-10">
+            <div className="inline-flex items-center gap-2 bg-[#B8323C] text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Antiquity, Culture & Heritage</span>
+            </div>
+            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight font-heading leading-tight">
+              Fazilnagar & Kushinagar: 2,600 Years of Sacred Heritage
+            </h1>
+            <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+              The ancient sovereign capitals of the democratic Malla Mahajanapada — the sacred ground where Lord Mahavira
+              attained Nirvana and Gautam Buddha passed into Mahaparinirvana along the tranquil waters of the Kukuttha and Hiranyavati.
+            </p>
 
-          <div className="flex flex-wrap items-center gap-3 pt-2">
-            <a
-              href="#heritage-showcase"
-              className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-xs flex items-center gap-1.5"
-            >
-              <span>Explore History & Monuments</span>
-              <ArrowRight className="w-4 h-4" />
-            </a>
-            <Link
-              to="/directory"
-              className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition border border-white/20"
-            >
-              View Local Directory ({seedPlaces?.length || 19} Places)
-            </Link>
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <a
+                href="#heritage-showcase"
+                className="bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-xs flex items-center gap-1.5"
+              >
+                <span>Explore History & Monuments</span>
+                <ArrowRight className="w-4 h-4" />
+              </a>
+              <Link
+                to="/directory"
+                className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition border border-white/20"
+              >
+                View Local Directory ({seedPlaces?.length || 19} Places)
+              </Link>
+            </div>
           </div>
+
+          {/* Decorative background glow with subtle parallax */}
+          <ParallaxLayer speed={0.2} className="absolute right-0 top-0 pointer-events-none">
+            <div className="w-96 h-96 bg-[#B8323C]/15 rounded-full blur-3xl"></div>
+          </ParallaxLayer>
         </div>
-
-        {/* Decorative background glow */}
-        <div className="absolute right-0 top-0 w-96 h-96 bg-[#B8323C]/10 rounded-full blur-3xl pointer-events-none"></div>
-      </div>
+      </ScrollReveal>
 
       {/* Interactive Tabs */}
       <div id="heritage-showcase" className="scroll-mt-24 space-y-8">
@@ -544,6 +551,7 @@ export default function About() {
       </div>
 
       {/* HOW WE VERIFY LISTINGS & CRITERIA SECTION */}
+      <ScrollReveal variant="fade-up" once={true}>
       <section id="verification-criteria" className="bg-white dark:bg-[#131823] rounded-3xl p-8 sm:p-12 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] space-y-8">
         <div className="space-y-2.5">
           <span className="text-xs font-bold text-[#B8323C] uppercase tracking-wider">
@@ -557,41 +565,41 @@ export default function About() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <ScrollStagger staggerBaseDelay={50} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-slate-50/70 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-200/60 dark:border-white/8 space-y-2.5">
             <span className="text-xl">📍</span>
-            <h3 className="text-xs font-bold text-slate-900">1. Physical GPS Ground Truth</h3>
-            <p className="text-[11px] text-slate-600 leading-relaxed">
+            <h3 className="text-xs font-bold text-slate-900 dark:text-white">1. Physical GPS Ground Truth</h3>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
               Volunteer surveyor confirms the physical existence of the establishment within Nagar Panchayat Fazilnagar boundary and logs exact coordinates.
             </p>
           </div>
 
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2">
+          <div className="bg-slate-50/70 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-200/60 dark:border-white/8 space-y-2.5">
             <span className="text-xl">📞</span>
-            <h3 className="text-xs font-bold text-slate-900">2. Active Call Verification</h3>
-            <p className="text-[11px] text-slate-600 leading-relaxed">
+            <h3 className="text-xs font-bold text-slate-900 dark:text-white">2. Active Call Verification</h3>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
               Every listed telephone number is called to confirm active service, correct business owner, and emergency response availability.
             </p>
           </div>
 
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2">
+          <div className="bg-slate-50/70 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-200/60 dark:border-white/8 space-y-2.5">
             <span className="text-xl">🏛️</span>
-            <h3 className="text-xs font-bold text-slate-900">3. Cross-Referenced Source</h3>
-            <p className="text-[11px] text-slate-600 leading-relaxed">
+            <h3 className="text-xs font-bold text-slate-900 dark:text-white">3. Cross-Referenced Source</h3>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
               Hospitals, colleges, and emergency helplines are cross-referenced with district notices, medical registrations, or academic board affiliations.
             </p>
           </div>
 
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2">
+          <div className="bg-slate-50/70 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-200/60 dark:border-white/8 space-y-2.5">
             <span className="text-xl">🔄</span>
-            <h3 className="text-xs font-bold text-slate-900">4. Community Re-Audit</h3>
-            <p className="text-[11px] text-slate-600 leading-relaxed">
+            <h3 className="text-xs font-bold text-slate-900 dark:text-white">4. Community Re-Audit</h3>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
               Listings show a public "Last Verified" date and can be flagged by any citizen using the "Report Wrong Information" desk.
             </p>
           </div>
-        </div>
+        </ScrollStagger>
 
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100">
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
           <span className="text-xs text-slate-500">
             Found an inaccurate listing or closed clinic?
           </span>
@@ -603,6 +611,7 @@ export default function About() {
           </Link>
         </div>
       </section>
+      </ScrollReveal>
     </div>
   );
 }

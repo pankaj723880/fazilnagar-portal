@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { usePageSEO } from "../utils/seo";
+import { matchesSearchText, useDebouncedSearch } from "../utils/searchUtils";
+import { ScrollReveal, ScrollStagger } from "../components/ScrollReveal";
 
 const INSTITUTES = [
   {
@@ -52,8 +54,6 @@ const INSTITUTES = [
   },
 ];
 
-import { matchesSearchText, useDebouncedSearch } from "../utils/searchUtils";
-
 export default function EducationHub() {
   usePageSEO({
     title: "Fazilnagar Education Guide | Schools, Degree Colleges & Coaching Institutes",
@@ -84,28 +84,30 @@ export default function EducationHub() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-8 sm:py-10 space-y-8 sm:space-y-10 pb-32 font-sans">
       {/* Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-[#18232E] to-slate-900 text-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.04)] border border-slate-800/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div>
-          <span className="bg-red-600/90 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-            Student & Academic Portal
-          </span>
-          <h1 className="text-2xl sm:text-4xl font-extrabold mt-3 tracking-tight font-heading">
-            🎓 Fazilnagar Education Guide &amp; Colleges
-          </h1>
-          <p className="text-slate-300 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed">
-            Discover schools, colleges, competitive exam centers, computer academies, and courses in Fazilnagar.
-          </p>
-        </div>
+      <ScrollReveal variant="fade-up" once={true}>
+        <div className="bg-gradient-to-r from-slate-900 via-[#18232E] to-slate-900 text-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.04)] border border-slate-800/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div>
+            <span className="bg-red-600/90 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+              Student & Academic Portal
+            </span>
+            <h1 className="text-2xl sm:text-4xl font-extrabold mt-3 tracking-tight font-heading">
+              🎓 Fazilnagar Education Guide &amp; Colleges
+            </h1>
+            <p className="text-slate-300 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed">
+              Discover schools, colleges, competitive exam centers, computer academies, and courses in Fazilnagar.
+            </p>
+          </div>
 
-        <input
-          type="text"
-          placeholder="Search school, college, course..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full md:w-80 bg-slate-800/80 text-white placeholder-slate-400 px-4 py-3 rounded-2xl text-xs border border-slate-700/80 focus:outline-none focus:ring-2 focus:ring-red-500 font-medium"
-          aria-label="Search educational institutions"
-        />
-      </div>
+          <input
+            type="text"
+            placeholder="Search school, college, course..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full md:w-80 bg-slate-800/80 text-white placeholder-slate-400 px-4 py-3 rounded-2xl text-xs border border-slate-700/80 focus:outline-none focus:ring-2 focus:ring-red-500 font-medium"
+            aria-label="Search educational institutions"
+          />
+        </div>
+      </ScrollReveal>
 
       {/* Screen Reader Announcement */}
       <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
@@ -115,31 +117,35 @@ export default function EducationHub() {
       </div>
 
       {/* Category Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-              activeCategory === cat
-                ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
-                : "bg-white dark:bg-[#131823] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/8 hover:bg-slate-50 dark:hover:bg-[#1A2234]"
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
+      <ScrollReveal variant="fade-up" once={true}>
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                activeCategory === cat
+                  ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
+                  : "bg-white dark:bg-[#131823] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/8 hover:bg-slate-50 dark:hover:bg-[#1A2234]"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </ScrollReveal>
 
       {/* Study in Fazilnagar Guide Header */}
-      <div className="bg-red-50/70 dark:bg-red-950/20 border border-red-200/60 dark:border-red-900/40 p-6 sm:p-7 rounded-3xl flex items-center justify-between text-xs text-red-950 dark:text-red-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
-        <div>
-          <h3 className="font-extrabold text-sm sm:text-base">📖 Study in Fazilnagar Guide</h3>
-          <p className="mt-1 leading-relaxed opacity-90">
-            Explore admission cycles, scholarships, hostelling, and accredited computer institutes.
-          </p>
+      <ScrollReveal variant="fade-up" once={true}>
+        <div className="bg-red-50/70 dark:bg-red-950/20 border border-red-200/60 dark:border-red-900/40 p-6 sm:p-7 rounded-3xl flex items-center justify-between text-xs text-red-950 dark:text-red-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
+          <div>
+            <h3 className="font-extrabold text-sm sm:text-base">📖 Study in Fazilnagar Guide</h3>
+            <p className="mt-1 leading-relaxed opacity-90">
+              Explore admission cycles, scholarships, hostelling, and accredited computer institutes.
+            </p>
+          </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {filtered.length === 0 && (
         <div className="bg-white dark:bg-[#131823] p-8 sm:p-12 rounded-3xl border border-slate-200/60 dark:border-white/8 text-center max-w-md mx-auto my-6 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
@@ -157,7 +163,7 @@ export default function EducationHub() {
       )}
 
       {/* List of Educational Institutions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+      <ScrollStagger staggerBaseDelay={35} className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
         {filtered.map((inst) => (
           <div
             key={inst.id}
@@ -165,15 +171,15 @@ export default function EducationHub() {
           >
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded">
+                <span className="text-[10px] font-bold uppercase bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-0.5 rounded">
                   {inst.category}
                 </span>
                 <span className="text-xs text-slate-500">📍 {inst.location}</span>
               </div>
 
-              <h3 className="text-lg font-bold text-slate-900">{inst.name}</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{inst.name}</h3>
 
-              <div className="bg-slate-50 p-4 rounded-2xl text-xs space-y-2 border border-slate-100 text-slate-700">
+              <div className="bg-slate-50 dark:bg-[#1A2234] p-4 rounded-2xl text-xs space-y-2 border border-slate-100 dark:border-white/6 text-slate-700 dark:text-slate-300">
                 <p><strong>📚 Courses:</strong> {inst.courses}</p>
                 <p><strong>💵 Fees:</strong> {inst.fees}</p>
                 <p><strong>📝 Admissions:</strong> {inst.admission}</p>
@@ -193,7 +199,7 @@ export default function EducationHub() {
             </a>
           </div>
         ))}
-      </div>
+      </ScrollStagger>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { usePageSEO } from "../utils/seo";
 import { Phone, ShieldAlert, HeartPulse, Flame, Zap, Droplets, ArrowLeft, Bell, CheckCircle2, AlertTriangle } from "lucide-react";
 import { EMERGENCY_SERVICES, EMERGENCY_CATEGORIES as CATEGORIES } from "../data/emergencyContacts";
+import { ScrollReveal, ScrollStagger } from "../components/ScrollReveal";
 
 
 export default function EmergencyHub() {
@@ -51,42 +52,46 @@ export default function EmergencyHub() {
 
       <div className="space-y-6 sm:space-y-8">
         {/* 3.1 Crimson Tint Banner */}
-        <div className="p-6 sm:p-8 rounded-3xl border border-rose-200/60 dark:border-rose-900/40 bg-rose-50/70 dark:bg-rose-950/20 text-rose-950 dark:text-rose-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">🚨</span>
-            <div>
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-700 dark:text-rose-400 bg-rose-200/60 dark:bg-rose-900/50 px-2.5 py-0.5 rounded-full border border-rose-300/40">
-                24/7 Resident Support
-              </span>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight mt-1.5 text-slate-900 dark:text-white">
-                Fazilnagar Emergency Numbers &amp; 24/7 Helplines
-              </h1>
+        <ScrollReveal variant="fade-up" once={true}>
+          <div className="p-6 sm:p-8 rounded-3xl border border-rose-200/60 dark:border-rose-900/40 bg-rose-50/70 dark:bg-rose-950/20 text-rose-950 dark:text-rose-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">🚨</span>
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-700 dark:text-rose-400 bg-rose-200/60 dark:bg-rose-900/50 px-2.5 py-0.5 rounded-full border border-rose-300/40">
+                  24/7 Resident Support
+                </span>
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight mt-1.5 text-slate-900 dark:text-white">
+                  Fazilnagar Emergency Numbers &amp; 24/7 Helplines
+                </h1>
+              </div>
             </div>
+            <p className="text-xs sm:text-sm text-rose-900/80 dark:text-rose-300 mt-2 leading-relaxed font-medium max-w-3xl">
+              Verified instant-dial emergency contacts for Fazilnagar police, medical trauma, fire, women safety, and utility breakdowns.
+            </p>
           </div>
-          <p className="text-xs sm:text-sm text-rose-900/80 dark:text-rose-300 mt-2 leading-relaxed font-medium max-w-3xl">
-            Verified instant-dial emergency contacts for Fazilnagar police, medical trauma, fire, women safety, and utility breakdowns.
-          </p>
-        </div>
+        </ScrollReveal>
 
         {/* 3.1 Category Filter List */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setFilter(cat)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 cursor-pointer ${
-                filter === cat
-                  ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
-                  : "bg-white dark:bg-[#131823] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/8 hover:bg-slate-50 dark:hover:bg-[#1A2234]"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        <ScrollReveal variant="fade-up" once={true}>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setFilter(cat)}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 cursor-pointer ${
+                  filter === cat
+                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
+                    : "bg-white dark:bg-[#131823] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/8 hover:bg-slate-50 dark:hover:bg-[#1A2234]"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </ScrollReveal>
 
         {/* 3.2 Standard High-Priority Dialing Cards (Responsive Grid) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        <ScrollStagger staggerBaseDelay={35} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {filteredServices.map((item) => (
             <div
               key={item.id}
@@ -114,13 +119,13 @@ export default function EmergencyHub() {
                   )}
                 </div>
 
-                <h3 className="text-sm font-extrabold text-slate-900 pt-1">{item.title}</h3>
-                <p className="text-xs text-slate-600 leading-relaxed font-normal">{item.desc}</p>
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white pt-1">{item.title}</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-normal">{item.desc}</p>
 
                 {/* Verification & Source Badges */}
-                <div className="pt-1.5 border-t border-slate-100 space-y-1 text-[10px] text-slate-500 font-medium">
+                <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800 space-y-1 text-[10px] text-slate-500 font-medium">
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1 text-slate-600">
+                    <span className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
                       <CheckCircle2 className="w-3 h-3 text-emerald-600 inline" />
                       <span>Last verified: <strong>{item.lastVerified}</strong></span>
                     </span>
@@ -130,7 +135,7 @@ export default function EmergencyHub() {
                   </div>
 
                   {!item.isVerified && (
-                    <div className="p-1.5 rounded-md bg-amber-50 border border-amber-200 text-amber-900 text-[10px] flex items-start gap-1 font-semibold">
+                    <div className="p-1.5 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 text-amber-900 dark:text-amber-300 text-[10px] flex items-start gap-1 font-semibold">
                       <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0 mt-0.5" />
                       <span>{item.verificationNote || "TODO: Contact unverified with local authority."}</span>
                     </div>
@@ -151,7 +156,7 @@ export default function EmergencyHub() {
               </div>
             </div>
           ))}
-        </div>
+        </ScrollStagger>
       </div>
     </div>
   );

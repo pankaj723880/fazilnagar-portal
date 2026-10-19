@@ -66,7 +66,7 @@ let globalObserver = null;
 let bidirectionalObserver = null;
 
 function getObserver(options = {}) {
-  const { bidirectional = false, rootMargin = "0px 0px -40px 0px", threshold = 0.1 } = options;
+  const { bidirectional = false, rootMargin = "0px 0px 150px 0px", threshold = 0.01 } = options;
 
   if (bidirectional) {
     if (!bidirectionalObserver && typeof window !== "undefined" && "IntersectionObserver" in window) {

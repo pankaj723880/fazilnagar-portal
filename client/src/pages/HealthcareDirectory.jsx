@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { usePageSEO } from "../utils/seo";
 import { openGoogleMapsDirections } from "../utils/directions";
+import { matchesSearchText, useDebouncedSearch } from "../utils/searchUtils";
+import { ScrollReveal, ScrollStagger } from "../components/ScrollReveal";
 
 const HEALTHCARE_PLACES = [
   {
@@ -65,8 +67,6 @@ const HEALTHCARE_PLACES = [
   },
 ];
 
-import { matchesSearchText, useDebouncedSearch } from "../utils/searchUtils";
-
 export default function HealthcareDirectory() {
   usePageSEO({
     title: "Fazilnagar Healthcare Directory | Hospitals, Doctors, Clinics & Pharmacies",
@@ -89,44 +89,48 @@ export default function HealthcareDirectory() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-8 sm:py-10 space-y-8 sm:space-y-10 pb-32 font-sans">
       {/* Header */}
-      <div className="bg-gradient-to-r from-slate-900 via-[#18232E] to-slate-900 text-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.04)] border border-slate-800/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div>
-          <span className="bg-red-600/90 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-            Verified Medical Registry
-          </span>
-          <h1 className="text-2xl sm:text-4xl font-extrabold mt-3 tracking-tight font-heading">
-            🏥 Fazilnagar Healthcare &amp; Medical Directory
-          </h1>
-          <p className="text-slate-300 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed">
-            Search Fazilnagar hospitals, Community Health Centre (CHC), clinics, pharmacies, and diagnostic labs.
-          </p>
-        </div>
+      <ScrollReveal variant="fade-up" once={true}>
+        <div className="bg-gradient-to-r from-slate-900 via-[#18232E] to-slate-900 text-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.04)] border border-slate-800/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div>
+            <span className="bg-red-600/90 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+              Verified Medical Registry
+            </span>
+            <h1 className="text-2xl sm:text-4xl font-extrabold mt-3 tracking-tight font-heading">
+              🏥 Fazilnagar Healthcare &amp; Medical Directory
+            </h1>
+            <p className="text-slate-300 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed">
+              Search Fazilnagar hospitals, Community Health Centre (CHC), clinics, pharmacies, and diagnostic labs.
+            </p>
+          </div>
 
-        <input
-          type="text"
-          placeholder="Search facility name or service..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full md:w-80 bg-slate-800/80 text-white placeholder-slate-400 px-4 py-3 rounded-2xl text-xs border border-slate-700/80 focus:outline-none focus:ring-2 focus:ring-red-500 font-medium"
-        />
-      </div>
+          <input
+            type="text"
+            placeholder="Search facility name or service..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full md:w-80 bg-slate-800/80 text-white placeholder-slate-400 px-4 py-3 rounded-2xl text-xs border border-slate-700/80 focus:outline-none focus:ring-2 focus:ring-red-500 font-medium"
+          />
+        </div>
+      </ScrollReveal>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-        {types.map((type) => (
-          <button
-            key={type}
-            onClick={() => setActiveType(type)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-              activeType === type
-                ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
-                : "bg-white dark:bg-[#131823] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/8 hover:bg-slate-50 dark:hover:bg-[#1A2234]"
-            }`}
-          >
-            {type}
-          </button>
-        ))}
-      </div>
+      <ScrollReveal variant="fade-up" once={true}>
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {types.map((type) => (
+            <button
+              key={type}
+              onClick={() => setActiveType(type)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                activeType === type
+                  ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
+                  : "bg-white dark:bg-[#131823] text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/8 hover:bg-slate-50 dark:hover:bg-[#1A2234]"
+              }`}
+            >
+              {type}
+            </button>
+          ))}
+        </div>
+      </ScrollReveal>
 
       {/* Screen Reader Announcement */}
       <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
@@ -151,7 +155,7 @@ export default function HealthcareDirectory() {
       )}
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+      <ScrollStagger staggerBaseDelay={35} className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
         {filteredHealthcare.map((place) => (
           <div
             key={place.id}
@@ -207,7 +211,7 @@ export default function HealthcareDirectory() {
             </div>
           </div>
         ))}
-      </div>
+      </ScrollStagger>
     </div>
   );
 }

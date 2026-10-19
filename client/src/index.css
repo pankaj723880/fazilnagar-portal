@@ -372,7 +372,14 @@ html[data-public-theme="light"] .text-secondary {
   color: #334155 !important;
 }
 
-/* Ensure Dark CTA Buttons & Badges Preserve White Text */
+/* Ensure Hero Section, Dark Photo Overlays & Dark CTA Buttons Preserve Crisp White Text */
+html[data-public-theme="light"] #hero-section h1,
+html[data-public-theme="light"] #hero-section h2,
+html[data-public-theme="light"] #hero-section h3,
+html[data-public-theme="light"] #hero-section .hero-title,
+html[data-public-theme="light"] #hero-section .text-white,
+html[data-public-theme="light"] #hero-section [class*="text-white"],
+html[data-public-theme="light"] .hero-title,
 html[data-public-theme="light"] .btn-civic-primary,
 html[data-public-theme="light"] .btn-civic-primary *,
 html[data-public-theme="light"] .bg-\[\#0F172A\],
@@ -380,7 +387,29 @@ html[data-public-theme="light"] .bg-\[\#0F172A\] *,
 html[data-public-theme="light"] [class*="bg-\[\#0F172A\]"],
 html[data-public-theme="light"] [class*="bg-\[\#0F172A\]"] *,
 html[data-public-theme="light"] .bg-slate-900,
-html[data-public-theme="light"] .bg-slate-900 * {
+html[data-public-theme="light"] .bg-slate-900 *,
+html[data-public-theme="light"] .bg-\[\#18232E\].text-white,
+html[data-public-theme="light"] .bg-\[\#18232E\] .text-white,
+html[data-public-theme="light"] .bg-emerald-700,
+html[data-public-theme="light"] .bg-emerald-700 *,
+html[data-public-theme="light"] .bg-\[\#0D5E49\],
+html[data-public-theme="light"] .bg-\[\#0D5E49\] *,
+html[data-public-theme="light"] .bg-black\/60,
+html[data-public-theme="light"] .bg-black\/60 *,
+html[data-public-theme="light"] .bg-black\/40,
+html[data-public-theme="light"] .bg-black\/40 * {
+  color: #FFFFFF !important;
+}
+
+html[data-public-theme="light"] #hero-section p,
+html[data-public-theme="light"] #hero-section .hero-description,
+html[data-public-theme="light"] #hero-section .text-slate-200,
+html[data-public-theme="light"] #hero-section .text-slate-300 {
+  color: #F8FAFC !important;
+}
+
+html[data-public-theme="light"] #hero-section .hero-location-badge span,
+html[data-public-theme="light"] #hero-section .hero-location-badge span * {
   color: #FFFFFF !important;
 }
 

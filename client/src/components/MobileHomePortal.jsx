@@ -748,7 +748,8 @@ export default function MobileHomePortal({
       {/* ========================================================
           1.5 HORIZONTAL SNAP CAROUSEL (VERIFIED PLACES)
           ======================================================== */}
-      <section className="px-4 sm:px-6 py-3" aria-label="Verified Places Carousel">
+      <ScrollReveal variant="fade-up" once={true}>
+        <section className="px-4 sm:px-6 py-3" aria-label="Verified Places Carousel">
         <div className="flex items-center justify-between mb-3 px-0.5">
           <div className="flex items-center gap-1.5">
             <h2 className="text-sm font-bold text-[#0F172A] dark:text-white uppercase tracking-wider font-heading">CIVIC DIRECTORY INDEX</h2>
@@ -856,11 +857,13 @@ export default function MobileHomePortal({
           </div>
         )}
       </section>
+      </ScrollReveal>
 
       {/* ========================================================
           SPEC 1: ESSENTIAL PUBLIC SERVICES & HELPLINES (2x2 Compact Grid)
           ======================================================== */}
-      <section className="px-4 sm:px-6 py-3" aria-label="Essential Public Services">
+      <ScrollReveal variant="fade-up" once={true}>
+        <section className="px-4 sm:px-6 py-3" aria-label="Essential Public Services">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5">
             <span className="text-base">🏛️</span>
@@ -906,11 +909,13 @@ export default function MobileHomePortal({
           ))}
         </div>
       </section>
+      </ScrollReveal>
 
       {/* ========================================================
           1.6 INTERACTIVE MAP FEATURE BLOCK
           ======================================================== */}
-      <section className="px-4 sm:px-6 py-3" aria-label="Interactive Map Feature Block">
+      <ScrollReveal variant="fade-up" once={true}>
+        <section className="px-4 sm:px-6 py-3" aria-label="Interactive Map Feature Block">
         <div className="relative rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/8 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-slate-900 text-white p-5 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.08)] space-y-3.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -942,11 +947,13 @@ export default function MobileHomePortal({
           </div>
         </div>
       </section>
+      </ScrollReveal>
 
       {/* ========================================================
           SPEC 3: COMMERCE & RETAIL DIRECTORY CARDS (2-Col Grid)
           ======================================================== */}
-      <section className="px-4 sm:px-6 py-3" aria-label="Commerce & Retail Directory">
+      <ScrollReveal variant="fade-up" once={true}>
+        <section className="px-4 sm:px-6 py-3" aria-label="Commerce & Retail Directory">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5">
             <span className="text-base">🛍️</span>
@@ -1033,11 +1040,13 @@ export default function MobileHomePortal({
           </Link>
         </div>
       </section>
+      </ScrollReveal>
 
       {/* ========================================================
           SPEC 4: EDUCATION DIRECTORY (Schools & Colleges List Tiles + Bottom Sheet)
           ======================================================== */}
-      <section className="px-4 sm:px-6 py-3" aria-label="Education Directory">
+      <ScrollReveal variant="fade-up" once={true}>
+        <section className="px-4 sm:px-6 py-3" aria-label="Education Directory">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5">
             <span className="text-base">🏫</span>
@@ -1087,6 +1096,7 @@ export default function MobileHomePortal({
           ))}
         </div>
       </section>
+      </ScrollReveal>
 
       {/* School Bottom Sheet Modal (Drawer) */}
       {selectedSchool && (
@@ -1179,7 +1189,8 @@ export default function MobileHomePortal({
       {/* ========================================================
           SPEC 5: TOWN FAIRS, MELAS & CULTURAL CELEBRATIONS
           ======================================================== */}
-      <section className="px-4 sm:px-6 py-3" aria-label="Town Fairs and Melas">
+      <ScrollReveal variant="fade-up" once={true}>
+        <section className="px-4 sm:px-6 py-3" aria-label="Town Fairs and Melas">
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-1.5">
             <span className="text-base">🎪</span>
@@ -1239,10 +1250,12 @@ export default function MobileHomePortal({
           </div>
         </div>
       </section>
+      </ScrollReveal>
 
       {/* ========================================================
           1.7 COLLAPSIBLE SACRED HERITAGE ACCORDION
           ======================================================== */}
+      <ScrollReveal variant="fade-up" once={true}>
       <section className="px-4 sm:px-6 py-3" aria-label="Sacred Heritage">
         <div className="bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-slate-900 text-white rounded-2xl p-5 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-slate-700/60 space-y-4">
           {/* Header & Twin Badges */}
@@ -1359,10 +1372,12 @@ export default function MobileHomePortal({
           </div>
         </div>
       </section>
+      </ScrollReveal>
 
       {/* ========================================================
           FAZILNAGAR & NEARBY PLACES (Regional Connectivity Map)
           ======================================================== */}
+      <ScrollReveal variant="fade-up" once={true}>
       <section id="regional-connectivity-mobile" className="px-4 sm:px-6 py-3" aria-label="Regional Connectivity Map">
         <div className="mb-3">
           <div className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-0.5">
@@ -1388,10 +1403,12 @@ export default function MobileHomePortal({
           <RegionalConnectivityMap />
         </Suspense>
       </section>
+      </ScrollReveal>
 
       {/* ========================================================
           1.8 CITIZEN CORNER CTA SPLIT CARD
           ======================================================== */}
+      <ScrollReveal variant="fade-up" once={true}>
       <section className="px-4 sm:px-6 py-3" aria-label="Citizen Contribution Desk">
         <div className="grid grid-cols-2 gap-3">
           {/* Card A: List Business */}
@@ -1446,10 +1463,12 @@ export default function MobileHomePortal({
           </div>
         </div>
       </section>
+      </ScrollReveal>
 
       {/* ========================================================
           SECTION 6: ADAPTABLE FOOTER SYSTEM (Collapsible Accordions)
           ======================================================== */}
+      <ScrollReveal variant="fade-up" once={true}>
       <footer className="mt-6 px-4 sm:px-6 pt-6 pb-32 border-t border-slate-200/60 dark:border-white/8 bg-white dark:bg-[#131823] text-slate-600 dark:text-slate-400 text-xs space-y-3">
         {/* Custom Brand Title Block */}
         <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -1602,6 +1621,7 @@ export default function MobileHomePortal({
           Copyright: 2026 Fazilnagar Town Portal Modern Civic &amp; Editorial System
         </div>
       </footer>
+      </ScrollReveal>
 
       {/* ========================================================
           FLOATING ACTION BUTTON (FAB): [+ Add Place]
