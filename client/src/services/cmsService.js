@@ -111,9 +111,9 @@ export const DEFAULT_SITE_SETTINGS = {
   taglineHindi: "स्वतंत्र नागरिक एवं स्थानीय निर्देशिका • कुशीनगर, उत्तर प्रदेश",
   logoUrl: "/icon-192.svg",
   announcement: {
-    enabled: true,
-    text: "Welcome to Fazilnagar Town Portal — Unofficial, Community-Run Civic Directory & Local Guide",
-    link: "/directory",
+    enabled: false,
+    text: "",
+    link: "",
     bgColor: "#0D5E49",
     textColor: "#FFFFFF",
   },
@@ -150,7 +150,7 @@ export const DEFAULT_SITE_SETTINGS = {
     { id: "stat-wards", label: "Selectable Wards & Areas", value: "26", subtext: "Municipal Boundary Scope", icon: "Landmark", isActive: true },
   ],
   sections: {
-    announcementBanner: true,
+    announcementBanner: false,
     heroCarousel: true,
     statsCounters: true,
     quickCategories: true,
@@ -171,11 +171,11 @@ export const DEFAULT_SITE_SETTINGS = {
     disclaimer: "All institutional locations verified by municipal mapping coordinates. Independent civic public resource.",
   },
   topAlertBar: {
-    enabled: true,
-    badgeText: "LIVE CIVIC",
-    text: "Fazilnagar Town Official Civic & Local Directory Portal (PIN 274401)",
-    helplineLabel: "📞 Helpline",
-    helplineNumber: "112",
+    enabled: false,
+    badgeText: "",
+    text: "",
+    helplineLabel: "",
+    helplineNumber: "",
   },
   navigation: {
     brandFirst: "FAZIL",

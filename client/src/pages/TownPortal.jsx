@@ -610,34 +610,9 @@ export default function TownPortal() {
           DESKTOP CIVIC & LOCAL DIRECTORY PORTAL (>= md, hidden on mobile)
           ======================================================== */}
       {isDesktop && !isMobilePreview && (
-        <div className="w-full max-w-full overflow-x-hidden bg-[#F5F7F8] font-sans text-[#18232E] selection:bg-[#B8323C] selection:text-white">
+        <div className="w-full max-w-full overflow-x-hidden bg-[#F8FAFC] dark:bg-[#0B0F17] font-sans text-[#0F172A] dark:text-[#F8FAFC] selection:bg-[#B8323C] selection:text-white">
 
 
-      {/* Dynamic Civic Announcement Ticker Banner */}
-      {siteSettings.sections?.announcementBanner !== false &&
-        siteSettings.announcement?.enabled &&
-        siteSettings.announcement?.text && (
-          <aside
-            aria-label="Civic Announcement Banner"
-            style={{
-              backgroundColor: siteSettings.announcement.bgColor || "#0D5E49",
-              color: siteSettings.announcement.textColor || "#FFFFFF",
-            }}
-            className="w-full px-4 py-2.5 text-center text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition z-30 relative"
-          >
-            <Sparkles className="w-3.5 h-3.5 shrink-0 text-amber-300 animate-pulse" />
-            <span>{siteSettings.announcement.text}</span>
-            {siteSettings.announcement.link && (
-              <Link
-                to={siteSettings.announcement.link}
-                className="underline hover:opacity-80 ml-2 inline-flex items-center gap-0.5 text-amber-200 font-extrabold"
-              >
-                <span>View Details</span>
-                <ChevronRight className="w-3 h-3" />
-              </Link>
-            )}
-          </aside>
-        )}
 
       {/* ========================================================
           SECTION 2: HERO SECTION (Dynamic Kushinagar & Fazilnagar Carousel)
@@ -868,23 +843,23 @@ export default function TownPortal() {
           ======================================================== */}
       {isBelowFoldReady && (
         <>
-      <section id="explore-categories" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+      <section id="explore-categories" className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-20 lg:py-28">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 lg:mb-12 gap-6">
           <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B8323C] uppercase tracking-wider mb-1">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 uppercase tracking-wider mb-3">
               <LayoutGrid className="w-3.5 h-3.5" />
               <span>{siteSettings?.homepageSections?.explore?.badge || "Civic Directory Index"}</span>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#18232E] tracking-tight font-heading">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading">
               {siteSettings?.homepageSections?.explore?.title || "Explore Fazilnagar"}
             </h2>
-            <p className="text-xs sm:text-sm text-[#647180] mt-1">
+            <p className="text-sm sm:text-base text-[#64748B] dark:text-slate-400 mt-2 leading-relaxed max-w-2xl">
               {siteSettings?.homepageSections?.explore?.subtitle || "Verified institutions across schools, colleges, hospitals, and fuel stations."}
             </p>
           </div>
           <Link
             to="/directory"
-            className="text-xs font-bold px-4 py-2.5 rounded-xl bg-[#18232E] hover:bg-[#B8323C] text-white transition self-start md:self-auto cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-95 duration-150"
+            className="text-xs font-bold px-5 py-3 rounded-2xl bg-[#0F172A] hover:bg-[#B8323C] text-white transition self-start md:self-auto cursor-pointer flex items-center gap-2 shadow-xs active:scale-95 duration-150"
           >
             <span>{siteSettings?.homepageSections?.explore?.viewAllText || "Open Full Directory"}</span>
             <ChevronRight className="w-3.5 h-3.5 text-amber-400" />
@@ -892,23 +867,23 @@ export default function TownPortal() {
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 transition-all duration-300">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 lg:gap-5 transition-all duration-300">
           {EXPLORE_21_CATEGORIES.map((cat) => {
             const Icon = cat.icon;
             return (
               <Link
                 key={cat.id}
                 to={cat.query === "all" ? "/directory" : `/directory?category=${encodeURIComponent(cat.query)}`}
-                className="group bg-white p-3.5 rounded-xl border border-[#E1E6EA] hover:border-[#CBD5E1] hover:shadow-md transition flex flex-col justify-between"
+                className="group bg-white dark:bg-slate-900/60 p-5 rounded-2xl lg:rounded-3xl border border-slate-200/60 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
               >
-                <div className="w-9 h-9 rounded-lg bg-[#F5F7F8] text-[#18232E] flex items-center justify-center mb-2.5 group-hover:bg-[#18232E] group-hover:text-white transition">
+                <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 text-[#0F172A] dark:text-slate-200 flex items-center justify-center mb-3 group-hover:bg-[#0F172A] group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-slate-900 transition-all duration-200">
                   <Icon className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold text-[#18232E] group-hover:text-[#B8323C] transition line-clamp-1 leading-snug">
+                  <h3 className="text-xs font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition-colors line-clamp-1 leading-snug">
                     {cat.name}
                   </h3>
-                  <span className="text-[10px] text-[#647180] font-medium block mt-0.5">
+                  <span className="text-[11px] text-[#64748B] dark:text-slate-400 font-medium block mt-1">
                     {cat.count} listings
                   </span>
                 </div>
@@ -919,11 +894,11 @@ export default function TownPortal() {
 
         {/* Bottom Collapse Button when expanded */}
         {isDirectoryExpanded && (
-          <div className="mt-6 flex justify-center">
+          <div className="mt-8 flex justify-center">
             <button
               type="button"
               onClick={toggleDirectoryExpanded}
-              className="text-xs font-bold px-5 py-2.5 rounded-xl bg-[#18232E] hover:bg-[#B8323C] text-white transition cursor-pointer flex items-center gap-1.5 shadow-xs active:scale-95 duration-150"
+              className="text-xs font-bold px-6 py-3 rounded-2xl bg-[#0F172A] hover:bg-[#B8323C] text-white transition cursor-pointer flex items-center gap-2 shadow-xs active:scale-95 duration-150"
             >
               <span>Close Directory</span>
               <ChevronUp className="w-3.5 h-3.5 text-amber-400" />
@@ -940,50 +915,50 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 4: ESSENTIAL SERVICES (High-Priority Civic Hub)
           ======================================================== */}
-      <section className="mobile-density-section bg-white py-16 border-y border-[#E1E6EA] content-visibility-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-10">
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0D5E49] uppercase tracking-wider mb-1">
+      <section className="mobile-density-section py-20 lg:py-28 border-y border-slate-200/60 dark:border-white/10 content-visibility-auto bg-white/50 dark:bg-slate-900/40 backdrop-blur-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
+          <div className="mb-10 lg:mb-12">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20 uppercase tracking-wider mb-3">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>{siteSettings?.homepageSections?.publicServices?.badge || "Public Welfare & Emergency"}</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#18232E] tracking-tight font-heading">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading">
               {siteSettings?.homepageSections?.publicServices?.title || "Essential Public Services"}
             </h2>
-            <p className="text-xs sm:text-sm text-[#647180] mt-1">
+            <p className="text-sm sm:text-base text-[#64748B] dark:text-slate-400 mt-2 leading-relaxed max-w-2xl">
               {siteSettings?.homepageSections?.publicServices?.subtitle || "Emergency numbers, primary healthcare, pharmacy points, and administrative offices in Fazilnagar."}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {((siteSettings?.homepageSections?.publicServices?.cards && siteSettings.homepageSections.publicServices.cards.length > 0)
               ? siteSettings.homepageSections.publicServices.cards
               : DEFAULT_SITE_SETTINGS.homepageSections.publicServices.cards
             ).map((card, idx) => (
-              <div key={card.id || idx} className="group bg-[#F5F7F8] hover:bg-white p-5 rounded-2xl border border-[#E1E6EA] hover:border-slate-300 shadow-2xs hover:shadow-lg hover:-translate-y-2 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
+              <div key={card.id || idx} className="group bg-white dark:bg-slate-900/80 p-6 lg:p-7 rounded-3xl border border-slate-200/60 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
                 <div>
-                  <span className="text-[10px] font-extrabold text-[#B8323C] uppercase tracking-wider block mb-1">
+                  <span className="inline-flex text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20 uppercase tracking-wider mb-2.5">
                     {card.badge}
                   </span>
-                  <h3 className="text-sm font-bold text-[#18232E]">{card.title}</h3>
-                  <p className="text-xs text-[#647180] mt-1">{card.address}</p>
-                  <p className="text-[11px] text-slate-600 mt-2">
+                  <h3 className="text-base font-bold text-[#0F172A] dark:text-white">{card.title}</h3>
+                  <p className="text-xs text-[#64748B] dark:text-slate-400 mt-1">{card.address}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-2.5 leading-relaxed">
                     {card.description}
                   </p>
                 </div>
-                <div className="pt-4 border-t border-[#E1E6EA] mt-4 flex items-center justify-between">
+                <div className="pt-4 border-t border-slate-100 dark:border-white/5 mt-5 flex items-center justify-between">
                   {card.phone ? (
-                    <a href={`tel:${card.phone.replace(/[^0-9+]/g, "")}`} className="text-xs font-bold text-[#18232E] hover:text-[#B8323C]">
+                    <a href={`tel:${card.phone.replace(/[^0-9+]/g, "")}`} className="text-xs font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition">
                       {card.phoneLabel || `📞 ${card.phone}`}
                     </a>
                   ) : (
-                    <span className="text-[10px] text-slate-400 font-semibold">{card.hours || "General"}</span>
+                    <span className="text-[11px] text-slate-400 font-semibold">{card.hours || "General"}</span>
                   )}
                   {card.directions && (
                     <button
                       type="button"
                       onClick={() => openGoogleMapsDirections({ name: card.title, landmark: card.address, lat: 26.6827, lng: 84.0498 })}
-                      className="text-xs font-bold text-[#0D5E49] hover:underline cursor-pointer"
+                      className="text-xs font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
                     >
                       Directions
                     </button>

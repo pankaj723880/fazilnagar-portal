@@ -389,7 +389,7 @@ export default function PublicContributionForm() {
   }
 
   return (
-    <div className="min-h-[calc(100dvh-64px)] sm:min-h-[calc(100dvh-96px)] w-full flex-1 bg-[#F5F7FA] py-4 sm:py-6 px-3 sm:px-6">
+    <div className="min-h-[calc(100dvh-64px)] w-full flex-1 bg-[#F5F7FA] py-4 sm:py-6 px-3 sm:px-6">
       <div className="max-w-[520px] mx-auto space-y-3.5">
         {/* Back Link */}
         {!hideNavbarAndFooter && (

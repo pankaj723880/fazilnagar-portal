@@ -187,7 +187,7 @@ const siteSettingsSchema = new mongoose.Schema(
     },
     // Announcement Banner
     announcement: {
-      enabled: { type: Boolean, default: true },
+      enabled: { type: Boolean, default: false },
       text: {
         type: String,
         default: "Welcome to Official Fazilnagar Town Portal — Verified Civic Directory, Healthcare & Public Services",
