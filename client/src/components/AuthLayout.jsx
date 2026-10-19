@@ -1,5 +1,6 @@
 import { ShieldCheck, AlertCircle, CheckCircle2, Info } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ScrollReveal } from "./ScrollReveal";
 
 /**
  * Reusable, compact, production-ready Civic Auth Card layout for Fazilnagar Town Portal.
@@ -40,7 +41,9 @@ export default function AuthLayout({
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[320px] bg-amber-500/[0.08] dark:bg-amber-400/[0.05] rounded-full blur-3xl" />
       </div>
 
-      <div
+      <ScrollReveal
+        variant="fade-up"
+        duration={460}
         className={`relative z-10 w-full ${maxWidth} my-auto bg-white/95 dark:bg-[#151F2E]/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-800/90 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-[0_12px_40px_-10px_rgba(15,23,42,0.14)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.55)] transition-all`}
       >
         {/* Header Section */}
@@ -123,13 +126,17 @@ export default function AuthLayout({
 
         {/* Form Body */}
         {children}
-      </div>
+      </ScrollReveal>
 
       {/* Trust & Security Verification Footer */}
-      <div className="mt-2.5 sm:mt-3 flex items-center justify-center gap-1.5 text-[10px] sm:text-[10.5px] font-medium text-slate-700 dark:text-slate-300 bg-white/85 dark:bg-[#151F2E]/85 backdrop-blur-md px-3 py-0.5 rounded-full border border-slate-200/80 dark:border-slate-800/80 shadow-2xs relative z-10">
+      <ScrollReveal
+        variant="fade-up"
+        delay={75}
+        className="mt-2.5 sm:mt-3 flex items-center justify-center gap-1.5 text-[10px] sm:text-[10.5px] font-medium text-slate-700 dark:text-slate-300 bg-white/85 dark:bg-[#151F2E]/85 backdrop-blur-md px-3 py-0.5 rounded-full border border-slate-200/80 dark:border-slate-800/80 shadow-2xs relative z-10"
+      >
         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
         <span>Official Civic Portal • 256-Bit SSL Encrypted Verification</span>
-      </div>
+      </ScrollReveal>
     </div>
   );
 }

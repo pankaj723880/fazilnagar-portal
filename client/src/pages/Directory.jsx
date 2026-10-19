@@ -10,6 +10,7 @@ const DirectoryMap = lazy(() => import("../components/DirectoryMap"));
 import { isUserAdmin, getAuthToken } from "../utils/authStorage";
 import { getSocket } from "../socket";
 import { FAZILNAGAR_AREAS } from "../constants/areas";
+import { ScrollReveal } from "../components/ScrollReveal";
 import {
   Search,
   Mic,
@@ -551,7 +552,11 @@ export default function Directory({ user }) {
       {/* ========================================================
           1. SIMPLIFIED HEADER & HERO (Compact on Mobile)
           ======================================================== */}
-      <div className="bg-gradient-to-r from-slate-900 via-[#18232E] to-slate-900 text-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.04)] border border-slate-800/80">
+      <ScrollReveal
+        variant="fade-up"
+        duration={480}
+        className="bg-gradient-to-r from-slate-900 via-[#18232E] to-slate-900 text-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.04)] border border-slate-800/80"
+      >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -607,7 +612,7 @@ export default function Directory({ user }) {
             )}
           </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Moderation Queue Drawer (Admin Only) */}
       {isAdmin && showAdminQueue && (
@@ -690,7 +695,11 @@ export default function Directory({ user }) {
       {/* ========================================================
           3. SEARCH & CATEGORY FILTERS (Primary Action Block)
           ======================================================== */}
-      <div className="bg-white dark:bg-[#131823] p-4 sm:p-5 lg:p-6 rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] space-y-3.5">
+      <ScrollReveal
+        variant="fade-up"
+        delay={45}
+        className="bg-white dark:bg-[#131823] p-4 sm:p-5 lg:p-6 rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] space-y-3.5"
+      >
         {/* Search input + View Switcher */}
         <form onSubmit={handleSearchSubmit} className="flex flex-wrap sm:flex-nowrap items-center gap-2">
           <div className="relative flex-1 min-w-[180px]">
@@ -839,7 +848,7 @@ export default function Directory({ user }) {
             </div>
           </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Screen Reader Announcement for Search & Filter Results */}
       <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
@@ -937,8 +946,12 @@ export default function Directory({ user }) {
                 const isSelected = isSamePlace(selectedPlace, place);
                 const isVerified = place.verificationStatus === "verified";
                 return (
-                  <div
+                  <ScrollReveal
                     key={`${place._id || place.id || 'place'}-${idx}`}
+                    variant="fade-up"
+                    staggerIndex={Math.min(idx, 8)}
+                    staggerBaseDelay={35}
+                    once={true}
                     onClick={() => handleSelectPlace(place)}
                     className={`p-3 rounded-xl border transition cursor-pointer text-left ${
                       isSelected
@@ -1047,7 +1060,7 @@ export default function Directory({ user }) {
                         </button>
                       </div>
                     )}
-                  </div>
+                  </ScrollReveal>
                 );
               })}
             </div>
@@ -1084,13 +1097,21 @@ export default function Directory({ user }) {
       ) : (
         /* List View (Single-Open Accordion Layout) */
         <div className="bg-white dark:bg-[#131823] rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] divide-y divide-slate-100 dark:divide-white/6 overflow-hidden">
-          {places.map((place) => {
+          {places.map((place, idx) => {
             const entityId = place._id || place.id || place.slug;
             const isExpanded = expandedEntityId === entityId;
             const isVerified = place.verificationStatus === "verified" || place.isVerified === true;
 
             return (
-              <div key={entityId} className="transition-colors">
+              <ScrollReveal
+                as="div"
+                key={entityId}
+                variant="fade-up"
+                staggerIndex={Math.min(idx, 8)}
+                staggerBaseDelay={35}
+                once={true}
+                className="transition-colors"
+              >
                 {/* Collapsed State Row - Minimum 48px touch target */}
                 <button
                   type="button"
@@ -1247,7 +1268,7 @@ export default function Directory({ user }) {
                     </div>
                   </div>
                 )}
-              </div>
+              </ScrollReveal>
             );
           })}
         </div>

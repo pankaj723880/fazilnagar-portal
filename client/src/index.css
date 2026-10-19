@@ -216,8 +216,8 @@ h1, h2, h3, h4, h5, h6, .civic-card, .civic-card * {
   --gr-section-secondary: #F1F5F9;
   --gr-card-bg: #FFFFFF;
   --gr-input-bg: #FFFFFF;
-  --gr-text-primary: #0F172A;
-  --gr-text-secondary: #64748B;
+  --gr-text-primary: #020617;
+  --gr-text-secondary: #334155;
   --gr-border: rgba(226, 232, 240, 0.7);
   --gr-border-hover: #CBD5E1;
   --gr-accent: #B8323C;
@@ -252,15 +252,15 @@ h1, h2, h3, h4, h5, h6, .civic-card, .civic-card * {
 
 html[data-public-theme="dark"] {
   /* Dark Mode Graphite Royale Tokens */
-  --gr-bg-main: #101114;
-  --gr-navbar-bg: #101114;
-  --gr-section-secondary: #19191E;
-  --gr-card-bg: #24242A;
-  --gr-input-bg: #1C1C22;
-  --gr-text-primary: #F5F1E9;
-  --gr-text-secondary: #B6B4B0;
-  --gr-border: #38383E;
-  --gr-border-hover: #4E4E56;
+  --gr-bg-main: #0B0F17;
+  --gr-navbar-bg: #0B0F17;
+  --gr-section-secondary: #0F172A;
+  --gr-card-bg: #131823;
+  --gr-input-bg: #1A2234;
+  --gr-text-primary: #FFFFFF;
+  --gr-text-secondary: #E2E8F0;
+  --gr-border: rgba(255, 255, 255, 0.08);
+  --gr-border-hover: rgba(255, 255, 255, 0.16);
   --gr-accent: #C5A46D;
   --gr-accent-hover: #D8BA85;
   --gr-highlight: #30291F;
@@ -292,16 +292,31 @@ html[data-public-theme="dark"] {
 }
 
 /* ========================================================
-   LIGHT MODE: COMPLETE GRAPHITE ROYALE PUBLIC STYLING
+   LIGHT MODE: HIGH-CONTRAST CRISP DARK TEXT STYLING
    ======================================================== */
 html[data-public-theme="light"] body {
   background-color: #F8FAFC !important;
-  color: #0F172A !important;
+  color: #020617 !important;
 }
 
 html[data-public-theme="light"] #public-portal-root {
   background-color: #F8FAFC !important;
-  color: #0F172A !important;
+  color: #020617 !important;
+}
+
+/* Headings in Light Mode: Bold, Pitch-Dark Slate */
+html[data-public-theme="light"] h1,
+html[data-public-theme="light"] h2,
+html[data-public-theme="light"] h3,
+html[data-public-theme="light"] h4,
+html[data-public-theme="light"] h5,
+html[data-public-theme="light"] h6 {
+  color: #020617 !important;
+}
+
+/* Paragraphs in Light Mode: Deep, High-Legibility Slate */
+html[data-public-theme="light"] p {
+  color: #1E293B;
 }
 
 /* Primary Surfaces & Cards (Light: #FFFFFF, hairline border: rgba(226, 232, 240, 0.7)) */
@@ -314,7 +329,7 @@ html[data-public-theme="light"] [role="dialog"] .bg-white,
 html[data-public-theme="light"] .modal-content {
   background-color: #FFFFFF !important;
   border-color: rgba(226, 232, 240, 0.7) !important;
-  color: #0F172A;
+  color: #020617;
 }
 
 html[data-public-theme="light"] .civic-card:hover {
@@ -336,24 +351,37 @@ html[data-public-theme="light"] .bg-slate-100\/80 {
   border-color: rgba(226, 232, 240, 0.7) !important;
 }
 
-/* Primary Text (Light: #0F172A) */
+/* Primary Text (Light: #020617 - Deep Rich Black/Slate) */
 html[data-public-theme="light"] .text-slate-900,
 html[data-public-theme="light"] .text-slate-800,
 html[data-public-theme="light"] .text-slate-700,
+html[data-public-theme="light"] .text-\[\#0F172A\],
 html[data-public-theme="light"] .text-\[\#18232E\],
 html[data-public-theme="light"] .text-\[\#111827\],
 html[data-public-theme="light"] .text-deep-slate {
-  color: #0F172A !important;
+  color: #020617 !important;
 }
 
-/* Secondary Text (Light: #64748B) */
+/* Secondary Text (Light: #334155 - Rich, Crisp Contrast) */
 html[data-public-theme="light"] .text-slate-600,
 html[data-public-theme="light"] .text-slate-500,
 html[data-public-theme="light"] .text-slate-400,
 html[data-public-theme="light"] .text-\[\#647180\],
 html[data-public-theme="light"] .text-\[\#64748B\],
 html[data-public-theme="light"] .text-secondary {
-  color: #64748B !important;
+  color: #334155 !important;
+}
+
+/* Ensure Dark CTA Buttons & Badges Preserve White Text */
+html[data-public-theme="light"] .btn-civic-primary,
+html[data-public-theme="light"] .btn-civic-primary *,
+html[data-public-theme="light"] .bg-\[\#0F172A\],
+html[data-public-theme="light"] .bg-\[\#0F172A\] *,
+html[data-public-theme="light"] [class*="bg-\[\#0F172A\]"],
+html[data-public-theme="light"] [class*="bg-\[\#0F172A\]"] *,
+html[data-public-theme="light"] .bg-slate-900,
+html[data-public-theme="light"] .bg-slate-900 * {
+  color: #FFFFFF !important;
 }
 
 /* Borders (Light: hairline rgba(226, 232, 240, 0.7)) */
@@ -485,7 +513,7 @@ html[data-public-theme="light"] footer.bg-\[\#18232E\],
 html[data-public-theme="light"] footer.bg-slate-900 {
   background-color: #FFFFFF !important;
   border-color: rgba(226, 232, 240, 0.7) !important;
-  color: #64748B !important;
+  color: #334155 !important;
 }
 
 html[data-public-theme="light"] footer h1,
@@ -493,7 +521,7 @@ html[data-public-theme="light"] footer h2,
 html[data-public-theme="light"] footer h3,
 html[data-public-theme="light"] footer h4,
 html[data-public-theme="light"] footer .text-white {
-  color: #0F172A !important;
+  color: #020617 !important;
 }
 
 html[data-public-theme="light"] footer a,
@@ -501,12 +529,12 @@ html[data-public-theme="light"] footer button,
 html[data-public-theme="light"] footer span,
 html[data-public-theme="light"] footer p,
 html[data-public-theme="light"] footer li {
-  color: #64748B;
+  color: #334155;
 }
 
 html[data-public-theme="light"] footer a:hover,
 html[data-public-theme="light"] footer button:hover {
-  color: #0F172A !important;
+  color: #020617 !important;
 }
 
 html[data-public-theme="light"] footer .border-slate-800,
@@ -589,13 +617,13 @@ html[data-public-theme="light"] #regional-connectivity-section .bg-slate-800\/90
 html[data-public-theme="light"] #regional-connectivity-section .bg-slate-800\/60 {
   background-color: #F1F5F9 !important;
   border-color: rgba(226, 232, 240, 0.7) !important;
-  color: #64748B !important;
+  color: #334155 !important;
 }
 
 html[data-public-theme="light"] #regional-connectivity-section input {
   background-color: #FFFFFF !important;
   border-color: rgba(226, 232, 240, 0.7) !important;
-  color: #0F172A !important;
+  color: #020617 !important;
 }
 
 html[data-public-theme="light"] #regional-connectivity-section input::placeholder {
@@ -605,19 +633,19 @@ html[data-public-theme="light"] #regional-connectivity-section input::placeholde
 html[data-public-theme="light"] #local-updates-section {
   background-color: #F8FAFC !important;
   border-color: rgba(226, 232, 240, 0.7) !important;
-  color: #0F172A !important;
+  color: #020617 !important;
 }
 
 html[data-public-theme="light"] #local-updates-section h2 {
-  color: #0F172A !important;
+  color: #020617 !important;
 }
 
 html[data-public-theme="light"] #local-updates-section p {
-  color: #64748B !important;
+  color: #334155 !important;
 }
 
 html[data-public-theme="light"] #local-updates-section .text-red-400 {
-  color: #0F172A !important;
+  color: #020617 !important;
 }
 
 html[data-public-theme="light"] #local-updates-section .bg-slate-900\/90,
@@ -634,38 +662,38 @@ html[data-public-theme="light"] #local-updates-section .border-slate-800\/80 {
 }
 
 html[data-public-theme="light"] #local-updates-section h3 {
-  color: #0F172A !important;
+  color: #020617 !important;
 }
 
 html[data-public-theme="light"] #local-updates-section .text-slate-300,
 html[data-public-theme="light"] #local-updates-section .text-slate-400 {
-  color: #64748B !important;
+  color: #334155 !important;
 }
 
 html[data-public-theme="light"] #local-updates-section .bg-red-950\/60 {
   background-color: #F1F5F9 !important;
   border-color: rgba(226, 232, 240, 0.8) !important;
-  color: #0F172A !important;
+  color: #020617 !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section {
   background-color: #F8FAFC !important;
   border-color: rgba(226, 232, 240, 0.7) !important;
-  color: #0F172A !important;
+  color: #020617 !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section h2 {
-  color: #0F172A !important;
+  color: #020617 !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section p {
-  color: #64748B !important;
+  color: #334155 !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section .bg-red-50 {
   background-color: #F1F5F9 !important;
   border-color: rgba(226, 232, 240, 0.8) !important;
-  color: #0F172A !important;
+  color: #020617 !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section .bg-\[\#F5F7F8\] {
@@ -675,13 +703,13 @@ html[data-public-theme="light"] #about-fazilnagar-section .bg-\[\#F5F7F8\] {
 
 html[data-public-theme="light"] #about-fazilnagar-section .bg-\[\#18232E\] {
   background-color: #FFFFFF !important;
-  color: #0F172A !important;
+  color: #020617 !important;
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04) !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section a.bg-\[\#18232E\],
 html[data-public-theme="light"] #about-fazilnagar-section button.bg-\[\#18232E\] {
-  background-color: #0F172A !important;
+  background-color: #020617 !important;
   color: #FFFFFF !important;
 }
 
@@ -694,11 +722,11 @@ html[data-public-theme="light"] #about-fazilnagar-section .lg\:col-span-2.bg-\[\
 html[data-public-theme="light"] #about-fazilnagar-section .bg-white.p-6 {
   background-color: #FFFFFF !important;
   border-color: rgba(226, 232, 240, 0.7) !important;
-  color: #0F172A !important;
+  color: #020617 !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section h3 {
-  color: #0F172A !important;
+  color: #020617 !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section .bg-white.p-3 {
@@ -709,32 +737,47 @@ html[data-public-theme="light"] #about-fazilnagar-section .bg-white.p-3 {
 html[data-public-theme="light"] #about-fazilnagar-section .text-slate-500,
 html[data-public-theme="light"] #about-fazilnagar-section .text-slate-600,
 html[data-public-theme="light"] #about-fazilnagar-section .text-slate-700 {
-  color: #64748B !important;
+  color: #334155 !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section .bg-gradient-to-br {
   background: #FFFFFF !important;
   border: 1px solid rgba(226, 232, 240, 0.7) !important;
-  color: #0F172A !important;
+  color: #020617 !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section .bg-slate-800\/80,
 html[data-public-theme="light"] #about-fazilnagar-section .bg-slate-800\/60 {
   background-color: #F1F5F9 !important;
   border-color: rgba(226, 232, 240, 0.7) !important;
-  color: #64748B !important;
+  color: #334155 !important;
 }
 
 /* ========================================================
-   DARK MODE: LUXURY CONSUMER-TECH PUBLIC STYLING
+   DARK MODE: LUXURY CONSUMER-TECH PUBLIC STYLING (BRIGHT TEXT)
    ======================================================== */
 html[data-public-theme="dark"] body {
   background-color: #0B0F17 !important;
-  color: #F8FAFC !important;
+  color: #FFFFFF !important;
 }
 
 html[data-public-theme="dark"] #public-portal-root {
   background-color: #0B0F17 !important;
+  color: #FFFFFF !important;
+}
+
+/* Headings in Dark Mode: Pure Bright White */
+html[data-public-theme="dark"] h1,
+html[data-public-theme="dark"] h2,
+html[data-public-theme="dark"] h3,
+html[data-public-theme="dark"] h4,
+html[data-public-theme="dark"] h5,
+html[data-public-theme="dark"] h6 {
+  color: #FFFFFF !important;
+}
+
+/* Paragraphs in Dark Mode: Bright Crisp Off-White */
+html[data-public-theme="dark"] p {
   color: #F8FAFC !important;
 }
 
@@ -751,7 +794,7 @@ html[data-public-theme="dark"] [role="dialog"] .bg-white,
 html[data-public-theme="dark"] .modal-content {
   background-color: #131823 !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
-  color: #F8FAFC;
+  color: #FFFFFF;
 }
 
 /* Public Secondary Surfaces & Backgrounds (Dark: #0F172A) */
@@ -773,7 +816,7 @@ html[data-public-theme="dark"] .btn-civic-secondary,
 html[data-public-theme="dark"] .bg-deep-slate {
   background-color: #1E293B !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
-  color: #F8FAFC !important;
+  color: #FFFFFF !important;
 }
 
 html[data-public-theme="dark"] .btn-civic-secondary:hover {
@@ -786,24 +829,26 @@ html[data-public-theme="dark"] .civic-card:hover {
   box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5) !important;
 }
 
-/* Primary Text (Dark: #F8FAFC) */
+/* Primary Text (Dark: #FFFFFF - Pure Bright White) */
 html[data-public-theme="dark"] .text-slate-900,
 html[data-public-theme="dark"] .text-slate-800,
 html[data-public-theme="dark"] .text-slate-700,
+html[data-public-theme="dark"] .text-\[\#0F172A\],
 html[data-public-theme="dark"] .text-\[\#18232E\],
 html[data-public-theme="dark"] .text-\[\#111827\],
 html[data-public-theme="dark"] .text-deep-slate {
-  color: #F8FAFC !important;
+  color: #FFFFFF !important;
 }
 
-/* Secondary Text (Dark: #94A3B8) */
+/* Secondary Text (Dark: #E2E8F0 - Bright High-Clarity Silver/Slate) */
 html[data-public-theme="dark"] .text-slate-600,
 html[data-public-theme="dark"] .text-slate-500,
 html[data-public-theme="dark"] .text-slate-400,
+html[data-public-theme="dark"] .text-slate-300,
 html[data-public-theme="dark"] .text-\[\#647180\],
 html[data-public-theme="dark"] .text-\[\#64748B\],
 html[data-public-theme="dark"] .text-secondary {
-  color: #94A3B8 !important;
+  color: #E2E8F0 !important;
 }
 
 /* Borders (Dark: rgba(255, 255, 255, 0.08)) */
@@ -1806,3 +1851,143 @@ html[data-public-theme="dark"] .civic-badge {
     transform: scale(1);
   }
 }
+
+/* ==========================================================================
+   FAZILNAGAR CIVIC PORTAL - SCROLL-DRIVEN ANIMATION SYSTEM
+   Compositor-only (transform, opacity), zero layout shift, prefers-reduced-motion
+   ========================================================================== */
+
+@keyframes fznFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fznFadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fznScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fznParallaxScroll {
+  from {
+    transform: translateY(18px);
+  }
+  to {
+    transform: translateY(-18px);
+  }
+}
+
+/* Base Reveal Rules - Defaults to fully visible so content is never hidden if JS fails */
+.fzn-reveal {
+  opacity: 1;
+  transform: none;
+  transition-property: opacity, transform;
+  transition-duration: var(--fzn-reveal-dur, 520ms);
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--fzn-reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+/* Pending State (Applied by Observer on init for elements outside viewport) */
+.fzn-reveal--pending.fzn-reveal--fade-up {
+  opacity: 0;
+  transform: translateY(22px);
+}
+
+.fzn-reveal--pending.fzn-reveal--fade-down {
+  opacity: 0;
+  transform: translateY(-18px);
+}
+
+.fzn-reveal--pending.fzn-reveal--scale {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+.fzn-reveal--pending.fzn-reveal--fade-in {
+  opacity: 0;
+  transform: none;
+}
+
+/* Revealed State */
+.fzn-reveal.is-revealed {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Once fully revealed and transition finishes, remove will-change to release memory */
+.fzn-reveal.is-revealed:not(.fzn-reveal--bidirectional) {
+  will-change: auto;
+}
+
+/* Direction-aware reveals for upward/reverse scroll */
+.fzn-reveal.revealed-from-top.is-revealed {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Subtle Parallax Layer */
+.fzn-parallax-wrapper {
+  overflow: clip;
+  position: relative;
+}
+
+.fzn-parallax-layer {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+/* Progressive Enhancement: Native CSS Scroll-Driven Animations (Modern Web Guidance) */
+@media (prefers-reduced-motion: no-preference) {
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    .fzn-scroll-driven-entry {
+      animation: fznFadeUp linear backwards;
+      animation-timeline: view();
+      animation-range: entry 10% entry 40%;
+    }
+
+    .fzn-parallax-css {
+      animation: fznParallaxScroll linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 100%;
+    }
+  }
+}
+
+/* Accessibility: Full Respect for prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .fzn-reveal,
+  .fzn-reveal--pending,
+  .fzn-reveal.is-revealed,
+  .fzn-parallax-layer,
+  .fzn-parallax-css,
+  .fzn-scroll-driven-entry {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    will-change: auto !important;
+  }
+}

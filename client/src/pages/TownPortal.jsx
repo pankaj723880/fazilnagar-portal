@@ -27,6 +27,7 @@ import {
 
 // Lazy-load Regional Map to eliminate render-blocking JS and main-thread freeze
 const RegionalConnectivityMap = lazy(() => import("../components/RegionalConnectivityMap"));
+import { ScrollReveal, ParallaxLayer } from "../components/ScrollReveal";
 import {
   MapPin,
   ShieldCheck,
@@ -629,9 +630,11 @@ export default function TownPortal() {
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             {/* Deep rich civic gradient base */}
             <div className="absolute inset-0 bg-gradient-to-b from-[#0B131E] via-[#0F1B2B] to-[#070D14]" />
-            {/* Subtle civic ambient lighting accents */}
-            <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-24 right-1/4 w-[500px] h-[250px] bg-red-600/5 rounded-full blur-3xl pointer-events-none" />
+            {/* Subtle civic ambient lighting accents with gentle parallax */}
+            <ParallaxLayer speed={0.2} className="absolute inset-0 pointer-events-none">
+              <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-24 right-1/4 w-[500px] h-[250px] bg-red-600/5 rounded-full blur-3xl pointer-events-none" />
+            </ParallaxLayer>
             {/* Subtle civic grid pattern */}
             <div
               className="absolute inset-0 opacity-[0.035]"
@@ -673,170 +676,172 @@ export default function TownPortal() {
           </div>
 
           <div className="relative z-30 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            {/* Civic / Active Landmark Pill Badge (Stabilized min-height container to eliminate CLS) */}
-            <div className="min-h-[42px] flex items-center justify-center mb-5">
-              {dynamicHeroSlides.length > 0 ? (
-                <div className="hero-location-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/30 text-xs text-slate-100 font-medium shadow-2xl animate-fade-in-up">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span className="text-amber-300 font-bold">
-                    📍 {dynamicHeroSlides[heroSlideIndex % dynamicHeroSlides.length]?.location || "Fazilnagar"}
-                  </span>
-                  <span className="text-slate-300">•</span>
-                  <span className="font-semibold text-white">
-                    {dynamicHeroSlides[heroSlideIndex % dynamicHeroSlides.length]?.title || "Official Civic Portal"}
-                  </span>
-                </div>
-              ) : (
-                <div className="hero-location-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-slate-100 font-medium shadow-xl animate-fade-in-up">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span className="text-emerald-300 font-bold">
-                    📍 {siteSettings.heroContent?.badgeLocation || "Official Civic Portal"}
-                  </span>
-                  <span className="text-slate-400">•</span>
-                  <span className="font-semibold text-slate-200">
-                    {siteSettings.heroContent?.badgeTitle || "Nagar Panchayat Fazilnagar • Kushinagar (PIN 274401)"}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Master Headline */}
-            <h1 className="hero-title text-[32px] sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 leading-[1.12] font-heading drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
-              {siteSettings.heroContent?.heading || siteSettings.siteName || "Fazilnagar Town Civic & Local Directory"}
-            </h1>
-
-            {siteSettings.heroContent?.subheadingHindi && (
-              <p className="hero-tagline text-[23px] sm:text-3xl font-bold leading-tight text-[#FF4D5A] font-hindi mb-3">
-                {siteSettings.heroContent.subheadingHindi}
-              </p>
-            )}
-
-            <p className="hero-description max-w-2xl mx-auto text-[15px] sm:text-base text-slate-100 leading-relaxed line-clamp-3 mb-5">
-              {siteSettings.heroContent?.description || "Official digital civic portal for Fazilnagar town. Verified schools, colleges, hospitals, emergency aid, local news, and community directory in Kushinagar, UP."}
-            </p>
-
-          {/* Smart Search Bar (Stabilized min-height to prevent search box jump) */}
-          <div className="max-w-2xl mx-auto relative text-left min-h-[58px]">
-            <div className="hero-search bg-white rounded-2xl p-1.5 shadow-2xl flex flex-row items-center gap-1.5 border border-[#E1E6EA]">
-              <div className="flex items-center gap-2 w-full min-w-0 px-2.5 py-2 text-[#18232E]">
-                <Search className="w-5 h-5 text-[#647180] flex-shrink-0" />
-                <input
-                  type="text"
-                  placeholder={siteSettings.heroContent?.searchPlaceholder || "Search schools, hospitals, medical stores, sweet shops…"}
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setDropdownOpen(Boolean(e.target.value.trim()));
-                  }}
-                  onFocus={() => {
-                    if (searchQuery.trim()) setDropdownOpen(true);
-                  }}
-                  className="w-full min-w-0 text-sm outline-none bg-transparent placeholder-slate-400 text-[#18232E] font-medium"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => {
-                      setSearchQuery("");
-                      setDropdownOpen(false);
-                    }}
-                    className="text-slate-400 hover:text-slate-600 p-1"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-              <button
-                onClick={() => {
-                  if (!searchQuery.trim()) {
-                    showToast("Please enter a keyword to search town directory.");
-                    return;
-                  }
-                  navigate(`/directory?search=${encodeURIComponent(searchQuery)}`);
-                }}
-                className="shrink-0 bg-[#18232E] hover:bg-[#B8323C] text-white px-4 sm:px-6 py-2.5 rounded-xl font-bold text-xs tracking-wide transition shadow-sm whitespace-nowrap flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <span>{siteSettings.heroContent?.searchButtonText || "Search"}</span>
-                <ArrowRight className="w-3.5 h-3.5 text-slate-300" />
-              </button>
-            </div>
-
-            {/* Smart Search Suggestions Dropdown */}
-            {dropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-[#E1E6EA] z-50 overflow-hidden max-h-80 overflow-y-auto animate-slide-down">
-                <div className="p-3 border-b border-slate-100 text-[11px] font-bold text-[#647180] uppercase tracking-wider flex justify-between items-center">
-                  <span>Verified Town Results</span>
-                  <span className="text-[#0D5E49] font-bold">{searchMatches.length} matches</span>
-                </div>
-                {searchMatches.length === 0 ? (
-                  <div className="p-6 text-center text-slate-500">
-                    <p className="text-xs font-semibold text-slate-800">No matching places found inside town boundary</p>
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      Search by category like "Schools", "Hospital", "Sweets", or road name "College Road".
-                    </p>
+            {/* Civic / Active Landmark Pill Badge + Master Headline */}
+            <ScrollReveal variant="fade-up" duration={480}>
+              <div className="min-h-[42px] flex items-center justify-center mb-5">
+                {dynamicHeroSlides.length > 0 ? (
+                  <div className="hero-location-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/30 text-xs text-slate-100 font-medium shadow-2xl animate-fade-in-up">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span className="text-amber-300 font-bold">
+                      📍 {dynamicHeroSlides[heroSlideIndex % dynamicHeroSlides.length]?.location || "Fazilnagar"}
+                    </span>
+                    <span className="text-slate-300">•</span>
+                    <span className="font-semibold text-white">
+                      {dynamicHeroSlides[heroSlideIndex % dynamicHeroSlides.length]?.title || "Official Civic Portal"}
+                    </span>
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-100">
-                    {searchMatches.map((item) => (
-                      <div
-                        key={item.id}
-                        onClick={() => handleSelectLocation(item)}
-                        className="p-3.5 hover:bg-slate-50 cursor-pointer transition flex items-center justify-between"
-                      >
-                        <div className="pr-2">
-                          <span className="text-[10px] font-bold text-[#B8323C] uppercase tracking-wider block">
-                            {item.category}
-                          </span>
-                          <h5 className="text-xs font-bold text-[#18232E]">{item.name}</h5>
-                          <p className="text-[11px] text-[#647180] line-clamp-1">{item.landmark}</p>
-                        </div>
-                        <span className="text-xs font-semibold text-[#0D5E49] flex items-center gap-1">
-                          View <ChevronRight className="w-3.5 h-3.5" />
-                        </span>
-                      </div>
-                    ))}
+                  <div className="hero-location-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-slate-100 font-medium shadow-xl animate-fade-in-up">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span className="text-emerald-300 font-bold">
+                      📍 {siteSettings.heroContent?.badgeLocation || "Official Civic Portal"}
+                    </span>
+                    <span className="text-slate-400">•</span>
+                    <span className="font-semibold text-slate-200">
+                      {siteSettings.heroContent?.badgeTitle || "Nagar Panchayat Fazilnagar • Kushinagar (PIN 274401)"}
+                    </span>
                   </div>
                 )}
               </div>
+
+              {/* Master Headline */}
+              <h1 className="hero-title text-[32px] sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 leading-[1.12] font-heading drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
+                {siteSettings.heroContent?.heading || siteSettings.siteName || "Fazilnagar Town Civic & Local Directory"}
+              </h1>
+
+              {siteSettings.heroContent?.subheadingHindi && (
+                <p className="hero-tagline text-[23px] sm:text-3xl font-bold leading-tight text-[#FF4D5A] font-hindi mb-3">
+                  {siteSettings.heroContent.subheadingHindi}
+                </p>
+              )}
+
+              <p className="hero-description max-w-2xl mx-auto text-[15px] sm:text-base text-slate-100 leading-relaxed line-clamp-3 mb-5">
+                {siteSettings.heroContent?.description || "Official digital civic portal for Fazilnagar town. Verified schools, colleges, hospitals, emergency aid, local news, and community directory in Kushinagar, UP."}
+              </p>
+            </ScrollReveal>
+
+            {/* Smart Search Bar (Stabilized min-height to prevent search box jump) */}
+            <ScrollReveal variant="fade-up" delay={70} className="max-w-2xl mx-auto relative text-left min-h-[58px]">
+              <div className="hero-search bg-white rounded-2xl p-1.5 shadow-2xl flex flex-row items-center gap-1.5 border border-[#E1E6EA]">
+                <div className="flex items-center gap-2 w-full min-w-0 px-2.5 py-2 text-[#18232E]">
+                  <Search className="w-5 h-5 text-[#647180] flex-shrink-0" />
+                  <input
+                    type="text"
+                    placeholder={siteSettings.heroContent?.searchPlaceholder || "Search schools, hospitals, medical stores, sweet shops…"}
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setDropdownOpen(Boolean(e.target.value.trim()));
+                    }}
+                    onFocus={() => {
+                      if (searchQuery.trim()) setDropdownOpen(true);
+                    }}
+                    className="w-full min-w-0 text-sm outline-none bg-transparent placeholder-slate-400 text-[#18232E] font-medium"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => {
+                        setSearchQuery("");
+                        setDropdownOpen(false);
+                      }}
+                      className="text-slate-400 hover:text-slate-600 p-1"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                <button
+                  onClick={() => {
+                    if (!searchQuery.trim()) {
+                      showToast("Please enter a keyword to search town directory.");
+                      return;
+                    }
+                    navigate(`/directory?search=${encodeURIComponent(searchQuery)}`);
+                  }}
+                  className="shrink-0 bg-[#18232E] hover:bg-[#B8323C] text-white px-4 sm:px-6 py-2.5 rounded-xl font-bold text-xs tracking-wide transition shadow-sm whitespace-nowrap flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>{siteSettings.heroContent?.searchButtonText || "Search"}</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-300" />
+                </button>
+              </div>
+
+              {/* Smart Search Suggestions Dropdown */}
+              {dropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-[#E1E6EA] z-50 overflow-hidden max-h-80 overflow-y-auto animate-slide-down">
+                  <div className="p-3 border-b border-slate-100 text-[11px] font-bold text-[#647180] uppercase tracking-wider flex justify-between items-center">
+                    <span>Verified Town Results</span>
+                    <span className="text-[#0D5E49] font-bold">{searchMatches.length} matches</span>
+                  </div>
+                  {searchMatches.length === 0 ? (
+                    <div className="p-6 text-center text-slate-500">
+                      <p className="text-xs font-semibold text-slate-800">No matching places found inside town boundary</p>
+                      <p className="text-[11px] text-slate-400 mt-1">
+                        Search by category like "Schools", "Hospital", "Sweets", or road name "College Road".
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-slate-100">
+                      {searchMatches.map((item) => (
+                        <div
+                          key={item.id}
+                          onClick={() => handleSelectLocation(item)}
+                          className="p-3.5 hover:bg-slate-50 cursor-pointer transition flex items-center justify-between"
+                        >
+                          <div className="pr-2">
+                            <span className="text-[10px] font-bold text-[#B8323C] uppercase tracking-wider block">
+                              {item.category}
+                            </span>
+                            <h5 className="text-xs font-bold text-[#18232E]">{item.name}</h5>
+                            <p className="text-[11px] text-[#647180] line-clamp-1">{item.landmark}</p>
+                          </div>
+                          <span className="text-xs font-semibold text-[#0D5E49] flex items-center gap-1">
+                            View <ChevronRight className="w-3.5 h-3.5" />
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </ScrollReveal>
+
+            {Array.isArray(siteSettings.heroContent?.actionButtons) && siteSettings.heroContent.actionButtons.some((button) => button.isActive !== false) && (
+              <ScrollReveal variant="fade-up" delay={120} className="hero-actions grid grid-cols-2 sm:flex items-stretch justify-center gap-2 sm:gap-3 mt-4 sm:mt-6">
+                {siteSettings.heroContent.actionButtons
+                  .filter((button) => button.isActive !== false)
+                  .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+                  .map((button) => {
+                    const Icon = HERO_ICON_MAP[button.icon] || Compass;
+                    const className = `min-h-[50px] px-3 sm:px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition cursor-pointer ${HERO_BUTTON_VARIANTS[button.variant] || HERO_BUTTON_VARIANTS.primary}`;
+                    if (button.isLink) {
+                      return <Link key={button.id || button.label} to={button.target || "/directory"} className={className}><Icon className="w-4 h-4 shrink-0" /><span>{button.label}</span></Link>;
+                    }
+                    return <button key={button.id || button.label} type="button" onClick={(event) => handleSmoothScroll(event, button.target)} className={className}><Icon className="w-4 h-4 shrink-0" /><span>{button.label}</span></button>;
+                  })}
+              </ScrollReveal>
+            )}
+
+            {/* Town Trust Badges (Below Buttons) */}
+            {Array.isArray(siteSettings.heroContent?.trustBadges) && siteSettings.heroContent.trustBadges.some((badge) => badge.isActive !== false) && (
+              <ScrollReveal variant="fade-up" delay={160} className="hero-trust-badges flex flex-wrap items-center justify-center gap-2 sm:gap-3 mt-4 sm:mt-5">
+                {siteSettings.heroContent.trustBadges
+                  .filter((badge) => badge.isActive !== false)
+                  .map((badge) => {
+                    const Icon = HERO_ICON_MAP[badge.icon] || ShieldCheck;
+                    return (
+                      <div
+                        key={badge.id || badge.label}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/15 text-[11px] sm:text-xs text-slate-200 font-medium shadow-md"
+                      >
+                        <Icon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span>{badge.label || badge.text}</span>
+                      </div>
+                    );
+                  })}
+              </ScrollReveal>
             )}
           </div>
-
-          {Array.isArray(siteSettings.heroContent?.actionButtons) && siteSettings.heroContent.actionButtons.some((button) => button.isActive !== false) && (
-            <div className="hero-actions grid grid-cols-2 sm:flex items-stretch justify-center gap-2 sm:gap-3 mt-4 sm:mt-6">
-              {siteSettings.heroContent.actionButtons
-                .filter((button) => button.isActive !== false)
-                .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
-                .map((button) => {
-                  const Icon = HERO_ICON_MAP[button.icon] || Compass;
-                  const className = `min-h-[50px] px-3 sm:px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition cursor-pointer ${HERO_BUTTON_VARIANTS[button.variant] || HERO_BUTTON_VARIANTS.primary}`;
-                  if (button.isLink) {
-                    return <Link key={button.id || button.label} to={button.target || "/directory"} className={className}><Icon className="w-4 h-4 shrink-0" /><span>{button.label}</span></Link>;
-                  }
-                  return <button key={button.id || button.label} type="button" onClick={(event) => handleSmoothScroll(event, button.target)} className={className}><Icon className="w-4 h-4 shrink-0" /><span>{button.label}</span></button>;
-                })}
-            </div>
-          )}
-
-          {/* Town Trust Badges (Below Buttons) */}
-          {Array.isArray(siteSettings.heroContent?.trustBadges) && siteSettings.heroContent.trustBadges.some((badge) => badge.isActive !== false) && (
-            <div className="hero-trust-badges flex flex-wrap items-center justify-center gap-2 sm:gap-3 mt-4 sm:mt-5">
-              {siteSettings.heroContent.trustBadges
-                .filter((badge) => badge.isActive !== false)
-                .map((badge) => {
-                  const Icon = HERO_ICON_MAP[badge.icon] || ShieldCheck;
-                  return (
-                    <div
-                      key={badge.id || badge.label}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/15 text-[11px] sm:text-xs text-slate-200 font-medium shadow-md"
-                    >
-                      <Icon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      <span>{badge.label || badge.text}</span>
-                    </div>
-                  );
-                })}
-            </div>
-          )}
-        </div>
-      </section>
+        </section>
       )}
 
       {/* ========================================================
@@ -845,7 +850,7 @@ export default function TownPortal() {
       {isBelowFoldReady && (
         <>
       <section id="explore-categories" className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-20 lg:py-28">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-6">
+        <ScrollReveal variant="fade-up" className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-6">
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#B8323C] uppercase tracking-wider mb-2">
               <LayoutGrid className="w-3.5 h-3.5" />
@@ -865,30 +870,37 @@ export default function TownPortal() {
             <span>{siteSettings?.homepageSections?.explore?.viewAllText || "Open Full Directory"}</span>
             <ChevronRight className="w-3.5 h-3.5 text-amber-400" />
           </Link>
-        </div>
+        </ScrollReveal>
 
         {/* Categories Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 sm:gap-6 lg:gap-8 transition-all duration-300">
-          {EXPLORE_21_CATEGORIES.map((cat) => {
+          {EXPLORE_21_CATEGORIES.map((cat, idx) => {
             const Icon = cat.icon;
             return (
-              <Link
+              <ScrollReveal
                 key={cat.id}
-                to={cat.query === "all" ? "/directory" : `/directory?category=${encodeURIComponent(cat.query)}`}
-                className="group bg-white dark:bg-[#131823] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] transition flex flex-col justify-between"
+                variant="fade-up"
+                staggerIndex={idx}
+                staggerBaseDelay={55}
+                once={true}
               >
-                <div className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-white/10 text-[#0F172A] dark:text-white flex items-center justify-center mb-4 group-hover:bg-[#0F172A] group-hover:text-white transition">
-                  <Icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition line-clamp-1 leading-snug">
-                    {cat.name}
-                  </h3>
-                  <span className="text-[11px] text-[#64748B] dark:text-slate-400 font-medium block mt-1">
-                    {cat.count} listings
-                  </span>
-                </div>
-              </Link>
+                <Link
+                  to={cat.query === "all" ? "/directory" : `/directory?category=${encodeURIComponent(cat.query)}`}
+                  className="group bg-white dark:bg-[#131823] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] transition flex flex-col justify-between h-full"
+                >
+                  <div className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-white/10 text-[#0F172A] dark:text-white flex items-center justify-center mb-4 group-hover:bg-[#0F172A] group-hover:text-white transition">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition line-clamp-1 leading-snug">
+                      {cat.name}
+                    </h3>
+                    <span className="text-[11px] text-[#64748B] dark:text-slate-400 font-medium block mt-1">
+                      {cat.count} listings
+                    </span>
+                  </div>
+                </Link>
+              </ScrollReveal>
             );
           })}
         </div>
@@ -918,7 +930,7 @@ export default function TownPortal() {
           ======================================================== */}
       <section className="mobile-density-section bg-white/70 dark:bg-[#131823]/50 py-20 lg:py-28 border-y border-slate-200/60 dark:border-white/10 content-visibility-auto">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          <div className="mb-10 sm:mb-12">
+          <ScrollReveal variant="fade-up" className="mb-10 sm:mb-12">
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0D5E49] dark:text-emerald-400 uppercase tracking-wider mb-2">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>{siteSettings?.homepageSections?.publicServices?.badge || "Public Welfare & Emergency"}</span>
@@ -929,43 +941,52 @@ export default function TownPortal() {
             <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 mt-2 max-w-2xl leading-relaxed">
               {siteSettings?.homepageSections?.publicServices?.subtitle || "Emergency numbers, primary healthcare, pharmacy points, and administrative offices in Fazilnagar."}
             </p>
-          </div>
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {((siteSettings?.homepageSections?.publicServices?.cards && siteSettings.homepageSections.publicServices.cards.length > 0)
               ? siteSettings.homepageSections.publicServices.cards
               : DEFAULT_SITE_SETTINGS.homepageSections.publicServices.cards
             ).map((card, idx) => (
-              <div key={card.id || idx} className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
-                <div>
-                  <span className="text-[10px] font-extrabold text-[#B8323C] uppercase tracking-wider block mb-2">
-                    {card.badge}
-                  </span>
-                  <h3 className="text-base font-bold text-[#0F172A] dark:text-white">{card.title}</h3>
-                  <p className="text-xs text-[#64748B] dark:text-slate-400 mt-1">{card.address}</p>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-3 leading-relaxed">
-                    {card.description}
-                  </p>
+              <ScrollReveal
+                key={card.id || idx}
+                variant="fade-up"
+                staggerIndex={idx}
+                staggerBaseDelay={65}
+                once={true}
+                className="h-full"
+              >
+                <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer h-full">
+                  <div>
+                    <span className="text-[10px] font-extrabold text-[#B8323C] uppercase tracking-wider block mb-2">
+                      {card.badge}
+                    </span>
+                    <h3 className="text-base font-bold text-[#0F172A] dark:text-white">{card.title}</h3>
+                    <p className="text-xs text-[#64748B] dark:text-slate-400 mt-1">{card.address}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-3 leading-relaxed">
+                      {card.description}
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between">
+                    {card.phone ? (
+                      <a href={`tel:${card.phone.replace(/[^0-9+]/g, "")}`} className="text-xs font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
+                        {card.phoneLabel || `📞 ${card.phone}`}
+                      </a>
+                    ) : (
+                      <span className="text-[11px] text-slate-400 font-semibold">{card.hours || "General"}</span>
+                    )}
+                    {card.directions && (
+                      <button
+                        type="button"
+                        onClick={() => openGoogleMapsDirections({ name: card.title, landmark: card.address, lat: 26.6827, lng: 84.0498 })}
+                        className="text-xs font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
+                      >
+                        Directions
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between">
-                  {card.phone ? (
-                    <a href={`tel:${card.phone.replace(/[^0-9+]/g, "")}`} className="text-xs font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
-                      {card.phoneLabel || `📞 ${card.phone}`}
-                    </a>
-                  ) : (
-                    <span className="text-[11px] text-slate-400 font-semibold">{card.hours || "General"}</span>
-                  )}
-                  {card.directions && (
-                    <button
-                      type="button"
-                      onClick={() => openGoogleMapsDirections({ name: card.title, landmark: card.address, lat: 26.6827, lng: 84.0498 })}
-                      className="text-xs font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
-                    >
-                      Directions
-                    </button>
-                  )}
-                </div>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -976,7 +997,7 @@ export default function TownPortal() {
           ======================================================== */}
       <section id="regional-connectivity-section" className="py-20 lg:py-28 border-y border-slate-200/60 dark:border-white/10 content-visibility-auto bg-[#F8FAFC] dark:bg-[#0B0F17]">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-6">
+          <ScrollReveal variant="fade-up" className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-6">
             <div>
               <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#B8323C] dark:text-amber-400 uppercase tracking-wider mb-2">
                 <Compass className="w-3.5 h-3.5" />
@@ -994,19 +1015,21 @@ export default function TownPortal() {
               <span className="w-2 h-2 rounded-full bg-[#B8323C] animate-ping" />
               <span>Fazilnagar Hub: 26.6827° N, 84.0498° E</span>
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* Regional Map Component */}
-          <Suspense
-            fallback={
-              <div className="w-full h-[460px] sm:h-[540px] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800 flex flex-col items-center justify-center text-slate-400 gap-2 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
-                <div className="w-8 h-8 border-2 border-slate-300 dark:border-slate-700 border-t-[#B8323C] rounded-full animate-spin" />
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-300">Loading Regional Connectivity Map…</span>
-              </div>
-            }
-          >
-            <RegionalConnectivityMap />
-          </Suspense>
+          <ScrollReveal variant="fade-up" delay={60}>
+            <Suspense
+              fallback={
+                <div className="w-full h-[460px] sm:h-[540px] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800 flex flex-col items-center justify-center text-slate-400 gap-2 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
+                  <div className="w-8 h-8 border-2 border-slate-300 dark:border-slate-700 border-t-[#B8323C] rounded-full animate-spin" />
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-300">Loading Regional Connectivity Map…</span>
+                </div>
+              }
+            >
+              <RegionalConnectivityMap />
+            </Suspense>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -1015,7 +1038,7 @@ export default function TownPortal() {
           ======================================================== */}
       <section className="mobile-density-section bg-white/70 dark:bg-[#131823]/50 py-20 lg:py-28 border-b border-slate-200/60 dark:border-white/10 content-visibility-auto">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-6">
+          <ScrollReveal variant="fade-up" className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-6">
             <div>
               <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#B8323C] uppercase tracking-wider mb-2">
                 <Store className="w-3.5 h-3.5" />
@@ -1035,104 +1058,112 @@ export default function TownPortal() {
               <span>View All Shops</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
-          </div>
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {/* Prashant Sweet House */}
-            <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
-              <div>
-                <span className="text-[10px] font-bold text-[#B8323C] uppercase tracking-wider">Sweet Shop & Chaat</span>
-                <h3 className="text-base font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition-colors mt-1.5">Prashant Sweet House</h3>
-                <p className="text-xs text-[#64748B] dark:text-slate-400 mt-1">Main Market, NH-27 Chowk</p>
-                <p className="text-xs text-slate-600 dark:text-slate-300 mt-3 line-clamp-2 leading-relaxed">
-                  Famous for pure desi ghee peda, rasgulla, morning kachori-jalebi, and evening chaat snacks.
-                </p>
+            <ScrollReveal variant="fade-up" staggerIndex={0} staggerBaseDelay={65} once={true} className="h-full">
+              <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer h-full">
+                <div>
+                  <span className="text-[10px] font-bold text-[#B8323C] uppercase tracking-wider">Sweet Shop & Chaat</span>
+                  <h3 className="text-base font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition-colors mt-1.5">Prashant Sweet House</h3>
+                  <p className="text-xs text-[#64748B] dark:text-slate-400 mt-1">Main Market, NH-27 Chowk</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-3 line-clamp-2 leading-relaxed">
+                    Famous for pure desi ghee peda, rasgulla, morning kachori-jalebi, and evening chaat snacks.
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
+                  <a href="tel:09839245678" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
+                    Call Shop
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => openGoogleMapsDirections({ name: "Prashant Sweet House", lat: 26.6833, lng: 84.0502, landmark: "Main Market, NH-27 Chowk, Fazilnagar" })}
+                    className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    Directions
+                  </button>
+                </div>
               </div>
-              <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
-                <a href="tel:09839245678" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
-                  Call Shop
-                </a>
-                <button
-                  type="button"
-                  onClick={() => openGoogleMapsDirections({ name: "Prashant Sweet House", lat: 26.6833, lng: 84.0502, landmark: "Main Market, NH-27 Chowk, Fazilnagar" })}
-                  className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
-                >
-                  Directions
-                </button>
-              </div>
-            </div>
+            </ScrollReveal>
 
             {/* Kanha Sweets */}
-            <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
-              <div>
-                <span className="text-[10px] font-bold text-[#B8323C] uppercase tracking-wider">Mithai & Snacks</span>
-                <h3 className="text-base font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition-colors mt-1.5">Kanha Sweets</h3>
-                <p className="text-xs text-[#64748B] dark:text-slate-400 mt-1">College Road Crossing</p>
-                <p className="text-xs text-slate-600 dark:text-slate-300 mt-3 line-clamp-2 leading-relaxed">
-                  Specialty sweets, fresh milk paneer, and authentic namkeen prepared daily with verified purity.
-                </p>
+            <ScrollReveal variant="fade-up" staggerIndex={1} staggerBaseDelay={65} once={true} className="h-full">
+              <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer h-full">
+                <div>
+                  <span className="text-[10px] font-bold text-[#B8323C] uppercase tracking-wider">Mithai & Snacks</span>
+                  <h3 className="text-base font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition-colors mt-1.5">Kanha Sweets</h3>
+                  <p className="text-xs text-[#64748B] dark:text-slate-400 mt-1">College Road Crossing</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-3 line-clamp-2 leading-relaxed">
+                    Specialty sweets, fresh milk paneer, and authentic namkeen prepared daily with verified purity.
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
+                  <a href="tel:09450987654" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
+                    Call Shop
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => openGoogleMapsDirections({ name: "Kanha Sweets", lat: 26.6844, lng: 84.0506, landmark: "College Road Crossing, Fazilnagar" })}
+                    className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    Directions
+                  </button>
+                </div>
               </div>
-              <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
-                <a href="tel:09450987654" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
-                  Call Shop
-                </a>
-                <button
-                  type="button"
-                  onClick={() => openGoogleMapsDirections({ name: "Kanha Sweets", lat: 26.6844, lng: 84.0506, landmark: "College Road Crossing, Fazilnagar" })}
-                  className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
-                >
-                  Directions
-                </button>
-              </div>
-            </div>
+            </ScrollReveal>
 
             {/* Amit Medical Store */}
-            <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
-              <div>
-                <span className="text-[10px] font-bold text-[#0D5E49] dark:text-emerald-400 uppercase tracking-wider">Retail Pharmacy</span>
-                <h3 className="text-base font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition-colors mt-1.5">Amit Medical Store</h3>
-                <p className="text-xs text-[#64748B] dark:text-slate-400 mt-1">College Road, Fazilnagar</p>
-                <p className="text-xs text-slate-600 dark:text-slate-300 mt-3 line-clamp-2 leading-relaxed">
-                  Licensed retail chemist providing allopathic pharmaceuticals, surgical kits, and health monitors.
-                </p>
+            <ScrollReveal variant="fade-up" staggerIndex={2} staggerBaseDelay={65} once={true} className="h-full">
+              <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer h-full">
+                <div>
+                  <span className="text-[10px] font-bold text-[#0D5E49] dark:text-emerald-400 uppercase tracking-wider">Retail Pharmacy</span>
+                  <h3 className="text-base font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition-colors mt-1.5">Amit Medical Store</h3>
+                  <p className="text-xs text-[#64748B] dark:text-slate-400 mt-1">College Road, Fazilnagar</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-3 line-clamp-2 leading-relaxed">
+                    Licensed retail chemist providing allopathic pharmaceuticals, surgical kits, and health monitors.
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
+                  <a href="tel:09450812345" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
+                    Call Chemist
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => openGoogleMapsDirections({ name: "Amit Medical Store", lat: 26.6846, lng: 84.0503, landmark: "College Road, Fazilnagar" })}
+                    className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    Directions
+                  </button>
+                </div>
               </div>
-              <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
-                <a href="tel:09450812345" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
-                  Call Chemist
-                </a>
-                <button
-                  type="button"
-                  onClick={() => openGoogleMapsDirections({ name: "Amit Medical Store", lat: 26.6846, lng: 84.0503, landmark: "College Road, Fazilnagar" })}
-                  className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
-                >
-                  Directions
-                </button>
-              </div>
-            </div>
+            </ScrollReveal>
 
             {/* Maurya Electronics */}
-            <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer">
-              <div>
-                <span className="text-[10px] font-bold text-[#64748B] dark:text-slate-400 uppercase tracking-wider">Electronics & Mobile</span>
-                <h3 className="text-base font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition-colors mt-1.5">Maurya Electronics & Mobile</h3>
-                <p className="text-xs text-[#64748B] dark:text-slate-400 mt-1">Babu Bazar, Fazilnagar</p>
-                <p className="text-xs text-slate-600 dark:text-slate-300 mt-3 line-clamp-2 leading-relaxed">
-                  Smartphones, home appliances, inverter battery care, and chip-level device repair services.
-                </p>
+            <ScrollReveal variant="fade-up" staggerIndex={3} staggerBaseDelay={65} once={true} className="h-full">
+              <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer h-full">
+                <div>
+                  <span className="text-[10px] font-bold text-[#64748B] dark:text-slate-400 uppercase tracking-wider">Electronics & Mobile</span>
+                  <h3 className="text-base font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition-colors mt-1.5">Maurya Electronics & Mobile</h3>
+                  <p className="text-xs text-[#64748B] dark:text-slate-400 mt-1">Babu Bazar, Fazilnagar</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-3 line-clamp-2 leading-relaxed">
+                    Smartphones, home appliances, inverter battery care, and chip-level device repair services.
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
+                  <a href="tel:09838877665" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
+                    Call Store
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => openGoogleMapsDirections({ name: "Maurya Electronics & Mobile", lat: 26.6827, lng: 84.0486, landmark: "Babu Bazar, Fazilnagar" })}
+                    className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    Directions
+                  </button>
+                </div>
               </div>
-              <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
-                <a href="tel:09838877665" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
-                  Call Store
-                </a>
-                <button
-                  type="button"
-                  onClick={() => openGoogleMapsDirections({ name: "Maurya Electronics & Mobile", lat: 26.6827, lng: 84.0486, landmark: "Babu Bazar, Fazilnagar" })}
-                  className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
-                >
-                  Directions
-                </button>
-              </div>
-            </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -1145,114 +1176,122 @@ export default function TownPortal() {
           ======================================================== */}
       <section className="mobile-density-section py-20 lg:py-28 border-b border-slate-200/60 dark:border-white/10 content-visibility-auto">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-6">
-            <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#B8323C] uppercase tracking-wider mb-2">
-                <GraduationCap className="w-3.5 h-3.5" />
-                <span>Education Directory</span>
+          <ScrollReveal variant="fade-up" once={true}>
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-6">
+              <div>
+                <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#B8323C] uppercase tracking-wider mb-2">
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  <span>Education Directory</span>
+                </div>
+                <h2 className="text-2xl sm:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading leading-tight">
+                  Schools & Colleges in Town
+                </h2>
+                <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 mt-2 max-w-2xl leading-relaxed">
+                  Verified educational institutions located within Fazilnagar town boundary.
+                </p>
               </div>
-              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading leading-tight">
-                Schools & Colleges in Town
-              </h2>
-              <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 mt-2 max-w-2xl leading-relaxed">
-                Verified educational institutions located within Fazilnagar town boundary.
-              </p>
+              <Link
+                to="/directory?category=Schools%20%26%20Colleges"
+                className="text-xs font-bold bg-[#0F172A] hover:bg-[#B8323C] text-white px-5 py-3 rounded-xl transition self-start md:self-auto shadow-xs"
+              >
+                View All Schools & Colleges →
+              </Link>
             </div>
-            <Link
-              to="/directory?category=Schools%20%26%20Colleges"
-              className="text-xs font-bold bg-[#0F172A] hover:bg-[#B8323C] text-white px-5 py-3 rounded-xl transition self-start md:self-auto shadow-xs"
-            >
-              View All Schools & Colleges →
-            </Link>
-          </div>
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {/* Sanskar Central Academy */}
-            <div className="bg-white dark:bg-[#131823] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-xs mb-3">
-                  <span className="text-[10px] font-bold text-[#B8323C] uppercase bg-red-50 dark:bg-red-950/40 px-2.5 py-1 rounded-full border border-red-200/60 dark:border-red-800/40">
-                    CBSE English Medium
-                  </span>
-                  <span className="text-[11px] text-[#0D5E49] dark:text-emerald-400 font-bold">Nursery – Class XII</span>
+            <ScrollReveal variant="fade-up" staggerIndex={0} staggerBaseDelay={65} once={true} className="h-full">
+              <div className="bg-white dark:bg-[#131823] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] flex flex-col justify-between h-full">
+                <div>
+                  <div className="flex items-center justify-between text-xs mb-3">
+                    <span className="text-[10px] font-bold text-[#B8323C] uppercase bg-red-50 dark:bg-red-950/40 px-2.5 py-1 rounded-full border border-red-200/60 dark:border-red-800/40">
+                      CBSE English Medium
+                    </span>
+                    <span className="text-[11px] text-[#0D5E49] dark:text-emerald-400 font-bold">Nursery – Class XII</span>
+                  </div>
+                  <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-1.5">Sanskar Central Academy</h3>
+                  <p className="text-xs text-[#64748B] dark:text-slate-400 mb-3">Durga Bhawan Campus, College Road</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed">
+                    Established CBSE-affiliated co-educational academy with smart computer labs, audio-visual classes, and sports training.
+                  </p>
                 </div>
-                <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-1.5">Sanskar Central Academy</h3>
-                <p className="text-xs text-[#64748B] dark:text-slate-400 mb-3">Durga Bhawan Campus, College Road</p>
-                <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed">
-                  Established CBSE-affiliated co-educational academy with smart computer labs, audio-visual classes, and sports training.
-                </p>
+                <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
+                  <a href="tel:09452089540" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
+                    📞 094520 89540
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => openGoogleMapsDirections({ name: "Sanskar Central Academy", lat: 26.6852, lng: 84.0508, landmark: "Durga Bhawan Campus, College Road, Fazilnagar" })}
+                    className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    Directions
+                  </button>
+                </div>
               </div>
-              <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
-                <a href="tel:09452089540" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
-                  📞 094520 89540
-                </a>
-                <button
-                  type="button"
-                  onClick={() => openGoogleMapsDirections({ name: "Sanskar Central Academy", lat: 26.6852, lng: 84.0508, landmark: "Durga Bhawan Campus, College Road, Fazilnagar" })}
-                  className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
-                >
-                  Directions
-                </button>
-              </div>
-            </div>
+            </ScrollReveal>
 
             {/* Pawanagar Mahavir Inter College */}
-            <div className="bg-white dark:bg-[#131823] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-xs mb-3">
-                  <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase bg-slate-100 dark:bg-white/10 px-2.5 py-1 rounded-full border border-slate-200/60 dark:border-white/10">
-                    UP Board Sr. Secondary
-                  </span>
-                  <span className="text-[11px] text-[#0D5E49] dark:text-emerald-400 font-bold">Class VI – XII</span>
+            <ScrollReveal variant="fade-up" staggerIndex={1} staggerBaseDelay={65} once={true} className="h-full">
+              <div className="bg-white dark:bg-[#131823] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] flex flex-col justify-between h-full">
+                <div>
+                  <div className="flex items-center justify-between text-xs mb-3">
+                    <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase bg-slate-100 dark:bg-white/10 px-2.5 py-1 rounded-full border border-slate-200/60 dark:border-white/10">
+                      UP Board Sr. Secondary
+                    </span>
+                    <span className="text-[11px] text-[#0D5E49] dark:text-emerald-400 font-bold">Class VI – XII</span>
+                  </div>
+                  <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-1.5">Pawanagar Mahavir Inter College</h3>
+                  <p className="text-xs text-[#64748B] dark:text-slate-400 mb-3">College Road, Fazilnagar</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed">
+                    Historic town anchor college offering Science, Commerce, and Arts streams with extensive athletic grounds.
+                  </p>
                 </div>
-                <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-1.5">Pawanagar Mahavir Inter College</h3>
-                <p className="text-xs text-[#64748B] dark:text-slate-400 mb-3">College Road, Fazilnagar</p>
-                <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed">
-                  Historic town anchor college offering Science, Commerce, and Arts streams with extensive athletic grounds.
-                </p>
+                <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
+                  <a href="tel:05564222115" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
+                    📞 05564-222115
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => openGoogleMapsDirections({ name: "Pawanagar Mahavir Inter College", lat: 26.6848, lng: 84.0510, landmark: "College Road, Fazilnagar" })}
+                    className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    Directions
+                  </button>
+                </div>
               </div>
-              <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
-                <a href="tel:05564222115" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
-                  📞 05564-222115
-                </a>
-                <button
-                  type="button"
-                  onClick={() => openGoogleMapsDirections({ name: "Pawanagar Mahavir Inter College", lat: 26.6848, lng: 84.0510, landmark: "College Road, Fazilnagar" })}
-                  className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
-                >
-                  Directions
-                </button>
-              </div>
-            </div>
+            </ScrollReveal>
 
             {/* The Hermitage School */}
-            <div className="bg-white dark:bg-[#131823] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-xs mb-3">
-                  <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-full border border-blue-200/60 dark:border-blue-800/40">
-                    English Medium Primary
-                  </span>
-                  <span className="text-[11px] text-[#0D5E49] dark:text-emerald-400 font-bold">KG – Middle</span>
+            <ScrollReveal variant="fade-up" staggerIndex={2} staggerBaseDelay={65} once={true} className="h-full">
+              <div className="bg-white dark:bg-[#131823] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] flex flex-col justify-between h-full">
+                <div>
+                  <div className="flex items-center justify-between text-xs mb-3">
+                    <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-full border border-blue-200/60 dark:border-blue-800/40">
+                      English Medium Primary
+                    </span>
+                    <span className="text-[11px] text-[#0D5E49] dark:text-emerald-400 font-bold">KG – Middle</span>
+                  </div>
+                  <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-1.5">The Hermitage School</h3>
+                  <p className="text-xs text-[#64748B] dark:text-slate-400 mb-3">Hospital Road (Near Sarkari Hospital)</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed">
+                    Quality foundational school focusing on language fluency, cognitive development, and creative extracurriculars.
+                  </p>
                 </div>
-                <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-1.5">The Hermitage School</h3>
-                <p className="text-xs text-[#64748B] dark:text-slate-400 mb-3">Hospital Road (Near Sarkari Hospital)</p>
-                <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed">
-                  Quality foundational school focusing on language fluency, cognitive development, and creative extracurriculars.
-                </p>
+                <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
+                  <a href="tel:09919523411" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
+                    📞 099195 23411
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => openGoogleMapsDirections({ name: "The Hermitage School", lat: 26.6821, lng: 84.0526, landmark: "Hospital Road, Fazilnagar" })}
+                    className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    Directions
+                  </button>
+                </div>
               </div>
-              <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 mt-5 flex items-center justify-between text-xs">
-                <a href="tel:09919523411" className="font-bold text-[#0F172A] dark:text-white hover:text-[#B8323C] transition-colors">
-                  📞 099195 23411
-                </a>
-                <button
-                  type="button"
-                  onClick={() => openGoogleMapsDirections({ name: "The Hermitage School", lat: 26.6821, lng: 84.0526, landmark: "Hospital Road, Fazilnagar" })}
-                  className="font-bold text-[#0D5E49] dark:text-emerald-400 hover:underline cursor-pointer"
-                >
-                  Directions
-                </button>
-              </div>
-            </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -1263,69 +1302,73 @@ export default function TownPortal() {
       <section id="events-melas-section" className="mobile-density-section bg-white/70 dark:bg-[#131823]/50 py-20 lg:py-28 border-b border-slate-200/60 dark:border-white/10">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           {/* Header */}
-          <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 sm:mb-12 gap-6">
-            <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2 bg-amber-50 dark:bg-amber-950/40 px-3 py-1 rounded-full border border-amber-200/60 dark:border-amber-800/40">
-                <Calendar className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                <span>{siteSettings?.homepageSections?.events?.badge || "Town Fairs, Melas & Cultural Celebrations"}</span>
+          <ScrollReveal variant="fade-up" once={true}>
+            <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 sm:mb-12 gap-6">
+              <div>
+                <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2 bg-amber-50 dark:bg-amber-950/40 px-3 py-1 rounded-full border border-amber-200/60 dark:border-amber-800/40">
+                  <Calendar className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  <span>{siteSettings?.homepageSections?.events?.badge || "Town Fairs, Melas & Cultural Celebrations"}</span>
+                </div>
+                <h2 className="text-2xl sm:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading leading-tight">
+                  {siteSettings?.homepageSections?.events?.title || "Upcoming Events & Town Melas"}
+                </h2>
+                <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 mt-2 max-w-2xl leading-relaxed">
+                  {siteSettings?.homepageSections?.events?.subtitle || "Experience the vibrant community life of Fazilnagar — from the sacred Pawapuri Nirvana Mela to civic festivals, devotional aartis, and annual town gatherings."}
+                </p>
               </div>
-              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading leading-tight">
-                {siteSettings?.homepageSections?.events?.title || "Upcoming Events & Town Melas"}
-              </h2>
-              <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 mt-2 max-w-2xl leading-relaxed">
-                {siteSettings?.homepageSections?.events?.subtitle || "Experience the vibrant community life of Fazilnagar — from the sacred Pawapuri Nirvana Mela to civic festivals, devotional aartis, and annual town gatherings."}
-              </p>
-            </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  handleRequireAuthAction(() => {
-                    setModalType("event");
-                    setCommunityModalOpen(true);
-                  }, "submit a local event or mela");
-                }}
-                className="inline-flex items-center gap-2 bg-[#0D5E49] hover:bg-[#0a4838] text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow-xs cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{siteSettings?.homepageSections?.events?.ctaText || "+ Submit Event / Mela"}</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleRequireAuthAction(() => {
+                      setModalType("event");
+                      setCommunityModalOpen(true);
+                    }, "submit a local event or mela");
+                  }}
+                  className="inline-flex items-center gap-2 bg-[#0D5E49] hover:bg-[#0a4838] text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow-xs cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{siteSettings?.homepageSections?.events?.ctaText || "+ Submit Event / Mela"}</span>
+                </button>
+              </div>
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* Category Filter Pills */}
-          <div className="flex flex-wrap items-center gap-2.5 mb-10 overflow-x-auto pb-2 scrollbar-none">
-            {eventCategories.map((cat) => {
-              const count = cat === "All"
-                ? events.filter((e) => e.isPublished !== false && e.status !== "draft").length
-                : events.filter((e) => (e.isPublished !== false && e.status !== "draft") && e.category === cat).length;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setSelectedEventCategory(cat)}
-                  className={`text-xs font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
-                    selectedEventCategory === cat
-                      ? "bg-[#0F172A] text-white shadow-xs dark:bg-white dark:text-[#0F172A]"
-                      : "bg-white dark:bg-[#131823] hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/10"
-                  }`}
-                >
-                  <span>{cat}</span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                    selectedEventCategory === cat ? "bg-white/20 dark:bg-black/20 text-white dark:text-black" : "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400"
-                  }`}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          <ScrollReveal variant="fade-up" delay={80} once={true}>
+            <div className="flex flex-wrap items-center gap-2.5 mb-10 overflow-x-auto pb-2 scrollbar-none">
+              {eventCategories.map((cat) => {
+                const count = cat === "All"
+                  ? events.filter((e) => e.isPublished !== false && e.status !== "draft").length
+                  : events.filter((e) => (e.isPublished !== false && e.status !== "draft") && e.category === cat).length;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSelectedEventCategory(cat)}
+                    className={`text-xs font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+                      selectedEventCategory === cat
+                        ? "bg-[#0F172A] text-white shadow-xs dark:bg-white dark:text-[#0F172A]"
+                        : "bg-white dark:bg-[#131823] hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/10"
+                    }`}
+                  >
+                    <span>{cat}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                      selectedEventCategory === cat ? "bg-white/20 dark:bg-black/20 text-white dark:text-black" : "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400"
+                    }`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </ScrollReveal>
 
           {/* Events Grid */}
           {filteredEvents.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-              {filteredEvents.map((evt) => {
+              {filteredEvents.map((evt, idx) => {
                 const eventDate = evt.startDate ? new Date(evt.startDate) : null;
                 const monthStr = eventDate && !isNaN(eventDate.getTime())
                   ? eventDate.toLocaleDateString("en-IN", { month: "short" }).toUpperCase()
@@ -1334,132 +1377,140 @@ export default function TownPortal() {
                 const yearStr = eventDate && !isNaN(eventDate.getTime()) ? eventDate.getFullYear() : "";
 
                 return (
-                  <article
+                  <ScrollReveal
                     key={evt._id || evt.id}
-                    className="group bg-white dark:bg-[#131823] rounded-2xl sm:rounded-3xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] transition-all duration-300 overflow-hidden flex flex-col justify-between"
+                    variant="fade-up"
+                    staggerIndex={idx % 6}
+                    staggerBaseDelay={50}
+                    once={true}
+                    className="h-full"
                   >
-                    <div>
-                      {/* Banner Image with Badges */}
-                      <div className="relative h-48 w-full bg-slate-900 overflow-hidden">
-                        {evt.bannerImage ? (
-                          <img
-                            src={evt.bannerImage}
-                            alt={evt.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-amber-900/60 via-slate-900 to-[#18232E] flex items-center justify-center">
-                            <Calendar className="w-12 h-12 text-amber-300/40" />
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                        {/* Top Badges */}
-                        <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-50/95 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-amber-200/80 shadow-2xs">
-                            {evt.category || "Event"}
-                          </span>
-                          {evt.isFeatured && (
-                            <span className="text-[10px] font-bold text-amber-900 bg-gradient-to-r from-amber-300 to-amber-400 px-2.5 py-0.5 rounded-full shadow-xs flex items-center gap-1">
-                              ★ Featured Mela
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Date Ribbon Badge */}
-                        <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-xl p-2 text-center shadow-md border border-white/60 min-w-[50px]">
-                          <span className="block text-[9px] font-extrabold text-red-600 leading-none">
-                            {monthStr}
-                          </span>
-                          <span className="block text-base font-black text-slate-900 leading-tight">
-                            {dayStr}
-                          </span>
-                          {yearStr && (
-                            <span className="block text-[8px] font-semibold text-slate-500 leading-none">
-                              {yearStr}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Content Area */}
-                      <div className="p-5 space-y-3">
-                        <div>
-                          <h3 className="text-base font-bold text-[#18232E] group-hover:text-amber-800 transition-colors line-clamp-2">
-                            {evt.title}
-                          </h3>
-                          {evt.titleHindi && (
-                            <p className="text-xs text-amber-900/80 font-hindi font-medium mt-0.5 line-clamp-1">
-                              {evt.titleHindi}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Timing & Venue */}
-                        <div className="space-y-1.5 text-xs text-slate-600 pt-1 border-t border-slate-100">
-                          {evt.timeString && (
-                            <div className="flex items-center gap-2 text-[11px]">
-                              <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                              <span className="font-medium text-slate-700">{evt.timeString}</span>
+                    <article
+                      className="group bg-white dark:bg-[#131823] rounded-2xl sm:rounded-3xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] transition-all duration-300 overflow-hidden flex flex-col justify-between h-full"
+                    >
+                      <div>
+                        {/* Banner Image with Badges */}
+                        <div className="relative h-48 w-full bg-slate-900 overflow-hidden">
+                          {evt.bannerImage ? (
+                            <img
+                              src={evt.bannerImage}
+                              alt={evt.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-amber-900/60 via-slate-900 to-[#18232E] flex items-center justify-center">
+                              <Calendar className="w-12 h-12 text-amber-300/40" />
                             </div>
                           )}
-                          <div className="flex items-start gap-2 text-[11px]">
-                            <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" />
-                            <span className="line-clamp-1 text-slate-700 font-medium">
-                              {evt.venue}{evt.address ? ` • ${evt.address}` : ""}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                          {/* Top Badges */}
+                          <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-50/95 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-amber-200/80 shadow-2xs">
+                              {evt.category || "Event"}
                             </span>
+                            {evt.isFeatured && (
+                              <span className="text-[10px] font-bold text-amber-900 bg-gradient-to-r from-amber-300 to-amber-400 px-2.5 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                                ★ Featured Mela
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Date Ribbon Badge */}
+                          <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-xl p-2 text-center shadow-md border border-white/60 min-w-[50px]">
+                            <span className="block text-[9px] font-extrabold text-red-600 leading-none">
+                              {monthStr}
+                            </span>
+                            <span className="block text-base font-black text-slate-900 leading-tight">
+                              {dayStr}
+                            </span>
+                            {yearStr && (
+                              <span className="block text-[8px] font-semibold text-slate-500 leading-none">
+                                {yearStr}
+                              </span>
+                            )}
                           </div>
                         </div>
 
-                        {/* Description */}
-                        <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
-                          {evt.summary || evt.description}
-                        </p>
-                      </div>
-                    </div>
+                        {/* Content Area */}
+                        <div className="p-5 space-y-3">
+                          <div>
+                            <h3 className="text-base font-bold text-[#18232E] group-hover:text-amber-800 transition-colors line-clamp-2">
+                              {evt.title}
+                            </h3>
+                            {evt.titleHindi && (
+                              <p className="text-xs text-amber-900/80 font-hindi font-medium mt-0.5 line-clamp-1">
+                                {evt.titleHindi}
+                              </p>
+                            )}
+                          </div>
 
-                    {/* Footer Actions */}
-                    <div className="p-4 bg-[#F5F7F8]/70 border-t border-[#E1E6EA] flex items-center justify-between text-xs gap-2">
-                      <span className="text-[11px] text-slate-500 truncate max-w-[140px]" title={evt.organizer}>
-                        {evt.organizer ? `Org: ${evt.organizer}` : "Civic Committee"}
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (navigator.share) {
-                              navigator.share({
-                                title: evt.title,
-                                text: `${evt.title} at ${evt.venue}, Fazilnagar`,
-                                url: window.location.href,
-                              }).catch(() => {});
-                            } else {
-                              navigator.clipboard?.writeText(`${evt.title} - ${evt.venue}, Fazilnagar. Details: ${window.location.href}`);
-                              showToast("Event details copied to clipboard!");
-                            }
-                          }}
-                          className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-white transition cursor-pointer"
-                          title="Share event"
-                        >
-                          <Share2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openGoogleMapsDirections({
-                            name: evt.venue,
-                            lat: evt.latitude || 26.6827,
-                            lng: evt.longitude || 84.0498,
-                            landmark: evt.address || "Fazilnagar",
-                          })}
-                          className="font-bold text-[#0D5E49] hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/60 px-2.5 py-1 rounded-lg text-[11px] transition inline-flex items-center gap-1 cursor-pointer"
-                        >
-                          <Navigation className="w-3 h-3" />
-                          <span>Directions</span>
-                        </button>
+                          {/* Timing & Venue */}
+                          <div className="space-y-1.5 text-xs text-slate-600 pt-1 border-t border-slate-100">
+                            {evt.timeString && (
+                              <div className="flex items-center gap-2 text-[11px]">
+                                <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                <span className="font-medium text-slate-700">{evt.timeString}</span>
+                              </div>
+                            )}
+                            <div className="flex items-start gap-2 text-[11px]">
+                              <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" />
+                              <span className="line-clamp-1 text-slate-700 font-medium">
+                                {evt.venue}{evt.address ? ` • ${evt.address}` : ""}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Description */}
+                          <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
+                            {evt.summary || evt.description}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </article>
+
+                      {/* Footer Actions */}
+                      <div className="p-4 bg-[#F5F7F8]/70 border-t border-[#E1E6EA] flex items-center justify-between text-xs gap-2">
+                        <span className="text-[11px] text-slate-500 truncate max-w-[140px]" title={evt.organizer}>
+                          {evt.organizer ? `Org: ${evt.organizer}` : "Civic Committee"}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (navigator.share) {
+                                navigator.share({
+                                  title: evt.title,
+                                  text: `${evt.title} at ${evt.venue}, Fazilnagar`,
+                                  url: window.location.href,
+                                }).catch(() => {});
+                              } else {
+                                navigator.clipboard?.writeText(`${evt.title} - ${evt.venue}, Fazilnagar. Details: ${window.location.href}`);
+                                showToast("Event details copied to clipboard!");
+                              }
+                            }}
+                            className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-white transition cursor-pointer"
+                            title="Share event"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openGoogleMapsDirections({
+                              name: evt.venue,
+                              lat: evt.latitude || 26.6827,
+                              lng: evt.longitude || 84.0498,
+                              landmark: evt.address || "Fazilnagar",
+                            })}
+                            className="font-bold text-[#0D5E49] hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/60 px-2.5 py-1 rounded-lg text-[11px] transition inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            <Navigation className="w-3 h-3" />
+                            <span>Directions</span>
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  </ScrollReveal>
                 );
               })}
             </div>
@@ -1487,158 +1538,174 @@ export default function TownPortal() {
           ======================================================== */}
       <section id="local-updates-section" className="mobile-density-section py-20 lg:py-28 border-y border-slate-200/60 dark:border-white/8 content-visibility-auto">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 lg:mb-12 gap-4">
-            <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-red-500 uppercase tracking-wider mb-2">
-                <Bell className="w-3.5 h-3.5" />
-                <span>Dated Community Bulletins</span>
+          <ScrollReveal variant="fade-up" once={true}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 lg:mb-12 gap-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold text-red-500 uppercase tracking-wider mb-2">
+                  <Bell className="w-3.5 h-3.5" />
+                  <span>Dated Community Bulletins</span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading">
+                  Local News & Civic Bulletins
+                </h2>
+                <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 mt-1.5 leading-relaxed">
+                  Official notices and community happenings verified from local organizers.
+                </p>
               </div>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading">
-                Local News & Civic Bulletins
-              </h2>
-              <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 mt-1.5 leading-relaxed">
-                Official notices and community happenings verified from local organizers.
-              </p>
+              <div className="flex items-center gap-3">
+                <Link
+                  to="/news"
+                  className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 text-xs font-bold inline-flex items-center gap-1 transition"
+                >
+                  <span>View All Updates ({liveNews.length > 0 ? liveNews.length : 3}) →</span>
+                </Link>
+                <Link
+                  to="/create-news"
+                  className="inline-flex items-center gap-1.5 bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-xs"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Post News</span>
+                </Link>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Link
-                to="/news"
-                className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 text-xs font-bold inline-flex items-center gap-1 transition"
-              >
-                <span>View All Updates ({liveNews.length > 0 ? liveNews.length : 3}) →</span>
-              </Link>
-              <Link
-                to="/create-news"
-                className="inline-flex items-center gap-1.5 bg-[#B8323C] hover:bg-[#991B1B] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-xs"
-              >
-                <Plus className="w-4 h-4" />
-                <span>+ Post News</span>
-              </Link>
-            </div>
-          </div>
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {liveNews.length > 0 ? (
-              liveNews.slice(0, 3).map((item) => (
-                <div
+              liveNews.slice(0, 3).map((item, idx) => (
+                <ScrollReveal
                   key={item._id || item.id}
-                  className="civic-card bg-white dark:bg-[#131823] border border-slate-200/60 dark:border-white/8 rounded-2xl overflow-hidden flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all group"
+                  variant="fade-up"
+                  staggerIndex={idx}
+                  staggerBaseDelay={65}
+                  once={true}
+                  className="h-full"
                 >
-                  {(item.mediaType === "video" || item.video) ? (
-                    <Suspense fallback={<div className="h-44 w-full bg-slate-100 dark:bg-slate-800 animate-pulse" />}>
-                      <StoryVideoPreview
-                        story={item}
-                        className="h-44 w-full"
-                        aspectRatio="aspect-auto"
-                        fallbackPoster={item.image || ""}
-                      />
-                    </Suspense>
-                  ) : item.image ? (
-                    <div className="h-44 w-full overflow-hidden bg-slate-100 dark:bg-slate-950">
-                      <img
-                        src={item.image}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    </div>
-                  ) : null}
-                  <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between text-xs mb-3">
-                        <span className="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider bg-red-50 dark:bg-red-950/60 px-2.5 py-1 rounded-full border border-red-200/60 dark:border-red-800/40">
-                          {item.category || "General"}
-                        </span>
-                        <span className="text-[11px] text-[#64748B] dark:text-slate-400">
-                          {item.createdAt
-                            ? new Date(item.createdAt).toLocaleDateString("en-IN", {
-                                day: "numeric",
-                                month: "short",
-                              })
-                            : "Recent"}
-                        </span>
+                  <div
+                    className="civic-card bg-white dark:bg-[#131823] border border-slate-200/60 dark:border-white/8 rounded-2xl overflow-hidden flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all group h-full"
+                  >
+                    {(item.mediaType === "video" || item.video) ? (
+                      <Suspense fallback={<div className="h-44 w-full bg-slate-100 dark:bg-slate-800 animate-pulse" />}>
+                        <StoryVideoPreview
+                          story={item}
+                          className="h-44 w-full"
+                          aspectRatio="aspect-auto"
+                          fallbackPoster={item.image || ""}
+                        />
+                      </Suspense>
+                    ) : item.image ? (
+                      <div className="h-44 w-full overflow-hidden bg-slate-100 dark:bg-slate-950">
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
                       </div>
-                      <h3 className="text-sm sm:text-base font-bold text-[#0F172A] dark:text-white mb-2 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors line-clamp-2 leading-snug">
-                        {item.title}
-                      </h3>
-                      {item.titleHi && (
-                        <p className="text-xs text-[#64748B] dark:text-slate-400 font-serif line-clamp-1 mb-2">
-                          {item.titleHi}
+                    ) : null}
+                    <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between text-xs mb-3">
+                          <span className="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider bg-red-50 dark:bg-red-950/60 px-2.5 py-1 rounded-full border border-red-200/60 dark:border-red-800/40">
+                            {item.category || "General"}
+                          </span>
+                          <span className="text-[11px] text-[#64748B] dark:text-slate-400">
+                            {item.createdAt
+                              ? new Date(item.createdAt).toLocaleDateString("en-IN", {
+                                  day: "numeric",
+                                  month: "short",
+                                })
+                              : "Recent"}
+                          </span>
+                        </div>
+                        <h3 className="text-sm sm:text-base font-bold text-[#0F172A] dark:text-white mb-2 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors line-clamp-2 leading-snug">
+                          {item.title}
+                        </h3>
+                        {item.titleHi && (
+                          <p className="text-xs text-[#64748B] dark:text-slate-400 font-serif line-clamp-1 mb-2">
+                            {item.titleHi}
+                          </p>
+                        )}
+                        <p className="text-xs text-[#475569] dark:text-slate-300 leading-relaxed line-clamp-3">
+                          {item.description}
                         </p>
-                      )}
-                      <p className="text-xs text-[#475569] dark:text-slate-300 leading-relaxed line-clamp-3">
-                        {item.description}
-                      </p>
-                    </div>
-                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 mt-5 text-[11px] text-[#64748B] dark:text-slate-400 flex items-center justify-between">
-                      <span className="truncate">By {item.author?.name || "Local Reporter"}</span>
-                      <Link to="/news" className="text-red-600 dark:text-red-400 hover:text-red-700 font-semibold shrink-0 ml-2">
-                        Read Bulletin →
-                      </Link>
+                      </div>
+                      <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 mt-5 text-[11px] text-[#64748B] dark:text-slate-400 flex items-center justify-between">
+                        <span className="truncate">By {item.author?.name || "Local Reporter"}</span>
+                        <Link to="/news" className="text-red-600 dark:text-red-400 hover:text-red-700 font-semibold shrink-0 ml-2">
+                          Read Bulletin →
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </ScrollReveal>
               ))
             ) : (
               <>
                 {/* Event 1 */}
-                <div className="civic-card bg-white dark:bg-[#131823] border border-slate-200/60 dark:border-white/8 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none">
-                  <div>
-                    <div className="flex items-center justify-between text-xs mb-3">
-                      <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200/60 dark:border-amber-800/40 px-2.5 py-1 rounded-full uppercase">Cultural Heritage</span>
-                      <span className="text-[11px] text-[#64748B] dark:text-slate-400">Annual Festival</span>
+                <ScrollReveal variant="fade-up" staggerIndex={0} staggerBaseDelay={65} once={true} className="h-full">
+                  <div className="civic-card bg-white dark:bg-[#131823] border border-slate-200/60 dark:border-white/8 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none h-full">
+                    <div>
+                      <div className="flex items-center justify-between text-xs mb-3">
+                        <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200/60 dark:border-amber-800/40 px-2.5 py-1 rounded-full uppercase">Cultural Heritage</span>
+                        <span className="text-[11px] text-[#64748B] dark:text-slate-400">Annual Festival</span>
+                      </div>
+                      <h3 className="text-sm sm:text-base font-bold text-[#0F172A] dark:text-white mb-2 leading-snug">
+                        Kartik Poornima & Nirvana Mahotsav at Pawanagar
+                      </h3>
+                      <p className="text-xs text-[#475569] dark:text-slate-300 leading-relaxed">
+                        Traditional annual pilgrimage gathering following Diwali celebrating the nirvana legacy of Lord Mahavira at the historic shrine.
+                      </p>
                     </div>
-                    <h3 className="text-sm sm:text-base font-bold text-[#0F172A] dark:text-white mb-2 leading-snug">
-                      Kartik Poornima & Nirvana Mahotsav at Pawanagar
-                    </h3>
-                    <p className="text-xs text-[#475569] dark:text-slate-300 leading-relaxed">
-                      Traditional annual pilgrimage gathering following Diwali celebrating the nirvana legacy of Lord Mahavira at the historic shrine.
-                    </p>
+                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-5 text-[11px] text-[#64748B] dark:text-slate-400 flex items-center justify-between">
+                      <span>Source: Pawanagar Trust</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Post-Diwali</span>
+                    </div>
                   </div>
-                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-5 text-[11px] text-[#64748B] dark:text-slate-400 flex items-center justify-between">
-                    <span>Source: Pawanagar Trust</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Post-Diwali</span>
-                  </div>
-                </div>
+                </ScrollReveal>
 
                 {/* Event 2 */}
-                <div className="civic-card bg-white dark:bg-[#131823] border border-slate-200/60 dark:border-white/8 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none">
-                  <div>
-                    <div className="flex items-center justify-between text-xs mb-3">
-                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/40 px-2.5 py-1 rounded-full uppercase">Healthcare Routine</span>
-                      <span className="text-[11px] text-[#64748B] dark:text-slate-400">Every Wednesday</span>
+                <ScrollReveal variant="fade-up" staggerIndex={1} staggerBaseDelay={65} once={true} className="h-full">
+                  <div className="civic-card bg-white dark:bg-[#131823] border border-slate-200/60 dark:border-white/8 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none h-full">
+                    <div>
+                      <div className="flex items-center justify-between text-xs mb-3">
+                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/40 px-2.5 py-1 rounded-full uppercase">Healthcare Routine</span>
+                        <span className="text-[11px] text-[#64748B] dark:text-slate-400">Every Wednesday</span>
+                      </div>
+                      <h3 className="text-sm sm:text-base font-bold text-[#0F172A] dark:text-white mb-2 leading-snug">
+                        Weekly Immunization & Maternal Day at CHC Fazilnagar
+                      </h3>
+                      <p className="text-xs text-[#475569] dark:text-slate-300 leading-relaxed">
+                        Public health team conducts designated infant immunizations, maternal nutrition checkups, and child wellness counseling.
+                      </p>
                     </div>
-                    <h3 className="text-sm sm:text-base font-bold text-[#0F172A] dark:text-white mb-2 leading-snug">
-                      Weekly Immunization & Maternal Day at CHC Fazilnagar
-                    </h3>
-                    <p className="text-xs text-[#475569] dark:text-slate-300 leading-relaxed">
-                      Public health team conducts designated infant immunizations, maternal nutrition checkups, and child wellness counseling.
-                    </p>
+                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-5 text-[11px] text-[#64748B] dark:text-slate-400 flex items-center justify-between">
+                      <span>Source: CHC Health Desk</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Weekly</span>
+                    </div>
                   </div>
-                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-5 text-[11px] text-[#64748B] dark:text-slate-400 flex items-center justify-between">
-                    <span>Source: CHC Health Desk</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Weekly</span>
-                  </div>
-                </div>
+                </ScrollReveal>
 
                 {/* Event 3 */}
-                <div className="civic-card bg-white dark:bg-[#131823] border border-slate-200/60 dark:border-white/8 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none">
-                  <div>
-                    <div className="flex items-center justify-between text-xs mb-3">
-                      <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800/40 px-2.5 py-1 rounded-full uppercase">Civic Works</span>
-                      <span className="text-[11px] text-[#64748B] dark:text-slate-400">Highway Corridor</span>
+                <ScrollReveal variant="fade-up" staggerIndex={2} staggerBaseDelay={65} once={true} className="h-full">
+                  <div className="civic-card bg-white dark:bg-[#131823] border border-slate-200/60 dark:border-white/8 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none h-full">
+                    <div>
+                      <div className="flex items-center justify-between text-xs mb-3">
+                        <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800/40 px-2.5 py-1 rounded-full uppercase">Civic Works</span>
+                        <span className="text-[11px] text-[#64748B] dark:text-slate-400">Highway Corridor</span>
+                      </div>
+                      <h3 className="text-sm sm:text-base font-bold text-[#0F172A] dark:text-white mb-2 leading-snug">
+                        NH-27 Highway Service Road Beautification & Lighting
+                      </h3>
+                      <p className="text-xs text-[#475569] dark:text-slate-300 leading-relaxed">
+                        Town civic maintenance program underway for solar streetlight installation and pedestrian pathway clearing at Main Chowk.
+                      </p>
                     </div>
-                    <h3 className="text-sm sm:text-base font-bold text-[#0F172A] dark:text-white mb-2 leading-snug">
-                      NH-27 Highway Service Road Beautification & Lighting
-                    </h3>
-                    <p className="text-xs text-[#475569] dark:text-slate-300 leading-relaxed">
-                      Town civic maintenance program underway for solar streetlight installation and pedestrian pathway clearing at Main Chowk.
-                    </p>
+                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-5 text-[11px] text-[#64748B] dark:text-slate-400 flex items-center justify-between">
+                      <span>Source: Town Civic Circle</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">In Progress</span>
+                    </div>
                   </div>
-                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-5 text-[11px] text-[#64748B] dark:text-slate-400 flex items-center justify-between">
-                    <span>Source: Town Civic Circle</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">In Progress</span>
-                  </div>
-                </div>
+                </ScrollReveal>
               </>
             )}
           </div>
@@ -1651,121 +1718,131 @@ export default function TownPortal() {
       <section id="about-fazilnagar-section" className="mobile-density-section py-20 lg:py-28 border-t border-slate-200/60 dark:border-white/8 content-visibility-auto">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           {/* Header */}
-          <div className="text-center max-w-3xl mx-auto mb-12 lg:mb-16">
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B8323C] dark:text-red-400 uppercase tracking-wider mb-2.5 bg-red-50 dark:bg-red-950/60 px-3.5 py-1 rounded-full border border-red-200/60 dark:border-red-800/40">
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>{siteSettings?.homepageSections?.heritage?.badge || "Town Profile, Antiquity & Sacred Heritage"}</span>
-            </div>
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight mb-3.5 font-heading">
-              {siteSettings?.homepageSections?.heritage?.title || "Fazilnagar & Kushinagar: The Sacred Twin Heritage"}
-            </h2>
-            <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 leading-relaxed">
-              {siteSettings?.homepageSections?.heritage?.subtitle || "Explore the deep 2,600-year-old antiquity, sacred spiritual milestones of Bhagwan Mahavira and Lord Buddha, and modern civic significance of the two historic capitals of the ancient Malla Republic."}
-            </p>
+          <ScrollReveal variant="fade-up" once={true}>
+            <div className="text-center max-w-3xl mx-auto mb-12 lg:mb-16">
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B8323C] dark:text-red-400 uppercase tracking-wider mb-2.5 bg-red-50 dark:bg-red-950/60 px-3.5 py-1 rounded-full border border-red-200/60 dark:border-red-800/40">
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>{siteSettings?.homepageSections?.heritage?.badge || "Town Profile, Antiquity & Sacred Heritage"}</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight mb-3.5 font-heading">
+                {siteSettings?.homepageSections?.heritage?.title || "Fazilnagar & Kushinagar: The Sacred Twin Heritage"}
+              </h2>
+              <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 leading-relaxed">
+                {siteSettings?.homepageSections?.heritage?.subtitle || "Explore the deep 2,600-year-old antiquity, sacred spiritual milestones of Bhagwan Mahavira and Lord Buddha, and modern civic significance of the two historic capitals of the ancient Malla Republic."}
+              </p>
 
-            {/* Interactive Tab Switcher */}
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-8 p-1.5 bg-slate-100/80 dark:bg-slate-900/80 rounded-2xl border border-slate-200/60 dark:border-white/8 max-w-xl mx-auto">
-              <button
-                type="button"
-                onClick={() => setAboutTab("fazilnagar")}
-                className={`flex-1 min-w-[150px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                  aboutTab === "fazilnagar"
-                    ? "bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] shadow-sm"
-                    : "text-[#64748B] dark:text-slate-400 hover:text-[#0F172A] dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60"
-                }`}
-              >
-                <span>{siteSettings?.homepageSections?.heritage?.tab1Label || "🏛️ Fazilnagar (Pawanagar)"}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setAboutTab("kushinagar")}
-                className={`flex-1 min-w-[150px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                  aboutTab === "kushinagar"
-                    ? "bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] shadow-sm"
-                    : "text-[#64748B] dark:text-slate-400 hover:text-[#0F172A] dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60"
-                }`}
-              >
-                <span>{siteSettings?.homepageSections?.heritage?.tab2Label || "☸️ Kushinagar (Mahaparinirvana)"}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setAboutTab("connection")}
-                className={`flex-1 min-w-[150px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                  aboutTab === "connection"
-                    ? "bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] shadow-sm"
-                    : "text-[#64748B] dark:text-slate-400 hover:text-[#0F172A] dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60"
-                }`}
-              >
-                <span>{siteSettings?.homepageSections?.heritage?.tab3Label || "✨ The Twin Sacred Bond"}</span>
-              </button>
+              {/* Interactive Tab Switcher */}
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-8 p-1.5 bg-slate-100/80 dark:bg-slate-900/80 rounded-2xl border border-slate-200/60 dark:border-white/8 max-w-xl mx-auto">
+                <button
+                  type="button"
+                  onClick={() => setAboutTab("fazilnagar")}
+                  className={`flex-1 min-w-[150px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                    aboutTab === "fazilnagar"
+                      ? "bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] shadow-sm"
+                      : "text-[#64748B] dark:text-slate-400 hover:text-[#0F172A] dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60"
+                  }`}
+                >
+                  <span>{siteSettings?.homepageSections?.heritage?.tab1Label || "🏛️ Fazilnagar (Pawanagar)"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAboutTab("kushinagar")}
+                  className={`flex-1 min-w-[150px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                    aboutTab === "kushinagar"
+                      ? "bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] shadow-sm"
+                      : "text-[#64748B] dark:text-slate-400 hover:text-[#0F172A] dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60"
+                  }`}
+                >
+                  <span>{siteSettings?.homepageSections?.heritage?.tab2Label || "☸️ Kushinagar (Mahaparinirvana)"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAboutTab("connection")}
+                  className={`flex-1 min-w-[150px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                    aboutTab === "connection"
+                      ? "bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] shadow-sm"
+                      : "text-[#64748B] dark:text-slate-400 hover:text-[#0F172A] dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60"
+                  }`}
+                >
+                  <span>{siteSettings?.homepageSections?.heritage?.tab3Label || "✨ The Twin Sacred Bond"}</span>
+                </button>
+              </div>
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* TAB 1: FAZILNAGAR (PAWANAGAR) */}
           {aboutTab === "fazilnagar" && (
             <div className="space-y-8 animate-fadeIn">
               {/* Dynamic Image Gallery Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                {fazilnagarSites.map((site) => (
-                  <div
+                {fazilnagarSites.map((site, idx) => (
+                  <ScrollReveal
                     key={site._id || site.slug || site.name}
-                    className="group relative rounded-2xl overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.06)] border border-slate-200/60 dark:border-white/8 bg-slate-900 aspect-16/10 flex flex-col justify-end"
+                    variant="fade-up"
+                    staggerIndex={idx}
+                    staggerBaseDelay={70}
+                    once={true}
+                    className="h-full"
                   >
-                    <img
-                      src={site.primaryImage || "/images/fazilnagar_pawanagar.webp"}
-                      alt={site.name}
-                      width="800"
-                      height="500"
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-6 sm:p-7 flex flex-col justify-end space-y-1.5">
-                      <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/85 border border-amber-600/50 px-2 py-0.5 rounded-full w-fit">
-                          {site.category || "Jain Heritage"}
-                        </span>
-                        {site.distanceFromFazilnagarCenter && (
-                          <span className="text-[10px] font-semibold text-slate-300 bg-black/50 px-2 py-0.5 rounded-full border border-white/20">
-                            📍 {site.distanceFromFazilnagarCenter}
+                    <div
+                      className="group relative rounded-2xl overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.06)] border border-slate-200/60 dark:border-white/8 bg-slate-900 aspect-16/10 flex flex-col justify-end h-full"
+                    >
+                      <img
+                        src={site.primaryImage || "/images/fazilnagar_pawanagar.webp"}
+                        alt={site.name}
+                        width="800"
+                        height="500"
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-6 sm:p-7 flex flex-col justify-end space-y-1.5">
+                        <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/85 border border-amber-600/50 px-2 py-0.5 rounded-full w-fit">
+                            {site.category || "Jain Heritage"}
                           </span>
+                          {site.distanceFromFazilnagarCenter && (
+                            <span className="text-[10px] font-semibold text-slate-300 bg-black/50 px-2 py-0.5 rounded-full border border-white/20">
+                              📍 {site.distanceFromFazilnagarCenter}
+                            </span>
+                          )}
+                          {site.isTwinHeritageHighlight && (
+                            <span className="text-[10px] font-semibold text-amber-300 bg-amber-900/60 px-2 py-0.5 rounded-full border border-amber-500/40">
+                              ★ Twin Axis
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="text-white font-bold text-base sm:text-lg leading-snug">
+                          {site.name}
+                        </h3>
+                        {site.nameHindi && (
+                          <p className="text-amber-200/90 text-xs font-hindi">
+                            {site.nameHindi}
+                          </p>
                         )}
-                        {site.isTwinHeritageHighlight && (
-                          <span className="text-[10px] font-semibold text-amber-300 bg-amber-900/60 px-2 py-0.5 rounded-full border border-amber-500/40">
-                            ★ Twin Axis
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="text-white font-bold text-base sm:text-lg leading-snug">
-                        {site.name}
-                      </h3>
-                      {site.nameHindi && (
-                        <p className="text-amber-200/90 text-xs font-hindi">
-                          {site.nameHindi}
+                        <p className="text-slate-200 text-xs line-clamp-2 leading-relaxed">
+                          {site.historicalSignificance || site.narrative}
                         </p>
-                      )}
-                      <p className="text-slate-200 text-xs line-clamp-2 leading-relaxed">
-                        {site.historicalSignificance || site.narrative}
-                      </p>
-                      <div className="pt-3 flex items-center justify-between text-[11px] text-slate-300 border-t border-white/20 mt-1.5">
-                        <span className="truncate max-w-[200px]">
-                          🕒 {site.visitingHours || "06:00 AM – 07:00 PM"} • {site.entryFee || "Free Entry"}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => openGoogleMapsDirections({
-                            name: site.name,
-                            lat: site.latitude || 26.6827,
-                            lng: site.longitude || 84.0498,
-                            landmark: site.locationAddress || "Fazilnagar",
-                          })}
-                          className="font-bold text-amber-300 hover:text-white underline cursor-pointer shrink-0 ml-2"
-                        >
-                          Directions →
-                        </button>
+                        <div className="pt-3 flex items-center justify-between text-[11px] text-slate-300 border-t border-white/20 mt-1.5">
+                          <span className="truncate max-w-[200px]">
+                            🕒 {site.visitingHours || "06:00 AM – 07:00 PM"} • {site.entryFee || "Free Entry"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => openGoogleMapsDirections({
+                              name: site.name,
+                              lat: site.latitude || 26.6827,
+                              lng: site.longitude || 84.0498,
+                              landmark: site.locationAddress || "Fazilnagar",
+                            })}
+                            className="font-bold text-amber-300 hover:text-white underline cursor-pointer shrink-0 ml-2"
+                          >
+                            Directions →
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </ScrollReveal>
                 ))}
               </div>
 
@@ -1872,66 +1949,74 @@ export default function TownPortal() {
             <div className="space-y-8 animate-fadeIn">
               {/* Dynamic Image Gallery Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                {kushinagarSites.map((site) => (
-                  <div
+                {kushinagarSites.map((site, idx) => (
+                  <ScrollReveal
                     key={site._id || site.slug || site.name}
-                    className="group relative rounded-2xl overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.06)] border border-slate-200/60 dark:border-white/8 bg-slate-900 aspect-16/10 flex flex-col justify-end"
+                    variant="fade-up"
+                    staggerIndex={idx}
+                    staggerBaseDelay={70}
+                    once={true}
+                    className="h-full"
                   >
-                    <img
-                      src={site.primaryImage || "/images/kushinagar_mahaparinirvana.webp"}
-                      alt={site.name}
-                      width="800"
-                      height="500"
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-6 sm:p-7 flex flex-col justify-end space-y-1.5">
-                      <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 bg-rose-950/85 border border-rose-600/50 px-2 py-0.5 rounded-full w-fit">
-                          {site.category || "Buddhist Heritage"}
-                        </span>
-                        {site.distanceFromFazilnagarCenter && (
-                          <span className="text-[10px] font-semibold text-slate-300 bg-black/50 px-2 py-0.5 rounded-full border border-white/20">
-                            📍 {site.distanceFromFazilnagarCenter}
+                    <div
+                      className="group relative rounded-2xl overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.06)] border border-slate-200/60 dark:border-white/8 bg-slate-900 aspect-16/10 flex flex-col justify-end h-full"
+                    >
+                      <img
+                        src={site.primaryImage || "/images/kushinagar_mahaparinirvana.webp"}
+                        alt={site.name}
+                        width="800"
+                        height="500"
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-6 sm:p-7 flex flex-col justify-end space-y-1.5">
+                        <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 bg-rose-950/85 border border-rose-600/50 px-2 py-0.5 rounded-full w-fit">
+                            {site.category || "Buddhist Heritage"}
                           </span>
+                          {site.distanceFromFazilnagarCenter && (
+                            <span className="text-[10px] font-semibold text-slate-300 bg-black/50 px-2 py-0.5 rounded-full border border-white/20">
+                              📍 {site.distanceFromFazilnagarCenter}
+                            </span>
+                          )}
+                          {site.isTwinHeritageHighlight && (
+                            <span className="text-[10px] font-semibold text-amber-300 bg-amber-900/60 px-2 py-0.5 rounded-full border border-amber-500/40">
+                              ★ Twin Axis
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="text-white font-bold text-base sm:text-lg leading-snug">
+                          {site.name}
+                        </h3>
+                        {site.nameHindi && (
+                          <p className="text-amber-200/90 text-xs font-hindi">
+                            {site.nameHindi}
+                          </p>
                         )}
-                        {site.isTwinHeritageHighlight && (
-                          <span className="text-[10px] font-semibold text-amber-300 bg-amber-900/60 px-2 py-0.5 rounded-full border border-amber-500/40">
-                            ★ Twin Axis
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="text-white font-bold text-base sm:text-lg leading-snug">
-                        {site.name}
-                      </h3>
-                      {site.nameHindi && (
-                        <p className="text-amber-200/90 text-xs font-hindi">
-                          {site.nameHindi}
+                        <p className="text-slate-200 text-xs line-clamp-2 leading-relaxed">
+                          {site.historicalSignificance || site.narrative}
                         </p>
-                      )}
-                      <p className="text-slate-200 text-xs line-clamp-2 leading-relaxed">
-                        {site.historicalSignificance || site.narrative}
-                      </p>
-                      <div className="pt-3 flex items-center justify-between text-[11px] text-slate-300 border-t border-white/20 mt-1.5">
-                        <span className="truncate max-w-[200px]">
-                          🕒 {site.visitingHours || "06:00 AM – 06:00 PM"} • {site.entryFee || "Free Entry"}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => openGoogleMapsDirections({
-                            name: site.name,
-                            lat: site.latitude || 26.7402,
-                            lng: site.longitude || 83.8887,
-                            landmark: site.locationAddress || "Kushinagar",
-                          })}
-                          className="font-bold text-amber-300 hover:text-white underline cursor-pointer shrink-0 ml-2"
-                        >
-                          Directions →
-                        </button>
+                        <div className="pt-3 flex items-center justify-between text-[11px] text-slate-300 border-t border-white/20 mt-1.5">
+                          <span className="truncate max-w-[200px]">
+                            🕒 {site.visitingHours || "06:00 AM – 06:00 PM"} • {site.entryFee || "Free Entry"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => openGoogleMapsDirections({
+                              name: site.name,
+                              lat: site.latitude || 26.7402,
+                              lng: site.longitude || 83.8887,
+                              landmark: site.locationAddress || "Kushinagar",
+                            })}
+                            className="font-bold text-amber-300 hover:text-white underline cursor-pointer shrink-0 ml-2"
+                          >
+                            Directions →
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </ScrollReveal>
                 ))}
               </div>
 
@@ -2110,79 +2195,87 @@ export default function TownPortal() {
           ======================================================== */}
       <section id="citizen-corner-section" className="mobile-density-section bg-[#F8FAFC] dark:bg-[#0B0F17] py-20 lg:py-28 border-t border-slate-200/60 dark:border-white/8 content-visibility-auto">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/40 px-3 py-1 rounded-full uppercase tracking-wider mb-2">
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span>Community Participation</span>
+          <ScrollReveal variant="fade-up" once={true}>
+            <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/40 px-3 py-1 rounded-full uppercase tracking-wider mb-2">
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>Community Participation</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading">
+                Citizen Corner
+              </h2>
+              <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 mt-2 leading-relaxed">
+                Help maintain accuracy by suggesting a local place, reporting an error, or broadcasting a town event.
+              </p>
             </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight font-heading">
-              Citizen Corner
-            </h2>
-            <p className="text-xs sm:text-sm text-[#64748B] dark:text-slate-400 mt-2 leading-relaxed">
-              Help maintain accuracy by suggesting a local place, reporting an error, or broadcasting a town event.
-            </p>
-          </div>
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {/* Action 1 */}
-            <div className="civic-card bg-white dark:bg-[#131823] rounded-2xl p-6 sm:p-8 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between transition-all">
-              <div>
-                <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-[#0F172A] dark:text-white flex items-center justify-center mb-4 border border-slate-200/60 dark:border-white/8">
-                  <Store className="w-5 h-5" />
+            <ScrollReveal variant="fade-up" staggerIndex={0} staggerBaseDelay={65} once={true} className="h-full">
+              <div className="civic-card bg-white dark:bg-[#131823] rounded-2xl p-6 sm:p-8 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between transition-all h-full">
+                <div>
+                  <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-[#0F172A] dark:text-white flex items-center justify-center mb-4 border border-slate-200/60 dark:border-white/8">
+                    <Store className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-2">Suggest a Business</h3>
+                  <p className="text-xs text-[#64748B] dark:text-slate-400 leading-relaxed mb-6">
+                    Are you a shopkeeper, doctor, or trade operator inside Fazilnagar town limits? Submit your details for verification.
+                  </p>
                 </div>
-                <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-2">Suggest a Business</h3>
-                <p className="text-xs text-[#64748B] dark:text-slate-400 leading-relaxed mb-6">
-                  Are you a shopkeeper, doctor, or trade operator inside Fazilnagar town limits? Submit your details for verification.
-                </p>
+                <button
+                  onClick={() => handleRequireAuthAction(() => setModalType("business"), "suggest a business or place")}
+                  className="w-full bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] hover:bg-[#B8323C] dark:hover:bg-slate-200 font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>Suggest Place</span>
+                </button>
               </div>
-              <button
-                onClick={() => handleRequireAuthAction(() => setModalType("business"), "suggest a business or place")}
-                className="w-full bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] hover:bg-[#B8323C] dark:hover:bg-slate-200 font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-              >
-                <PlusCircle className="w-4 h-4" />
-                <span>Suggest Place</span>
-              </button>
-            </div>
+            </ScrollReveal>
 
             {/* Action 2 */}
-            <div className="civic-card bg-white dark:bg-[#131823] rounded-2xl p-6 sm:p-8 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between transition-all">
-              <div>
-                <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4 border border-amber-200/60 dark:border-amber-800/40">
-                  <Edit3 className="w-5 h-5" />
+            <ScrollReveal variant="fade-up" staggerIndex={1} staggerBaseDelay={65} once={true} className="h-full">
+              <div className="civic-card bg-white dark:bg-[#131823] rounded-2xl p-6 sm:p-8 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between transition-all h-full">
+                <div>
+                  <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4 border border-amber-200/60 dark:border-amber-800/40">
+                    <Edit3 className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-2">Report Incorrect Info</h3>
+                  <p className="text-xs text-[#64748B] dark:text-slate-400 leading-relaxed mb-6">
+                    Noticed a wrong phone number, closed establishment, or village listing inside town directory? Report it to moderators.
+                  </p>
                 </div>
-                <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-2">Report Incorrect Info</h3>
-                <p className="text-xs text-[#64748B] dark:text-slate-400 leading-relaxed mb-6">
-                  Noticed a wrong phone number, closed establishment, or village listing inside town directory? Report it to moderators.
-                </p>
+                <button
+                  onClick={() => handleRequireAuthAction(() => setModalType("correction"), "report incorrect information")}
+                  className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 text-[#0F172A] dark:text-white border border-slate-200/60 dark:border-white/8 font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                >
+                  <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <span>Report Error</span>
+                </button>
               </div>
-              <button
-                onClick={() => handleRequireAuthAction(() => setModalType("correction"), "report incorrect information")}
-                className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 text-[#0F172A] dark:text-white border border-slate-200/60 dark:border-white/8 font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-              >
-                <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span>Report Error</span>
-              </button>
-            </div>
+            </ScrollReveal>
 
             {/* Action 3 */}
-            <div className="civic-card bg-white dark:bg-[#131823] rounded-2xl p-6 sm:p-8 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between transition-all">
-              <div>
-                <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mb-4 border border-emerald-200/60 dark:border-emerald-800/40">
-                  <CalendarPlus className="w-5 h-5" />
+            <ScrollReveal variant="fade-up" staggerIndex={2} staggerBaseDelay={65} once={true} className="h-full">
+              <div className="civic-card bg-white dark:bg-[#131823] rounded-2xl p-6 sm:p-8 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between transition-all h-full">
+                <div>
+                  <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mb-4 border border-emerald-200/60 dark:border-emerald-800/40">
+                    <CalendarPlus className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-2">Submit a Local Event</h3>
+                  <p className="text-xs text-[#64748B] dark:text-slate-400 leading-relaxed mb-6">
+                    Organizing a public camp, inter-college competition, or cultural katha inside town? Submit the date and organizer.
+                  </p>
                 </div>
-                <h3 className="text-base font-bold text-[#0F172A] dark:text-white mb-2">Submit a Local Event</h3>
-                <p className="text-xs text-[#64748B] dark:text-slate-400 leading-relaxed mb-6">
-                  Organizing a public camp, inter-college competition, or cultural katha inside town? Submit the date and organizer.
-                </p>
+                <button
+                  onClick={() => handleRequireAuthAction(() => setModalType("event"), "submit a local event")}
+                  className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                >
+                  <CalendarPlus className="w-4 h-4" />
+                  <span>Submit Event</span>
+                </button>
               </div>
-              <button
-                onClick={() => handleRequireAuthAction(() => setModalType("event"), "submit a local event")}
-                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-              >
-                <CalendarPlus className="w-4 h-4" />
-                <span>Submit Event</span>
-              </button>
-            </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -2191,7 +2284,8 @@ export default function TownPortal() {
           SECTION 11: FOOTER (Editorial Civic Footer)
           ======================================================== */}
       <footer className="bg-[#0F172A] text-slate-400 text-xs border-t border-slate-800/80 pb-24 lg:pb-0">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 lg:py-20 grid grid-cols-1 md:grid-cols-4 gap-10 lg:gap-12">
+        <ScrollReveal variant="fade-up" once={true}>
+          <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 lg:py-20 grid grid-cols-1 md:grid-cols-4 gap-10 lg:gap-12">
           {/* Col 1: Wordmark & Tagline */}
           <div className="space-y-3.5">
             <div className="flex items-center gap-2">
@@ -2262,6 +2356,7 @@ export default function TownPortal() {
             </ul>
           </div>
         </div>
+        </ScrollReveal>
 
         <div className="border-t border-slate-800 py-4 text-center text-[11px] text-slate-400">
           {siteSettings?.footer?.copyrightText ||

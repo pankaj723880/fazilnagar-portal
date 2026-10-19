@@ -4,6 +4,7 @@ import API from "../api";
 import { usePageSEO } from "../utils/seo";
 import { Newspaper, PlusCircle, Search, Calendar, User, Tag, Sparkles } from "lucide-react";
 import StoryVideoPreview from "../components/StoryVideoPreview";
+import { ScrollReveal } from "../components/ScrollReveal";
 
 const FALLBACK_NEWS = [
   {
@@ -78,7 +79,11 @@ export default function News() {
   return (
     <div className="space-y-6 pb-16 max-w-7xl mx-auto">
       {/* Header Banner */}
-      <div className="bg-[#18232E] text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-slate-800">
+      <ScrollReveal
+        variant="fade-up"
+        duration={500}
+        className="bg-[#18232E] text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-slate-800"
+      >
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 bg-[#B8323C] text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-xs">
             <Sparkles className="w-3.5 h-3.5" />
@@ -99,10 +104,14 @@ export default function News() {
           <PlusCircle className="w-4 h-4 group-hover:rotate-90 transition-transform" />
           <span>+ Post News / समाचार जोड़ें</span>
         </Link>
-      </div>
+      </ScrollReveal>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-[#E1E6EA] shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">
+      <ScrollReveal
+        variant="fade-up"
+        delay={60}
+        className="bg-white p-4 rounded-2xl border border-[#E1E6EA] shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4"
+      >
         {/* Category Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto scrollbar-none py-1">
           {categories.map((cat) => (
@@ -131,7 +140,7 @@ export default function News() {
             className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:border-[#B8323C] bg-slate-50/50"
           />
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* News Articles Grid */}
       {loading ? (
@@ -154,8 +163,13 @@ export default function News() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredNews.map((article) => (
-            <article
+          {filteredNews.map((article, idx) => (
+            <ScrollReveal
+              as="article"
+              variant="fade-up"
+              staggerIndex={idx}
+              staggerBaseDelay={65}
+              once={true}
               key={article._id || article.id}
               className="bg-white rounded-3xl border border-[#E1E6EA] shadow-2xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group"
             >
@@ -241,7 +255,7 @@ export default function News() {
                   View Story →
                 </Link>
               </div>
-            </article>
+            </ScrollReveal>
           ))}
         </div>
       )}

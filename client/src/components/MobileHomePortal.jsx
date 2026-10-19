@@ -36,6 +36,7 @@ import {
 import NotificationCenter from "./NotificationCenter";
 import ThemeToggle from "./ThemeToggle";
 import MobileHeroCarousel from "./MobileHeroCarousel";
+import ScrollReveal from "./ScrollReveal";
 import { openGoogleMapsDirections } from "../utils/directions";
 import { getAuthUser, isUserAdmin } from "../utils/authStorage";
 import {
@@ -625,118 +626,124 @@ export default function MobileHomePortal({
       {/* ========================================================
           1.3 IMMEDIATE TOUCH 4-COLUMN SOS & UTILITY GRID
           ======================================================== */}
-      <section className="px-4 sm:px-6 py-2" aria-label="Quick SOS & Utility Actions">
-        <div className="grid grid-cols-4 gap-2.5">
-          <a
-            href="tel:112"
-            className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40 active:scale-95 transition-all duration-150 touch-manipulation shadow-[0_2px_8px_rgba(0,0,0,0.02)] group"
-          >
-            <span className="text-xl mb-1 group-active:scale-110 transition-transform select-none">
-              🚨
-            </span>
-            <span className="text-[11px] font-black text-rose-700 dark:text-rose-400 leading-tight">
-              112 SOS
-            </span>
-            <span className="text-[9px] text-rose-600 dark:text-rose-300 font-medium leading-none mt-0.5">
-              Police Patrol
-            </span>
-          </a>
+      <ScrollReveal variant="fade-up" once={true}>
+        <section className="px-4 sm:px-6 py-2" aria-label="Quick SOS & Utility Actions">
+          <div className="grid grid-cols-4 gap-2.5">
+            <a
+              href="tel:112"
+              className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40 active:scale-95 transition-all duration-150 touch-manipulation shadow-[0_2px_8px_rgba(0,0,0,0.02)] group"
+            >
+              <span className="text-xl mb-1 group-active:scale-110 transition-transform select-none">
+                🚨
+              </span>
+              <span className="text-[11px] font-black text-rose-700 dark:text-rose-400 leading-tight">
+                112 SOS
+              </span>
+              <span className="text-[9px] text-rose-600 dark:text-rose-300 font-medium leading-none mt-0.5">
+                Police Patrol
+              </span>
+            </a>
 
-          <a
-            href="tel:05564222102"
-            className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-sky-50 dark:bg-sky-950/40 text-sky-800 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/40 active:scale-95 transition-all duration-150 touch-manipulation shadow-[0_2px_8px_rgba(0,0,0,0.02)] group"
-          >
-            <span className="text-xl mb-1 group-active:scale-110 transition-transform select-none">
-              🏥
-            </span>
-            <span className="text-[11px] font-black text-sky-800 dark:text-sky-300 leading-tight">
-              CHC Hosp
-            </span>
-            <span className="text-[9px] text-sky-600 dark:text-sky-400 font-medium leading-none mt-0.5">
-              24/7 Casualty
-            </span>
-          </a>
+            <a
+              href="tel:05564222102"
+              className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-sky-50 dark:bg-sky-950/40 text-sky-800 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/40 active:scale-95 transition-all duration-150 touch-manipulation shadow-[0_2px_8px_rgba(0,0,0,0.02)] group"
+            >
+              <span className="text-xl mb-1 group-active:scale-110 transition-transform select-none">
+                🏥
+              </span>
+              <span className="text-[11px] font-black text-sky-800 dark:text-sky-300 leading-tight">
+                CHC Hosp
+              </span>
+              <span className="text-[9px] text-sky-600 dark:text-sky-400 font-medium leading-none mt-0.5">
+                24/7 Casualty
+              </span>
+            </a>
 
-          <a
-            href="tel:112"
-            className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40 active:scale-95 transition-all duration-150 touch-manipulation shadow-[0_2px_8px_rgba(0,0,0,0.02)] group"
-          >
-            <span className="text-xl mb-1 group-active:scale-110 transition-transform select-none">
-              👮
-            </span>
-            <span className="text-[11px] font-black text-indigo-800 dark:text-indigo-300 leading-tight">
-              Police Chowki
-            </span>
-            <span className="text-[9px] text-indigo-600 dark:text-indigo-400 font-medium leading-none mt-0.5">
-              Town Help
-            </span>
-          </a>
+            <a
+              href="tel:112"
+              className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40 active:scale-95 transition-all duration-150 touch-manipulation shadow-[0_2px_8px_rgba(0,0,0,0.02)] group"
+            >
+              <span className="text-xl mb-1 group-active:scale-110 transition-transform select-none">
+                👮
+              </span>
+              <span className="text-[11px] font-black text-indigo-800 dark:text-indigo-300 leading-tight">
+                Police Chowki
+              </span>
+              <span className="text-[9px] text-indigo-600 dark:text-indigo-400 font-medium leading-none mt-0.5">
+                Town Help
+              </span>
+            </a>
 
-          <a
-            href="tel:1912"
-            className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40 active:scale-95 transition-all duration-150 touch-manipulation shadow-[0_2px_8px_rgba(0,0,0,0.02)] group"
-          >
-            <span className="text-xl mb-1 group-active:scale-110 transition-transform select-none">
-              ⚡
-            </span>
-            <span className="text-[11px] font-black text-amber-800 dark:text-amber-300 leading-tight">
-              Power (1912)
-            </span>
-            <span className="text-[9px] text-amber-600 dark:text-amber-400 font-medium leading-none mt-0.5">
-              Substation
-            </span>
-          </a>
-        </div>
-      </section>
+            <a
+              href="tel:1912"
+              className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40 active:scale-95 transition-all duration-150 touch-manipulation shadow-[0_2px_8px_rgba(0,0,0,0.02)] group"
+            >
+              <span className="text-xl mb-1 group-active:scale-110 transition-transform select-none">
+                ⚡
+              </span>
+              <span className="text-[11px] font-black text-amber-800 dark:text-amber-300 leading-tight">
+                Power (1912)
+              </span>
+              <span className="text-[9px] text-amber-600 dark:text-amber-400 font-medium leading-none mt-0.5">
+                Substation
+              </span>
+            </a>
+          </div>
+        </section>
+      </ScrollReveal>
 
       {/* ========================================================
           4. LIVE BULLETIN BANNER
           ======================================================== */}
-      <section className="px-4 sm:px-6 py-2" aria-label="Live Bulletin">
-        <Link
-          to="/news"
-          className="civic-card bg-[#0F172A] dark:bg-[#131823] text-white rounded-2xl py-3 px-4 flex items-center justify-between text-xs hover:bg-slate-800 active:scale-[0.98] transition border border-slate-800 dark:border-white/8 shadow-[0_2px_12px_rgba(0,0,0,0.04)] group"
-        >
-          <div className="flex items-center gap-2 overflow-hidden mr-2">
-            <span className="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0 uppercase tracking-wide">
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-              LIVE
+      <ScrollReveal variant="fade-up" delay={50} once={true}>
+        <section className="px-4 sm:px-6 py-2" aria-label="Live Bulletin">
+          <Link
+            to="/news"
+            className="civic-card bg-[#0F172A] dark:bg-[#131823] text-white rounded-2xl py-3 px-4 flex items-center justify-between text-xs hover:bg-slate-800 active:scale-[0.98] transition border border-slate-800 dark:border-white/8 shadow-[0_2px_12px_rgba(0,0,0,0.04)] group"
+          >
+            <div className="flex items-center gap-2 overflow-hidden mr-2">
+              <span className="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0 uppercase tracking-wide">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                LIVE
+              </span>
+              <span className="truncate text-slate-200 font-medium">
+                Navratri Mela timings released...
+              </span>
+            </div>
+            <span className="text-slate-400 group-hover:text-white font-bold text-[11px] shrink-0 flex items-center gap-0.5 transition-colors">
+              <span>View</span>
+              <span className="text-xs">→</span>
             </span>
-            <span className="truncate text-slate-200 font-medium">
-              Navratri Mela timings released...
-            </span>
-          </div>
-          <span className="text-slate-400 group-hover:text-white font-bold text-[11px] shrink-0 flex items-center gap-0.5 transition-colors">
-            <span>View</span>
-            <span className="text-xs">→</span>
-          </span>
-        </Link>
-      </section>
+          </Link>
+        </section>
+      </ScrollReveal>
 
       {/* ========================================================
           1.4 HORIZONTAL SWIPE CATEGORY CAROUSEL
           ======================================================== */}
-      <section className="px-4 sm:px-6 py-2" aria-label="Category Filters">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
-          {CATEGORY_PILLS.map((cat) => {
-            const isActive = selectedCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 cursor-pointer border ${
-                  isActive
-                    ? "bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] border-transparent shadow-xs"
-                    : "bg-white dark:bg-[#131823] text-slate-700 dark:text-slate-300 border-slate-200/60 dark:border-white/8 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-[0_1px_4px_rgba(0,0,0,0.02)]"
-                }`}
-              >
-                {cat.label}
-              </button>
-            );
-          })}
-        </div>
-      </section>
+      <ScrollReveal variant="fade-up" delay={80} once={true}>
+        <section className="px-4 sm:px-6 py-2" aria-label="Category Filters">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+            {CATEGORY_PILLS.map((cat) => {
+              const isActive = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 cursor-pointer border ${
+                    isActive
+                      ? "bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] border-transparent shadow-xs"
+                      : "bg-white dark:bg-[#131823] text-slate-700 dark:text-slate-300 border-slate-200/60 dark:border-white/8 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-[0_1px_4px_rgba(0,0,0,0.02)]"
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      </ScrollReveal>
 
       {/* ========================================================
           1.5 HORIZONTAL SNAP CAROUSEL (VERIFIED PLACES)
