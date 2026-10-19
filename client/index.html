@@ -37,7 +37,7 @@
 
     <!-- PWA & Device Installation Meta Tags -->
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#18232E" />
+    <meta name="theme-color" content="#A83D32" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -110,7 +110,11 @@
             document.documentElement.classList.add('is-homepage-launch');
           }
           if (!p.startsWith('/admin')) {
-            var savedTheme = localStorage.getItem('fazilnagar_theme') || 'light';
+            var savedTheme = localStorage.getItem('fazilnagar_theme');
+            if (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+              savedTheme = 'dark';
+            }
+            if (!savedTheme) savedTheme = 'light';
             document.documentElement.setAttribute('data-public-theme', savedTheme);
             if (savedTheme === 'dark') {
               document.documentElement.classList.add('dark', 'theme-dark');
@@ -127,7 +131,7 @@
     <!-- Critical CSS for Instant Above-the-fold Layout & Zero CLS -->
     <style>
       html, body {
-        background-color: #F8FAFC;
+        background-color: #F7F3EB;
         margin: 0;
         padding: 0;
         width: 100%;
@@ -135,7 +139,7 @@
         overflow-x: hidden;
       }
       html.dark, html.dark body, html[data-public-theme="dark"], html[data-public-theme="dark"] body {
-        background-color: #0B0F17 !important;
+        background-color: #191916 !important;
       }
       #hero-section { min-height: 440px; position: relative; background-color: #18232E; }
       .font-heading { font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; }

@@ -12,11 +12,16 @@ const ThemeContext = createContext({
 const STORAGE_KEY = "fazilnagar_theme";
 
 export function ThemeProvider({ children }) {
-  // Always default to "light" mode for first-time visitors
   const [theme, setThemeState] = useState(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      return stored === "dark" ? "dark" : "light";
+      if (stored === "dark" || stored === "light") {
+        return stored;
+      }
+      if (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        return "dark";
+      }
+      return "light";
     } catch {
       return "light";
     }

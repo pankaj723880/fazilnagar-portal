@@ -303,8 +303,8 @@ export default function App() {
       data-public-theme={isAdminPage ? undefined : (isDark ? "dark" : "light")}
       className={`min-h-screen w-full max-w-full overflow-x-hidden flex flex-col font-sans transition-colors duration-200 ${
         !isAdminPage && isDark
-          ? "bg-[#101114] text-[#F5F1E9] selection:bg-[#C5A46D] selection:text-[#101114]"
-          : "bg-[#F7F6F2] text-[#202124] selection:bg-[#A78650] selection:text-white"
+          ? "bg-[#191916] text-[#F5F0E7] selection:bg-[#C45A4C] selection:text-white"
+          : "bg-[#F7F3EB] text-[#292722] selection:bg-[#A83D32] selection:text-white"
       }`}
     >
       {/* Native App-Style Ultra-Premium Splash Screen (Fast, responsive 1.4s reveal) */}
@@ -315,7 +315,7 @@ export default function App() {
       {/* Skip to Main Content Link for WCAG 2.2 AA Keyboard Accessibility */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2.5 focus:bg-[#18232E] focus:text-white focus:rounded-xl focus:shadow-2xl focus:ring-2 focus:ring-[#B8323C] text-xs font-bold"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2.5 focus:bg-[#292722] focus:text-white focus:rounded-xl focus:shadow-2xl focus:ring-2 focus:ring-[#A83D32] text-xs font-bold"
       >
         Skip to main content / मुख्य सामग्री पर जाएं
       </a>
@@ -323,27 +323,27 @@ export default function App() {
       {/* ========================================================
           PERMANENT FIXED TOP SHELL (Desktop / Non-Portal Pages)
           ======================================================== */}
-      <header className={`fixed top-0 left-0 right-0 z-50 bg-[#FFFFFF] shadow-xs ${isAdminPage || hideLayoutOnAreaDetails ? "hidden" : isPortalPage || isMobilePreview ? "hidden md:block" : ""}`}>
+      <header className={`fixed top-0 left-0 right-0 z-50 bg-[#F7F3EB] dark:bg-[#191916] shadow-xs ${isAdminPage || hideLayoutOnAreaDetails ? "hidden" : isPortalPage || isMobilePreview ? "hidden md:block" : ""}`}>
         {/* Main Header & Navigation */}
-        <div className="bg-[#FFFFFF]/95 dark:bg-[#0B0F17]/95 backdrop-blur-md border-b border-slate-200/60 dark:border-white/8">
+        <div className="bg-[#FFFFFF]/95 dark:bg-[#24231F]/95 backdrop-blur-md border-b border-[#DED5C7] dark:border-[#484238]">
           <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 flex items-center justify-between h-16 gap-4">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-              <div className="w-9 h-9 rounded-xl bg-[#18232E] flex items-center justify-center text-white font-extrabold text-base border border-slate-700 shadow-xs group-hover:scale-105 transition-transform">
+              <div className="w-9 h-9 rounded-xl bg-[#A83D32] dark:bg-[#C45A4C] flex items-center justify-center text-white font-extrabold text-base border border-[#873027] dark:border-[#D36B5D] shadow-xs group-hover:scale-105 transition-transform">
                 {(siteSettings?.navigation?.brandFirst?.[0] || "F").toUpperCase()}
               </div>
               <div>
-                <span className="text-base font-extrabold tracking-tight text-[#18232E] leading-none block font-heading">
-                  {siteSettings?.navigation?.brandFirst || "FAZIL"}<span className="text-[#B8323C]">{siteSettings?.navigation?.brandSecond || "NAGAR"}</span>
+                <span className="text-base font-extrabold tracking-tight text-[#292722] dark:text-[#F5F0E7] leading-none block font-heading">
+                  {siteSettings?.navigation?.brandFirst || "FAZIL"}<span className="text-[#A83D32] dark:text-[#C45A4C]">{siteSettings?.navigation?.brandSecond || "NAGAR"}</span>
                 </span>
-                <span className="text-[10px] font-medium text-[#647180] tracking-wider hidden min-[370px]:block truncate max-w-[170px]">
+                <span className="text-[10px] font-medium text-[#6F6A61] dark:text-[#C0B8AA] tracking-wider hidden min-[370px]:block truncate max-w-[170px]">
                   {siteSettings?.navigation?.tagline || "Your Town. Your Community."}
                 </span>
               </div>
             </Link>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold text-[#18232E]">
+            <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold text-[#292722] dark:text-[#F5F0E7]">
               {(siteSettings?.navigation?.navItems && siteSettings.navigation.navItems.length > 0
                 ? siteSettings.navigation.navItems.filter((i) => i.isActive !== false && !isExcludedNavItem(i))
                 : MAIN_NAV_ITEMS.filter((i) => !isExcludedNavItem(i))
@@ -356,7 +356,7 @@ export default function App() {
                       key={item.id || item.path}
                       href={item.path}
                       onClick={(e) => handleNavClick(e, item.path, true)}
-                      className="text-[#647180] hover:text-[#18232E] transition cursor-pointer"
+                      className="text-[#6F6A61] hover:text-[#292722] dark:text-[#C0B8AA] dark:hover:text-[#F5F0E7] transition cursor-pointer"
                     >
                       {item.label}
                     </a>
@@ -373,12 +373,12 @@ export default function App() {
                       if (item.path === "/") window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
                     className={`transition flex items-center gap-1 ${
-                      isActiveRoute ? "text-[#B8323C] font-bold" : "text-[#647180] hover:text-[#18232E]"
+                      isActiveRoute ? "text-[#A83D32] dark:text-[#C45A4C] font-bold" : "text-[#6F6A61] hover:text-[#292722] dark:text-[#C0B8AA] dark:hover:text-[#F5F0E7]"
                     }`}
                   >
                     <span>{item.label}</span>
                     {item.badge && (
-                      <span className="text-[9px] bg-[#168568] text-white px-1.5 py-0.2 rounded-full font-bold">
+                      <span className="text-[9px] bg-[#26734D] text-white px-1.5 py-0.2 rounded-full font-bold">
                         {item.badge}
                       </span>
                     )}
@@ -402,10 +402,10 @@ export default function App() {
                 onMouseEnter={() => prefetchRoute("/messages")}
                 onFocus={() => prefetchRoute("/messages")}
                 onTouchStart={() => prefetchRoute("/messages")}
-                className={`min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl border flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-[#B8323C]/30 cursor-pointer ${
+                className={`min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl border flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-[#A83D32]/30 cursor-pointer ${
                   location.pathname === "/messages"
-                    ? "bg-[#B8323C] text-white border-[#B8323C]"
-                    : "bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 border-slate-200"
+                    ? "bg-[#A83D32] text-white border-[#A83D32]"
+                    : "bg-[#EEE7DA] hover:bg-[#E2D9CA] text-[#292722] border-[#DED5C7] dark:bg-[#302D27] dark:hover:bg-[#3D3932] dark:text-[#F5F0E7] dark:border-[#484238]"
                 }`}
                 aria-label="Town Messages"
                 title="Town Messages / नगर संवाद"
@@ -433,7 +433,7 @@ export default function App() {
               <Link
                 to={user ? (siteSettings?.navigation?.actionButtonLink || "/create-news") : "/login"}
                 state={!user ? { from: "/create-news", message: "Please log in to submit a local story." } : undefined}
-                className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#B8323C] hover:bg-[#991B1B] text-white flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-[#B8323C]/50 cursor-pointer"
+                className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#A83D32] hover:bg-[#873027] text-white flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-[#A83D32]/50 cursor-pointer"
                 aria-label="Add Story"
                 title="Add Story"
               >
@@ -445,14 +445,14 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setIsProfileModalOpen(true)}
-                    className="text-xs font-bold text-[#168568] hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                    className="text-xs font-bold text-[#26734D] hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg transition cursor-pointer flex items-center gap-1 shadow-2xs"
                     title={user.role === "admin" ? "Admin Profile & Settings" : "Edit Profile"}
                   >
                     <span>{user.role === "admin" ? "Admin 🛡️" : (user.name || user.email)}</span>
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer"
+                    className="bg-[#EEE7DA] hover:bg-[#E2D9CA] text-[#292722] dark:bg-[#302D27] dark:hover:bg-[#3D3932] dark:text-[#F5F0E7] text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer"
                   >
                     Logout
                   </button>
@@ -461,13 +461,13 @@ export default function App() {
                 <>
                   <Link
                     to="/login"
-                    className="text-xs font-bold text-slate-700 hover:text-slate-900 px-2.5 py-2"
+                    className="text-xs font-bold text-[#292722] hover:text-[#A83D32] dark:text-[#F5F0E7] dark:hover:text-[#C45A4C] px-2.5 py-2"
                   >
                     Sign In
                   </Link>
                   <Link
                     to="/register"
-                    className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs"
+                    className="bg-[#A83D32] hover:bg-[#873027] dark:bg-[#C45A4C] dark:hover:bg-[#D36B5D] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs"
                   >
                     Register
                   </Link>
@@ -485,21 +485,21 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsProfileModalOpen(true)}
-                  className="flex items-center gap-1 pl-1 pr-2 min-h-[44px] h-11 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200/80 transition text-slate-800 cursor-pointer shadow-2xs touch-manipulation"
+                  className="flex items-center gap-1 pl-1 pr-2 min-h-[44px] h-11 rounded-xl bg-[#EEE7DA] hover:bg-[#E2D9CA] border border-[#DED5C7] dark:bg-[#302D27] dark:hover:bg-[#3D3932] dark:border-[#484238] transition text-[#292722] dark:text-[#F5F0E7] cursor-pointer shadow-2xs touch-manipulation"
                   title={user.role === "admin" ? "Admin Profile & Settings" : (user.name || user.email)}
                   aria-label={user.role === "admin" ? "Admin Profile" : "User Profile"}
                 >
-                  <div className="w-6 h-6 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center shrink-0">
+                  <div className="w-6 h-6 rounded-full bg-[#A83D32] text-white text-[10px] font-black flex items-center justify-center shrink-0">
                     {user.role === "admin" ? "A" : (user.name?.[0] || "U").toUpperCase()}
                   </div>
-                  <span className="text-[10px] font-bold text-slate-700 max-w-[55px] truncate">
+                  <span className="text-[10px] font-bold text-[#292722] dark:text-[#F5F0E7] max-w-[55px] truncate">
                     {user.role === "admin" ? "Admin" : (user.name?.split(" ")[0] || "Citizen")}
                   </span>
                 </button>
               ) : (
                 <Link
                   to="/login"
-                  className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition border border-slate-200/80 shadow-2xs touch-manipulation"
+                  className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#EEE7DA] hover:bg-[#E2D9CA] text-[#292722] dark:bg-[#302D27] dark:hover:bg-[#3D3932] dark:text-[#F5F0E7] flex items-center justify-center transition border border-[#DED5C7] dark:border-[#484238] shadow-2xs touch-manipulation"
                   title="Citizen Login"
                   aria-label="Sign In"
                 >
@@ -523,7 +523,7 @@ export default function App() {
               <Link
                 to={user ? "/create-news" : "/login"}
                 state={!user ? { from: "/create-news", message: "Please log in to submit a local story." } : undefined}
-                className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#B8323C] hover:bg-red-700 text-white flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-[#B8323C]/50 cursor-pointer touch-manipulation"
+                className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#A83D32] hover:bg-[#873027] text-white flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-[#A83D32]/50 cursor-pointer touch-manipulation"
                 aria-label="Add Story"
                 title="Add Story"
               >
@@ -535,9 +535,9 @@ export default function App() {
 
         {/* Secondary Sub-Navbar - Visible across Directory & all Civic Hub pages */}
         {hasSubNav && (
-          <div className="bg-[#FFFFFF]/95 dark:bg-[#0B0F17]/95 backdrop-blur-md border-b border-slate-200/60 dark:border-white/8 py-2 px-4 shadow-[0_2px_16px_rgba(0,0,0,0.02)]">
+          <div className="bg-[#FFFFFF]/95 dark:bg-[#24231F]/95 backdrop-blur-md border-b border-[#DED5C7] dark:border-[#484238] py-2 px-4 shadow-[0_2px_14px_rgba(41,39,34,0.03)]">
             <div className="max-w-7xl mx-auto px-0 sm:px-4 lg:px-8 flex items-center gap-2 overflow-x-auto scrollbar-none py-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#647180] dark:text-[#C5A46D] shrink-0 mr-1 hidden sm:inline">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#6F6A61] dark:text-[#C5A66A] shrink-0 mr-1 hidden sm:inline">
                 Civic Hubs:
               </span>
               {DIRECTORY_SUB_NAV.map((item) => (
@@ -548,15 +548,15 @@ export default function App() {
                   className={({ isActive }) =>
                     `px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
                       isActive
-                        ? "bg-[#B8323C] dark:bg-[#C5A46D] text-white dark:text-[#101114] shadow-xs font-bold"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-[#E4E0D8] dark:hover:text-white dark:hover:bg-[#2C2C34] border border-slate-200/60 dark:border-white/8 bg-slate-50/70 dark:bg-[#131823]"
+                        ? "bg-[#A83D32] dark:bg-[#C45A4C] text-white shadow-xs font-bold"
+                        : "text-[#6F6A61] hover:text-[#292722] hover:bg-[#EEE7DA] dark:text-[#C0B8AA] dark:hover:text-white dark:hover:bg-[#302D27] border border-[#DED5C7] dark:border-[#484238] bg-[#EEE7DA]/50 dark:bg-[#24231F]"
                     }`
                   }
                 >
                   <span className="text-xs">{item.icon}</span>
                   <span>{item.label}</span>
                   {item.badge && (
-                    <span className="bg-[#168568] dark:bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">
+                    <span className="bg-[#26734D] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">
                       {item.badge}
                     </span>
                   )}
@@ -1173,7 +1173,7 @@ export default function App() {
           Provides effortless 1-thumb native app navigation across the portal
           ======================================================== */}
       {!isAdminPage && !isMessagesPage && !hideLayoutOnAreaDetails && (
-        <nav className={`fixed bottom-0 left-0 right-0 z-[1050] bg-white/95 dark:bg-[#0B0F17]/95 backdrop-blur-md border-t border-slate-200/60 dark:border-white/8 shadow-[0_-2px_16px_rgba(0,0,0,0.04)] pb-[max(0.5rem,env(safe-area-inset-bottom))] ${isMobilePreview ? "block" : "sm:hidden"}`}>
+        <nav className={`fixed bottom-0 left-0 right-0 z-[1050] bg-white/95 dark:bg-[#24231F]/95 backdrop-blur-md border-t border-[#DED5C7] dark:border-[#484238] shadow-[0_-2px_14px_rgba(41,39,34,0.04)] pb-[max(0.5rem,env(safe-area-inset-bottom))] ${isMobilePreview ? "block" : "sm:hidden"}`}>
           <div className="max-w-[420px] mx-auto w-full px-1 py-1 flex items-center justify-around">
             <NavLink
               to="/"
@@ -1188,8 +1188,8 @@ export default function App() {
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold touch-manipulation cursor-pointer ${
                   isActive && location.pathname === "/"
-                    ? "text-[#B8323C] dark:text-[#C5A46D]"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                    ? "text-[#A83D32] dark:text-[#C45A4C]"
+                    : "text-[#6F6A61] hover:text-[#292722] dark:text-[#C0B8AA] dark:hover:text-[#F5F0E7]"
                 }`
               }
             >
@@ -1204,14 +1204,14 @@ export default function App() {
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold relative touch-manipulation cursor-pointer ${
                   isActive || location.pathname.startsWith("/directory")
-                    ? "text-[#B8323C] dark:text-[#C5A46D]"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                    ? "text-[#A83D32] dark:text-[#C45A4C]"
+                    : "text-[#6F6A61] hover:text-[#292722] dark:text-[#C0B8AA] dark:hover:text-[#F5F0E7]"
                 }`
               }
             >
               <Compass className="w-5 h-5 mb-0.5" />
               <span>Directory</span>
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#0D5E49] dark:bg-emerald-400"></span>
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#26734D] dark:bg-emerald-400"></span>
             </NavLink>
 
             <NavLink
@@ -1221,8 +1221,8 @@ export default function App() {
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold relative touch-manipulation cursor-pointer ${
                   isActive || location.pathname.startsWith("/messages")
-                    ? "text-[#B8323C] dark:text-[#C5A46D]"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                    ? "text-[#A83D32] dark:text-[#C45A4C]"
+                    : "text-[#6F6A61] hover:text-[#292722] dark:text-[#C0B8AA] dark:hover:text-[#F5F0E7]"
                 }`
               }
             >
@@ -1237,8 +1237,8 @@ export default function App() {
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold touch-manipulation cursor-pointer ${
                   isActive || location.pathname.startsWith("/news") || location.pathname.startsWith("/local-updates")
-                    ? "text-[#B8323C] dark:text-[#C5A46D]"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                    ? "text-[#A83D32] dark:text-[#C45A4C]"
+                    : "text-[#6F6A61] hover:text-[#292722] dark:text-[#C0B8AA] dark:hover:text-[#F5F0E7]"
                 }`
               }
             >
@@ -1253,12 +1253,12 @@ export default function App() {
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold touch-manipulation cursor-pointer ${
                   isActive || location.pathname.startsWith("/emergency")
-                    ? "text-[#B8323C] dark:text-[#C5A46D]"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                    ? "text-[#A83D32] dark:text-[#C45A4C]"
+                    : "text-[#6F6A61] hover:text-[#292722] dark:text-[#C0B8AA] dark:hover:text-[#F5F0E7]"
                 }`
               }
             >
-              <PhoneCall className="w-5 h-5 mb-0.5 text-red-500 dark:text-red-400" />
+              <PhoneCall className="w-5 h-5 mb-0.5 text-[#A83D32] dark:text-[#C45A4C]" />
               <span>24/7 Aid</span>
             </NavLink>
 
@@ -1267,13 +1267,13 @@ export default function App() {
               onClick={() => setMobileMenuOpen((prev) => !prev)}
               className={`flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold cursor-pointer touch-manipulation ${
                 mobileMenuOpen
-                  ? "text-[#B8323C] dark:text-[#C5A46D]"
-                  : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                  ? "text-[#A83D32] dark:text-[#C45A4C]"
+                  : "text-[#6F6A61] hover:text-[#292722] dark:text-[#C0B8AA] dark:hover:text-[#F5F0E7]"
               }`}
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? (
-                <X className="w-5 h-5 mb-0.5 text-[#B8323C] dark:text-[#C5A46D]" />
+                <X className="w-5 h-5 mb-0.5 text-[#A83D32] dark:text-[#C45A4C]" />
               ) : (
                 <Menu className="w-5 h-5 mb-0.5" />
               )}
