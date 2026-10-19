@@ -486,8 +486,8 @@ router.post("/forgot-password", passwordResetLimiter, validateForgotPasswordInpu
 
     return res.status(200).json(genericResponse);
   } catch (err) {
-    console.error("Forgot Password Error:", err);
-    res.status(500).json({ message: "Server error processing password reset request." });
+    console.error("Forgot Password Error:", err.message || err);
+    res.status(500).json({ message: err.message || "Server error processing password reset request." });
   }
 });
 

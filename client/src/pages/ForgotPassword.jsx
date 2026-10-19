@@ -60,7 +60,11 @@ export default function ForgotPassword() {
       setResendCooldown(60);
       setExpirySeconds(600);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to process request. Please try again.");
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to process request. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -107,7 +111,7 @@ export default function ForgotPassword() {
       setResendCooldown(60);
       setExpirySeconds(600);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to resend code.");
+      setError(err.response?.data?.message || err.message || "Failed to resend code.");
     } finally {
       setLoading(false);
     }
@@ -140,7 +144,7 @@ export default function ForgotPassword() {
 
       setStep("success");
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update password. Please try again.");
+      setError(err.response?.data?.message || err.message || "Failed to update password. Please try again.");
     } finally {
       setLoading(false);
     }

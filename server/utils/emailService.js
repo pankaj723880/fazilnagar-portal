@@ -23,11 +23,25 @@ const getTransporter = () => {
     return null;
   }
 
+  // If host is Gmail, use Nodemailer's built-in gmail service preset for reliable cloud delivery
+  if (host.includes("gmail.com")) {
+    return nodemailer.createTransport({
+      service: "gmail",
+      auth: { user, pass },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+    });
+  }
+
   return nodemailer.createTransport({
     host,
     port,
     secure,
     auth: { user, pass },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
     tls: {
       rejectUnauthorized: process.env.NODE_ENV === "production",
     },
@@ -129,12 +143,12 @@ If you did not request this verification code, please ignore this email. No citi
 
   const transporter = getTransporter();
   if (!transporter) {
-    if (process.env.NODE_ENV === "development") {
+    if (process.env.NODE_ENV !== "production") {
       console.warn(`[EmailService DEV] SMTP unconfigured. Verification OTP for ${normalizedEmail}: ${otp}`);
       testSentEmails.push({ to: normalizedEmail, subject, otp, purpose: "registration" });
       return { success: true, simulated: true };
     }
-    throw new Error("SMTP email transport is not configured on this server.");
+    throw new Error("SMTP email transport is not configured on this server. Please configure SMTP_HOST, SMTP_USER, and SMTP_PASS in Render.");
   }
 
   try {
@@ -148,7 +162,21 @@ If you did not request this verification code, please ignore this email. No citi
     return { success: true, messageId: info.messageId };
   } catch (err) {
     console.error("[EmailService Error] Failed to send registration email:", err.message);
-    throw new Error("Unable to deliver verification email. Please verify the address and try again.");
+    const isAuthError =
+      err.message?.includes("Invalid login") ||
+      err.message?.includes("Username and Password not accepted") ||
+      err.code === "EAUTH";
+    const isTimeout = err.code === "ETIMEDOUT" || err.message?.includes("timeout");
+
+    if (isAuthError) {
+      throw new Error(
+        "SMTP authentication failed. If using Gmail, ensure 2-Step Verification is ON and a 16-character App Password is used."
+      );
+    }
+    if (isTimeout) {
+      throw new Error("SMTP connection timed out. Please check your SMTP host and port.");
+    }
+    throw new Error(`Email delivery failed: ${err.message || "Unable to deliver verification email."}`);
   }
 };
 
@@ -200,12 +228,12 @@ If you did not request a password reset, please ignore this email. Your current 
 
   const transporter = getTransporter();
   if (!transporter) {
-    if (process.env.NODE_ENV === "development") {
+    if (process.env.NODE_ENV !== "production") {
       console.warn(`[EmailService DEV] SMTP unconfigured. Password reset OTP for ${normalizedEmail}: ${otp}`);
       testSentEmails.push({ to: normalizedEmail, subject, otp, purpose: "password_reset" });
       return { success: true, simulated: true };
     }
-    throw new Error("SMTP email transport is not configured on this server.");
+    throw new Error("SMTP email transport is not configured on this server. Please configure SMTP_HOST, SMTP_USER, and SMTP_PASS in Render.");
   }
 
   try {
@@ -219,6 +247,20 @@ If you did not request a password reset, please ignore this email. Your current 
     return { success: true, messageId: info.messageId };
   } catch (err) {
     console.error("[EmailService Error] Failed to send password reset email:", err.message);
-    throw new Error("Unable to deliver password reset email. Please try again later.");
+    const isAuthError =
+      err.message?.includes("Invalid login") ||
+      err.message?.includes("Username and Password not accepted") ||
+      err.code === "EAUTH";
+    const isTimeout = err.code === "ETIMEDOUT" || err.message?.includes("timeout");
+
+    if (isAuthError) {
+      throw new Error(
+        "SMTP authentication failed. If using Gmail, ensure 2-Step Verification is ON and a 16-character App Password is used."
+      );
+    }
+    if (isTimeout) {
+      throw new Error("SMTP connection timed out. Please check your SMTP host and port.");
+    }
+    throw new Error(`Email delivery failed: ${err.message || "Unable to deliver password reset email."}`);
   }
 };
