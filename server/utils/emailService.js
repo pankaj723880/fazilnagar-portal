@@ -76,17 +76,68 @@ export async function diagnoseSmtpStages(host, port, secure, timeoutMs = 6000) {
 }
 
 /**
+ * Extracts and sanitizes the Resend API key from environment variables.
+ * Handles accidental surrounding quotes (single or double), whitespace, and line breaks.
+ * Checks both RESEND_API_KEY and RESEND_KEY.
+ * Never logs or exposes the key value.
+ */
+export function getSanitizedResendApiKey() {
+  const rawKey = process.env.RESEND_API_KEY || process.env.RESEND_KEY;
+  if (!rawKey || typeof rawKey !== "string") {
+    return null;
+  }
+
+  let key = rawKey.trim();
+
+  // Strip single or double quotes if accidentally added in Render dashboard or .env file
+  if (
+    (key.startsWith('"') && key.endsWith('"')) ||
+    (key.startsWith("'") && key.endsWith("'"))
+  ) {
+    key = key.slice(1, -1).trim();
+  }
+
+  // Guard against literal string placeholders accidentally entered
+  if (key === "null" || key === "undefined" || key === "") {
+    return null;
+  }
+
+  return key;
+}
+
+/**
+ * Extracts and sanitizes the Brevo API key from environment variables.
+ */
+export function getSanitizedBrevoApiKey() {
+  const rawKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
+  if (!rawKey || typeof rawKey !== "string") {
+    return null;
+  }
+  let key = rawKey.trim();
+  if (
+    (key.startsWith('"') && key.endsWith('"')) ||
+    (key.startsWith("'") && key.endsWith("'"))
+  ) {
+    key = key.slice(1, -1).trim();
+  }
+  if (key === "null" || key === "undefined" || key === "") {
+    return null;
+  }
+  return key;
+}
+
+/**
  * Dispatch transactional email via Resend HTTPS API (Port 443 - Never blocked on Render)
  */
-async function sendViaResend({ to, subject, html, text }) {
-  const apiKey = process.env.RESEND_API_KEY;
+export async function sendViaResend({ to, subject, html, text }) {
+  const apiKey = getSanitizedResendApiKey();
   if (!apiKey) return null;
 
   // Resend testing requires onboarding@resend.dev unless a custom domain is verified.
   // If SMTP_FROM contains a public provider (@gmail.com, etc.), safely use onboarding@resend.dev.
-  let from = process.env.RESEND_FROM;
+  let from = (process.env.RESEND_FROM || "").trim();
   if (!from) {
-    const configuredFrom = process.env.SMTP_FROM || "";
+    const configuredFrom = (process.env.SMTP_FROM || "").trim();
     if (!configuredFrom || /@(gmail|yahoo|outlook|hotmail)\.com/i.test(configuredFrom)) {
       from = '"Fazilnagar Town Portal" <onboarding@resend.dev>';
     } else {
@@ -94,26 +145,54 @@ async function sendViaResend({ to, subject, html, text }) {
     }
   }
 
+  // Strip accidental outer quotes wrapping the entire 'from' definition
+  if (
+    (from.startsWith('"') && from.endsWith('"') && !from.slice(1, -1).includes('"')) ||
+    (from.startsWith("'") && from.endsWith("'"))
+  ) {
+    from = from.slice(1, -1).trim();
+  }
+
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
+      "User-Agent": "FazilnagarTownPortal/1.0",
     },
     body: JSON.stringify({
       from,
-      to: [to],
+      to: Array.isArray(to) ? to : [to],
       subject,
       html,
       text,
     }),
   });
 
-  const data = await response.json();
+  let data = {};
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+
   if (!response.ok) {
     const errorMsg = data.message || `Resend API error (${response.status})`;
-    console.error("[EmailService Resend Error]:", errorMsg);
-    throw new Error(errorMsg);
+    const error = new Error(errorMsg);
+    error.status = response.status;
+    error.statusCode = response.status;
+    error.provider = "resend";
+    error.name = data.name || "ResendApiError";
+    const isDomainRestriction =
+      /only send testing emails|domain not verified|verify a domain/i.test(errorMsg);
+    error.isDomainRestriction = isDomainRestriction;
+    error.isAuthError =
+      !isDomainRestriction &&
+      (response.status === 401 ||
+        /api key is invalid|invalid api|unauthorized|forbidden|not authorized/i.test(errorMsg));
+
+    console.error(`[EmailService Resend Error]: ${errorMsg}`);
+    throw error;
   }
 
   console.log(`[EmailService] Dispatched email to ${to} via Resend HTTPS API (ID: ${data.id})`);
@@ -123,8 +202,8 @@ async function sendViaResend({ to, subject, html, text }) {
 /**
  * Dispatch transactional email via Brevo HTTPS API (Port 443 - Never blocked on Render)
  */
-async function sendViaBrevo({ to, subject, html, text }) {
-  const apiKey = process.env.BREVO_API_KEY;
+export async function sendViaBrevo({ to, subject, html, text }) {
+  const apiKey = getSanitizedBrevoApiKey();
   if (!apiKey) return null;
 
   const fromRaw = process.env.SMTP_FROM || "no-reply@fazilnagar.me";
@@ -148,11 +227,26 @@ async function sendViaBrevo({ to, subject, html, text }) {
     }),
   });
 
-  const data = await response.json();
+  let data = {};
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+
   if (!response.ok) {
     const errorMsg = data.message || `Brevo API error (${response.status})`;
-    console.error("[EmailService Brevo Error]:", errorMsg);
-    throw new Error(errorMsg);
+    const error = new Error(errorMsg);
+    error.status = response.status;
+    error.statusCode = response.status;
+    error.provider = "brevo";
+    error.isAuthError =
+      response.status === 401 ||
+      response.status === 403 ||
+      /unauthorized|invalid api/i.test(errorMsg);
+
+    console.error(`[EmailService Brevo Error]: ${errorMsg}`);
+    throw error;
   }
 
   console.log(`[EmailService] Dispatched email to ${to} via Brevo HTTPS API (ID: ${data.messageId})`);
@@ -163,7 +257,7 @@ async function sendViaBrevo({ to, subject, html, text }) {
  * Creates configured Nodemailer SMTP transporter.
  * Respects configured host and port; allows explicit service override if needed.
  */
-const getTransporter = () => {
+export const getTransporter = () => {
   const host = process.env.SMTP_HOST;
   const port = parseInt(process.env.SMTP_PORT || "587", 10);
   const user = process.env.SMTP_USER;
@@ -248,33 +342,81 @@ const renderEmailLayout = ({ title, preheader, bodyHtml }) => `
 /**
  * Unified email dispatch handler with HTTPS REST fallback and safe diagnostic logging
  */
-async function deliverEmail({ to, subject, text, html, purpose, otp }) {
+export async function deliverEmail({ to, subject, text, html, purpose, otp }) {
   const normalizedEmail = to.trim().toLowerCase();
 
-  // Test mode simulation
-  if (process.env.NODE_ENV === "test") {
+  // Test mode simulation (bypassed if TEST_REAL_EMAIL_DELIVERY=true for explicit unit/mock tests)
+  if (process.env.NODE_ENV === "test" && !process.env.TEST_REAL_EMAIL_DELIVERY) {
     testSentEmails.push({ to: normalizedEmail, subject, otp, purpose });
     return { success: true, simulated: true };
   }
 
-  // 1. Try HTTPS API providers first if configured (Port 443 - immune to cloud SMTP port blocks)
-  if (process.env.RESEND_API_KEY) {
+  // 1. Try Resend HTTPS API first if configured (Port 443 - immune to cloud SMTP port blocks)
+  const resendApiKey = getSanitizedResendApiKey();
+  if (resendApiKey) {
     try {
       return await sendViaResend({ to: normalizedEmail, subject, html, text });
     } catch (err) {
-      console.error("[EmailService] Resend HTTPS delivery error:", err.message);
+      const isDomainRestriction =
+        err.isDomainRestriction ||
+        /only send testing emails|domain not verified|validation_error|verify a domain/i.test(err.message);
+      if (isDomainRestriction) {
+        console.error(
+          `[EmailService] Resend delivery restriction: ${err.message}. ` +
+          `Aborting SMTP fallback. Make sure to test using the email address registered with your Resend account, or verify a custom domain.`
+        );
+        throw new Error(
+          `Email delivery restricted by provider: ${err.message}`
+        );
+      }
+
+      const isAuthError =
+        err.isAuthError ||
+        err.status === 401 ||
+        (err.status === 403 && !isDomainRestriction) ||
+        /api key is invalid|invalid api|unauthorized|forbidden|not authorized/i.test(err.message);
+
+      if (isAuthError) {
+        console.error(
+          `[EmailService] Resend authentication failed (HTTP ${err.status || 401}: ${err.message}). ` +
+          `Aborting SMTP fallback to prevent connection timeout on Render. ` +
+          `Please check RESEND_API_KEY in Render dashboard (verify key starts with 're_' with no quotes or spaces).`
+        );
+        throw new Error(
+          "Email service authentication failed. Please verify email settings or try signing in with Google."
+        );
+      }
+
       const transporter = getTransporter();
       if (!transporter) {
         throw new Error(`Email delivery failed: ${err.message}`);
       }
+
+      console.warn(
+        `[EmailService] Resend HTTPS delivery encountered error (${err.message}). Attempting secondary transport fallback...`
+      );
     }
   }
 
-  if (process.env.BREVO_API_KEY) {
+  // 2. Try Brevo HTTPS API if configured
+  const brevoApiKey = getSanitizedBrevoApiKey();
+  if (brevoApiKey) {
     try {
       return await sendViaBrevo({ to: normalizedEmail, subject, html, text });
     } catch (err) {
       console.error("[EmailService] Brevo HTTPS delivery error:", err.message);
+      const isAuthError =
+        err.status === 401 ||
+        err.status === 403 ||
+        /unauthorized|invalid api/i.test(err.message);
+      if (isAuthError) {
+        console.error(
+          `[EmailService] Brevo authentication failed. Aborting SMTP fallback to prevent connection timeout.`
+        );
+        throw new Error(
+          "Email service authentication failed. Please verify email settings or try signing in with Google."
+        );
+      }
       const transporter = getTransporter();
       if (!transporter) {
         throw new Error(`Email delivery failed: ${err.message}`);
@@ -282,7 +424,7 @@ async function deliverEmail({ to, subject, text, html, purpose, otp }) {
     }
   }
 
-  // 2. Fall back to SMTP via Nodemailer
+  // 3. Fall back to SMTP via Nodemailer
   const transporter = getTransporter();
   if (!transporter) {
     if (process.env.NODE_ENV !== "production") {
@@ -290,7 +432,7 @@ async function deliverEmail({ to, subject, text, html, purpose, otp }) {
       testSentEmails.push({ to: normalizedEmail, subject, otp, purpose });
       return { success: true, simulated: true };
     }
-    throw new Error("Email service is not configured on this server. Please configure RESEND_API_KEY or SMTP credentials in Render.");
+    throw new Error("Email service is not configured on this server. Please configure RESEND_API_KEY in Render.");
   }
 
   const from = process.env.SMTP_FROM || `"Fazilnagar Town Portal" <no-reply@fazilnagar.me>`;
