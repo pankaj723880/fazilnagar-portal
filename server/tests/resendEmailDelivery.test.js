@@ -252,6 +252,90 @@ describe("Resend Email Delivery & Credential Failure Protection", () => {
       );
     });
 
+    it("auto-retries with onboarding@resend.dev when custom domain is not verified, and succeeds", async () => {
+      process.env.NODE_ENV = "production";
+      process.env.RESEND_API_KEY = "re_valid_key";
+      process.env.SMTP_FROM = "Fazilnagar Town Portal <no-reply@fazilnagar.me>";
+
+      const sendersAttempted = [];
+      globalThis.fetch = async (url, options) => {
+        const body = JSON.parse(options.body);
+        sendersAttempted.push(body.from);
+
+        if (body.from.includes("fazilnagar.me")) {
+          return {
+            ok: false,
+            status: 403,
+            json: async () => ({
+              statusCode: 403,
+              message: "The fazilnagar.me domain is not verified. Please, add and verify your domain on https://resend.com/domains",
+              name: "validation_error",
+            }),
+          };
+        }
+
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ id: "msg_retry_domain_ok" }),
+        };
+      };
+
+      const result = await sendViaResend({
+        to: "citizen@fazilnagar.test",
+        subject: "Verification",
+        html: "<p>OTP: 123456</p>",
+        text: "OTP: 123456",
+      });
+
+      assert.strictEqual(result.success, true);
+      assert.strictEqual(result.messageId, "msg_retry_domain_ok");
+      // Verify first attempt was custom domain, second attempt was onboarding@resend.dev
+      assert.strictEqual(sendersAttempted.length, 2);
+      assert.ok(sendersAttempted[0].includes("fazilnagar.me"));
+      assert.ok(sendersAttempted[1].includes("onboarding@resend.dev"));
+    });
+
+    it("aborts SMTP fallback when unverified custom domain message is returned and test sender also cannot deliver", async () => {
+      process.env.NODE_ENV = "production";
+      process.env.RESEND_API_KEY = "re_valid_key";
+      process.env.SMTP_FROM = "Fazilnagar Town Portal <no-reply@fazilnagar.me>";
+      process.env.SMTP_HOST = "smtp.gmail.com";
+      process.env.SMTP_PORT = "587";
+      process.env.SMTP_USER = "user@gmail.com";
+      process.env.SMTP_PASS = "pass";
+
+      globalThis.fetch = async () => {
+        return {
+          ok: false,
+          status: 403,
+          json: async () => ({
+            statusCode: 403,
+            message: "The fazilnagar.me domain is not verified. Please, add and verify your domain on https://resend.com/domains",
+            name: "validation_error",
+          }),
+        };
+      };
+
+      await assert.rejects(
+        async () => {
+          await deliverEmail({
+            to: "citizen@fazilnagar.test",
+            subject: "Verification",
+            text: "OTP: 999888",
+            html: "<p>OTP: 999888</p>",
+            purpose: "registration",
+            otp: "999888",
+          });
+        },
+        (err) => {
+          // Verify it did not fall back to SMTP and threw safe restriction error
+          assert.ok(err.message.includes("Email delivery restricted by provider"));
+          return true;
+        }
+      );
+    });
+
     it("successfully delivers registration and password-reset OTP emails when Resend is healthy", async () => {
       process.env.NODE_ENV = "production";
       process.env.RESEND_API_KEY = "re_working_key_123";

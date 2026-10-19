@@ -129,19 +129,22 @@ export function getSanitizedBrevoApiKey() {
 /**
  * Dispatch transactional email via Resend HTTPS API (Port 443 - Never blocked on Render)
  */
-export async function sendViaResend({ to, subject, html, text }) {
+export async function sendViaResend({ to, subject, html, text, forceTestSender = false }) {
   const apiKey = getSanitizedResendApiKey();
   if (!apiKey) return null;
 
-  // Resend testing requires onboarding@resend.dev unless a custom domain is verified.
-  // If SMTP_FROM contains a public provider (@gmail.com, etc.), safely use onboarding@resend.dev.
-  let from = (process.env.RESEND_FROM || "").trim();
-  if (!from) {
-    const configuredFrom = (process.env.SMTP_FROM || "").trim();
-    if (!configuredFrom || /@(gmail|yahoo|outlook|hotmail)\.com/i.test(configuredFrom)) {
-      from = '"Fazilnagar Town Portal" <onboarding@resend.dev>';
-    } else {
-      from = configuredFrom;
+  let from;
+  if (forceTestSender) {
+    from = '"Fazilnagar Town Portal" <onboarding@resend.dev>';
+  } else {
+    from = (process.env.RESEND_FROM || "").trim();
+    if (!from) {
+      const configuredFrom = (process.env.SMTP_FROM || "").trim();
+      if (!configuredFrom || /@(gmail|yahoo|outlook|hotmail)\.com/i.test(configuredFrom)) {
+        from = '"Fazilnagar Town Portal" <onboarding@resend.dev>';
+      } else {
+        from = configuredFrom;
+      }
     }
   }
 
@@ -178,13 +181,30 @@ export async function sendViaResend({ to, subject, html, text }) {
 
   if (!response.ok) {
     const errorMsg = data.message || `Resend API error (${response.status})`;
+
+    // If custom domain is not yet verified in Resend, automatically retry once with Resend's default test sender
+    const isUnverifiedDomain = /domain.*not verified|not verified|verify.*domain/i.test(errorMsg);
+    if (isUnverifiedDomain && !forceTestSender && !from.includes("onboarding@resend.dev")) {
+      console.warn(
+        `[EmailService Resend] Custom domain in sender "${from}" is not yet verified in Resend. ` +
+        `Retrying automatically with "Fazilnagar Town Portal" <onboarding@resend.dev>...`
+      );
+      return await sendViaResend({
+        to,
+        subject,
+        html,
+        text,
+        forceTestSender: true,
+      });
+    }
+
     const error = new Error(errorMsg);
     error.status = response.status;
     error.statusCode = response.status;
     error.provider = "resend";
     error.name = data.name || "ResendApiError";
     const isDomainRestriction =
-      /only send testing emails|domain not verified|verify a domain/i.test(errorMsg);
+      /only send testing emails|domain.*not verified|not verified|verify.*domain|validation_error/i.test(errorMsg);
     error.isDomainRestriction = isDomainRestriction;
     error.isAuthError =
       !isDomainRestriction &&
@@ -359,7 +379,7 @@ export async function deliverEmail({ to, subject, text, html, purpose, otp }) {
     } catch (err) {
       const isDomainRestriction =
         err.isDomainRestriction ||
-        /only send testing emails|domain not verified|validation_error|verify a domain/i.test(err.message);
+        /only send testing emails|domain.*not verified|not verified|validation_error|verify.*domain/i.test(err.message);
       if (isDomainRestriction) {
         console.error(
           `[EmailService] Resend delivery restriction: ${err.message}. ` +
