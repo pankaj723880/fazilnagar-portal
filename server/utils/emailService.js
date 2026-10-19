@@ -1,4 +1,6 @@
 import nodemailer from "nodemailer";
+import dns from "dns/promises";
+import net from "net";
 
 // In-memory record for testing and diagnostics in non-production environments
 const testSentEmails = [];
@@ -9,28 +11,176 @@ export const clearTestSentEmails = () => {
 };
 
 /**
+ * Safely probes SMTP connectivity stages (DNS, TCP) without logging secrets.
+ * Outputs actionable diagnostics to server console to assist deployment debugging.
+ */
+export async function diagnoseSmtpStages(host, port, secure, timeoutMs = 6000) {
+  const result = {
+    host,
+    port,
+    secure,
+    dnsSuccess: false,
+    resolvedIp: null,
+    tcpSuccess: false,
+    failingStage: null,
+    error: null,
+  };
+
+  // Stage 1: DNS Resolution
+  const dnsStart = Date.now();
+  try {
+    const lookup = await dns.lookup(host);
+    result.dnsSuccess = true;
+    result.resolvedIp = lookup.address;
+    console.log(`[SMTP Diagnostic] Stage 1 (DNS): Successfully resolved "${host}" -> ${lookup.address} (${lookup.family === 6 ? "IPv6" : "IPv4"}) in ${Date.now() - dnsStart}ms`);
+  } catch (err) {
+    result.failingStage = "DNS_RESOLUTION";
+    result.error = err.message;
+    console.error(`[SMTP Diagnostic] Stage 1 (DNS) FAILED: Could not resolve "${host}": ${err.code || err.message}`);
+    return result;
+  }
+
+  // Stage 2: TCP Handshake probe
+  const tcpStart = Date.now();
+  try {
+    await new Promise((resolve, reject) => {
+      const socket = net.createConnection({ host: result.resolvedIp, port }, () => {
+        socket.destroy();
+        resolve();
+      });
+      socket.setTimeout(timeoutMs);
+      socket.on("timeout", () => {
+        socket.destroy();
+        reject(new Error(`TCP connection to ${host}:${port} timed out after ${timeoutMs}ms`));
+      });
+      socket.on("error", (err) => {
+        socket.destroy();
+        reject(err);
+      });
+    });
+    result.tcpSuccess = true;
+    console.log(`[SMTP Diagnostic] Stage 2 (TCP): Successfully established connection to ${host}:${port} in ${Date.now() - tcpStart}ms`);
+  } catch (err) {
+    result.failingStage = "TCP_CONNECTION";
+    result.error = err.message;
+    console.error(`[SMTP Diagnostic] Stage 2 (TCP Handshake) FAILED on port ${port}: ${err.message}`);
+    console.warn(
+      `[SMTP Diagnostic] Root Cause: Outbound TCP traffic to ${host}:${port} is blocked or dropped by the hosting environment.\n` +
+      `Note: Render Free Tier and certain cloud hosts block outbound ports 25, 465, and 587 to prevent abuse.\n` +
+      `Solution: Use an HTTPS-based email delivery provider (e.g. RESEND_API_KEY via port 443) which is not restricted by cloud firewalls.`
+    );
+    return result;
+  }
+
+  return result;
+}
+
+/**
+ * Dispatch transactional email via Resend HTTPS API (Port 443 - Never blocked on Render)
+ */
+async function sendViaResend({ to, subject, html, text }) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return null;
+
+  // Resend testing requires onboarding@resend.dev unless a custom domain is verified.
+  // If SMTP_FROM contains a public provider (@gmail.com, etc.), safely use onboarding@resend.dev.
+  let from = process.env.RESEND_FROM;
+  if (!from) {
+    const configuredFrom = process.env.SMTP_FROM || "";
+    if (!configuredFrom || /@(gmail|yahoo|outlook|hotmail)\.com/i.test(configuredFrom)) {
+      from = '"Fazilnagar Town Portal" <onboarding@resend.dev>';
+    } else {
+      from = configuredFrom;
+    }
+  }
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: [to],
+      subject,
+      html,
+      text,
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    const errorMsg = data.message || `Resend API error (${response.status})`;
+    console.error("[EmailService Resend Error]:", errorMsg);
+    throw new Error(errorMsg);
+  }
+
+  console.log(`[EmailService] Dispatched email to ${to} via Resend HTTPS API (ID: ${data.id})`);
+  return { success: true, messageId: data.id, provider: "resend_https" };
+}
+
+/**
+ * Dispatch transactional email via Brevo HTTPS API (Port 443 - Never blocked on Render)
+ */
+async function sendViaBrevo({ to, subject, html, text }) {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) return null;
+
+  const fromRaw = process.env.SMTP_FROM || "no-reply@fazilnagar.me";
+  const match = fromRaw.match(/(?:"?([^"]*)"?\s)?(?:<?(.+@[^>]+)>?)/);
+  const senderName = match?.[1] || "Fazilnagar Town Portal";
+  const senderEmail = match?.[2] || fromRaw;
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": apiKey,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      sender: { name: senderName, email: senderEmail },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+      textContent: text,
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    const errorMsg = data.message || `Brevo API error (${response.status})`;
+    console.error("[EmailService Brevo Error]:", errorMsg);
+    throw new Error(errorMsg);
+  }
+
+  console.log(`[EmailService] Dispatched email to ${to} via Brevo HTTPS API (ID: ${data.messageId})`);
+  return { success: true, messageId: data.messageId, provider: "brevo_https" };
+}
+
+/**
  * Creates configured Nodemailer SMTP transporter.
- * Returns null if SMTP credentials are missing.
+ * Respects configured host and port; allows explicit service override if needed.
  */
 const getTransporter = () => {
   const host = process.env.SMTP_HOST;
   const port = parseInt(process.env.SMTP_PORT || "587", 10);
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
-  const secure = process.env.SMTP_SECURE === "true" || port === 465;
+  const secure = process.env.SMTP_SECURE === "true" || (process.env.SMTP_SECURE !== "false" && port === 465);
 
   if (!host || !user || !pass) {
     return null;
   }
 
-  // If host is Gmail, use Nodemailer's built-in gmail service preset for reliable cloud delivery
-  if (host.includes("gmail.com")) {
+  if (process.env.SMTP_SERVICE === "gmail") {
     return nodemailer.createTransport({
       service: "gmail",
       auth: { user, pass },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 10000,
     });
   }
 
@@ -39,11 +189,12 @@ const getTransporter = () => {
     port,
     secure,
     auth: { user, pass },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 10000,
     tls: {
       rejectUnauthorized: process.env.NODE_ENV === "production",
+      minVersion: "TLSv1.2",
     },
   });
 };
@@ -95,12 +246,98 @@ const renderEmailLayout = ({ title, preheader, bodyHtml }) => `
 `;
 
 /**
+ * Unified email dispatch handler with HTTPS REST fallback and safe diagnostic logging
+ */
+async function deliverEmail({ to, subject, text, html, purpose, otp }) {
+  const normalizedEmail = to.trim().toLowerCase();
+
+  // Test mode simulation
+  if (process.env.NODE_ENV === "test") {
+    testSentEmails.push({ to: normalizedEmail, subject, otp, purpose });
+    return { success: true, simulated: true };
+  }
+
+  // 1. Try HTTPS API providers first if configured (Port 443 - immune to cloud SMTP port blocks)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      return await sendViaResend({ to: normalizedEmail, subject, html, text });
+    } catch (err) {
+      console.error("[EmailService] Resend HTTPS delivery error:", err.message);
+      const transporter = getTransporter();
+      if (!transporter) {
+        throw new Error(`Email delivery failed: ${err.message}`);
+      }
+    }
+  }
+
+  if (process.env.BREVO_API_KEY) {
+    try {
+      return await sendViaBrevo({ to: normalizedEmail, subject, html, text });
+    } catch (err) {
+      console.error("[EmailService] Brevo HTTPS delivery error:", err.message);
+      const transporter = getTransporter();
+      if (!transporter) {
+        throw new Error(`Email delivery failed: ${err.message}`);
+      }
+    }
+  }
+
+  // 2. Fall back to SMTP via Nodemailer
+  const transporter = getTransporter();
+  if (!transporter) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(`[EmailService DEV] Email transport unconfigured. Simulated ${purpose} OTP for ${normalizedEmail}: ${otp}`);
+      testSentEmails.push({ to: normalizedEmail, subject, otp, purpose });
+      return { success: true, simulated: true };
+    }
+    throw new Error("Email service is not configured on this server. Please configure RESEND_API_KEY or SMTP credentials in Render.");
+  }
+
+  const from = process.env.SMTP_FROM || `"Fazilnagar Town Portal" <no-reply@fazilnagar.me>`;
+
+  try {
+    const info = await transporter.sendMail({
+      from,
+      to: normalizedEmail,
+      subject,
+      text,
+      html,
+    });
+    return { success: true, messageId: info.messageId, provider: "smtp" };
+  } catch (err) {
+    console.error(`[EmailService Error] Failed to deliver ${purpose} email:`, err.message);
+
+    const isTimeout = err.code === "ETIMEDOUT" || err.message?.includes("timeout") || err.command === "CONN";
+    const isAuthError = err.message?.includes("Invalid login") || err.message?.includes("Username and Password not accepted") || err.code === "EAUTH";
+
+    // Trigger diagnostic probe asynchronously to log exact failing stage without delaying client
+    const host = process.env.SMTP_HOST || "smtp.gmail.com";
+    const port = parseInt(process.env.SMTP_PORT || "587", 10);
+    const secure = process.env.SMTP_SECURE === "true" || port === 465;
+    diagnoseSmtpStages(host, port, secure).catch((probeErr) => {
+      console.error("[SMTP Diagnostic Probe Error]:", probeErr.message);
+    });
+
+    if (isAuthError) {
+      console.error("[EmailService] SMTP Authentication failed. Ensure 2-Step Verification is active and a 16-character App Password is used without spaces.");
+      throw new Error("Email authentication failed. Please verify email settings or try signing in with Google.");
+    }
+
+    if (isTimeout) {
+      console.error(`[EmailService] SMTP Connection timed out connecting to ${host}:${port}. Outbound SMTP is likely blocked by hosting environment.`);
+      throw new Error("Unable to deliver verification code. The email server is temporarily unreachable. Please try again later or sign in with Google.");
+    }
+
+    throw new Error("Unable to deliver verification code. Please try again later or sign in with Google.");
+  }
+}
+
+/**
  * Send 6-digit registration verification OTP email
  */
 export const sendRegistrationOtpEmail = async (toEmail, otp) => {
   const normalizedEmail = toEmail.trim().toLowerCase();
   const subject = "Your Fazilnagar Town Portal Verification Code";
-  const from = process.env.SMTP_FROM || `"Fazilnagar Town Portal" <no-reply@fazilnagar.me>`;
 
   const text = `Fazilnagar Town Portal — Email Verification
 
@@ -135,49 +372,14 @@ If you did not request this verification code, please ignore this email. No citi
     bodyHtml,
   });
 
-  // Test mode or unconfigured simulation handling
-  if (process.env.NODE_ENV === "test") {
-    testSentEmails.push({ to: normalizedEmail, subject, otp, purpose: "registration" });
-    return { success: true, simulated: true };
-  }
-
-  const transporter = getTransporter();
-  if (!transporter) {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn(`[EmailService DEV] SMTP unconfigured. Verification OTP for ${normalizedEmail}: ${otp}`);
-      testSentEmails.push({ to: normalizedEmail, subject, otp, purpose: "registration" });
-      return { success: true, simulated: true };
-    }
-    throw new Error("SMTP email transport is not configured on this server. Please configure SMTP_HOST, SMTP_USER, and SMTP_PASS in Render.");
-  }
-
-  try {
-    const info = await transporter.sendMail({
-      from,
-      to: normalizedEmail,
-      subject,
-      text,
-      html,
-    });
-    return { success: true, messageId: info.messageId };
-  } catch (err) {
-    console.error("[EmailService Error] Failed to send registration email:", err.message);
-    const isAuthError =
-      err.message?.includes("Invalid login") ||
-      err.message?.includes("Username and Password not accepted") ||
-      err.code === "EAUTH";
-    const isTimeout = err.code === "ETIMEDOUT" || err.message?.includes("timeout");
-
-    if (isAuthError) {
-      throw new Error(
-        "SMTP authentication failed. If using Gmail, ensure 2-Step Verification is ON and a 16-character App Password is used."
-      );
-    }
-    if (isTimeout) {
-      throw new Error("SMTP connection timed out. Please check your SMTP host and port.");
-    }
-    throw new Error(`Email delivery failed: ${err.message || "Unable to deliver verification email."}`);
-  }
+  return deliverEmail({
+    to: normalizedEmail,
+    subject,
+    text,
+    html,
+    purpose: "registration",
+    otp,
+  });
 };
 
 /**
@@ -186,7 +388,6 @@ If you did not request this verification code, please ignore this email. No citi
 export const sendPasswordResetOtpEmail = async (toEmail, otp) => {
   const normalizedEmail = toEmail.trim().toLowerCase();
   const subject = "Fazilnagar Town Portal Password Reset Code";
-  const from = process.env.SMTP_FROM || `"Fazilnagar Town Portal" <no-reply@fazilnagar.me>`;
 
   const text = `Fazilnagar Town Portal — Password Reset Request
 
@@ -221,46 +422,12 @@ If you did not request a password reset, please ignore this email. Your current 
     bodyHtml,
   });
 
-  if (process.env.NODE_ENV === "test") {
-    testSentEmails.push({ to: normalizedEmail, subject, otp, purpose: "password_reset" });
-    return { success: true, simulated: true };
-  }
-
-  const transporter = getTransporter();
-  if (!transporter) {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn(`[EmailService DEV] SMTP unconfigured. Password reset OTP for ${normalizedEmail}: ${otp}`);
-      testSentEmails.push({ to: normalizedEmail, subject, otp, purpose: "password_reset" });
-      return { success: true, simulated: true };
-    }
-    throw new Error("SMTP email transport is not configured on this server. Please configure SMTP_HOST, SMTP_USER, and SMTP_PASS in Render.");
-  }
-
-  try {
-    const info = await transporter.sendMail({
-      from,
-      to: normalizedEmail,
-      subject,
-      text,
-      html,
-    });
-    return { success: true, messageId: info.messageId };
-  } catch (err) {
-    console.error("[EmailService Error] Failed to send password reset email:", err.message);
-    const isAuthError =
-      err.message?.includes("Invalid login") ||
-      err.message?.includes("Username and Password not accepted") ||
-      err.code === "EAUTH";
-    const isTimeout = err.code === "ETIMEDOUT" || err.message?.includes("timeout");
-
-    if (isAuthError) {
-      throw new Error(
-        "SMTP authentication failed. If using Gmail, ensure 2-Step Verification is ON and a 16-character App Password is used."
-      );
-    }
-    if (isTimeout) {
-      throw new Error("SMTP connection timed out. Please check your SMTP host and port.");
-    }
-    throw new Error(`Email delivery failed: ${err.message || "Unable to deliver password reset email."}`);
-  }
+  return deliverEmail({
+    to: normalizedEmail,
+    subject,
+    text,
+    html,
+    purpose: "password_reset",
+    otp,
+  });
 };
