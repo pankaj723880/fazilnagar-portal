@@ -1,7 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
 import { setAuthSession } from "../utils/authStorage";
+
+// Singleton tracking across component mounts to prevent duplicate GIS initialize() calls
+let gsiInitializedClientId = null;
+let activeCredentialCallback = null;
+
+function handleGlobalCredential(response) {
+  if (typeof activeCredentialCallback === "function") {
+    activeCredentialCallback(response);
+  }
+}
 
 export default function GoogleSignInButton({ setUser, redirectPath = "/", onError }) {
   const buttonRef = useRef(null);
@@ -11,80 +21,101 @@ export default function GoogleSignInButton({ setUser, redirectPath = "/", onErro
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-  const handleCredentialResponse = async (response) => {
-    if (!response || !response.credential) {
-      if (onError) onError("Google authentication failed. No credential received.");
-      return;
-    }
+  const handleCredentialResponse = useCallback(
+    async (response) => {
+      if (!response || !response.credential) {
+        if (onError) onError("Google authentication failed. No credential received.");
+        return;
+      }
 
-    setLoading(true);
-    if (onError) onError("");
+      setLoading(true);
+      if (onError) onError("");
 
-    try {
-      const res = await API.post("/auth/google", {
-        credential: response.credential,
-      });
+      try {
+        const res = await API.post("/auth/google", {
+          credential: response.credential,
+        });
 
-      const userData = res.data.user;
-      setAuthSession(res.data.token, userData);
-      if (setUser) setUser(userData);
+        const userData = res.data.user;
+        setAuthSession(res.data.token, userData);
+        if (setUser) setUser(userData);
 
-      navigate(redirectPath, { replace: true });
-    } catch (err) {
-      const msg =
-        err.response?.data?.message ||
-        err.message ||
-        "Google sign-in failed. Please try again.";
-      if (onError) onError(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
+        navigate(redirectPath, { replace: true });
+      } catch (err) {
+        const msg =
+          err.response?.data?.message ||
+          err.message ||
+          "Google sign-in failed. Please try again.";
+        if (onError) onError(msg);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [navigate, onError, redirectPath, setUser]
+  );
+
+  // Keep active callback handler pointing to currently mounted component instance
+  useEffect(() => {
+    activeCredentialCallback = handleCredentialResponse;
+    return () => {
+      if (activeCredentialCallback === handleCredentialResponse) {
+        activeCredentialCallback = null;
+      }
+    };
+  }, [handleCredentialResponse]);
 
   useEffect(() => {
     let checkInterval = null;
+    let isMounted = true;
 
-    const initGsi = () => {
-      if (window.google?.accounts?.id && googleClientId) {
-        try {
+    const setupButton = () => {
+      if (!isMounted || !window.google?.accounts?.id || !googleClientId) return;
+
+      try {
+        // Initialize once per unique client ID
+        if (gsiInitializedClientId !== googleClientId) {
           window.google.accounts.id.initialize({
             client_id: googleClientId,
-            callback: handleCredentialResponse,
+            callback: handleGlobalCredential,
             context: "signin",
             ux_mode: "popup",
+            auto_select: false,
+            itp_support: true,
           });
-
-          if (buttonRef.current) {
-            buttonRef.current.innerHTML = "";
-            window.google.accounts.id.renderButton(buttonRef.current, {
-              type: "standard",
-              shape: "rectangular",
-              theme: "outline",
-              text: "continue_with",
-              size: "large",
-              logo_alignment: "left",
-              width: 380,
-            });
-          }
-          setGoogleScriptReady(true);
-        } catch (e) {
-          console.warn("Google Sign-In initialization:", e.message);
+          gsiInitializedClientId = googleClientId;
         }
+
+        if (buttonRef.current) {
+          buttonRef.current.innerHTML = "";
+          window.google.accounts.id.renderButton(buttonRef.current, {
+            type: "standard",
+            shape: "rectangular",
+            theme: "outline",
+            text: "continue_with",
+            size: "large",
+            logo_alignment: "left",
+            width: 380,
+          });
+        }
+        setGoogleScriptReady(true);
+      } catch (e) {
+        console.warn("Google Sign-In setup:", e.message);
       }
     };
 
     if (window.google?.accounts?.id) {
-      initGsi();
+      setupButton();
     } else {
       checkInterval = setInterval(() => {
         if (window.google?.accounts?.id) {
           clearInterval(checkInterval);
-          initGsi();
+          setupButton();
         }
-      }, 200);
+      }, 150);
     }
 
     return () => {
+      isMounted = false;
       if (checkInterval) clearInterval(checkInterval);
     };
   }, [googleClientId]);
