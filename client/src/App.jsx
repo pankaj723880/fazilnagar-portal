@@ -38,6 +38,7 @@ import RequireMessagingAuth from "./components/RequireMessagingAuth";
 import InstallButton from "./components/InstallButton";
 import ThemeToggle from "./components/ThemeToggle";
 import { useTheme } from "./context/ThemeContext";
+import BackgroundAnimations from "./components/BackgroundAnimations";
 import EditProfileModal from "./components/EditProfileModal";
 import SplashScreen from "./components/SplashScreen";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -308,6 +309,9 @@ export default function App() {
         color: "var(--text-primary)",
       }}
     >
+      {/* Ambient Background & Motion Architecture Canvas */}
+      <BackgroundAnimations />
+
       {/* Native App-Style Ultra-Premium Splash Screen (Fast, responsive 1.4s reveal) */}
       {showSplash && (
         <SplashScreen onComplete={() => setShowSplash(false)} duration={1400} />

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { THEMES, getThemeById, DEFAULT_THEME_ID } from "../../constants/themes";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme, DEFAULT_BG_ANIMATIONS } from "../../context/ThemeContext";
 import {
   Palette,
   Check,
@@ -13,6 +13,11 @@ import {
   Eye,
   RefreshCw,
   ExternalLink,
+  Sliders,
+  Layers,
+  Power,
+  Activity,
+  Play,
 } from "lucide-react";
 
 export default function AdminThemeGallery({ onSaveSuccess }) {
@@ -21,10 +26,12 @@ export default function AdminThemeGallery({ onSaveSuccess }) {
   // Current active configuration from backend/context
   const activeThemeId = themeConfig?.themeId || DEFAULT_THEME_ID;
   const activeMode = themeConfig?.mode || "light";
+  const activeBgAnim = themeConfig?.bgAnimations || DEFAULT_BG_ANIMATIONS;
 
   // Admin selection state for preview & staging
   const [selectedThemeId, setSelectedThemeId] = useState(activeThemeId);
   const [selectedMode, setSelectedMode] = useState(activeMode);
+  const [bgAnim, setBgAnim] = useState(activeBgAnim);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState({ message: "", type: "success" });
   const [filterCategory, setFilterCategory] = useState("all");
@@ -33,21 +40,52 @@ export default function AdminThemeGallery({ onSaveSuccess }) {
   useEffect(() => {
     setSelectedThemeId(activeThemeId);
     setSelectedMode(activeMode);
-  }, [activeThemeId, activeMode]);
+    setBgAnim(themeConfig?.bgAnimations || DEFAULT_BG_ANIMATIONS);
+  }, [activeThemeId, activeMode, themeConfig?.bgAnimations]);
 
   const selectedTheme = getThemeById(selectedThemeId);
   const previewPalette = selectedMode === "dark" ? selectedTheme.dark : selectedTheme.light;
 
-  const isDirty = selectedThemeId !== activeThemeId || selectedMode !== activeMode;
+  const isBgDirty = JSON.stringify(bgAnim) !== JSON.stringify(activeBgAnim);
+  const isDirty = selectedThemeId !== activeThemeId || selectedMode !== activeMode || isBgDirty;
 
   const handleSelectTheme = (themeId) => {
     setSelectedThemeId(themeId);
-    previewTheme({ themeId, mode: selectedMode });
+    previewTheme({ themeId, mode: selectedMode, bgAnimations: bgAnim });
   };
 
   const handleSelectMode = (mode) => {
     setSelectedMode(mode);
-    previewTheme({ themeId: selectedThemeId, mode });
+    previewTheme({ themeId: selectedThemeId, mode, bgAnimations: bgAnim });
+  };
+
+  const handleToggleBgEnabled = () => {
+    const updated = { ...bgAnim, enabled: !bgAnim.enabled };
+    setBgAnim(updated);
+    previewTheme({ themeId: selectedThemeId, mode: selectedMode, bgAnimations: updated });
+  };
+
+  const handleToggleEffect = (key) => {
+    const updated = {
+      ...bgAnim,
+      effects: {
+        ...bgAnim.effects,
+        [key]: !bgAnim.effects[key],
+      },
+    };
+    setBgAnim(updated);
+    previewTheme({ themeId: selectedThemeId, mode: selectedMode, bgAnimations: updated });
+  };
+
+  const handleUpdateBgField = (field, value) => {
+    const updated = { ...bgAnim, [field]: value };
+    setBgAnim(updated);
+    previewTheme({ themeId: selectedThemeId, mode: selectedMode, bgAnimations: updated });
+  };
+
+  const handlePreviewCurrentConfig = () => {
+    previewTheme({ themeId: selectedThemeId, mode: selectedMode, bgAnimations: bgAnim });
+    showToast("Live preview updated across portal without saving yet!", "info");
   };
 
   // Direct 1-click application of a specific theme from card
@@ -60,6 +98,7 @@ export default function AdminThemeGallery({ onSaveSuccess }) {
       await applyAdminTheme({
         themeId,
         mode: modeToUse,
+        bgAnimations: bgAnim,
       });
       const targetTheme = getThemeById(themeId);
       showToast(
@@ -67,7 +106,7 @@ export default function AdminThemeGallery({ onSaveSuccess }) {
         "success"
       );
       if (onSaveSuccess) {
-        onSaveSuccess({ themeId, mode: modeToUse });
+        onSaveSuccess({ themeId, mode: modeToUse, bgAnimations: bgAnim });
       }
     } catch (err) {
       console.error("Failed to apply theme:", err);
@@ -80,8 +119,9 @@ export default function AdminThemeGallery({ onSaveSuccess }) {
   const handleReset = () => {
     setSelectedThemeId(activeThemeId);
     setSelectedMode(activeMode);
-    previewTheme({ themeId: activeThemeId, mode: activeMode });
-    showToast("Reverted to currently active global theme.", "info");
+    setBgAnim(activeBgAnim);
+    previewTheme({ themeId: activeThemeId, mode: activeMode, bgAnimations: activeBgAnim });
+    showToast("Reverted to currently active appearance & animation settings.", "info");
   };
 
   const showToast = (message, type = "success") => {
@@ -97,17 +137,18 @@ export default function AdminThemeGallery({ onSaveSuccess }) {
       await applyAdminTheme({
         themeId: selectedThemeId,
         mode: selectedMode,
+        bgAnimations: bgAnim,
       });
       showToast(
-        `Theme successfully applied globally: "${selectedTheme.name}" (${selectedMode.toUpperCase()} mode). All public visitors will now experience this visual identity.`,
+        `Appearance & Background Animations successfully published globally!`,
         "success"
       );
       if (onSaveSuccess) {
-        onSaveSuccess({ themeId: selectedThemeId, mode: selectedMode });
+        onSaveSuccess({ themeId: selectedThemeId, mode: selectedMode, bgAnimations: bgAnim });
       }
     } catch (err) {
       console.error("Failed to apply theme:", err);
-      showToast(err.message || "Failed to update global theme.", "error");
+      showToast(err.message || "Failed to update global appearance.", "error");
     } finally {
       setSaving(false);
     }
@@ -214,7 +255,7 @@ export default function AdminThemeGallery({ onSaveSuccess }) {
             ) : (
               <Save className="w-4 h-4" />
             )}
-            <span>{saving ? "Applying..." : isDirty ? "Apply Theme Globally" : "Theme Active & Synced"}</span>
+            <span>{saving ? "Publishing..." : isDirty ? "Publish Appearance & Animations" : "Appearance Synced & Published"}</span>
           </button>
         </div>
       </div>
@@ -312,6 +353,244 @@ export default function AdminThemeGallery({ onSaveSuccess }) {
               </span>
             </div>
           </button>
+        </div>
+      </div>
+
+      {/* ========================================================
+          AMBIENT BACKGROUND & MOTION ARCHITECTURE CONTROLS
+          ======================================================== */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-4">
+        {/* Header & Global Master Toggle */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-indigo-50 text-indigo-700">
+                <Layers className="w-4 h-4" />
+              </span>
+              <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider font-heading flex items-center gap-2">
+                <span>Ambient Background &amp; Motion Architecture</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
+                  GPU Accelerated
+                </span>
+              </h3>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              Layer multiple lightweight effects simultaneously. Automatically matches active theme palette with optional color override.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleToggleBgEnabled}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-2xs ${
+                bgAnim.enabled
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-500/20"
+                  : "bg-slate-200 hover:bg-slate-300 text-slate-700"
+              }`}
+            >
+              <Power className="w-3.5 h-3.5" />
+              <span>{bgAnim.enabled ? "Animations ON" : "Animations OFF"}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handlePreviewCurrentConfig}
+              className="px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-95"
+              title="Preview changes in live DOM immediately"
+            >
+              <Play className="w-3.5 h-3.5 text-amber-600 fill-amber-600" />
+              <span>Live Preview</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Effect Toggles Matrix (8 Concurrent Effects) */}
+        <div className="space-y-2">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 block">
+            Concurrent Visual Effects (बहु-प्रभाव सक्षम करें)
+          </span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            {[
+              { id: "orbs", label: "Floating Orbs", icon: "🔮", desc: "Glowing radial spheres drifting smoothly" },
+              { id: "aurora", label: "Aurora Gradients", icon: "🌌", desc: "Multi-stop liquid organic mesh" },
+              { id: "ribbons", label: "Flowing Ribbons", icon: "🌊", desc: "Diagonal light beams sweeping across" },
+              { id: "grid", label: "Moving Grids & Hex", icon: "📐", desc: "Dynamic isometric & honeycomb grid" },
+              { id: "orbitalRings", label: "Orbital Rings", icon: "🪐", desc: "Concentric dashed rings in orbit" },
+              { id: "sparkles", label: "Twinkling Sparkles", icon: "✨", desc: "Pulsing micro-accents and glass stars" },
+              { id: "cardBorders", label: "Card Border Glow", icon: "🔲", desc: "Subtle interactive border glow on hover" },
+              { id: "heroShimmer", label: "Hero Light Shimmer", icon: "⚡", desc: "Ambient diagonal light sweep across hero" },
+            ].map((eff) => {
+              const isChecked = Boolean(bgAnim.effects?.[eff.id]);
+              return (
+                <button
+                  key={eff.id}
+                  type="button"
+                  onClick={() => handleToggleEffect(eff.id)}
+                  disabled={!bgAnim.enabled}
+                  className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
+                    isChecked && bgAnim.enabled
+                      ? "bg-indigo-50/70 border-indigo-400 ring-2 ring-indigo-400/20 text-slate-900 shadow-2xs"
+                      : "bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-base">{eff.icon}</span>
+                    <span
+                      className={`w-4 h-4 rounded flex items-center justify-center text-[10px] font-black transition ${
+                        isChecked && bgAnim.enabled
+                          ? "bg-indigo-600 text-white"
+                          : "border border-slate-300 bg-white"
+                      }`}
+                    >
+                      {isChecked && bgAnim.enabled ? "✔" : ""}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-xs font-black block leading-tight text-slate-900">
+                      {eff.label}
+                    </span>
+                    <span className="text-[10px] text-slate-500 line-clamp-1 block">
+                      {eff.desc}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Scope, Speed, Opacity, Density & Theme Auto-Match Controls */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-2 border-t border-slate-100">
+          {/* Scope Selector */}
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600 block">
+              Application Scope
+            </label>
+            <select
+              value={bgAnim.scope || "global"}
+              onChange={(e) => handleUpdateBgField("scope", e.target.value)}
+              disabled={!bgAnim.enabled}
+              className="w-full text-xs font-semibold px-2.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer disabled:opacity-50"
+            >
+              <option value="global">Global (All Pages)</option>
+              <option value="public-only">Public Portal Only</option>
+              <option value="admin-only">Admin Dashboard Only</option>
+            </select>
+          </div>
+
+          {/* Speed Selector */}
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600 block">
+              Animation Speed
+            </label>
+            <div className="grid grid-cols-3 gap-1">
+              {["slow", "normal", "fast"].map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => handleUpdateBgField("speed", s)}
+                  disabled={!bgAnim.enabled}
+                  className={`py-1.5 rounded-lg text-xs font-bold capitalize transition cursor-pointer border disabled:opacity-50 ${
+                    bgAnim.speed === s
+                      ? "bg-indigo-600 text-white border-indigo-600 shadow-2xs"
+                      : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Density Selector */}
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600 block">
+              Visual Density
+            </label>
+            <div className="grid grid-cols-3 gap-1">
+              {["low", "medium", "high"].map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => handleUpdateBgField("density", d)}
+                  disabled={!bgAnim.enabled}
+                  className={`py-1.5 rounded-lg text-xs font-bold capitalize transition cursor-pointer border disabled:opacity-50 ${
+                    bgAnim.density === d
+                      ? "bg-indigo-600 text-white border-indigo-600 shadow-2xs"
+                      : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Opacity Slider */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600 block">
+                Opacity
+              </label>
+              <span className="text-xs font-mono font-bold text-slate-700">
+                {Math.round((bgAnim.opacity ?? 0.6) * 100)}%
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0.1"
+              max="1"
+              step="0.05"
+              value={bgAnim.opacity ?? 0.6}
+              onChange={(e) => handleUpdateBgField("opacity", parseFloat(e.target.value))}
+              disabled={!bgAnim.enabled}
+              className="w-full accent-indigo-600 cursor-pointer disabled:opacity-50 h-2 bg-slate-200 rounded-lg mt-2"
+            />
+          </div>
+        </div>
+
+        {/* Theme Colour Auto-Match & Manual Colour Overrides */}
+        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <input
+              type="checkbox"
+              id="fzn-auto-match-theme"
+              checked={bgAnim.autoMatchTheme !== false}
+              onChange={(e) => handleUpdateBgField("autoMatchTheme", e.target.checked)}
+              disabled={!bgAnim.enabled}
+              className="w-4 h-4 rounded text-indigo-600 accent-indigo-600 cursor-pointer disabled:opacity-50"
+            />
+            <label htmlFor="fzn-auto-match-theme" className="cursor-pointer text-xs font-bold text-slate-900 select-none">
+              Auto-match colours from active theme ({selectedTheme.name})
+              <span className="block text-[10px] font-normal text-slate-500">
+                Dynamically blends with CSS tokens (--heritage-action, --heritage-accent) across all 12 themes instantly.
+              </span>
+            </label>
+          </div>
+
+          {/* Manual Color Override (If Auto-Match is OFF) */}
+          {bgAnim.autoMatchTheme === false && (
+            <div className="flex items-center gap-2 shrink-0 animate-in fade-in duration-200">
+              <span className="text-[11px] font-bold text-slate-600">Manual Override:</span>
+              <input
+                type="color"
+                value={bgAnim.customColor || "#A83D32"}
+                onChange={(e) => handleUpdateBgField("customColor", e.target.value)}
+                disabled={!bgAnim.enabled}
+                className="w-8 h-8 rounded-lg cursor-pointer border border-slate-300 p-0.5 bg-white"
+                title="Choose custom animation color"
+              />
+              <input
+                type="text"
+                value={bgAnim.customColor || ""}
+                placeholder="#A83D32"
+                onChange={(e) => handleUpdateBgField("customColor", e.target.value)}
+                disabled={!bgAnim.enabled}
+                className="w-24 px-2 py-1 text-xs font-mono rounded-lg border border-slate-300 bg-white"
+              />
+            </div>
+          )}
         </div>
       </div>
 

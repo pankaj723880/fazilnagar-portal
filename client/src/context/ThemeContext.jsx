@@ -5,10 +5,31 @@ import API from "../api";
 import { getAuthToken, isUserAdmin } from "../utils/authStorage";
 import { THEMES, getThemeById, DEFAULT_THEME_ID, DEFAULT_THEME_MODE } from "../constants/themes";
 
+export const DEFAULT_BG_ANIMATIONS = {
+  enabled: true,
+  scope: "global", // 'global' | 'public-only' | 'admin-only'
+  speed: "normal", // 'slow' | 'normal' | 'fast'
+  opacity: 0.6,
+  density: "medium", // 'low' | 'medium' | 'high'
+  autoMatchTheme: true,
+  customColor: "",
+  effects: {
+    orbs: true,
+    aurora: true,
+    ribbons: false,
+    grid: true,
+    orbitalRings: false,
+    sparkles: false,
+    cardBorders: false,
+    heroShimmer: true,
+  },
+};
+
 const ThemeContext = createContext({
   theme: "light",
   themeId: DEFAULT_THEME_ID,
   mode: "light",
+  bgAnimations: DEFAULT_BG_ANIMATIONS,
   toggleTheme: () => {},
   setTheme: () => {},
   applyAdminTheme: async () => {},
@@ -53,6 +74,7 @@ export function ThemeProvider({ children }) {
           return {
             themeId: parsed.themeId,
             mode: initialMode || (parsed.mode === "dark" ? "dark" : "light"),
+            bgAnimations: parsed.bgAnimations || DEFAULT_BG_ANIMATIONS,
           };
         }
       }
@@ -60,11 +82,13 @@ export function ThemeProvider({ children }) {
       return {
         themeId: DEFAULT_THEME_ID,
         mode: initialMode || DEFAULT_THEME_MODE,
+        bgAnimations: DEFAULT_BG_ANIMATIONS,
       };
     } catch {
       return {
         themeId: DEFAULT_THEME_ID,
         mode: DEFAULT_THEME_MODE,
+        bgAnimations: DEFAULT_BG_ANIMATIONS,
       };
     }
   });
@@ -146,6 +170,26 @@ export function ThemeProvider({ children }) {
       root.style.setProperty("--civic-border", palette.border);
       root.style.setProperty("--civic-accent", palette.action);
     }
+
+    // Configure background animations system tokens
+    const anim = cfg?.bgAnimations || DEFAULT_BG_ANIMATIONS;
+    const speedFactor = anim.speed === "slow" ? "1.8" : anim.speed === "fast" ? "0.6" : "1.0";
+    root.style.setProperty("--fzn-anim-speed-factor", speedFactor);
+    root.style.setProperty("--fzn-anim-opacity", String(anim.opacity ?? 0.6));
+
+    if (!anim.autoMatchTheme && anim.customColor) {
+      root.style.setProperty("--fzn-anim-color-primary", anim.customColor);
+      root.style.setProperty("--fzn-anim-color-accent", anim.customColor);
+    } else {
+      root.style.removeProperty("--fzn-anim-color-primary");
+      root.style.removeProperty("--fzn-anim-color-accent");
+    }
+
+    if (anim.enabled && anim.effects?.cardBorders) {
+      root.classList.add("fzn-card-glow-active");
+    } else {
+      root.classList.remove("fzn-card-glow-active");
+    }
   }, []);
 
   // Fetch the active admin-configured global theme from backend on launch
@@ -166,6 +210,7 @@ export function ThemeProvider({ children }) {
           const mergedConfig = {
             themeId: serverThemeId,
             mode: effectiveMode,
+            bgAnimations: serverConfig.bgAnimations || DEFAULT_BG_ANIMATIONS,
           };
 
           setThemeConfig(mergedConfig);
@@ -174,7 +219,11 @@ export function ThemeProvider({ children }) {
           try {
             localStorage.setItem(
               GLOBAL_THEME_STORAGE_KEY,
-              JSON.stringify({ themeId: serverThemeId, mode: serverDefaultMode })
+              JSON.stringify({
+                themeId: serverThemeId,
+                mode: serverDefaultMode,
+                bgAnimations: serverConfig.bgAnimations || DEFAULT_BG_ANIMATIONS,
+              })
             );
           } catch {}
         }
@@ -199,6 +248,7 @@ export function ThemeProvider({ children }) {
       const previewCfg = {
         themeId: cfg.themeId || themeConfig.themeId,
         mode: cfg.mode === "dark" ? "dark" : "light",
+        bgAnimations: cfg.bgAnimations !== undefined ? cfg.bgAnimations : (themeConfig.bgAnimations || DEFAULT_BG_ANIMATIONS),
       };
       setThemeConfig(previewCfg);
       applyThemeToDOM(previewCfg);
@@ -222,6 +272,7 @@ export function ThemeProvider({ children }) {
       const payload = {
         themeId: newConfig.themeId,
         mode: newConfig.mode === "dark" ? "dark" : "light",
+        bgAnimations: newConfig.bgAnimations !== undefined ? newConfig.bgAnimations : (themeConfig.bgAnimations || DEFAULT_BG_ANIMATIONS),
       };
 
       const res = await API.put("/settings/theme", payload, {
@@ -232,6 +283,7 @@ export function ThemeProvider({ children }) {
         const updated = {
           themeId: res.data.themeConfig.themeId,
           mode: res.data.themeConfig.mode,
+          bgAnimations: res.data.themeConfig.bgAnimations || payload.bgAnimations,
         };
         setThemeConfig(updated);
         applyThemeToDOM(updated);
@@ -247,7 +299,7 @@ export function ThemeProvider({ children }) {
         throw new Error(res.data?.message || "Failed to update global theme");
       }
     },
-    [applyThemeToDOM]
+    [themeConfig, applyThemeToDOM]
   );
 
   // Universal Light/Dark mode toggle (Available to ALL users: visitors, citizens, and admins)
@@ -315,6 +367,7 @@ export function ThemeProvider({ children }) {
             const next = {
               themeId: e.data.config.themeId || DEFAULT_THEME_ID,
               mode: e.data.config.mode === "dark" ? "dark" : "light",
+              bgAnimations: e.data.config.bgAnimations || DEFAULT_BG_ANIMATIONS,
             };
             setThemeConfig(next);
             applyThemeToDOM(next);
@@ -328,6 +381,7 @@ export function ThemeProvider({ children }) {
         const next = {
           themeId: e.detail.themeId || DEFAULT_THEME_ID,
           mode: e.detail.mode === "dark" ? "dark" : "light",
+          bgAnimations: e.detail.bgAnimations || DEFAULT_BG_ANIMATIONS,
         };
         setThemeConfig(next);
         applyThemeToDOM(next);
@@ -343,6 +397,7 @@ export function ThemeProvider({ children }) {
             const next = {
               themeId: parsed.themeId,
               mode: parsed.mode === "dark" ? "dark" : "light",
+              bgAnimations: parsed.bgAnimations || DEFAULT_BG_ANIMATIONS,
             };
             setThemeConfig(next);
             applyThemeToDOM(next);
@@ -365,6 +420,7 @@ export function ThemeProvider({ children }) {
       themeId: themeConfig.themeId,
       mode: themeConfig.mode,
       rawTheme: themeConfig.mode,
+      bgAnimations: themeConfig.bgAnimations || DEFAULT_BG_ANIMATIONS,
       toggleTheme,
       setTheme,
       applyAdminTheme,

@@ -92,6 +92,7 @@ describe("Theme System — Strict Admin-Only Theme Controls & 12 Theme Integrity
       { key: "primary_settings" },
       { $set: { "themeConfig.themeId": "heritage-terracotta", "themeConfig.mode": "light" } }
     );
+    await mongoose.disconnect();
   });
 
   function makeRequest(method, reqPath, body = null, token = null) {
@@ -284,5 +285,65 @@ describe("Theme System — Strict Admin-Only Theme Controls & 12 Theme Integrity
     assert.strictEqual(resetRes.status, 200);
     assert.strictEqual(resetRes.data?.themeConfig?.themeId, "heritage-terracotta");
     assert.strictEqual(resetRes.data?.themeConfig?.mode, "light");
+  });
+
+  // 11. Ambient Background & Motion Architecture: Multi-effect persistence
+  it("PUT /api/settings/theme persists bgAnimations with multiple effects enabled simultaneously", async () => {
+    const bgPayload = {
+      themeId: "kashi-copper",
+      mode: "dark",
+      bgAnimations: {
+        enabled: true,
+        scope: "global",
+        speed: "fast",
+        opacity: 0.85,
+        density: "high",
+        autoMatchTheme: true,
+        customColor: "#FF5722",
+        effects: {
+          orbs: true,
+          aurora: true,
+          ribbons: true,
+          grid: true,
+          orbitalRings: true,
+          sparkles: true,
+          cardBorders: true,
+          heroShimmer: true,
+        },
+      },
+    };
+
+    const updateRes = await makeRequest(
+      "PUT",
+      "/api/settings/theme",
+      bgPayload,
+      adminToken
+    );
+    assert.strictEqual(updateRes.status, 200);
+    assert.strictEqual(updateRes.data?.success, true);
+    assert.strictEqual(updateRes.data?.themeConfig?.bgAnimations?.enabled, true);
+    assert.strictEqual(updateRes.data?.themeConfig?.bgAnimations?.speed, "fast");
+    assert.strictEqual(updateRes.data?.themeConfig?.bgAnimations?.density, "high");
+    assert.strictEqual(updateRes.data?.themeConfig?.bgAnimations?.effects?.orbs, true);
+    assert.strictEqual(updateRes.data?.themeConfig?.bgAnimations?.effects?.aurora, true);
+    assert.strictEqual(updateRes.data?.themeConfig?.bgAnimations?.effects?.ribbons, true);
+    assert.strictEqual(updateRes.data?.themeConfig?.bgAnimations?.effects?.grid, true);
+    assert.strictEqual(updateRes.data?.themeConfig?.bgAnimations?.effects?.orbitalRings, true);
+    assert.strictEqual(updateRes.data?.themeConfig?.bgAnimations?.effects?.sparkles, true);
+    assert.strictEqual(updateRes.data?.themeConfig?.bgAnimations?.effects?.cardBorders, true);
+    assert.strictEqual(updateRes.data?.themeConfig?.bgAnimations?.effects?.heroShimmer, true);
+
+    // Verify DB direct persistence
+    const dbRecord = await SiteSettings.findOne({ key: "primary_settings" });
+    assert.strictEqual(dbRecord.themeConfig.bgAnimations.enabled, true);
+    assert.strictEqual(dbRecord.themeConfig.bgAnimations.speed, "fast");
+    assert.strictEqual(dbRecord.themeConfig.bgAnimations.effects.ribbons, true);
+
+    // Verify public GET /api/settings returns persisted bgAnimations
+    const publicRes = await makeRequest("GET", "/api/settings");
+    assert.strictEqual(publicRes.status, 200);
+    assert.strictEqual(publicRes.data?.settings?.themeConfig?.bgAnimations?.enabled, true);
+    assert.strictEqual(publicRes.data?.settings?.themeConfig?.bgAnimations?.effects?.aurora, true);
+    assert.strictEqual(publicRes.data?.settings?.themeConfig?.bgAnimations?.effects?.grid, true);
   });
 });

@@ -259,14 +259,29 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
     }
 
     if (updateData.themeConfig && typeof updateData.themeConfig === "object") {
-      const { themeId, mode } = updateData.themeConfig;
+      const { themeId, mode, bgAnimations } = updateData.themeConfig;
       const targetThemeId = ALLOWED_THEME_IDS.includes(themeId)
         ? themeId
         : settings.themeConfig?.themeId || "heritage-terracotta";
       const targetMode = mode === "dark" || mode === "light" ? mode : settings.themeConfig?.mode || "light";
+      const existingBg = settings.themeConfig?.bgAnimations
+        ? (settings.themeConfig.bgAnimations.toObject ? settings.themeConfig.bgAnimations.toObject() : settings.themeConfig.bgAnimations)
+        : {};
+      const mergedBg = bgAnimations && typeof bgAnimations === "object"
+        ? {
+            ...existingBg,
+            ...bgAnimations,
+            effects: {
+              ...(existingBg.effects || {}),
+              ...(bgAnimations.effects || {}),
+            },
+          }
+        : existingBg;
+
       settings.themeConfig = {
         themeId: targetThemeId,
         mode: targetMode,
+        bgAnimations: mergedBg,
       };
     }
 
@@ -406,7 +421,7 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
 // @access  Private (Admin)
 router.put("/theme", verifyToken, requireAdmin, async (req, res) => {
   try {
-    const { themeId, mode } = req.body;
+    const { themeId, mode, bgAnimations } = req.body;
     if (!themeId || !ALLOWED_THEME_IDS.includes(themeId)) {
       return res.status(400).json({
         success: false,
@@ -421,7 +436,25 @@ router.put("/theme", verifyToken, requireAdmin, async (req, res) => {
     }
 
     const settings = await getOrCreateSettings();
-    settings.themeConfig = { themeId, mode };
+    const existingBg = settings.themeConfig?.bgAnimations
+      ? (settings.themeConfig.bgAnimations.toObject ? settings.themeConfig.bgAnimations.toObject() : settings.themeConfig.bgAnimations)
+      : {};
+    const mergedBgAnimations = bgAnimations && typeof bgAnimations === "object"
+      ? {
+          ...existingBg,
+          ...bgAnimations,
+          effects: {
+            ...(existingBg.effects || {}),
+            ...(bgAnimations.effects || {}),
+          },
+        }
+      : existingBg;
+
+    settings.themeConfig = {
+      themeId,
+      mode,
+      bgAnimations: mergedBgAnimations,
+    };
     settings.markModified("themeConfig");
     await settings.save();
 

@@ -36,6 +36,29 @@ export const ALLOWED_THEME_IDS = [
   "nirvana-monolith",
 ];
 
+const bgAnimationsSchema = new mongoose.Schema(
+  {
+    enabled: { type: Boolean, default: true },
+    scope: { type: String, enum: ["global", "public-only", "admin-only"], default: "global" },
+    speed: { type: String, enum: ["slow", "normal", "fast"], default: "normal" },
+    opacity: { type: Number, default: 0.6, min: 0.1, max: 1 },
+    density: { type: String, enum: ["low", "medium", "high"], default: "medium" },
+    autoMatchTheme: { type: Boolean, default: true },
+    customColor: { type: String, default: "" },
+    effects: {
+      orbs: { type: Boolean, default: true },
+      aurora: { type: Boolean, default: true },
+      ribbons: { type: Boolean, default: false },
+      grid: { type: Boolean, default: true },
+      orbitalRings: { type: Boolean, default: false },
+      sparkles: { type: Boolean, default: false },
+      cardBorders: { type: Boolean, default: false },
+      heroShimmer: { type: Boolean, default: true },
+    },
+  },
+  { _id: false }
+);
+
 const themeConfigSchema = new mongoose.Schema({
   themeId: {
     type: String,
@@ -46,6 +69,28 @@ const themeConfigSchema = new mongoose.Schema({
     type: String,
     enum: ["light", "dark"],
     default: "light",
+  },
+  bgAnimations: {
+    type: bgAnimationsSchema,
+    default: () => ({
+      enabled: true,
+      scope: "global",
+      speed: "normal",
+      opacity: 0.6,
+      density: "medium",
+      autoMatchTheme: true,
+      customColor: "",
+      effects: {
+        orbs: true,
+        aurora: true,
+        ribbons: false,
+        grid: true,
+        orbitalRings: false,
+        sparkles: false,
+        cardBorders: false,
+        heroShimmer: true,
+      },
+    }),
   },
 });
 
