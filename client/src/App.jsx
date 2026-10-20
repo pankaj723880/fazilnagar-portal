@@ -36,6 +36,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 import AdminRoute from "./components/AdminRoute";
 import RequireMessagingAuth from "./components/RequireMessagingAuth";
 import InstallButton from "./components/InstallButton";
+import ThemeToggle from "./components/ThemeToggle";
 import { useTheme } from "./context/ThemeContext";
 import EditProfileModal from "./components/EditProfileModal";
 import SplashScreen from "./components/SplashScreen";
@@ -300,11 +301,11 @@ export default function App() {
     <div
       id="public-portal-root"
       data-public-theme={isAdminPage ? undefined : (isDark ? "dark" : "light")}
-      className={`min-h-screen w-full max-w-full overflow-x-hidden flex flex-col font-sans transition-colors duration-200 ${
-        !isAdminPage && isDark
-          ? "bg-[#191916] text-[#F5F0E7] selection:bg-[#C45A4C] selection:text-white"
-          : "bg-[#F7F3EB] text-[#292722] selection:bg-[#A83D32] selection:text-white"
-      }`}
+      className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col font-sans transition-colors duration-200"
+      style={{
+        backgroundColor: "var(--background-primary)",
+        color: "var(--text-primary)",
+      }}
     >
       {/* Native App-Style Ultra-Premium Splash Screen (Fast, responsive 1.4s reveal) */}
       {showSplash && (
@@ -322,9 +323,20 @@ export default function App() {
       {/* ========================================================
           PERMANENT FIXED TOP SHELL (Desktop / Non-Portal Pages)
           ======================================================== */}
-      <header className={`fixed top-0 left-0 right-0 z-50 bg-[#F7F3EB] dark:bg-[#191916] shadow-xs ${isAdminPage || hideLayoutOnAreaDetails ? "hidden" : isPortalPage || isMobilePreview ? "hidden md:block" : ""}`}>
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 shadow-xs ${isAdminPage || hideLayoutOnAreaDetails ? "hidden" : isPortalPage || isMobilePreview ? "hidden md:block" : ""}`}
+        style={{
+          backgroundColor: "var(--background-primary)",
+        }}
+      >
         {/* Main Header & Navigation */}
-        <div className="bg-[#FFFFFF]/95 dark:bg-[#24231F]/95 backdrop-blur-md border-b border-[#DED5C7] dark:border-[#484238]">
+        <div
+          className="backdrop-blur-md border-b"
+          style={{
+            backgroundColor: "color-mix(in srgb, var(--surface-card) 95%, transparent)",
+            borderColor: "var(--border-color)",
+          }}
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 flex items-center justify-between h-16 gap-4">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
@@ -391,6 +403,9 @@ export default function App() {
               <Suspense fallback={<div className="w-11 h-11 shrink-0" />}>
                 <NotificationCenter />
               </Suspense>
+
+              {/* Universal Light/Dark Theme Switcher */}
+              <ThemeToggle />
 
               {/* Messages / नगर संवाद */}
               <Link
@@ -471,8 +486,10 @@ export default function App() {
               )}
             </div>
 
-            {/* Mobile Actions: Notification Bell + Messages + Add Story + User/Profile */}
+            {/* Mobile Actions: Theme Toggle + Notification Bell + Messages + Add Story + User/Profile */}
             <div className="flex sm:hidden items-center gap-1.5">
+              <ThemeToggle compact={true} />
+
               <Suspense fallback={<div className="w-9 h-9 shrink-0" />}>
                 <NotificationCenter />
               </Suspense>
@@ -938,6 +955,14 @@ export default function App() {
                   <span>📱</span> Install on Device
                 </span>
                 <InstallButton compact={false} />
+              </div>
+
+              {/* Theme Mode Toggle (Light/Dark Mode for all users) */}
+              <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between shadow-2xs">
+                <span className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
+                  <span>🌓</span> Theme Mode / थीम मोड
+                </span>
+                <ThemeToggle compact={true} />
               </div>
 
               {/* 4.2 Grid layout 1: CORE NAVIGATION */}

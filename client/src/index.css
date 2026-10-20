@@ -93,8 +93,8 @@
     overscroll-behavior-x: none;
     -webkit-tap-highlight-color: transparent;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #F7F3EB;
-    color: #292722;
+    background-color: var(--background-primary, #F7F3EB);
+    color: var(--text-primary, #292722);
   }
 
   #root {
@@ -778,7 +778,7 @@ html[data-public-theme="light"] p:not([class*="from-slate-900"] *):not([class*="
   color: var(--text-secondary);
 }
 
-/* Primary Surfaces & Cards (Light: #FFFFFF, borders: #DED5C7) */
+/* Primary Surfaces & Cards (Uses theme variables for all 12 themes) */
 html[data-public-theme="light"] .civic-card,
 html[data-public-theme="light"] .bg-white,
 html[data-public-theme="light"] .bg-\[\#FFFFFF\],
@@ -786,17 +786,17 @@ html[data-public-theme="light"] .bg-\[\#ffffff\],
 html[data-public-theme="light"] .bg-pure-white,
 html[data-public-theme="light"] [role="dialog"] .bg-white,
 html[data-public-theme="light"] .modal-content {
-  background-color: #FFFFFF !important;
-  border-color: #DED5C7 !important;
-  color: #292722;
+  background-color: var(--surface-card, #FFFFFF) !important;
+  border-color: var(--border-color, #DED5C7) !important;
+  color: var(--text-primary, #292722);
 }
 
 html[data-public-theme="light"] .civic-card:hover {
-  border-color: #C5BBAA !important;
+  border-color: var(--border-color, #C5BBAA) !important;
   box-shadow: 0 4px 18px 0 rgba(41, 39, 34, 0.08) !important;
 }
 
-/* Secondary Surfaces & Sections (Light: #EEE7DA) */
+/* Secondary Surfaces & Sections (Uses theme secondary surface) */
 html[data-public-theme="light"] .bg-slate-50,
 html[data-public-theme="light"] .bg-slate-100,
 html[data-public-theme="light"] .bg-slate-200,
@@ -806,11 +806,11 @@ html[data-public-theme="light"] .bg-soft-white,
 html[data-public-theme="light"] .bg-slate-50\/80,
 html[data-public-theme="light"] .bg-slate-50\/70,
 html[data-public-theme="light"] .bg-slate-100\/80 {
-  background-color: #EEE7DA !important;
-  border-color: #DED5C7 !important;
+  background-color: var(--background-secondary, #EEE7DA) !important;
+  border-color: var(--border-color, #DED5C7) !important;
 }
 
-/* Primary Text (Light: #292722 - Warm Editorial Charcoal) */
+/* Primary Text (Theme-Aware Primary Text) */
 html[data-public-theme="light"] .text-slate-900:not([class*="from-slate-900"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#18232E]"] *):not([class*="bg-[#0D5E49]"] *):not(.btn-civic-primary *),
 html[data-public-theme="light"] .text-slate-800:not([class*="from-slate-900"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#18232E]"] *):not([class*="bg-[#0D5E49]"] *):not(.btn-civic-primary *),
 html[data-public-theme="light"] .text-slate-700:not([class*="from-slate-900"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#18232E]"] *):not([class*="bg-[#0D5E49]"] *):not(.btn-civic-primary *),
@@ -818,17 +818,17 @@ html[data-public-theme="light"] .text-\[\#0F172A\]:not([class*="from-slate-900"]
 html[data-public-theme="light"] .text-\[\#18232E\]:not([class*="from-slate-900"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#18232E]"] *):not([class*="bg-[#0D5E49]"] *):not(.btn-civic-primary *),
 html[data-public-theme="light"] .text-\[\#111827\]:not([class*="from-slate-900"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#18232E]"] *):not([class*="bg-[#0D5E49]"] *):not(.btn-civic-primary *),
 html[data-public-theme="light"] .text-deep-slate:not([class*="from-slate-900"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#18232E]"] *):not([class*="bg-[#0D5E49]"] *):not(.btn-civic-primary *) {
-  color: #292722 !important;
+  color: var(--text-primary, #292722) !important;
 }
 
-/* Secondary Text (Light: #524E47 - Warm Editorial Sand with WCAG AA > 7:1) */
+/* Secondary Text (Theme-Aware Secondary Text with WCAG AA > 7:1) */
 html[data-public-theme="light"] .text-slate-600:not([class*="from-slate-900"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#18232E]"] *):not([class*="bg-[#0D5E49]"] *):not(.btn-civic-primary *),
 html[data-public-theme="light"] .text-slate-500:not([class*="from-slate-900"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#18232E]"] *):not([class*="bg-[#0D5E49]"] *):not(.btn-civic-primary *),
 html[data-public-theme="light"] .text-slate-400:not([class*="from-slate-900"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#18232E]"] *):not([class*="bg-[#0D5E49]"] *):not(.btn-civic-primary *),
 html[data-public-theme="light"] .text-\[\#647180\]:not([class*="from-slate-900"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#18232E]"] *):not([class*="bg-[#0D5E49]"] *):not(.btn-civic-primary *),
 html[data-public-theme="light"] .text-\[\#64748B\]:not([class*="from-slate-900"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#18232E]"] *):not([class*="bg-[#0D5E49]"] *):not(.btn-civic-primary *),
 html[data-public-theme="light"] .text-secondary {
-  color: #524E47 !important;
+  color: var(--text-secondary, #524E47) !important;
 }
 
 /* Ensure Hero Sections, Header Banners & High-Contrast Buttons Preserve Crisp White & Ivory Text */
@@ -874,7 +874,7 @@ html[data-public-theme="light"] #hero-section .hero-location-badge span * {
   color: #FFFFFF !important;
 }
 
-/* Borders (Light: #DED5C7) */
+/* Borders (Theme-Aware) */
 html[data-public-theme="light"] .border-slate-100,
 html[data-public-theme="light"] .border-slate-200,
 html[data-public-theme="light"] .border-slate-300,
@@ -885,56 +885,56 @@ html[data-public-theme="light"] .border-slate-200\/60,
 html[data-public-theme="light"] .border-\[\#E1E6EA\],
 html[data-public-theme="light"] .border-\[\#E5E7EB\],
 html[data-public-theme="light"] .border-civic {
-  border-color: #DED5C7 !important;
+  border-color: var(--border-color, #DED5C7) !important;
 }
 
 html[data-public-theme="light"] .divide-slate-100 > * + *,
 html[data-public-theme="light"] .divide-slate-200 > * + * {
-  border-color: #DED5C7 !important;
+  border-color: var(--border-color, #DED5C7) !important;
 }
 
-/* Public Primary Terracotta Buttons & Actions (Light: #A83D32, hover #873027) */
+/* Public Primary Action Buttons (Theme-Aware Action Colors) */
 html[data-public-theme="light"] .btn-civic-primary,
 html[data-public-theme="light"] .bg-crimson,
 html[data-public-theme="light"] .bg-\[\#B8323C\],
 html[data-public-theme="light"] [class*="bg-red-700"]:not(.bg-red-50):not(.bg-red-100) {
-  background-color: #A83D32 !important;
+  background-color: var(--heritage-action, #A83D32) !important;
   color: #FFFFFF !important;
-  border-color: #A83D32 !important;
+  border-color: var(--heritage-action, #A83D32) !important;
 }
 
 html[data-public-theme="light"] .btn-civic-primary:hover,
 html[data-public-theme="light"] .bg-crimson:hover,
 html[data-public-theme="light"] .bg-\[\#B8323C\]:hover,
 html[data-public-theme="light"] [class*="bg-red-700"]:hover {
-  background-color: #873027 !important;
-  border-color: #873027 !important;
+  background-color: var(--heritage-action-hover, #873027) !important;
+  border-color: var(--heritage-action-hover, #873027) !important;
 }
 
 html[data-public-theme="light"] .text-crimson,
 html[data-public-theme="light"] .text-\[\#B8323C\],
 html[data-public-theme="light"] [class*="text-red-700"] {
-  color: #A83D32 !important;
+  color: var(--heritage-action, #A83D32) !important;
 }
 
 html[data-public-theme="light"] .border-crimson,
 html[data-public-theme="light"] .border-\[\#B8323C\] {
-  border-color: #A83D32 !important;
+  border-color: var(--heritage-action, #A83D32) !important;
 }
 
-/* Secondary Button (Light: #EEE7DA, hover: #E2D9CA, text: #292722) */
+/* Secondary Button */
 html[data-public-theme="light"] .btn-civic-secondary {
-  background-color: #EEE7DA !important;
-  border-color: #DED5C7 !important;
-  color: #292722 !important;
+  background-color: var(--background-secondary, #EEE7DA) !important;
+  border-color: var(--border-color, #DED5C7) !important;
+  color: var(--text-primary, #292722) !important;
 }
 
 html[data-public-theme="light"] .btn-civic-secondary:hover {
-  background-color: #E2D9CA !important;
-  color: #292722 !important;
+  background-color: var(--background-secondary, #E2D9CA) !important;
+  color: var(--text-primary, #292722) !important;
 }
 
-/* Inputs, Textareas, Selects (Light: bg #FFFFFF, border #DED5C7, text #292722) */
+/* Inputs, Textareas, Selects (Theme-Aware Input Surface) */
 html[data-public-theme="light"] .civic-input,
 html[data-public-theme="light"] input[type="text"],
 html[data-public-theme="light"] input[type="search"],
@@ -943,9 +943,9 @@ html[data-public-theme="light"] input[type="email"],
 html[data-public-theme="light"] input[type="password"],
 html[data-public-theme="light"] select,
 html[data-public-theme="light"] textarea {
-  background-color: #FFFFFF !important;
-  color: #292722 !important;
-  border-color: #DED5C7 !important;
+  background-color: var(--surface-input, #FFFFFF) !important;
+  color: var(--text-primary, #292722) !important;
+  border-color: var(--border-color, #DED5C7) !important;
 }
 
 html[data-public-theme="light"] input::placeholder,
@@ -960,13 +960,13 @@ html[data-public-theme="light"] input:focus,
 html[data-public-theme="light"] select:focus,
 html[data-public-theme="light"] textarea:focus,
 html[data-public-theme="light"] .civic-input:focus {
-  border-color: #A83D32 !important;
+  border-color: var(--focus-ring, #A83D32) !important;
   box-shadow: 0 0 0 3px rgba(168, 61, 50, 0.15) !important;
 }
 
 html[data-public-theme="light"] option {
-  background-color: #FFFFFF;
-  color: #292722;
+  background-color: var(--surface-card, #FFFFFF);
+  color: var(--text-primary, #292722);
 }
 
 /* Keyboard Focus Rings in Light Mode */
@@ -976,7 +976,7 @@ html[data-public-theme="light"] a:focus-visible,
 html[data-public-theme="light"] input:focus-visible,
 html[data-public-theme="light"] select:focus-visible,
 html[data-public-theme="light"] textarea:focus-visible {
-  outline: 2px solid #A83D32 !important;
+  outline: 2px solid var(--focus-ring, #A83D32) !important;
   outline-offset: 2px !important;
 }
 
@@ -1277,6 +1277,7 @@ html[data-public-theme="dark"] p {
 }
 
 /* Public Primary Surfaces & Cards (Dark: #24231F, borders: #484238) */
+/* Public Primary Surfaces & Cards (Theme-Aware for all 12 themes) */
 html[data-public-theme="dark"] .civic-card,
 html[data-public-theme="dark"] .bg-white,
 html[data-public-theme="dark"] .bg-\[\#FFFFFF\],
@@ -1287,12 +1288,12 @@ html[data-public-theme="dark"] .bg-white\/90,
 html[data-public-theme="dark"] .bg-white\/80,
 html[data-public-theme="dark"] [role="dialog"] .bg-white,
 html[data-public-theme="dark"] .modal-content {
-  background-color: #24231F !important;
-  border-color: #484238 !important;
-  color: #F5F0E7;
+  background-color: var(--surface-card, #24231F) !important;
+  border-color: var(--border-color, #484238) !important;
+  color: var(--text-primary, #F5F0E7);
 }
 
-/* Public Secondary Surfaces & Backgrounds (Dark: #302D27) */
+/* Public Secondary Surfaces & Backgrounds (Theme-Aware) */
 html[data-public-theme="dark"] .bg-slate-50,
 html[data-public-theme="dark"] .bg-slate-100,
 html[data-public-theme="dark"] .bg-slate-200,
@@ -1302,29 +1303,29 @@ html[data-public-theme="dark"] .bg-soft-white,
 html[data-public-theme="dark"] .bg-slate-50\/80,
 html[data-public-theme="dark"] .bg-slate-50\/70,
 html[data-public-theme="dark"] .bg-slate-100\/80 {
-  background-color: #302D27 !important;
-  border-color: #484238 !important;
+  background-color: var(--background-secondary, #302D27) !important;
+  border-color: var(--border-color, #484238) !important;
 }
 
-/* Secondary Button & Dark Surfaces (Dark: #302D27, border: #484238) */
+/* Secondary Button & Dark Surfaces (Theme-Aware) */
 html[data-public-theme="dark"] .btn-civic-secondary,
 html[data-public-theme="dark"] .bg-deep-slate {
-  background-color: #302D27 !important;
-  border-color: #484238 !important;
-  color: #F5F0E7 !important;
+  background-color: var(--background-secondary, #302D27) !important;
+  border-color: var(--border-color, #484238) !important;
+  color: var(--text-primary, #F5F0E7) !important;
 }
 
 html[data-public-theme="dark"] .btn-civic-secondary:hover {
-  background-color: #3D3932 !important;
+  background-color: var(--background-secondary, #3D3932) !important;
 }
 
 /* Card hover glow and subtle border in dark mode */
 html[data-public-theme="dark"] .civic-card:hover {
-  border-color: #5E564A !important;
+  border-color: var(--border-color, #5E564A) !important;
   box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.6) !important;
 }
 
-/* Primary Text (Dark: #F5F0E7 - Crisp Warm Ivory) */
+/* Primary Text (Dark: Theme-Aware Crisp Light Tone) */
 html[data-public-theme="dark"] .text-slate-900,
 html[data-public-theme="dark"] .text-slate-950,
 html[data-public-theme="dark"] .text-slate-800,
@@ -1341,7 +1342,7 @@ html[data-public-theme="dark"] .text-deep-slate {
   color: var(--text-primary, #F5F0E7) !important;
 }
 
-/* Secondary Text (Dark: #D4CDC1 - Sandstone Sand with WCAG AA > 8.5:1) */
+/* Secondary Text (Dark: Theme-Aware Secondary Tone with WCAG AA > 8.5:1) */
 html[data-public-theme="dark"] .text-slate-600,
 html[data-public-theme="dark"] .text-slate-500,
 html[data-public-theme="dark"] .text-slate-300,
@@ -1358,7 +1359,7 @@ html[data-public-theme="dark"] .text-gray-400 {
   color: var(--text-muted, #B3ABA0) !important;
 }
 
-/* Borders (Dark: #484238) */
+/* Borders (Dark: Theme-Aware) */
 html[data-public-theme="dark"] .border-slate-100,
 html[data-public-theme="dark"] .border-slate-200,
 html[data-public-theme="dark"] .border-slate-300,
@@ -1369,44 +1370,44 @@ html[data-public-theme="dark"] .border-slate-200\/60,
 html[data-public-theme="dark"] .border-\[\#E1E6EA\],
 html[data-public-theme="dark"] .border-\[\#E5E7EB\],
 html[data-public-theme="dark"] .border-civic {
-  border-color: #484238 !important;
+  border-color: var(--border-color, #484238) !important;
 }
 
 html[data-public-theme="dark"] .divide-slate-100 > * + *,
 html[data-public-theme="dark"] .divide-slate-200 > * + * {
-  border-color: #484238 !important;
+  border-color: var(--border-color, #484238) !important;
 }
 
-/* Public Primary Terracotta Buttons & Badges (Dark: #C45A4C, hover: #D36B5D) */
+/* Public Primary Action Buttons & Badges (Dark: Theme-Aware Action) */
 html[data-public-theme="dark"] .btn-civic-primary,
 html[data-public-theme="dark"] .bg-crimson,
 html[data-public-theme="dark"] .bg-\[\#B8323C\],
 html[data-public-theme="dark"] [class*="bg-red-700"]:not(.bg-red-50):not(.bg-red-100) {
-  background-color: #C45A4C !important;
+  background-color: var(--heritage-action, #C45A4C) !important;
   color: #FFFFFF !important;
-  border-color: #C45A4C !important;
+  border-color: var(--heritage-action, #C45A4C) !important;
 }
 
 html[data-public-theme="dark"] .btn-civic-primary:hover,
 html[data-public-theme="dark"] .bg-crimson:hover,
 html[data-public-theme="dark"] .bg-\[\#B8323C\]:hover,
 html[data-public-theme="dark"] [class*="bg-red-700"]:hover {
-  background-color: #D36B5D !important;
-  border-color: #D36B5D !important;
+  background-color: var(--heritage-action-hover, #D36B5D) !important;
+  border-color: var(--heritage-action-hover, #D36B5D) !important;
 }
 
 html[data-public-theme="dark"] .text-crimson,
 html[data-public-theme="dark"] .text-\[\#B8323C\],
 html[data-public-theme="dark"] [class*="text-red-700"] {
-  color: #C45A4C !important;
+  color: var(--heritage-action, #C45A4C) !important;
 }
 
 html[data-public-theme="dark"] .border-crimson,
 html[data-public-theme="dark"] .border-\[\#B8323C\] {
-  border-color: #C45A4C !important;
+  border-color: var(--heritage-action, #C45A4C) !important;
 }
 
-/* Inputs, Textareas, Selects & Elevated Surfaces (Dark: #302D27, border: #484238, text: #F5F0E7) */
+/* Inputs, Textareas, Selects & Elevated Surfaces (Dark: Theme-Aware Input Surface) */
 html[data-public-theme="dark"] .civic-input,
 html[data-public-theme="dark"] input[type="text"],
 html[data-public-theme="dark"] input[type="search"],
@@ -1415,9 +1416,9 @@ html[data-public-theme="dark"] input[type="email"],
 html[data-public-theme="dark"] input[type="password"],
 html[data-public-theme="dark"] select,
 html[data-public-theme="dark"] textarea {
-  background-color: #302D27 !important;
-  color: #F5F0E7 !important;
-  border-color: #484238 !important;
+  background-color: var(--surface-input, #302D27) !important;
+  color: var(--text-primary, #F5F0E7) !important;
+  border-color: var(--border-color, #484238) !important;
 }
 
 html[data-public-theme="dark"] input::placeholder,

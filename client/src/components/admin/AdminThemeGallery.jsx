@@ -50,6 +50,33 @@ export default function AdminThemeGallery({ onSaveSuccess }) {
     previewTheme({ themeId: selectedThemeId, mode });
   };
 
+  // Direct 1-click application of a specific theme from card
+  const handleApplySpecificTheme = async (themeId, targetMode) => {
+    const modeToUse = targetMode || selectedMode;
+    setSelectedThemeId(themeId);
+    if (targetMode) setSelectedMode(targetMode);
+    setSaving(true);
+    try {
+      await applyAdminTheme({
+        themeId,
+        mode: modeToUse,
+      });
+      const targetTheme = getThemeById(themeId);
+      showToast(
+        `Theme successfully applied to portal: "${targetTheme.name}" (${modeToUse.toUpperCase()} mode)!`,
+        "success"
+      );
+      if (onSaveSuccess) {
+        onSaveSuccess({ themeId, mode: modeToUse });
+      }
+    } catch (err) {
+      console.error("Failed to apply theme:", err);
+      showToast(err.message || "Failed to update theme.", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleReset = () => {
     setSelectedThemeId(activeThemeId);
     setSelectedMode(activeMode);
@@ -160,6 +187,17 @@ export default function AdminThemeGallery({ onSaveSuccess }) {
               <span>Reset</span>
             </button>
           )}
+
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95"
+            title="View public website in a new tab"
+          >
+            <span>Live Portal</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
 
           <button
             type="button"
@@ -522,20 +560,45 @@ export default function AdminThemeGallery({ onSaveSuccess }) {
                 </div>
               </div>
 
-              {/* Selection Status Button */}
-              <div className="pt-2 flex items-center justify-between">
+              {/* Selection Status & Direct Apply Button */}
+              <div className="pt-2 flex items-center justify-between gap-2 border-t border-slate-100">
                 <span className="text-[11px] font-bold text-slate-500">
-                  {isSelected ? "● Previewing in Admin" : "Click to Preview"}
+                  {isLive ? "✔ Active on Portal" : isSelected ? "● Previewing" : "Click to Preview"}
                 </span>
-                <span
-                  className={`text-xs font-bold px-3 py-1 rounded-xl transition ${
-                    isSelected
-                      ? "bg-[#A83D32] text-white"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleApplySpecificTheme(theme.id);
+                  }}
+                  disabled={saving}
+                  className={`text-xs font-bold px-3.5 py-1.5 rounded-xl transition cursor-pointer shadow-xs active:scale-95 disabled:opacity-50 flex items-center gap-1.5 ${
+                    isLive
+                      ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                      : isSelected
+                      ? "bg-[#A83D32] hover:bg-[#873027] text-white ring-2 ring-[#A83D32]/30"
+                      : "bg-slate-900 hover:bg-slate-800 text-white"
                   }`}
                 >
-                  {isSelected ? "Selected" : "Select"}
-                </span>
+                  {saving && selectedThemeId === theme.id ? (
+                    <>
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                      <span>Applying...</span>
+                    </>
+                  ) : isLive ? (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Active Theme</span>
+                    </>
+                  ) : isSelected ? (
+                    <>
+                      <Save className="w-3.5 h-3.5" />
+                      <span>Apply Theme</span>
+                    </>
+                  ) : (
+                    <span>Select &amp; Apply</span>
+                  )}
+                </button>
               </div>
             </div>
           );

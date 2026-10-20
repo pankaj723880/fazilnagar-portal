@@ -275,29 +275,53 @@ router.get("/status", async (req, res) => {
  */
 router.get("/inspect", async (req, res) => {
   try {
-    const { drive, accountEmail } = await getAuthenticatedDriveClient();
-    const folderInspection = await inspectMediaFolder(drive, "Fazilnagar Media");
+    const hasClientId = !!process.env.GOOGLE_CLIENT_ID;
+    const hasClientSecret = !!process.env.GOOGLE_CLIENT_SECRET;
+    const configured = hasClientId && hasClientSecret;
+
     const mongoMediaCount = await GoogleDriveMedia.countDocuments();
     const mongoMedia = await GoogleDriveMedia.find().sort({ createdAt: -1 }).limit(10).lean();
+    const mappedMongoMedia = mongoMedia.map((m) => ({
+      id: m._id,
+      driveFileId: m.driveFileId,
+      fileName: m.fileName,
+      mimeType: m.mimeType,
+      fileSize: m.fileSize,
+      owner: m.owner,
+      folderId: m.folderId,
+      isTest: m.isTest,
+      deliveryUrl: m.deliveryUrl,
+      createdAt: m.createdAt,
+    }));
+
+    let driveClientResult = null;
+    try {
+      driveClientResult = await getAuthenticatedDriveClient();
+    } catch (authErr) {
+      // Gracefully return HTTP 200 with diagnostic status rather than 500 Internal Server Error
+      return res.status(200).json({
+        connected: false,
+        configured,
+        message: authErr.message || "Google Drive is not connected.",
+        folder: null,
+        mongo: {
+          totalCount: mongoMediaCount,
+          recentFiles: mappedMongoMedia,
+        },
+      });
+    }
+
+    const { drive, accountEmail } = driveClientResult;
+    const folderInspection = await inspectMediaFolder(drive, "Fazilnagar Media");
 
     res.status(200).json({
       connected: true,
+      configured: true,
       accountEmail,
       folder: folderInspection,
       mongo: {
         totalCount: mongoMediaCount,
-        recentFiles: mongoMedia.map((m) => ({
-          id: m._id,
-          driveFileId: m.driveFileId,
-          fileName: m.fileName,
-          mimeType: m.mimeType,
-          fileSize: m.fileSize,
-          owner: m.owner,
-          folderId: m.folderId,
-          isTest: m.isTest,
-          deliveryUrl: m.deliveryUrl,
-          createdAt: m.createdAt,
-        })),
+        recentFiles: mappedMongoMedia,
       },
     });
   } catch (err) {

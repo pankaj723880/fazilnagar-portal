@@ -145,27 +145,31 @@ describe("Theme System — Strict Admin-Only Theme Controls & 12 Theme Integrity
     assert.ok(css.includes(".admin-workspace"), "index.css must isolate admin workspace");
   });
 
-  // 2. Removal of public theme controls
-  it("Public pages have no theme toggles, and ThemeToggle returns null", () => {
+  // 2. Universal availability of dark/light mode toggle for all users
+  it("Public pages have theme toggle available to all users, and ThemeToggle renders accessible controls", () => {
     const togglePath = path.join(rootDir, "client/src/components/ThemeToggle.jsx");
     const toggleCode = fs.readFileSync(togglePath, "utf8");
     assert.ok(
-      toggleCode.includes("return null"),
-      "ThemeToggle must return null to prevent public rendering"
+      !toggleCode.includes("return null"),
+      "ThemeToggle must render active controls for all visitors"
+    );
+    assert.ok(
+      toggleCode.includes("toggleTheme"),
+      "ThemeToggle must hook into toggleTheme from ThemeContext"
     );
 
     const appPath = path.join(rootDir, "client/src/App.jsx");
     const appCode = fs.readFileSync(appPath, "utf8");
     assert.ok(
-      !appCode.includes("<ThemeToggle"),
-      "App.jsx must not render ThemeToggle on public pages"
+      appCode.includes("<ThemeToggle"),
+      "App.jsx must render ThemeToggle for public desktop and mobile users"
     );
 
     const mobilePath = path.join(rootDir, "client/src/components/MobileHomePortal.jsx");
     const mobileCode = fs.readFileSync(mobilePath, "utf8");
     assert.ok(
-      !mobileCode.includes("<ThemeToggle"),
-      "MobileHomePortal.jsx must not render ThemeToggle on public pages"
+      mobileCode.includes("<ThemeToggle"),
+      "MobileHomePortal.jsx must render ThemeToggle for mobile home visitors"
     );
   });
 

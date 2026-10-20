@@ -6,6 +6,18 @@ export const RENDER_PRODUCTION_BACKEND = "https://fazilnagar-portal.onrender.com
  * Gets the effective reachable backend URL (without trailing /api)
  */
 export function getBackendBase() {
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
+    if (isLocalhost) {
+      const configured = API?.defaults?.baseURL;
+      if (configured && typeof configured === "string") {
+        return configured.trim().replace(/\/api\/?$/, "");
+      }
+      return "http://localhost:5000";
+    }
+  }
+
   const configured = API?.defaults?.baseURL;
   if (configured && typeof configured === "string") {
     const cleaned = configured.trim().replace(/\/api\/?$/, "");
@@ -22,7 +34,7 @@ export function getBackendBase() {
  * - relative backend uploads (/uploads/avatars/..., /uploads/messages/...)
  * - blob / data URLs from local previews
  * - absolute URLs (Cloudinary, Google Drive, or production Render backend)
- * - legacy localhost URLs redirecting to production Render backend
+ * - legacy localhost URLs redirecting to production Render backend (only when running on production client)
  */
 export function resolveMediaUrl(url) {
   if (!url || typeof url !== "string") return "";
@@ -34,8 +46,18 @@ export function resolveMediaUrl(url) {
     return trimmed;
   }
 
+  const isLocalClient =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
   // Force HTTPS on HTTPS pages (like Vercel production) to prevent Mixed Content blocking
-  if (typeof window !== "undefined" && window.location.protocol === "https:" && trimmed.startsWith("http://")) {
+  if (
+    typeof window !== "undefined" &&
+    window.location.protocol === "https:" &&
+    trimmed.startsWith("http://") &&
+    !trimmed.includes("localhost") &&
+    !trimmed.includes("127.0.0.1")
+  ) {
     trimmed = trimmed.replace(/^http:\/\//i, "https://");
   }
 
@@ -43,8 +65,8 @@ export function resolveMediaUrl(url) {
 
   // If already absolute HTTP(S) URL
   if (/^https?:\/\//i.test(trimmed)) {
-    // If it's pointing to localhost or 127.0.0.1, rewrite to backendBase
-    if (trimmed.includes("localhost:") || trimmed.includes("127.0.0.1:")) {
+    // If client is in production (NOT localhost) but stored URL has legacy localhost:, rewrite to backendBase
+    if (!isLocalClient && (trimmed.includes("localhost:") || trimmed.includes("127.0.0.1:"))) {
       const uploadsIdx = trimmed.indexOf("/uploads/");
       if (uploadsIdx !== -1) {
         return `${backendBase}${trimmed.substring(uploadsIdx)}`;
