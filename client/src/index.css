@@ -3209,4 +3209,17 @@ html.fzn-card-glow-active [class*="rounded-3xl"][class*="border"]:hover {
     transform: none !important;
     will-change: auto !important;
   }
-}
+}
+
+/* Universal Civic Card & Surface Theme Integration */
+.civic-card {
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dark .civic-card,
+[data-public-theme="dark"] .civic-card,
+[data-theme*="dark"] .civic-card {
+  background-color: var(--surface-card);
+  border-color: var(--border-color);
+}
+

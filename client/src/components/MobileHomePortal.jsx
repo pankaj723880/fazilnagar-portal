@@ -578,7 +578,7 @@ export default function MobileHomePortal({
         />
 
         {/* Search Pill Input */}
-        <div className="relative flex items-center bg-white dark:bg-[#131823] rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] px-4 py-3 focus-within:border-slate-400 dark:focus-within:border-slate-600 transition">
+        <div className="relative flex items-center bg-white dark:bg-[var(--surface-card)] rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] px-4 py-3 focus-within:border-slate-400 dark:focus-within:border-slate-600 transition">
           <Search className="w-4 h-4 text-slate-400 shrink-0 mr-2.5" />
           <input
             type="text"
@@ -711,7 +711,7 @@ export default function MobileHomePortal({
         <section className="px-4 sm:px-6 py-2" aria-label="Live Bulletin">
           <Link
             to="/news"
-            className="civic-card bg-[#0F172A] dark:bg-[#131823] text-white rounded-2xl py-3 px-4 flex items-center justify-between text-xs hover:bg-slate-800 active:scale-[0.98] transition border border-slate-800 dark:border-white/8 shadow-[0_2px_12px_rgba(0,0,0,0.04)] group"
+            className="civic-card bg-[#0F172A] dark:bg-[var(--surface-card)] text-white rounded-2xl py-3 px-4 flex items-center justify-between text-xs hover:bg-slate-800 active:scale-[0.98] transition border border-slate-800 dark:border-white/8 shadow-[0_2px_12px_rgba(0,0,0,0.04)] group"
           >
             <div className="flex items-center gap-2 overflow-hidden mr-2">
               <span className="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0 uppercase tracking-wide">
@@ -746,7 +746,7 @@ export default function MobileHomePortal({
                   className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 cursor-pointer border ${
                     isActive
                       ? "bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] border-transparent shadow-xs"
-                      : "bg-white dark:bg-[#131823] text-slate-700 dark:text-slate-300 border-slate-200/60 dark:border-white/8 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-[0_1px_4px_rgba(0,0,0,0.02)]"
+                      : "bg-white dark:bg-[var(--surface-card)] text-slate-700 dark:text-slate-300 border-slate-200/60 dark:border-white/8 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-[0_1px_4px_rgba(0,0,0,0.02)]"
                   }`}
                 >
                   {cat.label}
@@ -779,7 +779,7 @@ export default function MobileHomePortal({
         </div>
 
         {filteredPlaces.length === 0 ? (
-          <div className="civic-card bg-white dark:bg-[#131823] rounded-2xl p-6 text-center border border-slate-200/60 dark:border-white/8 my-2 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
+          <div className="civic-card bg-white dark:bg-[var(--surface-card)] rounded-2xl p-6 text-center border border-slate-200/60 dark:border-white/8 my-2 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
             <p className="text-xs text-[#64748B] dark:text-slate-400">No verified places found matching this filter.</p>
             <button
               onClick={() => {
@@ -800,7 +800,7 @@ export default function MobileHomePortal({
                   if (e.target.closest("a, button")) return;
                   navigate(`/directory?q=${encodeURIComponent(place.title || "")}`);
                 }}
-                className="group w-[280px] snap-start shrink-0 civic-card bg-white dark:bg-[#131823] rounded-2xl border border-slate-200/60 dark:border-white/8 p-4 sm:p-5 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all duration-300 overflow-hidden flex flex-col justify-between cursor-pointer select-none"
+                className="group w-[280px] snap-start shrink-0 civic-card bg-white dark:bg-[var(--surface-card)] rounded-2xl border border-slate-200/60 dark:border-white/8 p-4 sm:p-5 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all duration-300 overflow-hidden flex flex-col justify-between cursor-pointer select-none"
               >
                 <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 mb-3">
                   <img
@@ -890,7 +890,7 @@ export default function MobileHomePortal({
           {ESSENTIAL_SERVICES.map((srv) => (
             <div
               key={srv.id}
-              className="group civic-card bg-white dark:bg-[#131823] rounded-2xl p-4 sm:p-5 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all duration-300 flex flex-col justify-between cursor-pointer"
+              className="group civic-card bg-white dark:bg-[var(--surface-card)] rounded-2xl p-4 sm:p-5 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all duration-300 flex flex-col justify-between cursor-pointer"
             >
               <div>
                 <span className={`inline-block text-[9px] font-extrabold px-2 py-0.5 rounded-full border uppercase tracking-wider mb-2 ${srv.badgeStyle}`}>
@@ -928,7 +928,13 @@ export default function MobileHomePortal({
           ======================================================== */}
       <ScrollReveal variant="fade-up" once={true}>
         <section className="px-4 sm:px-6 py-3" aria-label="Interactive Map Feature Block">
-        <div className="relative rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/8 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-slate-900 text-white p-5 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.08)] space-y-3.5">
+        <div
+          className="relative rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/8 text-white p-5 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.08)] space-y-3.5"
+          style={{
+            background: "linear-gradient(135deg, color-mix(in srgb, var(--surface-card) 92%, #0F172A), color-mix(in srgb, var(--background-secondary) 88%, #000000))",
+            borderColor: "var(--border-color)",
+          }}
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-xl">🗺️</span>
@@ -983,7 +989,7 @@ export default function MobileHomePortal({
           {RETAIL_SHOPS.map((shop) => (
             <div
               key={shop.id}
-              className="group civic-card bg-white dark:bg-[#131823] rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all duration-300 overflow-hidden flex flex-col justify-between cursor-pointer"
+              className="group civic-card bg-white dark:bg-[var(--surface-card)] rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all duration-300 overflow-hidden flex flex-col justify-between cursor-pointer"
             >
               <div className="relative aspect-4/3 w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                 <img
@@ -1069,7 +1075,7 @@ export default function MobileHomePortal({
           </Link>
         </div>
 
-        <div className="civic-card bg-white dark:bg-[#131823] rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
+        <div className="civic-card bg-white dark:bg-[var(--surface-card)] rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
           {SCHOOLS_DIRECTORY.map((school) => (
             <button
               key={school.id}
@@ -1114,7 +1120,7 @@ export default function MobileHomePortal({
       {selectedSchool && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
           <div
-            className="w-full max-w-md sm:max-w-xl bg-white dark:bg-[#131823] rounded-t-3xl p-6 shadow-2xl border-t border-slate-200/60 dark:border-white/8 animate-in slide-in-from-bottom duration-250 max-h-[85vh] overflow-y-auto"
+            className="w-full max-w-md sm:max-w-xl bg-white dark:bg-[var(--surface-card)] rounded-t-3xl p-6 shadow-2xl border-t border-slate-200/60 dark:border-white/8 animate-in slide-in-from-bottom duration-250 max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Sheet Handle */}
@@ -1223,7 +1229,7 @@ export default function MobileHomePortal({
                 className={`shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all duration-200 active:scale-95 cursor-pointer border ${
                   isActive
                     ? "bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] border-transparent shadow-xs"
-                    : "bg-white dark:bg-[#131823] text-slate-700 dark:text-slate-300 border-slate-200/60 dark:border-white/8 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-[0_1px_4px_rgba(0,0,0,0.02)]"
+                    : "bg-white dark:bg-[var(--surface-card)] text-slate-700 dark:text-slate-300 border-slate-200/60 dark:border-white/8 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-[0_1px_4px_rgba(0,0,0,0.02)]"
                 }`}
               >
                 {tab}
@@ -1233,7 +1239,7 @@ export default function MobileHomePortal({
         </div>
 
         {/* Redesigned Compact Empty State */}
-        <div className="civic-card bg-white dark:bg-[#131823] rounded-2xl p-5 sm:p-6 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none text-center flex flex-col items-center">
+        <div className="civic-card bg-white dark:bg-[var(--surface-card)] rounded-2xl p-5 sm:p-6 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none text-center flex flex-col items-center">
           <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center text-2xl mb-2.5">
             🪔
           </div>
@@ -1269,7 +1275,13 @@ export default function MobileHomePortal({
           ======================================================== */}
       <ScrollReveal variant="fade-up" once={true}>
       <section className="px-4 sm:px-6 py-3" aria-label="Sacred Heritage">
-        <div className="bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-slate-900 text-white rounded-2xl p-5 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-slate-700/60 space-y-4">
+        <div
+          className="text-white rounded-2xl p-5 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.08)] border space-y-4"
+          style={{
+            background: "linear-gradient(135deg, color-mix(in srgb, var(--surface-card) 92%, #0F172A), color-mix(in srgb, var(--background-secondary) 88%, #000000))",
+            borderColor: "var(--border-color)",
+          }}
+        >
           {/* Header & Twin Badges */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-amber-400 text-xs font-bold uppercase tracking-wider font-heading">
@@ -1285,7 +1297,7 @@ export default function MobileHomePortal({
 
           {/* 2 Feature Micro-Cards */}
           <div className="grid grid-cols-2 gap-2.5 text-xs">
-            <div className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/80 flex flex-col justify-between">
+            <div className="bg-[color-mix(in_srgb,var(--surface-card)_80%,transparent)] rounded-xl p-3 border border-white/10 flex flex-col justify-between">
               <div>
                 <p className="font-bold text-white text-[11px] leading-tight">
                   Pawapuri Jain Tirth
@@ -1293,7 +1305,7 @@ export default function MobileHomePortal({
                 <p className="text-[10px] text-amber-300 font-medium mt-0.5">
                   05:30 AM – 08:30 PM
                 </p>
-                <p className="text-[9px] text-slate-400 mt-1">
+                <p className="text-[9px] text-slate-300 mt-1">
                   Nirvana bhoomi of 24th Tirthankara • Free Entry
                 </p>
               </div>
@@ -1313,7 +1325,7 @@ export default function MobileHomePortal({
               </button>
             </div>
 
-            <div className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/80 flex flex-col justify-between">
+            <div className="bg-[color-mix(in_srgb,var(--surface-card)_80%,transparent)] rounded-xl p-3 border border-white/10 flex flex-col justify-between">
               <div>
                 <p className="font-bold text-white text-[11px] leading-tight">
                   Historic Kakodha Ghat
@@ -1321,13 +1333,13 @@ export default function MobileHomePortal({
                 <p className="text-[10px] text-emerald-300 font-medium mt-0.5">
                   Ancient Holy River Bath
                 </p>
-                <p className="text-[9px] text-slate-400 mt-1">
+                <p className="text-[9px] text-slate-300 mt-1">
                   Lord Buddha holy river bathing site en route Kushinagar
                 </p>
               </div>
               <Link
                 to="/directory"
-                className="mt-3 py-1.5 px-2 rounded-lg bg-slate-700 text-white font-bold text-[10px] active:scale-95 transition text-center"
+                className="mt-3 py-1.5 px-2 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-[10px] active:scale-95 transition text-center"
               >
                 View Map →
               </Link>
@@ -1335,7 +1347,7 @@ export default function MobileHomePortal({
           </div>
 
           {/* Collapsible History Accordion with Micro Fact-sheets */}
-          <div className="pt-2 border-t border-slate-700/70">
+          <div className="pt-2 border-t border-white/10">
             <button
               type="button"
               onClick={() => setIsHeritageHistoryOpen((prev) => !prev)}
@@ -1353,25 +1365,25 @@ export default function MobileHomePortal({
               <div className="mt-2.5 space-y-2.5 animate-in fade-in duration-200">
                 {/* 4 Micro Fact-sheets */}
                 <div className="grid grid-cols-4 gap-1.5 text-center text-[9px] font-medium text-slate-300">
-                  <div className="bg-slate-800/90 rounded-lg p-2 border border-slate-700">
+                  <div className="bg-[color-mix(in_srgb,var(--surface-card)_85%,transparent)] rounded-lg p-2 border border-white/10">
                     <span className="block text-[8px] text-slate-400">Antiquity</span>
                     <strong className="text-white font-bold">2600+ yrs</strong>
                   </div>
-                  <div className="bg-slate-800/90 rounded-lg p-2 border border-slate-700">
+                  <div className="bg-[color-mix(in_srgb,var(--surface-card)_85%,transparent)] rounded-lg p-2 border border-white/10">
                     <span className="block text-[8px] text-slate-400">Dynasty</span>
                     <strong className="text-white font-bold">Malla</strong>
                   </div>
-                  <div className="bg-slate-800/90 rounded-lg p-2 border border-slate-700">
+                  <div className="bg-[color-mix(in_srgb,var(--surface-card)_85%,transparent)] rounded-lg p-2 border border-white/10">
                     <span className="block text-[8px] text-slate-400">PIN</span>
                     <strong className="text-white font-bold">274401</strong>
                   </div>
-                  <div className="bg-slate-800/90 rounded-lg p-2 border border-slate-700">
+                  <div className="bg-[color-mix(in_srgb,var(--surface-card)_85%,transparent)] rounded-lg p-2 border border-white/10">
                     <span className="block text-[8px] text-slate-400">Highway</span>
                     <strong className="text-white font-bold">NH-27</strong>
                   </div>
                 </div>
 
-                <div className="text-[11px] text-slate-300 space-y-2 leading-relaxed bg-slate-800/60 rounded-xl p-3 border border-slate-700">
+                <div className="text-[11px] text-slate-300 space-y-2 leading-relaxed bg-[color-mix(in_srgb,var(--surface-card)_70%,transparent)] rounded-xl p-3 border border-white/10">
                   <p>
                     Fazilnagar represents the historic site of ancient <strong>Pawanagar (Pawa)</strong> of the Malla Republic. It is revered worldwide where Bhagwan Mahavira attained Nirvana on Kartik Amavasya in 527 BCE, commemorating the very genesis of the <strong>Deepavali (Festival of Lights)</strong> celebration.
                   </p>
@@ -1424,7 +1436,7 @@ export default function MobileHomePortal({
       <section className="px-4 sm:px-6 py-3" aria-label="Citizen Contribution Desk">
         <div className="grid grid-cols-2 gap-3">
           {/* Card A: List Business */}
-          <div className="civic-card bg-white dark:bg-[#131823] rounded-2xl p-4 sm:p-5 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none flex flex-col justify-between">
+          <div className="civic-card bg-white dark:bg-[var(--surface-card)] rounded-2xl p-4 sm:p-5 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none flex flex-col justify-between">
             <div>
               <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40 flex items-center justify-center text-sm font-bold mb-2">
                 🏪
@@ -1450,7 +1462,7 @@ export default function MobileHomePortal({
           </div>
 
           {/* Card B: Report Error */}
-          <div className="civic-card bg-white dark:bg-[#131823] rounded-2xl p-4 sm:p-5 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none flex flex-col justify-between">
+          <div className="civic-card bg-white dark:bg-[var(--surface-card)] rounded-2xl p-4 sm:p-5 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none flex flex-col justify-between">
             <div>
               <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center text-sm font-bold mb-2">
                 ⚠️
@@ -1481,7 +1493,7 @@ export default function MobileHomePortal({
           SECTION 6: ADAPTABLE FOOTER SYSTEM (Collapsible Accordions)
           ======================================================== */}
       <ScrollReveal variant="fade-up" once={true}>
-      <footer className="mt-6 px-4 sm:px-6 pt-6 pb-32 border-t border-slate-200/60 dark:border-white/8 bg-white dark:bg-[#131823] text-slate-600 dark:text-slate-400 text-xs space-y-3">
+      <footer className="mt-6 px-4 sm:px-6 pt-6 pb-32 border-t border-slate-200/60 dark:border-white/8 bg-white/90 dark:bg-[color-mix(in_srgb,var(--background-secondary)_90%,transparent)] backdrop-blur-md text-slate-600 dark:text-slate-400 text-xs space-y-3">
         {/* Custom Brand Title Block */}
         <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
           <h3 className="text-[#0F172A] dark:text-white font-extrabold text-sm tracking-tight font-heading">
@@ -1500,7 +1512,7 @@ export default function MobileHomePortal({
           <button
             type="button"
             onClick={() => toggleFooterSection("quickNav")}
-            className="w-full p-3 flex items-center justify-between font-bold text-slate-800 dark:text-slate-200 bg-slate-50/70 dark:bg-slate-800/40 cursor-pointer"
+            className="w-full p-3 flex items-center justify-between font-bold text-slate-800 dark:text-slate-200 bg-slate-50/70 dark:bg-[color-mix(in_srgb,var(--surface-card)_50%,transparent)] cursor-pointer"
           >
             <span>▶ Civic Navigation (Town Directory, News, Emergency)</span>
             {footerOpen.quickNav ? (
@@ -1510,23 +1522,23 @@ export default function MobileHomePortal({
             )}
           </button>
           {footerOpen.quickNav && (
-            <div className="p-3 bg-white divide-y divide-slate-100 text-xs">
-              <Link to="/" className="block py-1.5 text-slate-700 hover:text-red-600">
+            <div className="p-3 bg-white dark:bg-[var(--surface-card)] divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+              <Link to="/" className="block py-1.5 text-slate-700 dark:text-slate-300 hover:text-red-600">
                 🏛️ Portal Home
               </Link>
-              <Link to="/directory" className="block py-1.5 text-slate-700 hover:text-red-600 font-semibold text-red-600">
+              <Link to="/directory" className="block py-1.5 text-red-600 dark:text-red-400 hover:text-red-600 font-semibold">
                 📍 Town Directory &amp; Map
               </Link>
-              <Link to="/news" className="block py-1.5 text-slate-700 hover:text-red-600">
+              <Link to="/news" className="block py-1.5 text-slate-700 dark:text-slate-300 hover:text-red-600">
                 📰 Town Updates &amp; News
               </Link>
-              <Link to="/emergency" className="block py-1.5 text-slate-700 hover:text-red-600">
+              <Link to="/emergency" className="block py-1.5 text-slate-700 dark:text-slate-300 hover:text-red-600">
                 🚨 24/7 Helplines &amp; Police
               </Link>
-              <Link to="/healthcare" className="block py-1.5 text-slate-700 hover:text-red-600">
+              <Link to="/healthcare" className="block py-1.5 text-slate-700 dark:text-slate-300 hover:text-red-600">
                 🏥 Hospitals &amp; Clinics
               </Link>
-              <Link to="/govt" className="block py-1.5 text-slate-700 hover:text-red-600">
+              <Link to="/govt" className="block py-1.5 text-slate-700 dark:text-slate-300 hover:text-red-600">
                 🏛️ Public Services
               </Link>
             </div>
@@ -1538,7 +1550,7 @@ export default function MobileHomePortal({
           <button
             type="button"
             onClick={() => toggleFooterSection("community")}
-            className="w-full p-3 flex items-center justify-between font-bold text-slate-800 dark:text-slate-200 bg-slate-50/70 dark:bg-slate-800/40 cursor-pointer"
+            className="w-full p-3 flex items-center justify-between font-bold text-slate-800 dark:text-slate-200 bg-slate-50/70 dark:bg-[color-mix(in_srgb,var(--surface-card)_50%,transparent)] cursor-pointer"
           >
             <span>▶ Community Actions (Submit Local News, Citizen Login)</span>
             {footerOpen.community ? (
@@ -1548,7 +1560,7 @@ export default function MobileHomePortal({
             )}
           </button>
           {footerOpen.community && (
-            <div className="p-3 bg-white dark:bg-[#131823] divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+            <div className="p-3 bg-white dark:bg-[var(--surface-card)] divide-y divide-slate-100 dark:divide-slate-800 text-xs">
               <Link to="/create-news" className="block py-1.5 text-slate-700 dark:text-slate-300 hover:text-red-600">
                 ✍️ Submit Local News
               </Link>
@@ -1572,7 +1584,7 @@ export default function MobileHomePortal({
           <button
             type="button"
             onClick={() => toggleFooterSection("emergency")}
-            className="w-full p-3 flex items-center justify-between font-bold text-slate-800 dark:text-slate-200 bg-slate-50/70 dark:bg-slate-800/40 cursor-pointer"
+            className="w-full p-3 flex items-center justify-between font-bold text-slate-800 dark:text-slate-200 bg-slate-50/70 dark:bg-[color-mix(in_srgb,var(--surface-card)_50%,transparent)] cursor-pointer"
           >
             <span>▶ Emergency Hotline Numbers (Police 112, CHC Ambulance 108)</span>
             {footerOpen.emergency ? (
@@ -1582,7 +1594,7 @@ export default function MobileHomePortal({
             )}
           </button>
           {footerOpen.emergency && (
-            <div className="p-3 bg-white dark:bg-[#131823] divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+            <div className="p-3 bg-white dark:bg-[var(--surface-card)] divide-y divide-slate-100 dark:divide-slate-800 text-xs">
               <div className="flex items-center justify-between py-1.5">
                 <span className="text-slate-700 dark:text-slate-300">Police Outpost:</span>
                 <a href="tel:112" className="text-red-600 dark:text-red-400 font-black font-mono">112</a>

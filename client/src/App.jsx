@@ -733,9 +733,9 @@ export default function App() {
           ======================================================== */}
       {!isNewsPage && !isPortalPage && !isAdminPage && !isMessagesPage && !hideLayoutOnAreaDetails && (
         <footer
-          className={`text-slate-400 text-xs border-t pb-28 sm:pb-8 transition-colors duration-200 ${isAuthPage || isPublicFormPage ? "mt-0" : "mt-12"}`}
+          className={`text-slate-400 text-xs border-t pb-28 sm:pb-8 transition-colors duration-200 backdrop-blur-md ${isAuthPage || isPublicFormPage ? "mt-0" : "mt-12"}`}
           style={{
-            backgroundColor: "var(--background-secondary)",
+            backgroundColor: "color-mix(in srgb, var(--background-secondary) 85%, transparent)",
             borderColor: "var(--border-color)",
           }}
         >
@@ -755,7 +755,7 @@ export default function App() {
             </div>
 
             {/* Accordion 1: Civic Navigation */}
-            <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/60">
+            <div className="border border-[var(--border-color)] rounded-xl overflow-hidden bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)]">
               <button
                 type="button"
                 onClick={() => setMobileFooterNavOpen((prev) => !prev)}
@@ -767,7 +767,7 @@ export default function App() {
                 </span>
               </button>
               {mobileFooterNavOpen && (
-                <ul className="px-3 pb-3 pt-1 space-y-2 border-t border-slate-800/60 text-xs bg-slate-900/30">
+                <ul className="px-3 pb-3 pt-1 space-y-2 border-t border-[var(--border-color)] text-xs bg-[color-mix(in_srgb,var(--surface-card)_50%,transparent)]">
                   <li><Link to="/directory" className="hover:text-red-300 font-bold text-[#B8323C] flex items-center gap-1.5"><span>📍</span> Town Directory (Map &amp; List)</Link></li>
                   <li><Link to="/news" className="hover:text-white flex items-center gap-1.5"><span>📰</span> Town News</Link></li>
                   <li><Link to="/emergency" className="hover:text-white flex items-center gap-1.5"><span>🚨</span> Emergency Helplines</Link></li>
@@ -779,7 +779,7 @@ export default function App() {
             </div>
 
             {/* Accordion 2: Community Actions */}
-            <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/60">
+            <div className="border border-[var(--border-color)] rounded-xl overflow-hidden bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)]">
               <button
                 type="button"
                 onClick={() => setMobileFooterActionsOpen((prev) => !prev)}
@@ -791,7 +791,7 @@ export default function App() {
                 </span>
               </button>
               {mobileFooterActionsOpen && (
-                <ul className="px-3 pb-3 pt-1 space-y-2 border-t border-slate-800/60 text-xs bg-slate-900/30">
+                <ul className="px-3 pb-3 pt-1 space-y-2 border-t border-[var(--border-color)] text-xs bg-[color-mix(in_srgb,var(--surface-card)_50%,transparent)]">
                   <li><Link to="/create-news" className="hover:text-white flex items-center gap-1.5"><span>✍️</span> Submit Local News</Link></li>
                   <li><Link to="/login" className="hover:text-white flex items-center gap-1.5"><span>👤</span> Citizen / Reporter Login</Link></li>
                   <li><Link to="/register" className="hover:text-white flex items-center gap-1.5"><span>📝</span> Register Resident Account</Link></li>
@@ -803,7 +803,7 @@ export default function App() {
             </div>
 
             {/* Accordion 3: Emergency Hotline Numbers */}
-            <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/60">
+            <div className="border border-[var(--border-color)] rounded-xl overflow-hidden bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)]">
               <button
                 type="button"
                 onClick={() => setMobileFooterEmergencyOpen((prev) => !prev)}
@@ -815,7 +815,7 @@ export default function App() {
                 </span>
               </button>
               {mobileFooterEmergencyOpen && (
-                <div className="px-3 pb-3 pt-1 space-y-2 border-t border-slate-800/60 text-xs bg-slate-900/30">
+                <div className="px-3 pb-3 pt-1 space-y-2 border-t border-[var(--border-color)] text-xs bg-[color-mix(in_srgb,var(--surface-card)_50%,transparent)]">
                   <div className="flex items-center justify-between py-1 border-b border-slate-800/40">
                     <span className="text-slate-300">Police Chowki / Dial 112:</span>
                     <a href="tel:112" className="text-red-400 font-black font-mono">112</a>
@@ -837,7 +837,7 @@ export default function App() {
             </div>
 
             {/* Accordion 4: Legal & Independent Portal Notice */}
-            <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/60">
+            <div className="border border-[var(--border-color)] rounded-xl overflow-hidden bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)]">
               <button
                 type="button"
                 onClick={() => setMobileFooterLegalOpen((prev) => !prev)}
@@ -849,7 +849,7 @@ export default function App() {
                 </span>
               </button>
               {mobileFooterLegalOpen && (
-                <div className="px-3 pb-3 pt-1 space-y-2 border-t border-slate-800/60 text-[11px] text-slate-400 bg-slate-900/30">
+                <div className="px-3 pb-3 pt-1 space-y-2 border-t border-[var(--border-color)] text-[11px] text-slate-400 bg-[color-mix(in_srgb,var(--surface-card)_50%,transparent)]">
                   <p className="leading-relaxed">
                     Fazilnagar Town Portal is an independent community and civic directory initiative serving Fazilnagar (PIN 274401, Kushinagar, Uttar Pradesh). Independent community directory notice: Not affiliated directly with any single commercial entity.
                   </p>

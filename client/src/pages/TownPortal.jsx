@@ -620,12 +620,12 @@ export default function TownPortal() {
           id="hero-section"
           onMouseEnter={() => setIsHeroHovered(true)}
           onMouseLeave={() => setIsHeroHovered(false)}
-          className="relative text-white py-12 sm:py-20 lg:py-24 overflow-hidden border-b border-slate-800 bg-[#0B131E]"
+          className="relative text-white py-12 sm:py-20 lg:py-24 overflow-hidden border-b border-slate-800/60 bg-transparent"
         >
           {/* Civic Hero Background & Dynamic Carousel (if slides configured) */}
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-            {/* Deep rich civic gradient base */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#0B131E] via-[#0F1B2B] to-[#070D14]" />
+            {/* Deep rich civic gradient base with theme tokens allowing global animations to show through */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[color-mix(in_srgb,var(--background-primary)_85%,transparent)] via-[color-mix(in_srgb,var(--background-secondary)_80%,transparent)] to-[color-mix(in_srgb,var(--background-primary)_90%,transparent)]" />
             {/* Subtle civic ambient lighting accents with gentle parallax */}
             <ParallaxLayer speed={0.2} className="absolute inset-0 pointer-events-none">
               <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -884,7 +884,7 @@ export default function TownPortal() {
               >
                 <Link
                   to={cat.query === "all" ? "/directory" : `/directory?category=${encodeURIComponent(cat.query)}`}
-                  className="group bg-white dark:bg-[#131823] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] transition flex flex-col justify-between h-full"
+                  className="group bg-white dark:bg-[var(--surface-card)] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] transition flex flex-col justify-between h-full"
                 >
                   <div className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-white/10 text-[#0F172A] dark:text-white flex items-center justify-center mb-4 group-hover:bg-[#0F172A] group-hover:text-white transition">
                     <Icon className="w-5 h-5" />
@@ -926,7 +926,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 4: ESSENTIAL SERVICES (High-Priority Civic Hub)
           ======================================================== */}
-      <section className="mobile-density-section bg-white/70 dark:bg-[#131823]/50 py-20 lg:py-28 border-y border-slate-200/60 dark:border-white/10 content-visibility-auto">
+      <section className="mobile-density-section bg-white/70 dark:bg-[var(--surface-card)]/50 py-20 lg:py-28 border-y border-slate-200/60 dark:border-white/10 content-visibility-auto">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           <ScrollReveal variant="fade-up" className="mb-10 sm:mb-12">
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0D5E49] dark:text-emerald-400 uppercase tracking-wider mb-2">
@@ -954,7 +954,7 @@ export default function TownPortal() {
                 once={true}
                 className="h-full"
               >
-                <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer h-full">
+                <div className="group bg-white dark:bg-[var(--surface-card)] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer h-full">
                   <div>
                     <span className="text-[10px] font-extrabold text-[#B8323C] uppercase tracking-wider block mb-2">
                       {card.badge}
@@ -993,7 +993,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 5: FAZILNAGAR & NEARBY PLACES (Regional Connectivity Map)
           ======================================================== */}
-      <section id="regional-connectivity-section" className="py-20 lg:py-28 border-y border-slate-200/60 dark:border-white/10 content-visibility-auto bg-[#F8FAFC] dark:bg-[#0B0F17]">
+      <section id="regional-connectivity-section" className="py-20 lg:py-28 border-y border-slate-200/60 dark:border-white/10 content-visibility-auto bg-slate-50/40 dark:bg-[color-mix(in_srgb,var(--background-secondary)_40%,transparent)]">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           <ScrollReveal variant="fade-up" className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-6">
             <div>
@@ -1009,7 +1009,7 @@ export default function TownPortal() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-[#131823] px-4 py-2.5 rounded-xl border border-slate-200/60 dark:border-white/10 self-start md:self-auto shadow-xs">
+            <div className="flex items-center gap-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-[var(--surface-card)] px-4 py-2.5 rounded-xl border border-slate-200/60 dark:border-white/10 self-start md:self-auto shadow-xs">
               <span className="w-2 h-2 rounded-full bg-[#B8323C] animate-ping" />
               <span>Fazilnagar Hub: 26.6827° N, 84.0498° E</span>
             </div>
@@ -1034,7 +1034,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 6: DISCOVER LOCAL BUSINESSES (Verified Shops)
           ======================================================== */}
-      <section className="mobile-density-section bg-white/70 dark:bg-[#131823]/50 py-20 lg:py-28 border-b border-slate-200/60 dark:border-white/10 content-visibility-auto">
+      <section className="mobile-density-section bg-white/70 dark:bg-[color-mix(in_srgb,var(--surface-card)_35%,transparent)] py-20 lg:py-28 border-b border-slate-200/60 dark:border-white/10 content-visibility-auto">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           <ScrollReveal variant="fade-up" className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-6">
             <div>
@@ -1061,7 +1061,7 @@ export default function TownPortal() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {/* Prashant Sweet House */}
             <ScrollReveal variant="fade-up" staggerIndex={0} staggerBaseDelay={65} once={true} className="h-full">
-              <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer h-full">
+              <div className="group bg-white dark:bg-[var(--surface-card)] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer h-full">
                 <div>
                   <span className="text-[10px] font-bold text-[#B8323C] uppercase tracking-wider">Sweet Shop & Chaat</span>
                   <h3 className="text-base font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition-colors mt-1.5">Prashant Sweet House</h3>
@@ -1087,7 +1087,7 @@ export default function TownPortal() {
 
             {/* Kanha Sweets */}
             <ScrollReveal variant="fade-up" staggerIndex={1} staggerBaseDelay={65} once={true} className="h-full">
-              <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer h-full">
+              <div className="group bg-white dark:bg-[var(--surface-card)] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer h-full">
                 <div>
                   <span className="text-[10px] font-bold text-[#B8323C] uppercase tracking-wider">Mithai & Snacks</span>
                   <h3 className="text-base font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition-colors mt-1.5">Kanha Sweets</h3>
@@ -1113,7 +1113,7 @@ export default function TownPortal() {
 
             {/* Amit Medical Store */}
             <ScrollReveal variant="fade-up" staggerIndex={2} staggerBaseDelay={65} once={true} className="h-full">
-              <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer h-full">
+              <div className="group bg-white dark:bg-[var(--surface-card)] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer h-full">
                 <div>
                   <span className="text-[10px] font-bold text-[#0D5E49] dark:text-emerald-400 uppercase tracking-wider">Retail Pharmacy</span>
                   <h3 className="text-base font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition-colors mt-1.5">Amit Medical Store</h3>
@@ -1139,7 +1139,7 @@ export default function TownPortal() {
 
             {/* Maurya Electronics */}
             <ScrollReveal variant="fade-up" staggerIndex={3} staggerBaseDelay={65} once={true} className="h-full">
-              <div className="group bg-white dark:bg-[#131823] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer h-full">
+              <div className="group bg-white dark:bg-[var(--surface-card)] hover:bg-slate-50/50 dark:hover:bg-[#1A2234] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 ease-out flex flex-col justify-between cursor-pointer h-full">
                 <div>
                   <span className="text-[10px] font-bold text-[#64748B] dark:text-slate-400 uppercase tracking-wider">Electronics & Mobile</span>
                   <h3 className="text-base font-bold text-[#0F172A] dark:text-white group-hover:text-[#B8323C] transition-colors mt-1.5">Maurya Electronics & Mobile</h3>
@@ -1200,7 +1200,7 @@ export default function TownPortal() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {/* Sanskar Central Academy */}
             <ScrollReveal variant="fade-up" staggerIndex={0} staggerBaseDelay={65} once={true} className="h-full">
-              <div className="bg-white dark:bg-[#131823] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] flex flex-col justify-between h-full">
+              <div className="bg-white dark:bg-[var(--surface-card)] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] flex flex-col justify-between h-full">
                 <div>
                   <div className="flex items-center justify-between text-xs mb-3">
                     <span className="text-[10px] font-bold text-[#B8323C] uppercase bg-red-50 dark:bg-red-950/40 px-2.5 py-1 rounded-full border border-red-200/60 dark:border-red-800/40">
@@ -1231,7 +1231,7 @@ export default function TownPortal() {
 
             {/* Pawanagar Mahavir Inter College */}
             <ScrollReveal variant="fade-up" staggerIndex={1} staggerBaseDelay={65} once={true} className="h-full">
-              <div className="bg-white dark:bg-[#131823] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] flex flex-col justify-between h-full">
+              <div className="bg-white dark:bg-[var(--surface-card)] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] flex flex-col justify-between h-full">
                 <div>
                   <div className="flex items-center justify-between text-xs mb-3">
                     <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase bg-slate-100 dark:bg-white/10 px-2.5 py-1 rounded-full border border-slate-200/60 dark:border-white/10">
@@ -1262,7 +1262,7 @@ export default function TownPortal() {
 
             {/* The Hermitage School */}
             <ScrollReveal variant="fade-up" staggerIndex={2} staggerBaseDelay={65} once={true} className="h-full">
-              <div className="bg-white dark:bg-[#131823] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] flex flex-col justify-between h-full">
+              <div className="bg-white dark:bg-[var(--surface-card)] p-6 sm:p-7 rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] flex flex-col justify-between h-full">
                 <div>
                   <div className="flex items-center justify-between text-xs mb-3">
                     <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-full border border-blue-200/60 dark:border-blue-800/40">
@@ -1297,7 +1297,7 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION: UPCOMING EVENTS & TOWN MELAS (Religious Melas & Civic Festivals)
           ======================================================== */}
-      <section id="events-melas-section" className="mobile-density-section bg-white/70 dark:bg-[#131823]/50 py-20 lg:py-28 border-b border-slate-200/60 dark:border-white/10">
+      <section id="events-melas-section" className="mobile-density-section bg-white/70 dark:bg-[color-mix(in_srgb,var(--surface-card)_35%,transparent)] py-20 lg:py-28 border-b border-slate-200/60 dark:border-white/10">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           {/* Header */}
           <ScrollReveal variant="fade-up" once={true}>
@@ -1348,7 +1348,7 @@ export default function TownPortal() {
                     className={`text-xs font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
                       selectedEventCategory === cat
                         ? "bg-[#0F172A] text-white shadow-xs dark:bg-white dark:text-[#0F172A]"
-                        : "bg-white dark:bg-[#131823] hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/10"
+                        : "bg-white dark:bg-[var(--surface-card)] hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/10"
                     }`}
                   >
                     <span>{cat}</span>
@@ -1384,7 +1384,7 @@ export default function TownPortal() {
                     className="h-full"
                   >
                     <article
-                      className="group bg-white dark:bg-[#131823] rounded-2xl sm:rounded-3xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] transition-all duration-300 overflow-hidden flex flex-col justify-between h-full"
+                      className="group bg-white dark:bg-[var(--surface-card)] rounded-2xl sm:rounded-3xl border border-slate-200/60 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] transition-all duration-300 overflow-hidden flex flex-col justify-between h-full"
                     >
                       <div>
                         {/* Banner Image with Badges */}
@@ -1580,7 +1580,7 @@ export default function TownPortal() {
                   className="h-full"
                 >
                   <div
-                    className="civic-card bg-white dark:bg-[#131823] border border-slate-200/60 dark:border-white/8 rounded-2xl overflow-hidden flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all group h-full"
+                    className="civic-card bg-white dark:bg-[var(--surface-card)] border border-slate-200/60 dark:border-white/8 rounded-2xl overflow-hidden flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all group h-full"
                   >
                     {(item.mediaType === "video" || item.video) ? (
                       <Suspense fallback={<div className="h-44 w-full bg-slate-100 dark:bg-slate-800 animate-pulse" />}>
@@ -1641,7 +1641,7 @@ export default function TownPortal() {
               <>
                 {/* Event 1 */}
                 <ScrollReveal variant="fade-up" staggerIndex={0} staggerBaseDelay={65} once={true} className="h-full">
-                  <div className="civic-card bg-white dark:bg-[#131823] border border-slate-200/60 dark:border-white/8 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none h-full">
+                  <div className="civic-card bg-white dark:bg-[var(--surface-card)] border border-slate-200/60 dark:border-white/8 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none h-full">
                     <div>
                       <div className="flex items-center justify-between text-xs mb-3">
                         <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200/60 dark:border-amber-800/40 px-2.5 py-1 rounded-full uppercase">Cultural Heritage</span>
@@ -1663,7 +1663,7 @@ export default function TownPortal() {
 
                 {/* Event 2 */}
                 <ScrollReveal variant="fade-up" staggerIndex={1} staggerBaseDelay={65} once={true} className="h-full">
-                  <div className="civic-card bg-white dark:bg-[#131823] border border-slate-200/60 dark:border-white/8 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none h-full">
+                  <div className="civic-card bg-white dark:bg-[var(--surface-card)] border border-slate-200/60 dark:border-white/8 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none h-full">
                     <div>
                       <div className="flex items-center justify-between text-xs mb-3">
                         <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/40 px-2.5 py-1 rounded-full uppercase">Healthcare Routine</span>
@@ -1685,7 +1685,7 @@ export default function TownPortal() {
 
                 {/* Event 3 */}
                 <ScrollReveal variant="fade-up" staggerIndex={2} staggerBaseDelay={65} once={true} className="h-full">
-                  <div className="civic-card bg-white dark:bg-[#131823] border border-slate-200/60 dark:border-white/8 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none h-full">
+                  <div className="civic-card bg-white dark:bg-[var(--surface-card)] border border-slate-200/60 dark:border-white/8 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none h-full">
                     <div>
                       <div className="flex items-center justify-between text-xs mb-3">
                         <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800/40 px-2.5 py-1 rounded-full uppercase">Civic Works</span>
@@ -1846,7 +1846,7 @@ export default function TownPortal() {
 
               {/* History & Importance Deep Dive */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-                <div className="lg:col-span-2 civic-card bg-white dark:bg-[#131823] p-6 sm:p-8 rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none space-y-5">
+                <div className="lg:col-span-2 civic-card bg-white dark:bg-[var(--surface-card)] p-6 sm:p-8 rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none space-y-5">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#B8323C] dark:text-red-400 uppercase tracking-wide">
                     <Landmark className="w-4 h-4" />
                     <span>Historical Significance of Fazilnagar (Pawanagar)</span>
@@ -1903,7 +1903,7 @@ export default function TownPortal() {
                 </div>
 
                 {/* Modern Importance Column */}
-                <div className="civic-card bg-white dark:bg-[#131823] p-6 sm:p-8 rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none space-y-5 flex flex-col justify-between">
+                <div className="civic-card bg-white dark:bg-[var(--surface-card)] p-6 sm:p-8 rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none space-y-5 flex flex-col justify-between">
                   <div>
                     <span className="text-[10px] font-bold uppercase text-[#0D5E49] dark:text-emerald-400 tracking-wider block mb-1">
                       Present-Day Importance
@@ -2020,7 +2020,7 @@ export default function TownPortal() {
 
               {/* History & Importance Deep Dive */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-                <div className="lg:col-span-2 civic-card bg-white dark:bg-[#131823] p-6 sm:p-8 rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none space-y-5">
+                <div className="lg:col-span-2 civic-card bg-white dark:bg-[var(--surface-card)] p-6 sm:p-8 rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none space-y-5">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#B8323C] dark:text-red-400 uppercase tracking-wide">
                     <Landmark className="w-4 h-4" />
                     <span>Sacred Antiquity of Kushinagar (Kusinara)</span>
@@ -2077,7 +2077,7 @@ export default function TownPortal() {
                 </div>
 
                 {/* Key Monuments Column */}
-                <div className="civic-card bg-white dark:bg-[#131823] p-6 sm:p-8 rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none space-y-5 flex flex-col justify-between">
+                <div className="civic-card bg-white dark:bg-[var(--surface-card)] p-6 sm:p-8 rounded-2xl border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none space-y-5 flex flex-col justify-between">
                   <div>
                     <span className="text-[10px] font-bold uppercase text-[#B8323C] dark:text-red-400 tracking-wider block mb-1">
                       Key Pilgrimage Monuments
@@ -2211,7 +2211,7 @@ export default function TownPortal() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {/* Action 1 */}
             <ScrollReveal variant="fade-up" staggerIndex={0} staggerBaseDelay={65} once={true} className="h-full">
-              <div className="civic-card bg-white dark:bg-[#131823] rounded-2xl p-6 sm:p-8 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between transition-all h-full">
+              <div className="civic-card bg-white dark:bg-[var(--surface-card)] rounded-2xl p-6 sm:p-8 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between transition-all h-full">
                 <div>
                   <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-[#0F172A] dark:text-white flex items-center justify-center mb-4 border border-slate-200/60 dark:border-white/8">
                     <Store className="w-5 h-5" />
@@ -2233,7 +2233,7 @@ export default function TownPortal() {
 
             {/* Action 2 */}
             <ScrollReveal variant="fade-up" staggerIndex={1} staggerBaseDelay={65} once={true} className="h-full">
-              <div className="civic-card bg-white dark:bg-[#131823] rounded-2xl p-6 sm:p-8 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between transition-all h-full">
+              <div className="civic-card bg-white dark:bg-[var(--surface-card)] rounded-2xl p-6 sm:p-8 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between transition-all h-full">
                 <div>
                   <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4 border border-amber-200/60 dark:border-amber-800/40">
                     <Edit3 className="w-5 h-5" />
@@ -2255,7 +2255,7 @@ export default function TownPortal() {
 
             {/* Action 3 */}
             <ScrollReveal variant="fade-up" staggerIndex={2} staggerBaseDelay={65} once={true} className="h-full">
-              <div className="civic-card bg-white dark:bg-[#131823] rounded-2xl p-6 sm:p-8 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between transition-all h-full">
+              <div className="civic-card bg-white dark:bg-[var(--surface-card)] rounded-2xl p-6 sm:p-8 border border-slate-200/60 dark:border-white/8 shadow-[0_2px_16px_rgba(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between transition-all h-full">
                 <div>
                   <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mb-4 border border-emerald-200/60 dark:border-emerald-800/40">
                     <CalendarPlus className="w-5 h-5" />
@@ -2282,9 +2282,9 @@ export default function TownPortal() {
           SECTION 11: FOOTER (Editorial Civic Footer)
           ======================================================== */}
       <footer
-        className="text-slate-400 text-xs border-t pb-24 lg:pb-0 transition-colors duration-200"
+        className="text-slate-400 text-xs border-t pb-24 lg:pb-0 transition-colors duration-200 backdrop-blur-md"
         style={{
-          backgroundColor: "var(--background-secondary)",
+          backgroundColor: "color-mix(in srgb, var(--background-secondary) 85%, transparent)",
           borderColor: "var(--border-color)",
         }}
       >
