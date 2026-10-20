@@ -134,7 +134,7 @@ function CivicRouteSkeleton() {
 }
 
 export default function App() {
-  const { isDark } = useTheme();
+  const { isDark, themeId } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -300,7 +300,8 @@ export default function App() {
   return (
     <div
       id="public-portal-root"
-      data-public-theme={isAdminPage ? undefined : (isDark ? "dark" : "light")}
+      data-theme-id={themeId}
+      data-public-theme={isDark ? "dark" : "light"}
       className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col font-sans transition-colors duration-200"
       style={{
         backgroundColor: "var(--background-primary)",

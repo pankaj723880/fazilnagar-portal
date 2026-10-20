@@ -109,29 +109,27 @@
           if (p === '/' || p === '/index.html' || p === '/town' || p === '/portal' || p === '/fazilnagar') {
             document.documentElement.classList.add('is-homepage-launch');
           }
-          if (!p.startsWith('/admin')) {
-            var rawTheme = localStorage.getItem('fazilnagar_global_theme');
-            var themeId = 'heritage-terracotta';
-            var mode = 'light';
-            if (rawTheme) {
-              try {
-                var parsed = JSON.parse(rawTheme);
-                if (parsed && parsed.themeId) themeId = parsed.themeId;
-                if (parsed && (parsed.mode === 'dark' || parsed.mode === 'light')) mode = parsed.mode;
-              } catch (_) {}
-            } else {
-              var legacyTheme = localStorage.getItem('fazilnagar_theme');
-              if (legacyTheme === 'dark') mode = 'dark';
-            }
-            document.documentElement.setAttribute('data-theme-id', themeId);
-            document.documentElement.setAttribute('data-public-theme', mode);
-            if (mode === 'dark') {
-              document.documentElement.classList.add('dark', 'theme-dark');
-              document.documentElement.classList.remove('theme-light');
-            } else {
-              document.documentElement.classList.add('theme-light');
-              document.documentElement.classList.remove('dark', 'theme-dark');
-            }
+          var rawTheme = localStorage.getItem('fazilnagar_global_theme');
+          var themeId = 'heritage-terracotta';
+          var mode = 'light';
+          if (rawTheme) {
+            try {
+              var parsed = JSON.parse(rawTheme);
+              if (parsed && parsed.themeId) themeId = parsed.themeId;
+              if (parsed && (parsed.mode === 'dark' || parsed.mode === 'light')) mode = parsed.mode;
+            } catch (_) {}
+          } else {
+            var legacyTheme = localStorage.getItem('fazilnagar_theme');
+            if (legacyTheme === 'dark') mode = 'dark';
+          }
+          document.documentElement.setAttribute('data-theme-id', themeId);
+          document.documentElement.setAttribute('data-public-theme', mode);
+          if (mode === 'dark') {
+            document.documentElement.classList.add('dark', 'theme-dark');
+            document.documentElement.classList.remove('theme-light');
+          } else {
+            document.documentElement.classList.add('theme-light');
+            document.documentElement.classList.remove('dark', 'theme-dark');
           }
         } catch (_) {}
       })();
@@ -140,7 +138,8 @@
     <!-- Critical CSS for Instant Above-the-fold Layout & Zero CLS -->
     <style>
       html, body {
-        background-color: #F7F3EB;
+        background-color: var(--background-primary, #F7F3EB);
+        color: var(--text-primary, #292722);
         margin: 0;
         padding: 0;
         width: 100%;
@@ -149,6 +148,7 @@
       }
       html.dark, html.dark body, html[data-public-theme="dark"], html[data-public-theme="dark"] body {
         background-color: var(--background-primary, #191916) !important;
+        color: var(--text-primary, #F5F0E7) !important;
       }
       #hero-section { min-height: 440px; position: relative; background-color: #18232E; }
       .font-heading { font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; }

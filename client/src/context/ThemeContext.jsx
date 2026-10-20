@@ -22,6 +22,22 @@ const STORAGE_KEY = "fazilnagar_theme";
 const USER_MODE_STORAGE_KEY = "fazilnagar_user_mode";
 const GLOBAL_THEME_STORAGE_KEY = "fazilnagar_global_theme";
 
+const THEME_BROADCAST_CHANNEL = "fazilnagar_portal_theme_sync";
+
+function broadcastThemeUpdate(config) {
+  if (typeof window === "undefined") return;
+  try {
+    if ("BroadcastChannel" in window) {
+      const channel = new BroadcastChannel(THEME_BROADCAST_CHANNEL);
+      channel.postMessage({ type: "THEME_UPDATED", config });
+      channel.close();
+    }
+  } catch {}
+  try {
+    window.dispatchEvent(new CustomEvent("fazilnagar-theme-sync", { detail: config }));
+  } catch {}
+}
+
 export function ThemeProvider({ children }) {
   const [themeConfig, setThemeConfig] = useState(() => {
     try {
@@ -109,6 +125,26 @@ export function ThemeProvider({ children }) {
       root.style.setProperty("--success-text", activeMode === "dark" ? "#4ADE80" : "#166534");
       root.style.setProperty("--warning-text", activeMode === "dark" ? "#FBBF24" : "#92400E");
       root.style.setProperty("--error-text", activeMode === "dark" ? "#F87171" : "#B91C1C");
+
+      // Aliased tokens for complete backward compatibility
+      root.style.setProperty("--gr-bg-main", palette.bg);
+      root.style.setProperty("--gr-navbar-bg", palette.bg);
+      root.style.setProperty("--gr-section-secondary", palette.surfaceSecondary);
+      root.style.setProperty("--gr-card-bg", palette.surface);
+      root.style.setProperty("--gr-input-bg", activeMode === "dark" ? palette.surfaceSecondary : "#FFFFFF");
+      root.style.setProperty("--gr-text-primary", palette.textPrimary);
+      root.style.setProperty("--gr-text-secondary", palette.textSecondary);
+      root.style.setProperty("--gr-border", palette.border);
+      root.style.setProperty("--gr-accent", palette.action);
+      root.style.setProperty("--gr-accent-hover", palette.actionHover);
+
+      root.style.setProperty("--civic-bg", palette.bg);
+      root.style.setProperty("--civic-surface", palette.surface);
+      root.style.setProperty("--civic-surface-secondary", palette.surfaceSecondary);
+      root.style.setProperty("--civic-text-primary", palette.textPrimary);
+      root.style.setProperty("--civic-text-secondary", palette.textSecondary);
+      root.style.setProperty("--civic-border", palette.border);
+      root.style.setProperty("--civic-accent", palette.action);
     }
   }, []);
 
@@ -157,7 +193,7 @@ export function ThemeProvider({ children }) {
     applyThemeToDOM(themeConfig);
   }, [themeConfig, applyThemeToDOM]);
 
-  // Admin-only preview function (instant DOM preview without saving yet)
+  // Admin-only preview function (instant DOM preview across portal without requiring DB commit yet)
   const previewTheme = useCallback(
     (cfg) => {
       const previewCfg = {
@@ -166,6 +202,10 @@ export function ThemeProvider({ children }) {
       };
       setThemeConfig(previewCfg);
       applyThemeToDOM(previewCfg);
+      try {
+        localStorage.setItem(GLOBAL_THEME_STORAGE_KEY, JSON.stringify(previewCfg));
+        broadcastThemeUpdate(previewCfg);
+      } catch {}
     },
     [themeConfig, applyThemeToDOM]
   );
@@ -196,6 +236,9 @@ export function ThemeProvider({ children }) {
         try {
           localStorage.setItem(GLOBAL_THEME_STORAGE_KEY, JSON.stringify(updated));
           localStorage.setItem(GLOBAL_THEME_STORAGE_KEY + "_time", String(Date.now()));
+          localStorage.setItem(USER_MODE_STORAGE_KEY, updated.mode);
+          localStorage.setItem(STORAGE_KEY, updated.mode);
+          broadcastThemeUpdate(updated);
         } catch {}
         return res.data;
       } else {
@@ -234,10 +277,11 @@ export function ThemeProvider({ children }) {
         applyThemeToDOM(nextCfg);
       }
 
-      // Store personal preference locally
+      // Store personal preference locally & broadcast
       try {
         localStorage.setItem(USER_MODE_STORAGE_KEY, nextMode);
         localStorage.setItem(STORAGE_KEY, nextMode);
+        broadcastThemeUpdate(nextCfg);
       } catch {}
     },
     [themeConfig, applyThemeToDOM]
@@ -252,32 +296,65 @@ export function ThemeProvider({ children }) {
       try {
         localStorage.setItem(USER_MODE_STORAGE_KEY, val);
         localStorage.setItem(STORAGE_KEY, val);
+        broadcastThemeUpdate(nextCfg);
       } catch {}
     },
     [themeConfig, applyThemeToDOM]
   );
 
-  // Synchronize across browser tabs if admin changes theme in another tab
+  // Synchronize across browser tabs and same-window components in real time
   useEffect(() => {
+    let channel;
+    try {
+      if ("BroadcastChannel" in window) {
+        channel = new BroadcastChannel(THEME_BROADCAST_CHANNEL);
+        channel.onmessage = (e) => {
+          if (e.data?.type === "THEME_UPDATED" && e.data.config) {
+            const next = {
+              themeId: e.data.config.themeId || DEFAULT_THEME_ID,
+              mode: e.data.config.mode === "dark" ? "dark" : "light",
+            };
+            setThemeConfig(next);
+            applyThemeToDOM(next);
+          }
+        };
+      }
+    } catch {}
+
+    const handleCustomSync = (e) => {
+      if (e.detail) {
+        const next = {
+          themeId: e.detail.themeId || DEFAULT_THEME_ID,
+          mode: e.detail.mode === "dark" ? "dark" : "light",
+        };
+        setThemeConfig(next);
+        applyThemeToDOM(next);
+      }
+    };
+    window.addEventListener("fazilnagar-theme-sync", handleCustomSync);
+
     const handleStorage = (e) => {
       if (e.key === GLOBAL_THEME_STORAGE_KEY && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
           if (parsed && parsed.themeId) {
-            setThemeConfig((prev) => {
-              const updated = {
-                ...prev,
-                themeId: parsed.themeId,
-              };
-              applyThemeToDOM(updated);
-              return updated;
-            });
+            const next = {
+              themeId: parsed.themeId,
+              mode: parsed.mode === "dark" ? "dark" : "light",
+            };
+            setThemeConfig(next);
+            applyThemeToDOM(next);
           }
         } catch {}
       }
     };
     window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
+
+    return () => {
+      if (channel) channel.close();
+      window.removeEventListener("fazilnagar-theme-sync", handleCustomSync);
+      window.removeEventListener("storage", handleStorage);
+    };
   }, [applyThemeToDOM]);
 
   const value = useMemo(

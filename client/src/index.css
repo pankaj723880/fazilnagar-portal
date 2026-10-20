@@ -1075,177 +1075,177 @@ html[data-public-theme="light"] .leaflet-bar a {
 
 /* Homepage Sections in Light Mode */
 html[data-public-theme="light"] #regional-connectivity-section {
-  background-color: #F7F3EB !important;
-  border-color: #DED5C7 !important;
-  color: #292722 !important;
+  background-color: var(--background-primary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="light"] #regional-connectivity-section h2 {
-  color: #292722 !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="light"] #regional-connectivity-section p {
-  color: #6F6A61 !important;
+  color: var(--text-secondary) !important;
 }
 
 html[data-public-theme="light"] #regional-connectivity-section .text-amber-400 {
-  color: #B3945B !important;
+  color: var(--heritage-accent) !important;
 }
 
 html[data-public-theme="light"] #regional-connectivity-section .bg-slate-800\/80,
 html[data-public-theme="light"] #regional-connectivity-section .bg-slate-800 {
-  background-color: #EEE7DA !important;
-  border-color: #DED5C7 !important;
-  color: #6F6A61 !important;
+  background-color: var(--background-secondary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-secondary) !important;
 }
 
 html[data-public-theme="light"] #regional-connectivity-section .bg-slate-900,
 html[data-public-theme="light"] #regional-connectivity-section .bg-slate-900\/95,
 html[data-public-theme="light"] #regional-connectivity-section .bg-slate-900\/90,
 html[data-public-theme="light"] #regional-connectivity-section .bg-slate-900\/80 {
-  background-color: #FFFFFF !important;
-  border-color: #DED5C7 !important;
-  color: #292722 !important;
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="light"] #regional-connectivity-section .bg-slate-800\/90,
 html[data-public-theme="light"] #regional-connectivity-section .bg-slate-800\/60 {
-  background-color: #EEE7DA !important;
-  border-color: #DED5C7 !important;
-  color: #6F6A61 !important;
+  background-color: var(--background-secondary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-secondary) !important;
 }
 
 html[data-public-theme="light"] #regional-connectivity-section input {
-  background-color: #FFFFFF !important;
-  border-color: #DED5C7 !important;
-  color: #292722 !important;
+  background-color: var(--surface-input) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="light"] #regional-connectivity-section input::placeholder {
-  color: #8E887D !important;
+  color: var(--placeholder-color) !important;
 }
 
 html[data-public-theme="light"] #local-updates-section {
-  background-color: #F7F3EB !important;
-  border-color: #DED5C7 !important;
-  color: #292722 !important;
+  background-color: var(--background-primary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="light"] #local-updates-section h2 {
-  color: #292722 !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="light"] #local-updates-section p {
-  color: #6F6A61 !important;
+  color: var(--text-secondary) !important;
 }
 
 html[data-public-theme="light"] #local-updates-section .text-red-400 {
-  color: #A83D32 !important;
+  color: var(--heritage-action) !important;
 }
 
 html[data-public-theme="light"] #local-updates-section .bg-slate-900\/90,
 html[data-public-theme="light"] #local-updates-section .bg-slate-900\/80,
 html[data-public-theme="light"] #local-updates-section .bg-slate-900 {
-  background-color: #FFFFFF !important;
-  border-color: #DED5C7 !important;
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-color) !important;
   box-shadow: 0 2px 14px rgba(41, 39, 34, 0.05) !important;
 }
 
 html[data-public-theme="light"] #local-updates-section .border-slate-800,
 html[data-public-theme="light"] #local-updates-section .border-slate-800\/80 {
-  border-color: #DED5C7 !important;
+  border-color: var(--border-color) !important;
 }
 
 html[data-public-theme="light"] #local-updates-section h3 {
-  color: #292722 !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="light"] #local-updates-section .text-slate-300,
 html[data-public-theme="light"] #local-updates-section .text-slate-400 {
-  color: #6F6A61 !important;
+  color: var(--text-secondary) !important;
 }
 
 html[data-public-theme="light"] #local-updates-section .bg-red-950\/60 {
-  background-color: #FDF2F1 !important;
-  border-color: #F8B4AF !important;
-  color: #B42318 !important;
+  background-color: var(--heritage-error-bg, #FDF2F1) !important;
+  border-color: var(--heritage-error-border, #F8B4AF) !important;
+  color: var(--heritage-error, #B42318) !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section {
-  background-color: #F7F3EB !important;
-  border-color: #DED5C7 !important;
-  color: #292722 !important;
+  background-color: var(--background-primary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section h2 {
-  color: #292722 !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section p {
-  color: #6F6A61 !important;
+  color: var(--text-secondary) !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section .bg-red-50 {
-  background-color: #FDF2F1 !important;
-  border-color: #F8B4AF !important;
-  color: #B42318 !important;
+  background-color: var(--heritage-error-bg, #FDF2F1) !important;
+  border-color: var(--heritage-error-border, #F8B4AF) !important;
+  color: var(--heritage-error, #B42318) !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section .bg-\[\#F5F7F8\] {
-  background-color: #FFFFFF !important;
-  border-color: #DED5C7 !important;
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-color) !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section .bg-\[\#18232E\] {
-  background-color: #FFFFFF !important;
-  color: #292722 !important;
+  background-color: var(--surface-card) !important;
+  color: var(--text-primary) !important;
   box-shadow: 0 2px 14px rgba(41, 39, 34, 0.05) !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section a.bg-\[\#18232E\],
 html[data-public-theme="light"] #about-fazilnagar-section button.bg-\[\#18232E\] {
-  background-color: #A83D32 !important;
+  background-color: var(--heritage-action) !important;
   color: #FFFFFF !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section a.bg-\[\#18232E\]:hover,
 html[data-public-theme="light"] #about-fazilnagar-section button.bg-\[\#18232E\]:hover {
-  background-color: #873027 !important;
+  background-color: var(--heritage-action-hover) !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section .lg\:col-span-2.bg-\[\#F5F7F8\],
 html[data-public-theme="light"] #about-fazilnagar-section .bg-white.p-6 {
-  background-color: #FFFFFF !important;
-  border-color: #DED5C7 !important;
-  color: #292722 !important;
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section h3 {
-  color: #292722 !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section .bg-white.p-3 {
-  background-color: #F7F3EB !important;
-  border-color: #DED5C7 !important;
+  background-color: var(--background-secondary) !important;
+  border-color: var(--border-color) !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section .text-slate-500,
 html[data-public-theme="light"] #about-fazilnagar-section .text-slate-600,
 html[data-public-theme="light"] #about-fazilnagar-section .text-slate-700 {
-  color: #6F6A61 !important;
+  color: var(--text-secondary) !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section .bg-gradient-to-br {
-  background: #FFFFFF !important;
-  border: 1px solid #DED5C7 !important;
-  color: #292722 !important;
+  background: var(--surface-card) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="light"] #about-fazilnagar-section .bg-slate-800\/80,
 html[data-public-theme="light"] #about-fazilnagar-section .bg-slate-800\/60 {
-  background-color: #EEE7DA !important;
-  border-color: #DED5C7 !important;
-  color: #6F6A61 !important;
+  background-color: var(--background-secondary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-secondary) !important;
 }
 
 /* ========================================================
@@ -1572,163 +1572,163 @@ html[data-public-theme="dark"] .leaflet-bar a {
 
 /* Section Overrides: Map, News, & Sacred Twin Heritage (Dark) */
 html[data-public-theme="dark"] #regional-connectivity-section {
-  background-color: #191916 !important;
-  border-color: #484238 !important;
-  color: #F5F0E7 !important;
+  background-color: var(--background-primary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="dark"] #regional-connectivity-section h2 {
-  color: #F5F0E7 !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="dark"] #regional-connectivity-section p {
-  color: #C0B8AA !important;
+  color: var(--text-secondary) !important;
 }
 
 html[data-public-theme="dark"] #regional-connectivity-section .text-amber-400 {
-  color: #C5A66A !important;
+  color: var(--heritage-accent) !important;
 }
 
 html[data-public-theme="dark"] #regional-connectivity-section .bg-slate-800\/80,
 html[data-public-theme="dark"] #regional-connectivity-section .bg-slate-800 {
-  background-color: #24231F !important;
-  border-color: #484238 !important;
-  color: #C0B8AA !important;
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-secondary) !important;
 }
 
 html[data-public-theme="dark"] #regional-connectivity-section .bg-slate-900,
 html[data-public-theme="dark"] #regional-connectivity-section .bg-slate-900\/95,
 html[data-public-theme="dark"] #regional-connectivity-section .bg-slate-900\/90,
 html[data-public-theme="dark"] #regional-connectivity-section .bg-slate-900\/80 {
-  background-color: #24231F !important;
-  border-color: #484238 !important;
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-color) !important;
 }
 
 html[data-public-theme="dark"] #regional-connectivity-section .bg-slate-800\/90,
 html[data-public-theme="dark"] #regional-connectivity-section .bg-slate-800\/60 {
-  background-color: #24231F !important;
-  border-color: #484238 !important;
-  color: #C0B8AA !important;
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-secondary) !important;
 }
 
 html[data-public-theme="dark"] #local-updates-section {
-  background-color: #191916 !important;
-  border-color: #484238 !important;
-  color: #F5F0E7 !important;
+  background-color: var(--background-primary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="dark"] #local-updates-section h2 {
-  color: #F5F0E7 !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="dark"] #local-updates-section p {
-  color: #C0B8AA !important;
+  color: var(--text-secondary) !important;
 }
 
 html[data-public-theme="dark"] #local-updates-section .text-red-400 {
-  color: #C45A4C !important;
+  color: var(--heritage-action) !important;
 }
 
 html[data-public-theme="dark"] #local-updates-section .bg-slate-900\/90,
 html[data-public-theme="dark"] #local-updates-section .bg-slate-900\/80,
 html[data-public-theme="dark"] #local-updates-section .bg-slate-900 {
-  background-color: #24231F !important;
-  border-color: #484238 !important;
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-color) !important;
 }
 
 html[data-public-theme="dark"] #local-updates-section .border-slate-800,
 html[data-public-theme="dark"] #local-updates-section .border-slate-800\/80 {
-  border-color: #484238 !important;
+  border-color: var(--border-color) !important;
 }
 
 html[data-public-theme="dark"] #local-updates-section h3 {
-  color: #F5F0E7 !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="dark"] #local-updates-section .text-slate-300,
 html[data-public-theme="dark"] #local-updates-section .text-slate-400 {
-  color: #C0B8AA !important;
+  color: var(--text-secondary) !important;
 }
 
 html[data-public-theme="dark"] #local-updates-section .bg-red-950\/60 {
-  background-color: #3B1210 !important;
-  border-color: #7F231D !important;
-  color: #FCA5A5 !important;
+  background-color: var(--heritage-error-bg, #3B1210) !important;
+  border-color: var(--heritage-error-border, #7F231D) !important;
+  color: var(--error-text, #FCA5A5) !important;
 }
 
 html[data-public-theme="dark"] #about-fazilnagar-section {
-  background-color: #191916 !important;
-  border-color: #484238 !important;
-  color: #F5F0E7 !important;
+  background-color: var(--background-primary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="dark"] #about-fazilnagar-section h2 {
-  color: #F5F0E7 !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="dark"] #about-fazilnagar-section p {
-  color: #C0B8AA !important;
+  color: var(--text-secondary) !important;
 }
 
 html[data-public-theme="dark"] #about-fazilnagar-section .bg-red-50 {
-  background-color: #3B1210 !important;
-  border-color: #7F231D !important;
-  color: #FCA5A5 !important;
+  background-color: var(--heritage-error-bg, #3B1210) !important;
+  border-color: var(--heritage-error-border, #7F231D) !important;
+  color: var(--error-text, #FCA5A5) !important;
 }
 
 html[data-public-theme="dark"] #about-fazilnagar-section .bg-\[\#F5F7F8\] {
-  background-color: #24231F !important;
-  border-color: #484238 !important;
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-color) !important;
 }
 
 html[data-public-theme="dark"] #about-fazilnagar-section .bg-\[\#18232E\] {
-  background-color: #24231F !important;
-  color: #F5F0E7 !important;
+  background-color: var(--surface-card) !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="dark"] #about-fazilnagar-section a.bg-\[\#18232E\],
 html[data-public-theme="dark"] #about-fazilnagar-section button.bg-\[\#18232E\] {
-  background-color: #C45A4C !important;
+  background-color: var(--heritage-action) !important;
   color: #FFFFFF !important;
 }
 
 html[data-public-theme="dark"] #about-fazilnagar-section a.bg-\[\#18232E\]:hover,
 html[data-public-theme="dark"] #about-fazilnagar-section button.bg-\[\#18232E\]:hover {
-  background-color: #D36B5D !important;
+  background-color: var(--heritage-action-hover) !important;
 }
 
 html[data-public-theme="dark"] #about-fazilnagar-section .lg\:col-span-2.bg-\[\#F5F7F8\],
 html[data-public-theme="dark"] #about-fazilnagar-section .bg-white.p-6 {
-  background-color: #24231F !important;
-  border-color: #484238 !important;
-  color: #F5F0E7 !important;
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="dark"] #about-fazilnagar-section h3 {
-  color: #F5F0E7 !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="dark"] #about-fazilnagar-section .bg-white.p-3 {
-  background-color: #302D27 !important;
-  border-color: #484238 !important;
+  background-color: var(--background-secondary) !important;
+  border-color: var(--border-color) !important;
 }
 
 html[data-public-theme="dark"] #about-fazilnagar-section .text-slate-500,
 html[data-public-theme="dark"] #about-fazilnagar-section .text-slate-600,
 html[data-public-theme="dark"] #about-fazilnagar-section .text-slate-700 {
-  color: #C0B8AA !important;
+  color: var(--text-secondary) !important;
 }
 
 html[data-public-theme="dark"] #about-fazilnagar-section .bg-gradient-to-br {
-  background: #24231F !important;
-  border: 1px solid #484238 !important;
+  background: var(--surface-card) !important;
+  border: 1px solid var(--border-color) !important;
 }
 
 html[data-public-theme="dark"] #about-fazilnagar-section .bg-slate-800\/80,
 html[data-public-theme="dark"] #about-fazilnagar-section .bg-slate-800\/60 {
-  background-color: #24231F !important;
-  border-color: #484238 !important;
-  color: #C0B8AA !important;
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-secondary) !important;
 }
 
 /* ========================================================
@@ -1737,16 +1737,16 @@ html[data-public-theme="dark"] #about-fazilnagar-section .bg-slate-800\/60 {
 html[data-public-theme="dark"] #directory-page .text-slate-500,
 html[data-public-theme="dark"] #directory-page .text-slate-600,
 html[data-public-theme="dark"] #directory-page .text-slate-700 {
-  color: #C0B8AA !important;
+  color: var(--text-secondary) !important;
 }
 
 html[data-public-theme="dark"] #directory-page .text-slate-400 {
-  color: #A8A092 !important;
+  color: var(--text-muted) !important;
 }
 
 html[data-public-theme="dark"] #directory-page .text-slate-900,
 html[data-public-theme="dark"] #directory-page .text-slate-800 {
-  color: #F5F0E7 !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="dark"] #directory-page .text-emerald-700,
@@ -1826,33 +1826,33 @@ html[data-public-theme="light"] #directory-page button.bg-\[\#18232E\] span {
   color: #FFFFFF !important;
 }
 html[data-public-theme="light"] #directory-page button.bg-slate-50 {
-  background-color: #EEE7DA !important;
-  border-color: #DED5C7 !important;
-  color: #292722 !important;
+  background-color: var(--background-secondary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
 html[data-public-theme="light"] #directory-page button.bg-slate-50:hover {
-  background-color: #E2D9CA !important;
-  border-color: #C5BBAA !important;
-  color: #292722 !important;
+  background-color: var(--heritage-surface-secondary, #E2D9CA) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="dark"] #directory-page button.bg-\[\#18232E\] {
-  background-color: var(--heritage-action, #C45A4C) !important;
+  background-color: var(--heritage-action) !important;
   color: #FFFFFF !important;
-  border-color: var(--heritage-action, #C45A4C) !important;
+  border-color: var(--heritage-action) !important;
 }
 html[data-public-theme="dark"] #directory-page button.bg-\[\#18232E\] span {
   color: #FFFFFF !important;
 }
 html[data-public-theme="dark"] #directory-page button.bg-slate-50 {
-  background-color: #302D27 !important;
-  border-color: #484238 !important;
-  color: #F5F0E7 !important;
+  background-color: var(--background-secondary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
 html[data-public-theme="dark"] #directory-page button.bg-slate-50:hover {
-  background-color: #3B3730 !important;
-  border-color: #5E564A !important;
-  color: #F5F0E7 !important;
+  background-color: var(--heritage-surface-secondary, #3B3730) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
 
 /* 3. High-Contrast Verified & Live Badges (WCAG AA compliant >= 4.5:1) */
@@ -1891,57 +1891,57 @@ html[data-public-theme="dark"] .bg-amber-100 * {
 /* 4. Dropdowns, Filter Popovers & Select Elements */
 html[data-public-theme="light"] select,
 html[data-public-theme="light"] .civic-form-select {
-  background-color: #FFFFFF !important;
-  color: #292722 !important;
-  border-color: #DED5C7 !important;
+  background-color: var(--surface-input) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
 }
 html[data-public-theme="light"] select option {
-  background-color: #FFFFFF !important;
-  color: #292722 !important;
+  background-color: var(--surface-card) !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-public-theme="dark"] select,
 html[data-public-theme="dark"] .civic-form-select {
-  background-color: #24231F !important;
-  color: #F5F0E7 !important;
-  border-color: #484238 !important;
+  background-color: var(--surface-input) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
 }
 html[data-public-theme="dark"] select option {
-  background-color: #24231F !important;
-  color: #F5F0E7 !important;
+  background-color: var(--surface-card) !important;
+  color: var(--text-primary) !important;
 }
 
 /* 5. Leaflet Map Controls, Popups & Markers */
 html[data-public-theme="light"] .leaflet-popup-content-wrapper {
-  background-color: #FFFFFF !important;
-  color: #292722 !important;
-  border: 1px solid #DED5C7 !important;
+  background-color: var(--surface-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
 }
 html[data-public-theme="light"] .leaflet-popup-content h1,
 html[data-public-theme="light"] .leaflet-popup-content h2,
 html[data-public-theme="light"] .leaflet-popup-content h3,
 html[data-public-theme="light"] .leaflet-popup-content h4 {
-  color: #292722 !important;
+  color: var(--text-primary) !important;
 }
 html[data-public-theme="light"] .leaflet-popup-content p,
 html[data-public-theme="light"] .leaflet-popup-content span {
-  color: #524E47 !important;
+  color: var(--text-secondary) !important;
 }
 
 html[data-public-theme="dark"] .leaflet-popup-content-wrapper {
-  background-color: #24231F !important;
-  color: #F5F0E7 !important;
-  border: 1px solid #484238 !important;
+  background-color: var(--surface-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
 }
 html[data-public-theme="dark"] .leaflet-popup-content h1,
 html[data-public-theme="dark"] .leaflet-popup-content h2,
 html[data-public-theme="dark"] .leaflet-popup-content h3,
 html[data-public-theme="dark"] .leaflet-popup-content h4 {
-  color: #F5F0E7 !important;
+  color: var(--text-primary) !important;
 }
 html[data-public-theme="dark"] .leaflet-popup-content p,
 html[data-public-theme="dark"] .leaflet-popup-content span {
-  color: #D4CDC1 !important;
+  color: var(--text-secondary) !important;
 }
 
 /* 6. Text Over Hero Images, Gradients & Variable Backgrounds */
@@ -1955,15 +1955,15 @@ html[data-public-theme="dark"] .leaflet-popup-content span {
 /* 7. Town Messaging Theme-Aware Bubbles & Controls */
 html[data-public-theme="dark"] .chat-incoming-bubble,
 html[data-public-theme="dark"] .bg-slate-100 {
-  background-color: #302D27 !important;
-  color: #F5F0E7 !important;
-  border-color: #484238 !important;
+  background-color: var(--background-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 html[data-public-theme="light"] .chat-incoming-bubble {
-  background-color: #EEE7DA !important;
-  color: #292722 !important;
-  border-color: #DED5C7 !important;
+  background-color: var(--background-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 /* 8. Hindi Text and Small Labels Contrast Enforcement */
@@ -2001,16 +2001,16 @@ html[data-public-theme="light"] .admin-workspace * {
   font-size: 0.8125rem;
   font-weight: 700;
   border-radius: 0.75rem;
-  background-color: #A83D32;
+  background-color: var(--heritage-action);
   color: #FFFFFF;
   border: 1px solid transparent;
-  box-shadow: 0 1px 2px 0 rgba(168, 61, 50, 0.25);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
 }
 .btn-civic-primary:hover {
-  background-color: #873027;
-  box-shadow: 0 4px 12px 0 rgba(168, 61, 50, 0.35);
+  background-color: var(--heritage-action-hover);
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.3);
 }
 .btn-civic-primary:active {
   transform: scale(0.98);
@@ -2031,16 +2031,16 @@ html[data-public-theme="light"] .admin-workspace * {
   font-size: 0.8125rem;
   font-weight: 700;
   border-radius: 0.75rem;
-  background-color: #EEE7DA;
-  color: #292722;
-  border: 1px solid #DED5C7;
-  box-shadow: 0 1px 2px 0 rgba(41, 39, 34, 0.05);
+  background-color: var(--background-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
 }
 .btn-civic-secondary:hover {
-  background-color: #E2D9CA;
-  border-color: #C5BBAA;
+  background-color: var(--heritage-surface-secondary, #E2D9CA);
+  border-color: var(--border-color);
 }
 .btn-civic-secondary:active {
   transform: scale(0.98);
@@ -2057,19 +2057,19 @@ html[data-public-theme="light"] .admin-workspace * {
   padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
   border-radius: 0.75rem;
-  border: 1px solid #DED5C7;
-  background-color: #FFFFFF;
-  color: #292722;
+  border: 1px solid var(--border-color);
+  background-color: var(--surface-input);
+  color: var(--text-primary);
   box-sizing: border-box;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .civic-input:focus {
   outline: none;
-  border-color: #A83D32;
-  box-shadow: 0 0 0 3px rgba(168, 61, 50, 0.15);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-ring) 20%, transparent);
 }
 .civic-input::placeholder {
-  color: #8E887D;
+  color: var(--placeholder-color);
 }
 
 .civic-badge {
@@ -2081,15 +2081,121 @@ html[data-public-theme="light"] .admin-workspace * {
   font-weight: 600;
   border-radius: 9999px;
   letter-spacing: 0.01em;
-  background-color: #EEE7DA;
-  color: #6F6A61;
-  border: 1px solid #DED5C7;
+  background-color: var(--background-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
 }
 
 html[data-public-theme="dark"] .civic-badge {
-  background-color: #302D27;
-  color: #C0B8AA;
-  border-color: #484238;
+  background-color: var(--background-secondary);
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+/* ==========================================================================
+   GLOBAL THEME BRIDGE: Connects all Public Components to Active Theme Tokens
+   ========================================================================== */
+:not(.admin-workspace):not(.admin-workspace *) .bg-\[\#A83D32\],
+:not(.admin-workspace):not(.admin-workspace *) [class*="bg-[#A83D32]"] {
+  background-color: var(--heritage-action) !important;
+}
+:not(.admin-workspace):not(.admin-workspace *) .hover\:bg-\[\#873027\]:hover,
+:not(.admin-workspace):not(.admin-workspace *) [class*="hover:bg-[#873027]"]:hover {
+  background-color: var(--heritage-action-hover) !important;
+}
+:not(.admin-workspace):not(.admin-workspace *) .text-\[\#A83D32\],
+:not(.admin-workspace):not(.admin-workspace *) [class*="text-[#A83D32]"] {
+  color: var(--heritage-action) !important;
+}
+:not(.admin-workspace):not(.admin-workspace *) .border-\[\#A83D32\],
+:not(.admin-workspace):not(.admin-workspace *) [class*="border-[#A83D32]"] {
+  border-color: var(--heritage-action) !important;
+}
+:not(.admin-workspace):not(.admin-workspace *) .border-\[\#873027\],
+:not(.admin-workspace):not(.admin-workspace *) [class*="border-[#873027]"] {
+  border-color: var(--heritage-action-hover) !important;
+}
+
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:bg-\[\#C45A4C\],
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:bg-[#C45A4C]"] {
+  background-color: var(--heritage-action) !important;
+}
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:hover\:bg-\[\#D36B5D\]:hover,
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:hover:bg-[#D36B5D]"]:hover {
+  background-color: var(--heritage-action-hover) !important;
+}
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:text-\[\#C45A4C\],
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:text-[#C45A4C]"] {
+  color: var(--heritage-action) !important;
+}
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:border-\[\#D36B5D\],
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:border-[#D36B5D]"] {
+  border-color: var(--heritage-action-hover) !important;
+}
+
+:not(.admin-workspace):not(.admin-workspace *) .text-\[\#292722\],
+:not(.admin-workspace):not(.admin-workspace *) [class*="text-[#292722]"] {
+  color: var(--text-primary) !important;
+}
+:not(.admin-workspace):not(.admin-workspace *) .hover\:text-\[\#292722\]:hover,
+:not(.admin-workspace):not(.admin-workspace *) [class*="hover:text-[#292722]"]:hover {
+  color: var(--text-primary) !important;
+}
+:not(.admin-workspace):not(.admin-workspace *) .text-\[\#6F6A61\],
+:not(.admin-workspace):not(.admin-workspace *) .text-\[\#524E47\],
+:not(.admin-workspace):not(.admin-workspace *) [class*="text-[#6F6A61]"],
+:not(.admin-workspace):not(.admin-workspace *) [class*="text-[#524E47]"] {
+  color: var(--text-secondary) !important;
+}
+
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:text-\[\#F5F0E7\],
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:text-[#F5F0E7]"] {
+  color: var(--text-primary) !important;
+}
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:text-\[\#C0B8AA\],
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:text-\[\#D4CDC1\],
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:text-[#C0B8AA]"],
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:text-[#D4CDC1]"] {
+  color: var(--text-secondary) !important;
+}
+
+:not(.admin-workspace):not(.admin-workspace *) .bg-\[\#F7F3EB\],
+:not(.admin-workspace):not(.admin-workspace *) [class*="bg-[#F7F3EB]"] {
+  background-color: var(--background-primary) !important;
+}
+:not(.admin-workspace):not(.admin-workspace *) .bg-\[\#EEE7DA\],
+:not(.admin-workspace):not(.admin-workspace *) [class*="bg-[#EEE7DA]"] {
+  background-color: var(--background-secondary) !important;
+}
+:not(.admin-workspace):not(.admin-workspace *) .hover\:bg-\[\#E2D9CA\]:hover,
+:not(.admin-workspace):not(.admin-workspace *) .hover\:bg-\[\#E5DDD0\]:hover {
+  background-color: var(--heritage-surface-secondary) !important;
+}
+
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:bg-\[\#191916\],
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:bg-[#191916]"] {
+  background-color: var(--background-primary) !important;
+}
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:bg-\[\#24231F\],
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:bg-[#24231F]"] {
+  background-color: var(--surface-card) !important;
+}
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:bg-\[\#302D27\],
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:bg-[#302D27]"] {
+  background-color: var(--background-secondary) !important;
+}
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:hover\:bg-\[\#3D3932\]:hover,
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:hover:bg-[#3D3932]"]:hover {
+  background-color: var(--heritage-surface-secondary) !important;
+}
+
+:not(.admin-workspace):not(.admin-workspace *) .border-\[\#DED5C7\],
+:not(.admin-workspace):not(.admin-workspace *) [class*="border-[#DED5C7]"] {
+  border-color: var(--border-color) !important;
+}
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:border-\[\#484238\],
+html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:border-[#484238]"] {
+  border-color: var(--border-color) !important;
 }
 
 /* Minimal editorial scrollbar */
