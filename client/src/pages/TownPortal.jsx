@@ -347,6 +347,31 @@ export default function TownPortal() {
     return evt.category === selectedEventCategory;
   });
 
+  // Curated high-resolution local images for seamless hero carousel display
+  const HERO_FALLBACK_IMAGES = [
+    "/images/fazilnagar_pawanagar.webp",
+    "/images/fazilnagar_kakodha.webp",
+    "/images/kushinagar_mahaparinirvana.webp",
+    "/images/kushinagar_ramabhar.webp",
+  ];
+
+  const getSlideFallbackImage = (title, idx = 0) => {
+    const t = String(title || "").toLowerCase();
+    if (t.includes("shaheed") || t.includes("tila") || t.includes("kakodha")) {
+      return "/images/fazilnagar_kakodha.webp";
+    }
+    if (t.includes("parinirvana") || t.includes("buddha") || t.includes("stupa") || t.includes("temple")) {
+      return "/images/kushinagar_mahaparinirvana.webp";
+    }
+    if (t.includes("ramabhar") || t.includes("naukari")) {
+      return "/images/kushinagar_ramabhar.webp";
+    }
+    if (t.includes("college") || t.includes("market") || t.includes("pawanagar") || t.includes("fazilnagar")) {
+      return "/images/fazilnagar_pawanagar.webp";
+    }
+    return HERO_FALLBACK_IMAGES[idx % HERO_FALLBACK_IMAGES.length];
+  };
+
   // Compute dynamic hero slides (custom admin slides if any with valid URLs, or default slides)
   const rawHeroSlides =
     siteSettings?.heroSettings?.slides && siteSettings.heroSettings.slides.length > 0
@@ -358,21 +383,26 @@ export default function TownPortal() {
       return (
         s &&
         s.isActive !== false &&
-        s.imageUrl &&
-        !s.imageUrl.startsWith("blob:") &&
+        !s.imageUrl?.startsWith("blob:") &&
         !title.includes("buddha temple")
       );
     }
   );
-  const dynamicHeroSlides = configuredSlides.map((s, idx) => ({
-    id: s._id || idx,
-    src: s.imageUrl,
-    title: s.title,
-    location: s.subtitle || "Fazilnagar",
-    caption: s.caption || "",
-    linkUrl: s.linkUrl || "/directory",
-    buttonText: s.buttonText || "Browse Town Directory",
-  }));
+  const slidesToUse = configuredSlides.length > 0 ? configuredSlides : DEFAULT_HERO_SLIDES;
+  const dynamicHeroSlides = slidesToUse.map((s, idx) => {
+    const fallback = getSlideFallbackImage(s.title, idx);
+    const rawSrc = s.imageUrl && typeof s.imageUrl === "string" && s.imageUrl.trim() ? s.imageUrl.trim() : fallback;
+    return {
+      id: s._id || idx,
+      src: rawSrc,
+      fallbackSrc: fallback,
+      title: s.title || "Fazilnagar",
+      location: s.subtitle || "Fazilnagar",
+      caption: s.caption || "",
+      linkUrl: s.linkUrl || "/directory",
+      buttonText: s.buttonText || "Browse Town Directory",
+    };
+  });
 
   // Hero Background Carousel States
   const [heroSlideIndex, setHeroSlideIndex] = useState(0);
@@ -644,6 +674,14 @@ export default function TownPortal() {
               }}
             />
 
+            {/* Ambient baseline hero image to ensure zero black flash during initial mount / transitions */}
+            <div
+              className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-luminosity pointer-events-none"
+              style={{
+                backgroundImage: "url('/images/fazilnagar_pawanagar.webp')",
+              }}
+            />
+
             {/* If slides exist, render carousel image transitions */}
             {dynamicHeroSlides.length > 0 &&
               dynamicHeroSlides.map((img, idx) => {
@@ -654,6 +692,11 @@ export default function TownPortal() {
                   <div
                     key={img.id || idx}
                     className="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-100 z-10"
+                    style={{
+                      backgroundImage: `url(${img.fallbackSrc})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }}
                   >
                     <img
                       src={img.src}
@@ -665,7 +708,12 @@ export default function TownPortal() {
                       height="600"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
-                        e.currentTarget.style.display = "none";
+                        e.currentTarget.onerror = null;
+                        const fallback = img.fallbackSrc || "/images/fazilnagar_pawanagar.webp";
+                        if (e.currentTarget.src !== fallback && !e.currentTarget.src.endsWith(fallback)) {
+                          e.currentTarget.src = fallback;
+                          e.currentTarget.style.display = "block";
+                        }
                       }}
                       className="w-full h-full object-cover object-center animate-ken-burns scale-105 transition-transform duration-1000 ease-out"
                     />

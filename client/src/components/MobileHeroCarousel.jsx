@@ -117,8 +117,8 @@ export default function MobileHeroCarousel({
         {/* Carousel Slide Images */}
         {slides.map((slide, idx) => {
           const isCurrent = idx === currentIndex;
-          const imageSrc = slide.src || slide.imageUrl;
-          if (!imageSrc) return null;
+          const fallback = slide.fallbackSrc || "/images/fazilnagar_pawanagar.webp";
+          const imageSrc = slide.src || slide.imageUrl || fallback;
 
           return (
             <div
@@ -126,6 +126,11 @@ export default function MobileHeroCarousel({
               className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
                 isCurrent ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
               }`}
+              style={{
+                backgroundImage: `url(${fallback})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
             >
               <img
                 src={imageSrc}
@@ -135,7 +140,9 @@ export default function MobileHeroCarousel({
                 referrerPolicy="no-referrer"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
-                  e.currentTarget.src = "/images/fazilnagar_pawanagar.webp";
+                  if (e.currentTarget.src !== fallback && !e.currentTarget.src.endsWith(fallback)) {
+                    e.currentTarget.src = fallback;
+                  }
                 }}
                 className="w-full h-full object-cover object-center"
                 style={{

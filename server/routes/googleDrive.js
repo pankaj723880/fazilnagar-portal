@@ -780,7 +780,10 @@ router.get("/media/:id", async (req, res) => {
     driveStream.data.pipe(res);
   } catch (err) {
     console.error("[GoogleDrive] Media Retrieval Error:", err);
-    res.status(500).json({ message: "Failed to retrieve media file from Google Drive." });
+    if (!res.headersSent) {
+      const clientBase = (process.env.CLIENT_URL || "https://fazilnagar.vercel.app").replace(/\/+$/, "");
+      return res.redirect(302, `${clientBase}/images/fazilnagar_pawanagar.webp`);
+    }
   }
 });
 

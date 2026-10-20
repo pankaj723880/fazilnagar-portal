@@ -511,7 +511,8 @@ export default function AdminHeroCMS() {
                         alt={slide.title || "Slide"}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          e.target.src = "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1200&q=80";
+                          e.target.onerror = null;
+                          e.target.src = "/images/fazilnagar_pawanagar.webp";
                         }}
                       />
                       <span className="absolute bottom-0.5 right-0.5 bg-black/70 text-white text-[9px] font-black px-1 rounded">
