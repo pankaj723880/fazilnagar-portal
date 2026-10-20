@@ -728,7 +728,13 @@ export default function App() {
           (Hidden on /news full-screen reels page and TownPortal homepage which has its own footer)
           ======================================================== */}
       {!isNewsPage && !isPortalPage && !isAdminPage && !isMessagesPage && !hideLayoutOnAreaDetails && (
-        <footer className={`bg-[#18232E] text-slate-400 text-xs border-t border-slate-800 pb-28 sm:pb-8 ${isAuthPage || isPublicFormPage ? "mt-0" : "mt-12"}`}>
+        <footer
+          className={`text-slate-400 text-xs border-t pb-28 sm:pb-8 transition-colors duration-200 ${isAuthPage || isPublicFormPage ? "mt-0" : "mt-12"}`}
+          style={{
+            backgroundColor: "var(--background-secondary)",
+            borderColor: "var(--border-color)",
+          }}
+        >
           {/* Mobile Collapsible Accordions (md:hidden) */}
           <div className="md:hidden max-w-lg mx-auto px-4 py-6 space-y-2.5">
             {/* Custom Brand Title Block */}

@@ -601,7 +601,13 @@ export default function TownPortal() {
           DESKTOP CIVIC & LOCAL DIRECTORY PORTAL (>= md, hidden on mobile)
           ======================================================== */}
       {isDesktop && !isMobilePreview && (
-        <div className="w-full max-w-full overflow-x-hidden bg-[#F5F7F8] font-sans text-[#18232E] selection:bg-[#B8323C] selection:text-white">
+        <div
+          className="w-full max-w-full overflow-x-hidden font-sans transition-colors duration-200"
+          style={{
+            backgroundColor: "var(--background-primary)",
+            color: "var(--text-primary)",
+          }}
+        >
 
 
 
@@ -2275,7 +2281,13 @@ export default function TownPortal() {
       {/* ========================================================
           SECTION 11: FOOTER (Editorial Civic Footer)
           ======================================================== */}
-      <footer className="bg-[#0F172A] text-slate-400 text-xs border-t border-slate-800/80 pb-24 lg:pb-0">
+      <footer
+        className="text-slate-400 text-xs border-t pb-24 lg:pb-0 transition-colors duration-200"
+        style={{
+          backgroundColor: "var(--background-secondary)",
+          borderColor: "var(--border-color)",
+        }}
+      >
         <ScrollReveal variant="fade-up" once={true}>
           <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 lg:py-20 grid grid-cols-1 md:grid-cols-4 gap-10 lg:gap-12">
           {/* Col 1: Wordmark & Tagline */}

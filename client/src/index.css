@@ -1074,175 +1074,175 @@ html[data-public-theme="light"] .leaflet-bar a {
 }
 
 /* Homepage Sections in Light Mode */
-html[data-public-theme="light"] #regional-connectivity-section {
+#public-portal-root #regional-connectivity-section {
   background-color: var(--background-primary) !important;
   border-color: var(--border-color) !important;
   color: var(--text-primary) !important;
 }
 
-html[data-public-theme="light"] #regional-connectivity-section h2 {
+#public-portal-root #regional-connectivity-section h2 {
   color: var(--text-primary) !important;
 }
 
-html[data-public-theme="light"] #regional-connectivity-section p {
+#public-portal-root #regional-connectivity-section p {
   color: var(--text-secondary) !important;
 }
 
-html[data-public-theme="light"] #regional-connectivity-section .text-amber-400 {
+#public-portal-root #regional-connectivity-section .text-amber-400 {
   color: var(--heritage-accent) !important;
 }
 
-html[data-public-theme="light"] #regional-connectivity-section .bg-slate-800\/80,
-html[data-public-theme="light"] #regional-connectivity-section .bg-slate-800 {
+#public-portal-root #regional-connectivity-section .bg-slate-800\/80,
+#public-portal-root #regional-connectivity-section .bg-slate-800 {
   background-color: var(--background-secondary) !important;
   border-color: var(--border-color) !important;
   color: var(--text-secondary) !important;
 }
 
-html[data-public-theme="light"] #regional-connectivity-section .bg-slate-900,
-html[data-public-theme="light"] #regional-connectivity-section .bg-slate-900\/95,
-html[data-public-theme="light"] #regional-connectivity-section .bg-slate-900\/90,
-html[data-public-theme="light"] #regional-connectivity-section .bg-slate-900\/80 {
+#public-portal-root #regional-connectivity-section .bg-slate-900,
+#public-portal-root #regional-connectivity-section .bg-slate-900\/95,
+#public-portal-root #regional-connectivity-section .bg-slate-900\/90,
+#public-portal-root #regional-connectivity-section .bg-slate-900\/80 {
   background-color: var(--surface-card) !important;
   border-color: var(--border-color) !important;
   color: var(--text-primary) !important;
 }
 
-html[data-public-theme="light"] #regional-connectivity-section .bg-slate-800\/90,
-html[data-public-theme="light"] #regional-connectivity-section .bg-slate-800\/60 {
+#public-portal-root #regional-connectivity-section .bg-slate-800\/90,
+#public-portal-root #regional-connectivity-section .bg-slate-800\/60 {
   background-color: var(--background-secondary) !important;
   border-color: var(--border-color) !important;
   color: var(--text-secondary) !important;
 }
 
-html[data-public-theme="light"] #regional-connectivity-section input {
+#public-portal-root #regional-connectivity-section input {
   background-color: var(--surface-input) !important;
   border-color: var(--border-color) !important;
   color: var(--text-primary) !important;
 }
 
-html[data-public-theme="light"] #regional-connectivity-section input::placeholder {
+#public-portal-root #regional-connectivity-section input::placeholder {
   color: var(--placeholder-color) !important;
 }
 
-html[data-public-theme="light"] #local-updates-section {
+#public-portal-root #local-updates-section {
   background-color: var(--background-primary) !important;
   border-color: var(--border-color) !important;
   color: var(--text-primary) !important;
 }
 
-html[data-public-theme="light"] #local-updates-section h2 {
+#public-portal-root #local-updates-section h2 {
   color: var(--text-primary) !important;
 }
 
-html[data-public-theme="light"] #local-updates-section p {
+#public-portal-root #local-updates-section p {
   color: var(--text-secondary) !important;
 }
 
-html[data-public-theme="light"] #local-updates-section .text-red-400 {
+#public-portal-root #local-updates-section .text-red-400 {
   color: var(--heritage-action) !important;
 }
 
-html[data-public-theme="light"] #local-updates-section .bg-slate-900\/90,
-html[data-public-theme="light"] #local-updates-section .bg-slate-900\/80,
-html[data-public-theme="light"] #local-updates-section .bg-slate-900 {
+#public-portal-root #local-updates-section .bg-slate-900\/90,
+#public-portal-root #local-updates-section .bg-slate-900\/80,
+#public-portal-root #local-updates-section .bg-slate-900 {
   background-color: var(--surface-card) !important;
   border-color: var(--border-color) !important;
   box-shadow: 0 2px 14px rgba(41, 39, 34, 0.05) !important;
 }
 
-html[data-public-theme="light"] #local-updates-section .border-slate-800,
-html[data-public-theme="light"] #local-updates-section .border-slate-800\/80 {
+#public-portal-root #local-updates-section .border-slate-800,
+#public-portal-root #local-updates-section .border-slate-800\/80 {
   border-color: var(--border-color) !important;
 }
 
-html[data-public-theme="light"] #local-updates-section h3 {
+#public-portal-root #local-updates-section h3 {
   color: var(--text-primary) !important;
 }
 
-html[data-public-theme="light"] #local-updates-section .text-slate-300,
-html[data-public-theme="light"] #local-updates-section .text-slate-400 {
+#public-portal-root #local-updates-section .text-slate-300,
+#public-portal-root #local-updates-section .text-slate-400 {
   color: var(--text-secondary) !important;
 }
 
-html[data-public-theme="light"] #local-updates-section .bg-red-950\/60 {
+#public-portal-root #local-updates-section .bg-red-950\/60 {
   background-color: var(--heritage-error-bg, #FDF2F1) !important;
   border-color: var(--heritage-error-border, #F8B4AF) !important;
   color: var(--heritage-error, #B42318) !important;
 }
 
-html[data-public-theme="light"] #about-fazilnagar-section {
+#public-portal-root #about-fazilnagar-section {
   background-color: var(--background-primary) !important;
   border-color: var(--border-color) !important;
   color: var(--text-primary) !important;
 }
 
-html[data-public-theme="light"] #about-fazilnagar-section h2 {
+#public-portal-root #about-fazilnagar-section h2 {
   color: var(--text-primary) !important;
 }
 
-html[data-public-theme="light"] #about-fazilnagar-section p {
+#public-portal-root #about-fazilnagar-section p {
   color: var(--text-secondary) !important;
 }
 
-html[data-public-theme="light"] #about-fazilnagar-section .bg-red-50 {
+#public-portal-root #about-fazilnagar-section .bg-red-50 {
   background-color: var(--heritage-error-bg, #FDF2F1) !important;
   border-color: var(--heritage-error-border, #F8B4AF) !important;
   color: var(--heritage-error, #B42318) !important;
 }
 
-html[data-public-theme="light"] #about-fazilnagar-section .bg-\[\#F5F7F8\] {
+#public-portal-root #about-fazilnagar-section .bg-\[\#F5F7F8\] {
   background-color: var(--surface-card) !important;
   border-color: var(--border-color) !important;
 }
 
-html[data-public-theme="light"] #about-fazilnagar-section .bg-\[\#18232E\] {
+#public-portal-root #about-fazilnagar-section .bg-\[\#18232E\] {
   background-color: var(--surface-card) !important;
   color: var(--text-primary) !important;
   box-shadow: 0 2px 14px rgba(41, 39, 34, 0.05) !important;
 }
 
-html[data-public-theme="light"] #about-fazilnagar-section a.bg-\[\#18232E\],
-html[data-public-theme="light"] #about-fazilnagar-section button.bg-\[\#18232E\] {
+#public-portal-root #about-fazilnagar-section a.bg-\[\#18232E\],
+#public-portal-root #about-fazilnagar-section button.bg-\[\#18232E\] {
   background-color: var(--heritage-action) !important;
   color: #FFFFFF !important;
 }
 
-html[data-public-theme="light"] #about-fazilnagar-section a.bg-\[\#18232E\]:hover,
-html[data-public-theme="light"] #about-fazilnagar-section button.bg-\[\#18232E\]:hover {
+#public-portal-root #about-fazilnagar-section a.bg-\[\#18232E\]:hover,
+#public-portal-root #about-fazilnagar-section button.bg-\[\#18232E\]:hover {
   background-color: var(--heritage-action-hover) !important;
 }
 
-html[data-public-theme="light"] #about-fazilnagar-section .lg\:col-span-2.bg-\[\#F5F7F8\],
-html[data-public-theme="light"] #about-fazilnagar-section .bg-white.p-6 {
+#public-portal-root #about-fazilnagar-section .lg\:col-span-2.bg-\[\#F5F7F8\],
+#public-portal-root #about-fazilnagar-section .bg-white.p-6 {
   background-color: var(--surface-card) !important;
   border-color: var(--border-color) !important;
   color: var(--text-primary) !important;
 }
 
-html[data-public-theme="light"] #about-fazilnagar-section h3 {
+#public-portal-root #about-fazilnagar-section h3 {
   color: var(--text-primary) !important;
 }
 
-html[data-public-theme="light"] #about-fazilnagar-section .bg-white.p-3 {
+#public-portal-root #about-fazilnagar-section .bg-white.p-3 {
   background-color: var(--background-secondary) !important;
   border-color: var(--border-color) !important;
 }
 
-html[data-public-theme="light"] #about-fazilnagar-section .text-slate-500,
-html[data-public-theme="light"] #about-fazilnagar-section .text-slate-600,
-html[data-public-theme="light"] #about-fazilnagar-section .text-slate-700 {
+#public-portal-root #about-fazilnagar-section .text-slate-500,
+#public-portal-root #about-fazilnagar-section .text-slate-600,
+#public-portal-root #about-fazilnagar-section .text-slate-700 {
   color: var(--text-secondary) !important;
 }
 
-html[data-public-theme="light"] #about-fazilnagar-section .bg-gradient-to-br {
+#public-portal-root #about-fazilnagar-section .bg-gradient-to-br {
   background: var(--surface-card) !important;
   border: 1px solid var(--border-color) !important;
   color: var(--text-primary) !important;
 }
 
-html[data-public-theme="light"] #about-fazilnagar-section .bg-slate-800\/80,
-html[data-public-theme="light"] #about-fazilnagar-section .bg-slate-800\/60 {
+#public-portal-root #about-fazilnagar-section .bg-slate-800\/80,
+#public-portal-root #about-fazilnagar-section .bg-slate-800\/60 {
   background-color: var(--background-secondary) !important;
   border-color: var(--border-color) !important;
   color: var(--text-secondary) !important;
@@ -2095,107 +2095,217 @@ html[data-public-theme="dark"] .civic-badge {
 /* ==========================================================================
    GLOBAL THEME BRIDGE: Connects all Public Components to Active Theme Tokens
    ========================================================================== */
-:not(.admin-workspace):not(.admin-workspace *) .bg-\[\#A83D32\],
-:not(.admin-workspace):not(.admin-workspace *) [class*="bg-[#A83D32]"] {
+
+/* 1. Primary Action & Button Utilities across all public elements */
+#public-portal-root .bg-\[\#B8323C\],
+#public-portal-root .bg-\[\#C92F3D\],
+#public-portal-root .bg-\[\#A83D32\],
+#public-portal-root [class*="bg-[#B8323C]"],
+#public-portal-root [class*="bg-[#C92F3D]"],
+#public-portal-root [class*="bg-[#A83D32]"] {
   background-color: var(--heritage-action) !important;
 }
-:not(.admin-workspace):not(.admin-workspace *) .hover\:bg-\[\#873027\]:hover,
-:not(.admin-workspace):not(.admin-workspace *) [class*="hover:bg-[#873027]"]:hover {
+
+#public-portal-root .hover\:bg-\[\#991B1B\]:hover,
+#public-portal-root .hover\:bg-\[\#a3222e\]:hover,
+#public-portal-root .hover\:bg-\[\#873027\]:hover,
+#public-portal-root [class*="hover:bg-[#991B1B]"]:hover,
+#public-portal-root [class*="hover:bg-[#a3222e]"]:hover,
+#public-portal-root [class*="hover:bg-[#873027]"]:hover {
   background-color: var(--heritage-action-hover) !important;
 }
-:not(.admin-workspace):not(.admin-workspace *) .text-\[\#A83D32\],
-:not(.admin-workspace):not(.admin-workspace *) [class*="text-[#A83D32]"] {
+
+#public-portal-root .text-\[\#B8323C\],
+#public-portal-root .text-\[\#C92F3D\],
+#public-portal-root .text-\[\#A83D32\],
+#public-portal-root [class*="text-[#B8323C]"],
+#public-portal-root [class*="text-[#C92F3D]"],
+#public-portal-root [class*="text-[#A83D32]"] {
   color: var(--heritage-action) !important;
 }
-:not(.admin-workspace):not(.admin-workspace *) .border-\[\#A83D32\],
-:not(.admin-workspace):not(.admin-workspace *) [class*="border-[#A83D32]"] {
+
+#public-portal-root .border-\[\#B8323C\],
+#public-portal-root .border-\[\#C92F3D\],
+#public-portal-root .border-\[\#A83D32\],
+#public-portal-root [class*="border-[#B8323C]"],
+#public-portal-root [class*="border-[#C92F3D]"],
+#public-portal-root [class*="border-[#A83D32]"] {
   border-color: var(--heritage-action) !important;
 }
-:not(.admin-workspace):not(.admin-workspace *) .border-\[\#873027\],
-:not(.admin-workspace):not(.admin-workspace *) [class*="border-[#873027]"] {
-  border-color: var(--heritage-action-hover) !important;
-}
 
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:bg-\[\#C45A4C\],
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:bg-[#C45A4C]"] {
+/* Dark Mode Action Adapters */
+html[data-public-theme="dark"] #public-portal-root .dark\:bg-\[\#C45A4C\],
+html[data-public-theme="dark"] #public-portal-root [class*="dark:bg-[#C45A4C]"] {
   background-color: var(--heritage-action) !important;
 }
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:hover\:bg-\[\#D36B5D\]:hover,
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:hover:bg-[#D36B5D]"]:hover {
+
+html[data-public-theme="dark"] #public-portal-root .dark\:hover\:bg-\[\#D36B5D\]:hover,
+html[data-public-theme="dark"] #public-portal-root [class*="dark:hover:bg-[#D36B5D]"]:hover {
   background-color: var(--heritage-action-hover) !important;
 }
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:text-\[\#C45A4C\],
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:text-[#C45A4C]"] {
+
+html[data-public-theme="dark"] #public-portal-root .dark\:text-\[\#C45A4C\],
+html[data-public-theme="dark"] #public-portal-root [class*="dark:text-[#C45A4C]"] {
   color: var(--heritage-action) !important;
 }
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:border-\[\#D36B5D\],
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:border-[#D36B5D]"] {
+
+html[data-public-theme="dark"] #public-portal-root .dark\:border-\[\#D36B5D\],
+html[data-public-theme="dark"] #public-portal-root [class*="dark:border-[#D36B5D]"] {
   border-color: var(--heritage-action-hover) !important;
 }
 
-:not(.admin-workspace):not(.admin-workspace *) .text-\[\#292722\],
-:not(.admin-workspace):not(.admin-workspace *) [class*="text-[#292722]"] {
-  color: var(--text-primary) !important;
-}
-:not(.admin-workspace):not(.admin-workspace *) .hover\:text-\[\#292722\]:hover,
-:not(.admin-workspace):not(.admin-workspace *) [class*="hover:text-[#292722]"]:hover {
-  color: var(--text-primary) !important;
-}
-:not(.admin-workspace):not(.admin-workspace *) .text-\[\#6F6A61\],
-:not(.admin-workspace):not(.admin-workspace *) .text-\[\#524E47\],
-:not(.admin-workspace):not(.admin-workspace *) [class*="text-[#6F6A61]"],
-:not(.admin-workspace):not(.admin-workspace *) [class*="text-[#524E47]"] {
-  color: var(--text-secondary) !important;
-}
-
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:text-\[\#F5F0E7\],
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:text-[#F5F0E7]"] {
-  color: var(--text-primary) !important;
-}
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:text-\[\#C0B8AA\],
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:text-\[\#D4CDC1\],
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:text-[#C0B8AA]"],
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:text-[#D4CDC1]"] {
-  color: var(--text-secondary) !important;
-}
-
-:not(.admin-workspace):not(.admin-workspace *) .bg-\[\#F7F3EB\],
-:not(.admin-workspace):not(.admin-workspace *) [class*="bg-[#F7F3EB]"] {
+/* 2. Public Page Background Surfaces */
+#public-portal-root .bg-\[\#F5F7F8\],
+#public-portal-root .bg-\[\#F8FAFC\],
+#public-portal-root .bg-\[\#F5F7FA\],
+#public-portal-root .bg-\[\#F7F3EB\],
+#public-portal-root .bg-\[\#F5F8FA\],
+#public-portal-root [class*="bg-[#F5F7F8]"],
+#public-portal-root [class*="bg-[#F8FAFC]"],
+#public-portal-root [class*="bg-[#F5F7FA]"],
+#public-portal-root [class*="bg-[#F7F3EB]"],
+#public-portal-root [class*="bg-[#F5F8FA]"] {
   background-color: var(--background-primary) !important;
 }
-:not(.admin-workspace):not(.admin-workspace *) .bg-\[\#EEE7DA\],
-:not(.admin-workspace):not(.admin-workspace *) [class*="bg-[#EEE7DA]"] {
+
+#public-portal-root .bg-\[\#EEE7DA\],
+#public-portal-root [class*="bg-[#EEE7DA]"] {
   background-color: var(--background-secondary) !important;
 }
-:not(.admin-workspace):not(.admin-workspace *) .hover\:bg-\[\#E2D9CA\]:hover,
-:not(.admin-workspace):not(.admin-workspace *) .hover\:bg-\[\#E5DDD0\]:hover {
+
+#public-portal-root .hover\:bg-\[\#E2D9CA\]:hover,
+#public-portal-root .hover\:bg-\[\#E5DDD0\]:hover {
   background-color: var(--heritage-surface-secondary) !important;
 }
 
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:bg-\[\#191916\],
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:bg-[#191916]"] {
+html[data-public-theme="dark"] #public-portal-root .dark\:bg-\[\#0B0F17\],
+html[data-public-theme="dark"] #public-portal-root .dark\:bg-\[\#131823\],
+html[data-public-theme="dark"] #public-portal-root .dark\:bg-\[\#191916\],
+html[data-public-theme="dark"] #public-portal-root [class*="dark:bg-[#0B0F17]"],
+html[data-public-theme="dark"] #public-portal-root [class*="dark:bg-[#131823]"],
+html[data-public-theme="dark"] #public-portal-root [class*="dark:bg-[#191916]"] {
   background-color: var(--background-primary) !important;
 }
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:bg-\[\#24231F\],
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:bg-[#24231F]"] {
+
+html[data-public-theme="dark"] #public-portal-root .dark\:bg-\[\#302D27\],
+html[data-public-theme="dark"] #public-portal-root [class*="dark:bg-[#302D27]"] {
+  background-color: var(--background-secondary) !important;
+}
+
+html[data-public-theme="dark"] #public-portal-root .dark\:hover\:bg-\[\#3D3932\]:hover,
+html[data-public-theme="dark"] #public-portal-root [class*="dark:hover:bg-[#3D3932]"]:hover {
+  background-color: var(--heritage-surface-secondary) !important;
+}
+
+/* 3. Public Cards & Secondary Containers */
+html[data-public-theme="dark"] #public-portal-root .dark\:bg-\[\#24231F\],
+html[data-public-theme="dark"] #public-portal-root .dark\:bg-\[\#18202F\],
+html[data-public-theme="dark"] #public-portal-root [class*="dark:bg-[#24231F]"],
+html[data-public-theme="dark"] #public-portal-root [class*="dark:bg-[#18202F]"] {
   background-color: var(--surface-card) !important;
 }
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:bg-\[\#302D27\],
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:bg-[#302D27]"] {
-  background-color: var(--background-secondary) !important;
-}
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:hover\:bg-\[\#3D3932\]:hover,
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:hover:bg-[#3D3932]"]:hover {
-  background-color: var(--heritage-surface-secondary) !important;
+
+/* 4. Headings & Primary Text */
+#public-portal-root .text-\[\#18232E\],
+#public-portal-root .text-\[\#0F172A\],
+#public-portal-root .text-\[\#182338\],
+#public-portal-root .text-\[\#292722\],
+#public-portal-root .text-\[\#111827\],
+#public-portal-root [class*="text-[#18232E]"],
+#public-portal-root [class*="text-[#0F172A]"],
+#public-portal-root [class*="text-[#182338]"],
+#public-portal-root [class*="text-[#292722]"] {
+  color: var(--text-primary) !important;
 }
 
-:not(.admin-workspace):not(.admin-workspace *) .border-\[\#DED5C7\],
-:not(.admin-workspace):not(.admin-workspace *) [class*="border-[#DED5C7]"] {
+#public-portal-root .hover\:text-\[\#292722\]:hover,
+#public-portal-root [class*="hover:text-[#292722]"]:hover {
+  color: var(--text-primary) !important;
+}
+
+html[data-public-theme="dark"] #public-portal-root .dark\:text-\[\#F5F0E7\],
+html[data-public-theme="dark"] #public-portal-root .dark\:text-white,
+html[data-public-theme="dark"] #public-portal-root .dark\:text-slate-100,
+html[data-public-theme="dark"] #public-portal-root [class*="dark:text-[#F5F0E7]"] {
+  color: var(--text-primary) !important;
+}
+
+/* 5. Subtitles & Secondary Text */
+#public-portal-root .text-\[\#64748B\],
+#public-portal-root .text-\[\#71819B\],
+#public-portal-root .text-\[\#6F6A61\],
+#public-portal-root .text-\[\#524E47\],
+#public-portal-root [class*="text-[#64748B]"],
+#public-portal-root [class*="text-[#71819B]"],
+#public-portal-root [class*="text-[#6F6A61]"],
+#public-portal-root [class*="text-[#524E47]"] {
+  color: var(--text-secondary) !important;
+}
+
+html[data-public-theme="dark"] #public-portal-root .dark\:text-\[\#C0B8AA\],
+html[data-public-theme="dark"] #public-portal-root .dark\:text-slate-400,
+html[data-public-theme="dark"] #public-portal-root .dark\:text-\[\#D4CDC1\],
+html[data-public-theme="dark"] #public-portal-root [class*="dark:text-[#C0B8AA]"],
+html[data-public-theme="dark"] #public-portal-root [class*="dark:text-[#D4CDC1]"] {
+  color: var(--text-secondary) !important;
+}
+
+/* 6. Borders */
+#public-portal-root .border-\[\#E3EAF1\],
+#public-portal-root .border-\[\#E1E6EA\],
+#public-portal-root .border-\[\#E5E7EB\],
+#public-portal-root .border-\[\#DED5C7\],
+#public-portal-root [class*="border-[#E3EAF1]"],
+#public-portal-root [class*="border-[#E1E6EA]"],
+#public-portal-root [class*="border-[#E5E7EB]"],
+#public-portal-root [class*="border-[#DED5C7]"] {
   border-color: var(--border-color) !important;
 }
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) .dark\:border-\[\#484238\],
-html[data-public-theme="dark"] :not(.admin-workspace):not(.admin-workspace *) [class*="dark:border-[#484238]"] {
+
+html[data-public-theme="dark"] #public-portal-root .dark\:border-\[\#484238\],
+html[data-public-theme="dark"] #public-portal-root [class*="dark:border-[#484238]"] {
   border-color: var(--border-color) !important;
+}
+
+/* 7. Public Form Inputs */
+#public-portal-root input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+#public-portal-root select,
+#public-portal-root textarea {
+  background-color: var(--surface-input) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+#public-portal-root input::placeholder,
+#public-portal-root textarea::placeholder {
+  color: var(--placeholder-color) !important;
+}
+
+/* 8. Admin Isolation: Retains dedicated admin system styling */
+.admin-workspace,
+.admin-workspace [class*="bg-[#F8FAFC]"] {
+  background-color: #F8FAFC !important;
+}
+.admin-workspace [class*="text-[#111827]"] {
+  color: #111827 !important;
+}
+.admin-workspace [class*="bg-[#B8323C]"] {
+  background-color: #B8323C !important;
+}
+.admin-workspace [class*="text-[#B8323C]"] {
+  color: #B8323C !important;
+}
+.admin-workspace [class*="border-[#B8323C]"] {
+  border-color: #B8323C !important;
+}
+.admin-workspace [class*="hover:bg-[#991B1B]"]:hover {
+  background-color: #991B1B !important;
+}
+.admin-workspace [class*="border-[#E5E7EB]"] {
+  border-color: #E5E7EB !important;
+}
+.admin-workspace [class*="text-[#64748B]"] {
+  color: #64748B !important;
 }
 
 /* Minimal editorial scrollbar */

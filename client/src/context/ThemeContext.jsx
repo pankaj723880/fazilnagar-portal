@@ -204,6 +204,8 @@ export function ThemeProvider({ children }) {
       applyThemeToDOM(previewCfg);
       try {
         localStorage.setItem(GLOBAL_THEME_STORAGE_KEY, JSON.stringify(previewCfg));
+        localStorage.setItem(USER_MODE_STORAGE_KEY, previewCfg.mode);
+        localStorage.setItem(STORAGE_KEY, previewCfg.mode);
         broadcastThemeUpdate(previewCfg);
       } catch {}
     },

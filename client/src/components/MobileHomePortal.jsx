@@ -481,11 +481,23 @@ export default function MobileHomePortal({
   };
 
   return (
-    <div className="w-full max-w-md sm:max-w-xl mx-auto min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F17] flex flex-col font-sans pb-32 text-slate-800 dark:text-slate-100 selection:bg-red-500 selection:text-white relative space-y-6 sm:space-y-8">
+    <div
+      className="w-full max-w-md sm:max-w-xl mx-auto min-h-screen flex flex-col font-sans pb-32 selection:bg-red-500 selection:text-white relative space-y-6 sm:space-y-8 transition-colors duration-200"
+      style={{
+        backgroundColor: "var(--background-primary)",
+        color: "var(--text-primary)",
+      }}
+    >
       {/* ========================================================
           1.1 TOP APP BAR (Sticky, 58px h)
           ======================================================== */}
-      <header className="sticky top-0 z-30 w-full h-[58px] backdrop-blur-md bg-white/90 dark:bg-[#0B0F17]/90 border-b border-slate-200/60 dark:border-white/8 px-4 sm:px-6 flex items-center justify-between shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+      <header
+        className="sticky top-0 z-30 w-full h-[58px] backdrop-blur-md border-b px-4 sm:px-6 flex items-center justify-between shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-colors duration-200"
+        style={{
+          backgroundColor: "color-mix(in srgb, var(--surface-card) 92%, transparent)",
+          borderColor: "var(--border-color)",
+        }}
+      >
         <Link to="/" className="flex items-center gap-2 group">
           <div className="w-8 h-8 rounded-xl bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] font-black text-sm flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
             F
