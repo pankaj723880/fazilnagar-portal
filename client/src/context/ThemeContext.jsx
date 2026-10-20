@@ -3,10 +3,11 @@ import { flushSync } from "react-dom";
 import { useLocation } from "react-router-dom";
 import API from "../api";
 import { getAuthToken, isUserAdmin } from "../utils/authStorage";
+import { THEMES, getThemeById, DEFAULT_THEME_ID, DEFAULT_THEME_MODE } from "../constants/themes";
 
 const ThemeContext = createContext({
   theme: "light",
-  themeId: "heritage-terracotta",
+  themeId: DEFAULT_THEME_ID,
   mode: "light",
   toggleTheme: () => {},
   setTheme: () => {},
@@ -18,31 +19,36 @@ const ThemeContext = createContext({
 });
 
 const STORAGE_KEY = "fazilnagar_theme";
+const USER_MODE_STORAGE_KEY = "fazilnagar_user_mode";
 const GLOBAL_THEME_STORAGE_KEY = "fazilnagar_global_theme";
 
 export function ThemeProvider({ children }) {
   const [themeConfig, setThemeConfig] = useState(() => {
     try {
+      // Check for user-selected personal appearance mode first (light/dark preference)
+      const userSavedMode = localStorage.getItem(USER_MODE_STORAGE_KEY) || localStorage.getItem(STORAGE_KEY);
+      const initialMode = userSavedMode === "dark" || userSavedMode === "light" ? userSavedMode : null;
+
+      // Check for admin-configured global themeId
       const globalStored = localStorage.getItem(GLOBAL_THEME_STORAGE_KEY);
       if (globalStored) {
         const parsed = JSON.parse(globalStored);
         if (parsed && parsed.themeId) {
           return {
             themeId: parsed.themeId,
-            mode: parsed.mode === "dark" ? "dark" : "light",
+            mode: initialMode || (parsed.mode === "dark" ? "dark" : "light"),
           };
         }
       }
-      const stored = localStorage.getItem(STORAGE_KEY);
-      const initialMode = stored === "dark" ? "dark" : "light";
+
       return {
-        themeId: "heritage-terracotta",
-        mode: initialMode,
+        themeId: DEFAULT_THEME_ID,
+        mode: initialMode || DEFAULT_THEME_MODE,
       };
     } catch {
       return {
-        themeId: "heritage-terracotta",
-        mode: "light",
+        themeId: DEFAULT_THEME_ID,
+        mode: DEFAULT_THEME_MODE,
       };
     }
   });
@@ -53,28 +59,58 @@ export function ThemeProvider({ children }) {
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith("/admin");
 
-  // Synchronize DOM attributes and ensure zero leakage into Admin
+  // Synchronize DOM attributes and inject CSS Custom Property tokens across documentElement
   const applyThemeToDOM = useCallback((cfg) => {
     const root = document.documentElement;
-    if (isAdminPage) {
-      root.removeAttribute("data-public-theme");
-      root.removeAttribute("data-theme-id");
-      root.classList.remove("theme-dark", "theme-light", "dark");
-    } else {
-      const activeThemeId = cfg?.themeId || "heritage-terracotta";
-      const activeMode = cfg?.mode === "dark" ? "dark" : "light";
+    const activeThemeId = cfg?.themeId || DEFAULT_THEME_ID;
+    const activeMode = cfg?.mode === "dark" ? "dark" : "light";
 
-      root.setAttribute("data-theme-id", activeThemeId);
-      root.setAttribute("data-public-theme", activeMode);
-      if (activeMode === "dark") {
-        root.classList.add("dark", "theme-dark");
-        root.classList.remove("theme-light");
-      } else {
-        root.classList.add("theme-light");
-        root.classList.remove("dark", "theme-dark");
-      }
+    // Set canonical semantic attributes for selectors
+    root.setAttribute("data-theme-id", activeThemeId);
+    root.setAttribute("data-public-theme", activeMode);
+
+    if (activeMode === "dark") {
+      root.classList.add("dark", "theme-dark");
+      root.classList.remove("theme-light");
+    } else {
+      root.classList.add("theme-light");
+      root.classList.remove("dark", "theme-dark");
     }
-  }, [isAdminPage]);
+
+    // Dynamic CSS Custom Properties injection directly to root style
+    // Ensures real-time application of all 12 themes without stale stylesheets
+    const themeObj = getThemeById(activeThemeId);
+    if (themeObj) {
+      const palette = activeMode === "dark" ? themeObj.dark : themeObj.light;
+
+      root.style.setProperty("--heritage-bg", palette.bg);
+      root.style.setProperty("--heritage-surface", palette.surface);
+      root.style.setProperty("--heritage-surface-secondary", palette.surfaceSecondary);
+      root.style.setProperty("--heritage-text-primary", palette.textPrimary);
+      root.style.setProperty("--heritage-text-secondary", palette.textSecondary);
+      root.style.setProperty("--heritage-action", palette.action);
+      root.style.setProperty("--heritage-action-hover", palette.actionHover);
+      root.style.setProperty("--heritage-accent", palette.accent);
+      root.style.setProperty("--heritage-border", palette.border);
+
+      // WCAG 2.2 AA Core Theme Tokens (Requirement B)
+      root.style.setProperty("--background-primary", palette.bg);
+      root.style.setProperty("--background-secondary", palette.surfaceSecondary);
+      root.style.setProperty("--surface-card", palette.surface);
+      root.style.setProperty("--surface-input", activeMode === "dark" ? palette.surfaceSecondary : "#FFFFFF");
+      root.style.setProperty("--text-primary", palette.textPrimary);
+      root.style.setProperty("--text-secondary", palette.textSecondary);
+      root.style.setProperty("--text-muted", activeMode === "dark" ? "#A39B8F" : "#6B655B");
+      root.style.setProperty("--text-inverse", activeMode === "dark" ? "#191916" : "#FFFFFF");
+      root.style.setProperty("--border-color", palette.border);
+      root.style.setProperty("--placeholder-color", activeMode === "dark" ? "#8A8275" : "#6B655B");
+      root.style.setProperty("--link-color", palette.action);
+      root.style.setProperty("--focus-ring", palette.action);
+      root.style.setProperty("--success-text", activeMode === "dark" ? "#4ADE80" : "#166534");
+      root.style.setProperty("--warning-text", activeMode === "dark" ? "#FBBF24" : "#92400E");
+      root.style.setProperty("--error-text", activeMode === "dark" ? "#F87171" : "#B91C1C");
+    }
+  }, []);
 
   // Fetch the active admin-configured global theme from backend on launch
   useEffect(() => {
@@ -83,15 +119,27 @@ export function ThemeProvider({ children }) {
       try {
         const res = await API.get("/settings");
         if (res.data?.success && res.data?.settings?.themeConfig && isMounted) {
-          const serverConfig = {
-            themeId: res.data.settings.themeConfig.themeId || "heritage-terracotta",
-            mode: res.data.settings.themeConfig.mode === "dark" ? "dark" : "light",
+          const serverConfig = res.data.settings.themeConfig;
+          const serverThemeId = serverConfig.themeId || DEFAULT_THEME_ID;
+          const serverDefaultMode = serverConfig.mode === "dark" ? "dark" : "light";
+
+          // Check if user has explicitly chosen a personal light/dark preference
+          const userSavedMode = localStorage.getItem(USER_MODE_STORAGE_KEY);
+          const effectiveMode = userSavedMode ? (userSavedMode === "dark" ? "dark" : "light") : serverDefaultMode;
+
+          const mergedConfig = {
+            themeId: serverThemeId,
+            mode: effectiveMode,
           };
-          setThemeConfig(serverConfig);
-          applyThemeToDOM(serverConfig);
+
+          setThemeConfig(mergedConfig);
+          applyThemeToDOM(mergedConfig);
+
           try {
-            localStorage.setItem(GLOBAL_THEME_STORAGE_KEY, JSON.stringify(serverConfig));
-            localStorage.setItem(STORAGE_KEY, serverConfig.mode);
+            localStorage.setItem(
+              GLOBAL_THEME_STORAGE_KEY,
+              JSON.stringify({ themeId: serverThemeId, mode: serverDefaultMode })
+            );
           } catch {}
         }
       } catch (err) {
@@ -104,72 +152,110 @@ export function ThemeProvider({ children }) {
     };
   }, [applyThemeToDOM]);
 
-  // Apply on mount and whenever theme or page changes
+  // Apply on mount and whenever theme changes
   useEffect(() => {
     applyThemeToDOM(themeConfig);
   }, [themeConfig, applyThemeToDOM]);
 
   // Admin-only preview function (instant DOM preview without saving yet)
-  const previewTheme = useCallback((cfg) => {
-    if (!isAdminPage || !isUserAdmin()) return;
-    const previewCfg = {
-      themeId: cfg.themeId || themeConfig.themeId,
-      mode: cfg.mode === "dark" ? "dark" : "light",
-    };
-    applyThemeToDOM(previewCfg);
-  }, [isAdminPage, themeConfig, applyThemeToDOM]);
+  const previewTheme = useCallback(
+    (cfg) => {
+      const previewCfg = {
+        themeId: cfg.themeId || themeConfig.themeId,
+        mode: cfg.mode === "dark" ? "dark" : "light",
+      };
+      setThemeConfig(previewCfg);
+      applyThemeToDOM(previewCfg);
+    },
+    [themeConfig, applyThemeToDOM]
+  );
 
   // Admin-only persistent update function (saves to backend database)
-  const applyAdminTheme = useCallback(async (newConfig) => {
-    if (!isAdminPage || !isUserAdmin()) {
-      throw new Error("Unauthorized: Only administrators can modify website theme.");
-    }
-    const token = getAuthToken();
-    const payload = {
-      themeId: newConfig.themeId,
-      mode: newConfig.mode === "dark" ? "dark" : "light",
-    };
-
-    const res = await API.put("/settings/theme", payload, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (res.data?.success) {
-      const updated = {
-        themeId: res.data.themeConfig.themeId,
-        mode: res.data.themeConfig.mode,
+  const applyAdminTheme = useCallback(
+    async (newConfig) => {
+      if (!isUserAdmin()) {
+        throw new Error("Unauthorized: Only administrators can modify the global portal theme.");
+      }
+      const token = getAuthToken();
+      const payload = {
+        themeId: newConfig.themeId,
+        mode: newConfig.mode === "dark" ? "dark" : "light",
       };
-      setThemeConfig(updated);
-      applyThemeToDOM(updated);
+
+      const res = await API.put("/settings/theme", payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.data?.success) {
+        const updated = {
+          themeId: res.data.themeConfig.themeId,
+          mode: res.data.themeConfig.mode,
+        };
+        setThemeConfig(updated);
+        applyThemeToDOM(updated);
+        try {
+          localStorage.setItem(GLOBAL_THEME_STORAGE_KEY, JSON.stringify(updated));
+          localStorage.setItem(GLOBAL_THEME_STORAGE_KEY + "_time", String(Date.now()));
+        } catch {}
+        return res.data;
+      } else {
+        throw new Error(res.data?.message || "Failed to update global theme");
+      }
+    },
+    [applyThemeToDOM]
+  );
+
+  // Universal Light/Dark mode toggle (Available to ALL users: visitors, citizens, and admins)
+  const toggleTheme = useCallback(
+    (event) => {
+      const nextMode = themeConfig.mode === "dark" ? "light" : "dark";
+      const nextCfg = { ...themeConfig, mode: nextMode };
+
+      // Optional smooth View Transition if supported
+      if (typeof document !== "undefined" && document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setIsTransitioning(true);
+        isTransitioningRef.current = true;
+        document.documentElement.setAttribute("data-theme-transition", "active");
+
+        const transition = document.startViewTransition(() => {
+          flushSync(() => {
+            setThemeConfig(nextCfg);
+            applyThemeToDOM(nextCfg);
+          });
+        });
+
+        transition.finished.finally(() => {
+          document.documentElement.removeAttribute("data-theme-transition");
+          setIsTransitioning(false);
+          isTransitioningRef.current = false;
+        });
+      } else {
+        setThemeConfig(nextCfg);
+        applyThemeToDOM(nextCfg);
+      }
+
+      // Store personal preference locally
       try {
-        localStorage.setItem(GLOBAL_THEME_STORAGE_KEY, JSON.stringify(updated));
-        localStorage.setItem(STORAGE_KEY, updated.mode);
+        localStorage.setItem(USER_MODE_STORAGE_KEY, nextMode);
+        localStorage.setItem(STORAGE_KEY, nextMode);
       } catch {}
-      return res.data;
-    } else {
-      throw new Error(res.data?.message || "Failed to update theme");
-    }
-  }, [isAdminPage, applyThemeToDOM]);
+    },
+    [themeConfig, applyThemeToDOM]
+  );
 
-  // Restricted public toggle (public users cannot modify theme)
-  const toggleTheme = useCallback((event) => {
-    if (!isAdminPage || !isUserAdmin()) {
-      // Strictly prevent public manipulation
-      return;
-    }
-    const nextMode = themeConfig.mode === "dark" ? "light" : "dark";
-    const nextCfg = { ...themeConfig, mode: nextMode };
-    setThemeConfig(nextCfg);
-    applyThemeToDOM(nextCfg);
-  }, [isAdminPage, themeConfig, applyThemeToDOM]);
-
-  const setTheme = useCallback((nextTheme) => {
-    if (!isAdminPage || !isUserAdmin()) return;
-    const val = nextTheme === "dark" ? "dark" : "light";
-    const nextCfg = { ...themeConfig, mode: val };
-    setThemeConfig(nextCfg);
-    applyThemeToDOM(nextCfg);
-  }, [isAdminPage, themeConfig, applyThemeToDOM]);
+  const setTheme = useCallback(
+    (nextMode) => {
+      const val = nextMode === "dark" ? "dark" : "light";
+      const nextCfg = { ...themeConfig, mode: val };
+      setThemeConfig(nextCfg);
+      applyThemeToDOM(nextCfg);
+      try {
+        localStorage.setItem(USER_MODE_STORAGE_KEY, val);
+        localStorage.setItem(STORAGE_KEY, val);
+      } catch {}
+    },
+    [themeConfig, applyThemeToDOM]
+  );
 
   // Synchronize across browser tabs if admin changes theme in another tab
   useEffect(() => {
@@ -178,8 +264,14 @@ export function ThemeProvider({ children }) {
         try {
           const parsed = JSON.parse(e.newValue);
           if (parsed && parsed.themeId) {
-            setThemeConfig(parsed);
-            applyThemeToDOM(parsed);
+            setThemeConfig((prev) => {
+              const updated = {
+                ...prev,
+                themeId: parsed.themeId,
+              };
+              applyThemeToDOM(updated);
+              return updated;
+            });
           }
         } catch {}
       }
@@ -198,9 +290,10 @@ export function ThemeProvider({ children }) {
       setTheme,
       applyAdminTheme,
       previewTheme,
-      isDark: !isAdminPage && themeConfig.mode === "dark",
+      isDark: themeConfig.mode === "dark",
       isAdminPage,
       isTransitioning,
+      themeConfig,
     }),
     [themeConfig, isAdminPage, toggleTheme, setTheme, applyAdminTheme, previewTheme, isTransitioning]
   );
