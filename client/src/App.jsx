@@ -75,7 +75,7 @@ const isExcludedNavItem = (item) => {
 };
 
 const DIRECTORY_SUB_NAV = [
-  { path: "/directory", label: "Town Directory", icon: "🗺️", badge: "Verified" },
+  { path: "/directory", label: "Directory", icon: "🗺️", badge: "Verified" },
   { path: "/news", label: "Local Updates", icon: "📰", badge: "Live" },
   { path: "/emergency", label: "24/7 Aid", icon: "🚨", badge: "24/7" },
   { path: "/education", label: "Education", icon: "🎓" },
@@ -471,68 +471,85 @@ export default function App() {
               )}
             </div>
 
-            {/* Mobile Actions: Notification Bell + User/Admin Profile + Review Desk + Add Story */}
+            {/* Mobile Actions: Notification Bell + Messages + Add Story + User/Profile */}
             <div className="flex sm:hidden items-center gap-1.5">
-              <Suspense fallback={<div className="w-11 h-11 shrink-0" />}>
+              <Suspense fallback={<div className="w-9 h-9 shrink-0" />}>
                 <NotificationCenter />
               </Suspense>
-              {user ? (
-                <button
-                  type="button"
-                  onClick={() => setIsProfileModalOpen(true)}
-                  className="flex items-center gap-1 pl-1 pr-2 min-h-[44px] h-11 rounded-xl bg-[#EEE7DA] hover:bg-[#E2D9CA] border border-[#DED5C7] dark:bg-[#302D27] dark:hover:bg-[#3D3932] dark:border-[#484238] transition text-[#292722] dark:text-[#F5F0E7] cursor-pointer shadow-2xs touch-manipulation"
-                  title={user.role === "admin" ? "Admin Profile & Settings" : (user.name || user.email)}
-                  aria-label={user.role === "admin" ? "Admin Profile" : "User Profile"}
-                >
-                  <div className="w-6 h-6 rounded-full bg-[#A83D32] text-white text-[10px] font-black flex items-center justify-center shrink-0">
-                    {user.role === "admin" ? "A" : (user.name?.[0] || "U").toUpperCase()}
-                  </div>
-                  <span className="text-[10px] font-bold text-[#292722] dark:text-[#F5F0E7] max-w-[55px] truncate">
-                    {user.role === "admin" ? "Admin" : (user.name?.split(" ")[0] || "Citizen")}
-                  </span>
-                </button>
-              ) : (
-                <Link
-                  to="/login"
-                  className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#EEE7DA] hover:bg-[#E2D9CA] text-[#292722] dark:bg-[#302D27] dark:hover:bg-[#3D3932] dark:text-[#F5F0E7] flex items-center justify-center transition border border-[#DED5C7] dark:border-[#484238] shadow-2xs touch-manipulation"
-                  title="Citizen Login"
-                  aria-label="Sign In"
-                >
-                  <span className="text-base">👤</span>
-                </Link>
-              )}
+
+              {/* Messages / संवाद */}
+              <Link
+                to="/messages"
+                onMouseEnter={() => prefetchRoute("/messages")}
+                onTouchStart={() => prefetchRoute("/messages")}
+                className={`min-w-[38px] min-h-[38px] w-9 h-9 rounded-xl border flex items-center justify-center transition shadow-2xs ${
+                  location.pathname === "/messages"
+                    ? "bg-[#C92F3D] text-white border-[#C92F3D]"
+                    : "bg-[#EEE7DA] hover:bg-[#E2D9CA] text-[#292722] border-[#DED5C7] dark:bg-[#302D27] dark:text-[#F5F0E7]"
+                }`}
+                aria-label="Town Messages"
+                title="Town Messages"
+              >
+                <MessageSquare className="w-4 h-4" />
+              </Link>
+
+              {/* Add Story Action */}
+              <Link
+                to={user ? "/create-news" : "/login"}
+                state={!user ? { from: "/create-news", message: "Please log in to submit a local story." } : undefined}
+                className="min-w-[38px] min-h-[38px] w-9 h-9 rounded-xl bg-[#C92F3D] hover:bg-[#a3222e] text-white flex items-center justify-center transition shadow-2xs focus:outline-none cursor-pointer touch-manipulation"
+                aria-label="Add Story"
+                title="Add Story"
+              >
+                <span className="text-sm select-none" aria-hidden="true">✍️</span>
+              </Link>
+
               {isAdmin && (
                 <Link
                   to="/admin/review"
-                  className={`min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl border flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer ${
+                  className={`min-w-[38px] min-h-[38px] w-9 h-9 rounded-xl border flex items-center justify-center transition shadow-xs focus:outline-none cursor-pointer ${
                     location.pathname.startsWith("/admin")
-                      ? "bg-amber-600 text-white border-amber-600 shadow-amber-900/20"
+                      ? "bg-amber-600 text-white border-amber-600"
                       : "bg-amber-100 hover:bg-amber-200 text-amber-950 border-amber-300"
                   }`}
                   aria-label="Admin dashboard"
                   title="Admin dashboard"
                 >
-                  <ShieldAlert className="w-5 h-5 text-amber-950" aria-hidden="true" />
+                  <ShieldAlert className="w-4 h-4 text-amber-950" aria-hidden="true" />
                 </Link>
               )}
-              <Link
-                to={user ? "/create-news" : "/login"}
-                state={!user ? { from: "/create-news", message: "Please log in to submit a local story." } : undefined}
-                className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#A83D32] hover:bg-[#873027] text-white flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-[#A83D32]/50 cursor-pointer touch-manipulation"
-                aria-label="Add Story"
-                title="Add Story"
-              >
-                <span className="text-base select-none" aria-hidden="true">✍️</span>
-              </Link>
+
+              {user ? (
+                <button
+                  type="button"
+                  onClick={() => setIsProfileModalOpen(true)}
+                  className="w-9 h-9 rounded-xl bg-[#EEE7DA] hover:bg-[#E2D9CA] border border-[#DED5C7] dark:bg-[#302D27] dark:border-[#484238] transition flex items-center justify-center text-[#292722] dark:text-[#F5F0E7] cursor-pointer shadow-2xs touch-manipulation"
+                  title={user.role === "admin" ? "Admin Profile" : (user.name || user.email)}
+                  aria-label="User Profile"
+                >
+                  <div className="w-6 h-6 rounded-full bg-[#C92F3D] text-white text-[10px] font-black flex items-center justify-center shrink-0">
+                    {user.role === "admin" ? "A" : (user.name?.[0] || "U").toUpperCase()}
+                  </div>
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  className="min-w-[38px] min-h-[38px] w-9 h-9 rounded-xl bg-[#EEE7DA] hover:bg-[#E2D9CA] text-[#292722] dark:bg-[#302D27] dark:text-[#F5F0E7] flex items-center justify-center transition border border-[#DED5C7] dark:border-[#484238] shadow-2xs touch-manipulation"
+                  title="Sign In"
+                  aria-label="Sign In"
+                >
+                  <span className="text-sm">👤</span>
+                </Link>
+              )}
             </div>
           </div>
         </div>
 
         {/* Secondary Sub-Navbar - Visible across Directory & all Civic Hub pages */}
         {hasSubNav && (
-          <div className="bg-[#FFFFFF]/95 dark:bg-[#24231F]/95 backdrop-blur-md border-b border-[#DED5C7] dark:border-[#484238] py-2 px-4 shadow-[0_2px_14px_rgba(41,39,34,0.03)]">
+          <div className="bg-[#FFFFFF]/95 dark:bg-[#24231F]/95 backdrop-blur-md border-b border-[#E3EAF1] dark:border-[#484238] py-2 px-4 shadow-2xs">
             <div className="max-w-7xl mx-auto px-0 sm:px-4 lg:px-8 flex items-center gap-2 overflow-x-auto scrollbar-none py-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#6F6A61] dark:text-[#C5A66A] shrink-0 mr-1 hidden sm:inline">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#71819B] shrink-0 mr-1 hidden sm:inline">
                 Civic Hubs:
               </span>
               {DIRECTORY_SUB_NAV.map((item) => (
@@ -543,15 +560,15 @@ export default function App() {
                   className={({ isActive }) =>
                     `px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
                       isActive
-                        ? "bg-[#A83D32] dark:bg-[#C45A4C] text-white shadow-xs font-bold"
-                        : "text-[#6F6A61] hover:text-[#292722] hover:bg-[#EEE7DA] dark:text-[#C0B8AA] dark:hover:text-white dark:hover:bg-[#302D27] border border-[#DED5C7] dark:border-[#484238] bg-[#EEE7DA]/50 dark:bg-[#24231F]"
+                        ? "bg-[#C92F3D] text-white shadow-xs font-bold"
+                        : "text-[#182338] hover:text-[#C92F3D] hover:bg-[#F5F8FA] border border-[#E3EAF1] bg-white dark:bg-[#24231F] dark:border-[#484238] dark:text-[#C0B8AA]"
                     }`
                   }
                 >
                   <span className="text-xs">{item.icon}</span>
                   <span>{item.label}</span>
                   {item.badge && (
-                    <span className="bg-[#26734D] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">
+                    <span className="bg-[#087F62] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">
                       {item.badge}
                     </span>
                   )}
@@ -1168,8 +1185,12 @@ export default function App() {
           Provides effortless 1-thumb native app navigation across the portal
           ======================================================== */}
       {!isAdminPage && !isMessagesPage && !hideLayoutOnAreaDetails && (
-        <nav className={`fixed bottom-0 left-0 right-0 z-[1050] bg-white/95 dark:bg-[#24231F]/95 backdrop-blur-md border-t border-[#DED5C7] dark:border-[#484238] shadow-[0_-2px_14px_rgba(41,39,34,0.04)] pb-[max(0.5rem,env(safe-area-inset-bottom))] ${isMobilePreview ? "block" : "sm:hidden"}`}>
-          <div className="max-w-[420px] mx-auto w-full px-1 py-1 flex items-center justify-around">
+        <nav
+          aria-label="Mobile bottom navigation"
+          className={`fixed bottom-0 left-0 right-0 z-[1050] bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-md border-t border-[#E3EAF1] dark:border-[#334155] shadow-[0_-2px_12px_rgba(17,26,46,0.05)] pb-[max(0.5rem,env(safe-area-inset-bottom))] ${isMobilePreview ? "block" : "sm:hidden"}`}
+        >
+          <div className="max-w-[440px] mx-auto w-full px-2 py-1 flex items-center justify-between">
+            {/* 1. Home */}
             <NavLink
               to="/"
               end
@@ -1181,10 +1202,10 @@ export default function App() {
                 }
               }}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold touch-manipulation cursor-pointer ${
+                `flex-1 flex flex-col items-center justify-center min-h-[48px] py-1 px-1 rounded-xl transition text-[10px] font-semibold touch-manipulation cursor-pointer ${
                   isActive && location.pathname === "/"
-                    ? "text-[#A83D32] dark:text-[#C45A4C]"
-                    : "text-[#6F6A61] hover:text-[#292722] dark:text-[#C0B8AA] dark:hover:text-[#F5F0E7]"
+                    ? "text-[#C92F3D] font-bold"
+                    : "text-[#71819B] hover:text-[#182338] dark:text-slate-400 dark:hover:text-white"
                 }`
               }
             >
@@ -1192,48 +1213,51 @@ export default function App() {
               <span>Home</span>
             </NavLink>
 
+            {/* 2. Directory */}
             <NavLink
               to="/directory"
               onMouseEnter={() => prefetchRoute("/directory")}
               onFocus={() => prefetchRoute("/directory")}
-              className={({ isActive }) =>
-                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold relative touch-manipulation cursor-pointer ${
-                  isActive || location.pathname.startsWith("/directory")
-                    ? "text-[#A83D32] dark:text-[#C45A4C]"
-                    : "text-[#6F6A61] hover:text-[#292722] dark:text-[#C0B8AA] dark:hover:text-[#F5F0E7]"
-                }`
-              }
+              className={() => {
+                const isDirActive = location.pathname.startsWith("/directory") || location.pathname.startsWith("/local-directory");
+                return `flex-1 flex flex-col items-center justify-center min-h-[48px] py-1 px-1 rounded-xl transition text-[10px] font-semibold relative touch-manipulation cursor-pointer ${
+                  isDirActive
+                    ? "text-[#C92F3D] font-bold"
+                    : "text-[#71819B] hover:text-[#182338] dark:text-slate-400 dark:hover:text-white"
+                }`;
+              }}
             >
               <Compass className="w-5 h-5 mb-0.5" />
               <span>Directory</span>
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#26734D] dark:bg-emerald-400"></span>
             </NavLink>
 
+            {/* 3. 24/7 Aid */}
             <NavLink
-              to="/messages"
-              onMouseEnter={() => prefetchRoute("/messages")}
-              onFocus={() => prefetchRoute("/messages")}
+              to="/emergency"
+              onMouseEnter={() => prefetchRoute("/emergency")}
+              onFocus={() => prefetchRoute("/emergency")}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold relative touch-manipulation cursor-pointer ${
-                  isActive || location.pathname.startsWith("/messages")
-                    ? "text-[#A83D32] dark:text-[#C45A4C]"
-                    : "text-[#6F6A61] hover:text-[#292722] dark:text-[#C0B8AA] dark:hover:text-[#F5F0E7]"
+                `flex-1 flex flex-col items-center justify-center min-h-[48px] py-1 px-1 rounded-xl transition text-[10px] font-semibold touch-manipulation cursor-pointer ${
+                  isActive || location.pathname.startsWith("/emergency")
+                    ? "text-[#C92F3D] font-bold"
+                    : "text-[#71819B] hover:text-[#182338] dark:text-slate-400 dark:hover:text-white"
                 }`
               }
             >
-              <MessageSquare className="w-5 h-5 mb-0.5" />
-              <span>Chat</span>
+              <PhoneCall className="w-5 h-5 mb-0.5" />
+              <span>24/7 Aid</span>
             </NavLink>
 
+            {/* 4. Updates */}
             <NavLink
               to="/news"
               onMouseEnter={() => prefetchRoute("/news")}
               onFocus={() => prefetchRoute("/news")}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold touch-manipulation cursor-pointer ${
+                `flex-1 flex flex-col items-center justify-center min-h-[48px] py-1 px-1 rounded-xl transition text-[10px] font-semibold touch-manipulation cursor-pointer ${
                   isActive || location.pathname.startsWith("/news") || location.pathname.startsWith("/local-updates")
-                    ? "text-[#A83D32] dark:text-[#C45A4C]"
-                    : "text-[#6F6A61] hover:text-[#292722] dark:text-[#C0B8AA] dark:hover:text-[#F5F0E7]"
+                    ? "text-[#C92F3D] font-bold"
+                    : "text-[#71819B] hover:text-[#182338] dark:text-slate-400 dark:hover:text-white"
                 }`
               }
             >
@@ -1241,34 +1265,19 @@ export default function App() {
               <span>Updates</span>
             </NavLink>
 
-            <NavLink
-              to="/emergency"
-              onMouseEnter={() => prefetchRoute("/emergency")}
-              onFocus={() => prefetchRoute("/emergency")}
-              className={({ isActive }) =>
-                `flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold touch-manipulation cursor-pointer ${
-                  isActive || location.pathname.startsWith("/emergency")
-                    ? "text-[#A83D32] dark:text-[#C45A4C]"
-                    : "text-[#6F6A61] hover:text-[#292722] dark:text-[#C0B8AA] dark:hover:text-[#F5F0E7]"
-                }`
-              }
-            >
-              <PhoneCall className="w-5 h-5 mb-0.5 text-[#A83D32] dark:text-[#C45A4C]" />
-              <span>24/7 Aid</span>
-            </NavLink>
-
+            {/* 5. Menu */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
-              className={`flex flex-col items-center justify-center min-w-[46px] min-h-[44px] py-1 px-1 rounded-xl transition text-[9.5px] font-bold cursor-pointer touch-manipulation ${
+              className={`flex-1 flex flex-col items-center justify-center min-h-[48px] py-1 px-1 rounded-xl transition text-[10px] font-semibold cursor-pointer touch-manipulation ${
                 mobileMenuOpen
-                  ? "text-[#A83D32] dark:text-[#C45A4C]"
-                  : "text-[#6F6A61] hover:text-[#292722] dark:text-[#C0B8AA] dark:hover:text-[#F5F0E7]"
+                  ? "text-[#C92F3D] font-bold"
+                  : "text-[#71819B] hover:text-[#182338] dark:text-slate-400 dark:hover:text-white"
               }`}
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? (
-                <X className="w-5 h-5 mb-0.5 text-[#A83D32] dark:text-[#C45A4C]" />
+                <X className="w-5 h-5 mb-0.5" />
               ) : (
                 <Menu className="w-5 h-5 mb-0.5" />
               )}

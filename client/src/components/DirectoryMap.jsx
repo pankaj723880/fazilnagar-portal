@@ -36,7 +36,7 @@ export default function DirectoryMap({
   };
 
   const createMarkerIcon = (isSelected) => {
-    const color = isSelected ? "#2563EB" : "#B8323C";
+    const color = isSelected ? "#2563EB" : "#C92F3D";
     const size = isSelected ? 34 : 28;
     const height = isSelected ? 44 : 36;
     const strokeWidth = isSelected ? 2.2 : 1.8;
@@ -63,7 +63,7 @@ export default function DirectoryMap({
   const createClusterIcon = (count) => {
     const size = 32;
     const svgHtml = `
-      <div style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;background:#18232E;border:2.5px solid #0D5E49;border-radius:50%;color:#ffffff;font-size:11px;font-weight:800;font-family:system-ui,sans-serif;box-shadow:0 3px 6px rgba(0,0,0,0.35);cursor:pointer;">
+      <div style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;background:#087F62;border:2.5px solid #FFFFFF;border-radius:50%;color:#FFFFFF;font-size:12px;font-weight:800;font-family:system-ui,sans-serif;box-shadow:0 3px 8px rgba(8,127,98,0.45);cursor:pointer;transition:transform 0.15s ease;">
         <span>${count}</span>
       </div>
     `;
@@ -72,6 +72,29 @@ export default function DirectoryMap({
       className: "fazilnagar-cluster-pin",
       iconSize: [size, size],
       iconAnchor: [size / 2, size / 2],
+    });
+  };
+
+  const createCenterMarkerIcon = () => {
+    const size = 32;
+    const height = 40;
+    const svgHtml = `
+      <div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;filter:drop-shadow(0 3px 6px rgba(201,47,61,0.4));">
+        <svg viewBox="0 0 24 24" width="${size}" height="${height}" fill="#C92F3D" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+          <polygon points="12,5.5 13.1,8.4 16.2,8.4 13.7,10.2 14.6,13.1 12,11.3 9.4,13.1 10.3,10.2 7.8,8.4 10.9,8.4" fill="#ffffff" stroke="none"/>
+        </svg>
+        <span style="background:#111A2E;color:#ffffff;font-size:9.5px;font-weight:700;padding:1.5px 6px;border-radius:4px;margin-top:-6px;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.3);letter-spacing:0.3px;border:1px solid rgba(255,255,255,0.25);">
+          Fazilnagar Centre
+        </span>
+      </div>
+    `;
+    return L.divIcon({
+      html: svgHtml,
+      className: "fazilnagar-centre-marker",
+      iconSize: [110, height + 18],
+      iconAnchor: [55, height],
+      popupAnchor: [0, -height],
     });
   };
 
@@ -96,22 +119,22 @@ export default function DirectoryMap({
     marker.bindPopup(`
       <div style="font-size: 12px; min-width: 200px; font-family: Inter, system-ui, sans-serif; padding: 2px;">
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-bottom: 3px;">
-          <span style="font-size: 9px; font-weight: 800; color: #0D5E49; text-transform: uppercase; letter-spacing: 0.5px;">${place.category}</span>
-          <span style="font-size: 8px; font-weight: 700; color: ${isVerified ? '#0D5E49' : '#B45309'}; background: ${isVerified ? '#ECFDF5' : '#FEF3C7'}; padding: 1px 5px; border-radius: 999px; border: 1px solid ${isVerified ? '#A7F3D0' : '#FDE68A'};">
+          <span style="font-size: 9px; font-weight: 800; color: #087F62; text-transform: uppercase; letter-spacing: 0.5px;">${place.category}</span>
+          <span style="font-size: 8px; font-weight: 700; color: ${isVerified ? '#087F62' : '#B45309'}; background: ${isVerified ? '#E8F5E9' : '#FEF3C7'}; padding: 1px 5px; border-radius: 999px; border: 1px solid ${isVerified ? '#A7F3D0' : '#FDE68A'};">
             ${isVerified ? '✓ Verified' : '⚠ Needs Verification'}
           </span>
         </div>
-        <h4 style="margin: 2px 0 3px; font-size: 13px; font-weight: 800; color: #18232E; line-height: 1.2;">${place.name}</h4>
-        <p style="margin: 0; font-size: 11px; color: #647180; line-height: 1.3;">${place.streetOrLandmark || place.addressFull || place.locality}</p>
+        <h4 style="margin: 2px 0 3px; font-size: 13px; font-weight: 800; color: #111A2E; line-height: 1.2;">${place.name}</h4>
+        <p style="margin: 0; font-size: 11px; color: #71819B; line-height: 1.3;">${place.streetOrLandmark || place.addressFull || place.locality}</p>
         <div style="display: flex; justify-content: space-between; font-size: 9px; color: #94A3B8; margin-top: 4px; padding-top: 3px; border-top: 1px dashed #E2E8F0;">
           <span>ID: ${recordId}</span>
           <span>${place.latitude}, ${place.longitude}</span>
         </div>
-        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #E1E6EA; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-          <button type="button" class="leaflet-popup-directions-btn" style="color: #0D5E49; background: none; border: none; padding: 0; font-weight: 700; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #E3EAF1; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+          <button type="button" class="leaflet-popup-directions-btn" style="color: #087F62; background: none; border: none; padding: 0; font-weight: 700; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
             <span>🧭 Directions</span>
           </button>
-          ${place.phone ? `<a href="tel:${place.phone.replace(/\\s+/g, '')}" style="color: #18232E; text-decoration: none; font-weight: 700; font-size: 11px;">📞 Call</a>` : ''}
+          ${place.phone ? `<a href="tel:${place.phone.replace(/\\s+/g, '')}" style="color: #111A2E; text-decoration: none; font-weight: 700; font-size: 11px;">📞 Call</a>` : ''}
         </div>
       </div>
     `);
@@ -148,6 +171,24 @@ export default function DirectoryMap({
       map.removeLayer(m);
     });
     markersRef.current = [];
+
+    // Prominent Fazilnagar Centre Marker
+    const townLat = 26.6827;
+    const townLng = 84.0498;
+    const centerMarker = L.marker([townLat, townLng], {
+      icon: createCenterMarkerIcon(),
+      title: "Fazilnagar Centre (PIN 274401)",
+      zIndexOffset: 500,
+    }).addTo(map);
+
+    centerMarker.bindPopup(`
+      <div style="font-size: 12px; font-family: Inter, system-ui, sans-serif; padding: 2px;">
+        <span style="font-size: 9px; font-weight: 800; color: #C92F3D; text-transform: uppercase;">Town Anchor</span>
+        <h4 style="margin: 2px 0 2px; font-size: 13px; font-weight: 800; color: #111A2E;">Fazilnagar Centre</h4>
+        <p style="margin: 0; font-size: 11px; color: #71819B;">PIN 274401 • NH-27 Corridor, Kushinagar, UP</p>
+      </div>
+    `);
+    markersRef.current.push(centerMarker);
 
     const itemsWithCoords = (items || []).filter(
       (p) =>
@@ -232,6 +273,7 @@ export default function DirectoryMap({
         dragging: false,
         touchZoom: false,
         scrollWheelZoom: false,
+        zoomControl: false, // We render clean, custom styled controls
       });
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -311,8 +353,8 @@ export default function DirectoryMap({
 
   return (
     <div
-      className={`lg:col-span-2 bg-slate-50 rounded-2xl overflow-hidden border border-slate-200/90 shadow-sm relative transition-all duration-300 group ${
-        isMapExpanded ? "h-[460px] sm:h-[520px] lg:h-[620px]" : "h-[270px] sm:h-[380px] lg:h-[560px]"
+      className={`w-full bg-[#F5F8FA] rounded-2xl sm:rounded-3xl overflow-hidden border border-[#E3EAF1] shadow-xs relative transition-all duration-300 group ${
+        isMapExpanded ? "h-[440px] sm:h-[500px] lg:h-[580px]" : "h-[300px] sm:h-[380px] lg:h-[440px]"
       }`}
       onClick={() => {
         if (!isMapActive && onSetActive) onSetActive(true);
@@ -328,34 +370,69 @@ export default function DirectoryMap({
         style={{ height: "100%", width: "100%", position: "relative" }}
       />
 
-      {/* Top Info Badge */}
-      <div className="absolute top-2.5 left-2.5 z-20 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-200 text-[10px] sm:text-[11px] font-semibold text-slate-700 shadow-2xs flex items-center gap-1.5 pointer-events-none">
-        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span>26.6827° N, 84.0498° E (Fazilnagar)</span>
+      {/* Top Left Info Badge */}
+      <div className="absolute top-3 left-3 z-20 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-[#E3EAF1] text-[11px] font-semibold text-[#182338] shadow-2xs flex items-center gap-1.5 pointer-events-none">
+        <span className="w-2 h-2 rounded-full bg-[#087F62] animate-pulse"></span>
+        <span>Fazilnagar Map • PIN 274401</span>
       </div>
 
-      {/* Mobile/Desktop Map Expand/Collapse Toggle */}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          if (onToggleExpand) onToggleExpand();
-        }}
-        className="absolute top-2.5 right-2.5 z-20 bg-white/95 hover:bg-white text-slate-700 hover:text-slate-900 p-1.5 rounded-lg border border-slate-200 shadow-2xs text-[10px] font-bold flex items-center gap-1 transition cursor-pointer"
-        title={isMapExpanded ? "Compact map" : "Expand map"}
-      >
-        {isMapExpanded ? (
-          <>
-            <Minimize2 className="w-3.5 h-3.5 text-slate-600" />
-            <span className="hidden sm:inline">Compact</span>
-          </>
-        ) : (
-          <>
-            <Maximize2 className="w-3.5 h-3.5 text-slate-600" />
-            <span className="hidden sm:inline">Expand</span>
-          </>
-        )}
-      </button>
+      {/* Map Control Buttons: Zoom In, Zoom Out, Centre, Expand */}
+      <div className="absolute top-3 right-3 z-20 flex flex-col gap-1.5">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (mapInstanceRef.current) mapInstanceRef.current.zoomIn();
+          }}
+          className="w-8 h-8 rounded-lg bg-white/95 hover:bg-white text-[#182338] border border-[#E3EAF1] flex items-center justify-center font-bold text-base shadow-2xs transition cursor-pointer active:scale-95"
+          title="Zoom in"
+          aria-label="Zoom in"
+        >
+          +
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (mapInstanceRef.current) mapInstanceRef.current.zoomOut();
+          }}
+          className="w-8 h-8 rounded-lg bg-white/95 hover:bg-white text-[#182338] border border-[#E3EAF1] flex items-center justify-center font-bold text-base shadow-2xs transition cursor-pointer active:scale-95"
+          title="Zoom out"
+          aria-label="Zoom out"
+        >
+          −
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (mapInstanceRef.current) {
+              mapInstanceRef.current.setView([26.6827, 84.0498], 15, { animate: true });
+            }
+          }}
+          className="w-8 h-8 rounded-lg bg-white/95 hover:bg-white text-[#182338] border border-[#E3EAF1] flex items-center justify-center shadow-2xs transition cursor-pointer active:scale-95"
+          title="Center on Fazilnagar"
+          aria-label="Center on Fazilnagar"
+        >
+          <Compass className="w-4 h-4 text-[#087F62]" />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onToggleExpand) onToggleExpand();
+          }}
+          className="w-8 h-8 rounded-lg bg-white/95 hover:bg-white text-[#182338] border border-[#E3EAF1] flex items-center justify-center shadow-2xs transition cursor-pointer active:scale-95"
+          title={isMapExpanded ? "Compact map" : "Expand map"}
+          aria-label={isMapExpanded ? "Compact map" : "Expand map"}
+        >
+          {isMapExpanded ? (
+            <Minimize2 className="w-4 h-4 text-slate-600" />
+          ) : (
+            <Maximize2 className="w-4 h-4 text-slate-600" />
+          )}
+        </button>
+      </div>
 
       {/* Interaction Mode Activator Overlay */}
       {!isMapActive && (
@@ -366,27 +443,27 @@ export default function DirectoryMap({
               e.stopPropagation();
               if (onSetActive) onSetActive(true);
             }}
-            className="pointer-events-auto bg-[#18232E]/95 hover:bg-[#18232E] text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-lg border border-slate-700/80 backdrop-blur-md flex items-center gap-1.5 active:scale-95 transition cursor-pointer"
+            className="pointer-events-auto bg-[#111A2E]/95 hover:bg-[#111A2E] text-white text-xs font-semibold px-3.5 py-1.5 rounded-full shadow-lg border border-slate-700/80 backdrop-blur-md flex items-center gap-1.5 active:scale-95 transition cursor-pointer"
           >
-            <Compass className="w-3.5 h-3.5 text-amber-400" />
-            <span>Click map to interact & zoom</span>
+            <Compass className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Tap map to interact</span>
           </button>
         </div>
       )}
 
       {/* Active Interaction Badge: Allows User to Lock Map & Resume Page Scrolling */}
       {isMapActive && (
-        <div className="absolute top-11 right-2.5 z-20">
+        <div className="absolute bottom-3 right-3 z-20">
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               if (onSetActive) onSetActive(false);
             }}
-            className="bg-[#0D5E49] hover:bg-emerald-800 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg border border-emerald-400 backdrop-blur-md flex items-center gap-1 active:scale-95 transition cursor-pointer"
+            className="bg-[#087F62] hover:bg-emerald-800 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg border border-emerald-400 backdrop-blur-md flex items-center gap-1.5 active:scale-95 transition cursor-pointer"
           >
             <Lock className="w-3 h-3" />
-            <span>Lock map to scroll page</span>
+            <span>Lock map</span>
           </button>
         </div>
       )}
