@@ -44,8 +44,12 @@ export default function AdminDriveStorage() {
   const fetchDriveData = async () => {
     setDriveLoading(true);
     try {
-      const res = await API.get("/google-drive/inspect");
-      setDriveData(res.data);
+      const res = await API.get("/google-drive/inspect", {
+        params: { _t: Date.now() },
+      });
+      if (res.data) {
+        setDriveData(res.data);
+      }
     } catch (err) {
       if (err.response?.data && typeof err.response.data.connected !== "undefined") {
         setDriveData(err.response.data);

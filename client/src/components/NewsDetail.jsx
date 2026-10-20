@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { fetchNewsById } from "../api";
 import { resolveStoryMedia } from "../utils/mediaUtils";
+import ReporterAudioPlayer from "./ReporterAudioPlayer";
 
 export default function NewsDetail() {
   const { id } = useParams();
@@ -99,6 +100,16 @@ export default function NewsDetail() {
         }
         return null;
       })()}
+
+      {/* Ground audio narration if provided */}
+      {article.audio && (
+        <ReporterAudioPlayer
+          audioUrl={article.audio}
+          audioMeta={article.audioMeta}
+          authorName={article.author?.name || article.source || "Reporter"}
+          className="my-4"
+        />
+      )}
 
       <div className="flex items-center justify-between text-xs text-slate-400 border-y border-slate-100 py-3">
         <span>By {article.author?.name || "Local Reporter"}</span>

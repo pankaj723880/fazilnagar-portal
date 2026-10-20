@@ -356,6 +356,9 @@ export async function uploadMediaToDrive({
  * @access  Public / Admin
  */
 router.get("/status", async (req, res) => {
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
   try {
     const authStatus = await verifyDriveAuth();
     const isDbReady = mongoose.connection && mongoose.connection.readyState === 1;
@@ -397,6 +400,9 @@ router.get("/status", async (req, res) => {
  * @access  Public / Admin
  */
 router.get("/inspect", async (req, res) => {
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
   try {
     const isDbReady = mongoose.connection && mongoose.connection.readyState === 1;
     const mongoMediaCount = isDbReady ? await GoogleDriveMedia.countDocuments().catch(() => 0) : 0;

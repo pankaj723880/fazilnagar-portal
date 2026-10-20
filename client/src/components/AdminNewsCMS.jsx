@@ -34,6 +34,7 @@ import EmptyState from "./admin/EmptyState";
 import LoadingSkeleton from "./admin/LoadingSkeleton";
 import ImageUploader from "./admin/ImageUploader";
 import MediaPicker from "./admin/MediaPicker";
+import AudioRecorderTrimmer from "./AudioRecorderTrimmer";
 
 export default function AdminNewsCMS({ onStatsChange }) {
   const [newsList, setNewsList] = useState([]);
@@ -60,6 +61,9 @@ export default function AdminNewsCMS({ onStatsChange }) {
   const [newsFormImageFile, setNewsFormImageFile] = useState(null);
   const [newsFormVideoUrl, setNewsFormVideoUrl] = useState("");
   const [newsFormVideoFile, setNewsFormVideoFile] = useState(null);
+  const [newsFormAudioUrl, setNewsFormAudioUrl] = useState("");
+  const [newsFormAudioFile, setNewsFormAudioFile] = useState(null);
+  const [newsFormAudioDuration, setNewsFormAudioDuration] = useState(0);
   const [newsFormIsFeatured, setNewsFormIsFeatured] = useState(false);
   const [newsFormIsPublished, setNewsFormIsPublished] = useState(true);
   const [newsFormSubmitting, setNewsFormSubmitting] = useState(false);
@@ -121,6 +125,9 @@ export default function AdminNewsCMS({ onStatsChange }) {
     setNewsFormImageFile(null);
     setNewsFormVideoUrl("");
     setNewsFormVideoFile(null);
+    setNewsFormAudioUrl("");
+    setNewsFormAudioFile(null);
+    setNewsFormAudioDuration(0);
     setNewsFormIsFeatured(false);
     setNewsFormIsPublished(true);
     setNewsModalOpen(true);
@@ -139,6 +146,9 @@ export default function AdminNewsCMS({ onStatsChange }) {
     setNewsFormImageFile(null);
     setNewsFormVideoUrl(item.video || item.videoUrl || "");
     setNewsFormVideoFile(null);
+    setNewsFormAudioUrl(item.audio || item.audioUrl || "");
+    setNewsFormAudioFile(null);
+    setNewsFormAudioDuration(item.audioMeta?.duration || 0);
     setNewsFormIsFeatured(item.isFeatured === true);
     setNewsFormIsPublished(Boolean(item.isPublished && item.status === "approved"));
     setNewsModalOpen(true);
@@ -182,6 +192,14 @@ export default function AdminNewsCMS({ onStatsChange }) {
         formData.append("video", newsFormVideoFile);
       } else if (newsFormVideoUrl && !newsFormVideoUrl.startsWith("blob:")) {
         formData.append("videoUrl", newsFormVideoUrl.trim());
+      }
+
+      if (newsFormAudioFile) {
+        formData.append("audio", newsFormAudioFile, "reporter_audio.wav");
+        formData.append("audioDuration", String(newsFormAudioDuration || 0));
+      } else if (newsFormAudioUrl !== undefined) {
+        formData.append("audioUrl", newsFormAudioUrl);
+        formData.append("audioDuration", String(newsFormAudioDuration || 0));
       }
 
       const headers = { Authorization: `Bearer ${token}` };
@@ -766,6 +784,24 @@ export default function AdminNewsCMS({ onStatsChange }) {
                         </button>
                       </div>
                     )}
+                  </div>
+
+                  {/* Reporter Audio Narration & Trimming */}
+                  <div className="pt-2 border-t border-slate-100">
+                    <AudioRecorderTrimmer
+                      onAudioChange={({ blob, duration, url }) => {
+                        setNewsFormAudioFile(blob);
+                        setNewsFormAudioDuration(duration);
+                        setNewsFormAudioUrl(url);
+                      }}
+                      onAudioClear={() => {
+                        setNewsFormAudioFile(null);
+                        setNewsFormAudioDuration(0);
+                        setNewsFormAudioUrl("");
+                      }}
+                      existingAudioUrl={newsFormAudioUrl}
+                      existingDuration={newsFormAudioDuration}
+                    />
                   </div>
                 </div>
               </FormSection>

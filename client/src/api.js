@@ -35,6 +35,7 @@ const baseURL = rawUrl.endsWith("/api") ? rawUrl : `${rawUrl}/api`;
 const API = axios.create({
   baseURL,
   timeout: 45000, // 45 seconds to accommodate Render wake-up and file uploads
+  validateStatus: (status) => (status >= 200 && status < 300) || status === 304,
 });
 
 // Attach Authorization token & persistent client identifier
@@ -56,10 +57,11 @@ API.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // If local fails, retry against production Render API
+    // If local fails due to network error (local server down/unreachable), retry against production Render API
     if (
       originalRequest &&
       !originalRequest._retry &&
+      (!error.response || error.code === "ERR_NETWORK" || error.code === "ECONNREFUSED") &&
       originalRequest.baseURL &&
       originalRequest.baseURL.includes("localhost")
     ) {

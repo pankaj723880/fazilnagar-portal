@@ -35,10 +35,13 @@
     2. Go to **APIs & Services** -> **OAuth consent screen**.
     3. Click **"PUBLISH APP"** to change the publishing status from **"Testing"** to **"In production"**. (Since the app only requests `drive.file` and `userinfo.email`, Google does NOT require a full sensitive scope app verification).
     4. Go to `/admin?tab=drive` in the portal and click **"Reconnect Google Drive"** to sign in with `pss809352@gmail.com` and grant permissions. The refresh token will now be permanent and no longer expire after 7 days.
-  - **Verification**:
-    - Client production build (`npm run build`) succeeded in 25.17s.
-    - Automated unit tests (`server/tests/googleDriveDiagnostics.test.js`) passed 5/5 tests.
-    - Authentication security guards (`server/tests/creationAuth.test.js`) passed 8/8 tests.
+    - **HTTP 304 (Not Modified) & Axios Fallback Error Fix**:
+      - Root Cause: Express generated ETags for `/status` and `/inspect` responses, causing browsers to send `If-None-Match` and receive HTTP 304. Axios default `validateStatus` strictly expects `200..299` and treated 304 as an unhandled `AxiosError: Request failed with status code 304`. The client response interceptor then caught this error and re-routed the request to the remote Render URL, resulting in cascading `Network Error` logs when Render took time to respond or was cold.
+      - Fixes:
+        1. Set explicit `Cache-Control: no-cache, no-store, must-revalidate, max-age=0` and `Expires: 0` headers on all diagnostic routes in `server/routes/googleDrive.js`.
+        2. Configured `validateStatus: (status) => (status >= 200 && status < 300) || status === 304` in `client/src/api.js`.
+        3. Constrained the Axios localhost fallback retry in `client/src/api.js` to ONLY trigger on true connection failures (`!error.response`, `ERR_NETWORK`, `ECONNREFUSED`), preventing standard HTTP responses from leaking across environments.
+        4. Added cache-busting timestamp parameter (`_t: Date.now()`) in `AdminDriveStorage.jsx`'s `fetchDriveData`.
 
 - **FIX INCONSISTENT SECTION BACKGROUNDS (MAP, NEWS & SACRED TWIN HERITAGE) (COMPLETED & VERIFIED)**
   - **Summary**: Resolved section wrapper background inconsistencies across Issue 1 (Map Section) and Issue 2 (Local News & Civic Bulletins + Sacred Twin Heritage Sections) in one focused implementation.

@@ -34,6 +34,7 @@ import {
   Minimize,
 } from "lucide-react";
 import { resolveStoryMedia, resolveMediaUrl } from "../utils/mediaUtils";
+import ReporterAudioPlayer from "../components/ReporterAudioPlayer";
 
 function formatDuration(seconds) {
   if (isNaN(seconds) || seconds < 0) return "0:00";
@@ -1386,6 +1387,18 @@ export default function ReelsNewsFeed() {
                     {story.summary || story.description}
                   </p>
 
+                  {/* Reporter Ground Audio Dispatch Pill */}
+                  {story.audio && (
+                    <div className="pt-1">
+                      <ReporterAudioPlayer
+                        audioUrl={story.audio}
+                        audioMeta={story.audioMeta}
+                        authorName={story.source || "Reporter"}
+                        compact={true}
+                      />
+                    </div>
+                  )}
+
                   {/* Author / Source & Publication Time */}
                   <div className="pt-1.5 flex items-center justify-between gap-2 text-[11px] text-slate-400">
                     <div className="flex items-center gap-1.5 truncate">
@@ -1672,6 +1685,16 @@ export default function ReelsNewsFeed() {
                   </span>
                 </div>
               </div>
+
+              {/* Reporter Ground Audio Dispatch Player */}
+              {readingStory.audio && (
+                <ReporterAudioPlayer
+                  audioUrl={readingStory.audio}
+                  audioMeta={readingStory.audioMeta}
+                  authorName={readingStory.source || "Reporter"}
+                  className="my-3"
+                />
+              )}
 
               {/* Summary Lead Paragraph */}
               {readingStory.summary && (

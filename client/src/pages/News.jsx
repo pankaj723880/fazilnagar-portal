@@ -4,6 +4,7 @@ import API from "../api";
 import { usePageSEO } from "../utils/seo";
 import { Newspaper, PlusCircle, Search, Calendar, User, Tag, Sparkles } from "lucide-react";
 import StoryVideoPreview from "../components/StoryVideoPreview";
+import ReporterAudioPlayer from "../components/ReporterAudioPlayer";
 import { ScrollReveal } from "../components/ScrollReveal";
 
 const FALLBACK_NEWS = [
@@ -240,6 +241,17 @@ export default function News() {
                   <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
                     {article.description}
                   </p>
+
+                  {/* Ground Audio Narration */}
+                  {article.audio && (
+                    <div className="pt-2">
+                      <ReporterAudioPlayer
+                        audioUrl={article.audio}
+                        audioMeta={article.audioMeta}
+                        authorName={article.author?.name || article.source || "Reporter"}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
