@@ -7,32 +7,53 @@ import { useTheme, DEFAULT_BG_ANIMATIONS } from "../context/ThemeContext";
  * Renders lightweight, theme-matched GPU-accelerated CSS effects
  * Behind all content with zero pointer events & full accessibility respect.
  */
-function BackgroundAnimations() {
+function BackgroundAnimations({ config, isPreview = false, className = "" }) {
   const { themeConfig } = useTheme();
   const location = useLocation();
 
-  const bgConfig = themeConfig?.bgAnimations || DEFAULT_BG_ANIMATIONS;
+  const bgConfig = config || themeConfig?.bgAnimations || DEFAULT_BG_ANIMATIONS;
   const {
     enabled = true,
     scope = "global",
+    speed = "normal",
+    opacity = 0.6,
     density = "medium",
+    autoMatchTheme = true,
+    customColor = "",
     effects = DEFAULT_BG_ANIMATIONS.effects,
   } = bgConfig;
 
   if (!enabled) return null;
 
-  const isAdminPage = location.pathname.startsWith("/admin");
-  if (scope === "public-only" && isAdminPage) return null;
-  if (scope === "admin-only" && !isAdminPage) return null;
+  if (!isPreview) {
+    const isAdminPage = location.pathname.startsWith("/admin");
+    if (scope === "public-only" && isAdminPage) return null;
+    if (scope === "admin-only" && !isAdminPage) return null;
+  }
 
+  const speedFactor = speed === "slow" ? "1.8" : speed === "fast" ? "0.6" : "1.0";
   const isLow = density === "low";
   const isHigh = density === "high";
 
+  const containerStyle = {
+    "--fzn-anim-speed-factor": speedFactor,
+    "--fzn-anim-opacity": String(opacity ?? 0.6),
+    ...(autoMatchTheme === false && customColor
+      ? {
+          "--fzn-anim-primary": customColor,
+          "--fzn-anim-accent": customColor,
+          "--fzn-anim-color-primary": customColor,
+          "--fzn-anim-color-accent": customColor,
+        }
+      : {}),
+  };
+
   return (
     <div
-      className="fzn-bg-container"
+      className={`fzn-bg-container ${isPreview ? "is-preview" : ""} ${className}`.trim()}
+      style={containerStyle}
       aria-hidden="true"
-      data-testid="fzn-bg-animations"
+      data-testid={isPreview ? "fzn-bg-animations-preview" : "fzn-bg-animations"}
     >
       {/* 1. Aurora & Liquid Gradients */}
       {effects.aurora && <div className="fzn-bg-aurora-layer" />}

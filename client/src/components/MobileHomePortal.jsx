@@ -484,7 +484,7 @@ export default function MobileHomePortal({
     <div
       className="w-full max-w-md sm:max-w-xl mx-auto min-h-screen flex flex-col font-sans pb-32 selection:bg-red-500 selection:text-white relative space-y-6 sm:space-y-8 transition-colors duration-200"
       style={{
-        backgroundColor: "var(--background-primary)",
+        backgroundColor: "transparent",
         color: "var(--text-primary)",
       }}
     >

@@ -604,7 +604,7 @@ export default function TownPortal() {
         <div
           className="w-full max-w-full overflow-x-hidden font-sans transition-colors duration-200"
           style={{
-            backgroundColor: "var(--background-primary)",
+            backgroundColor: "transparent",
             color: "var(--text-primary)",
           }}
         >

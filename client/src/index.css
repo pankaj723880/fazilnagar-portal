@@ -2937,6 +2937,18 @@ html[data-public-theme="dark"] #public-portal-root [class*="dark:border-[#484238
   will-change: opacity;
 }
 
+.fzn-bg-container.is-preview {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.admin-workspace {
+  background-color: color-mix(in srgb, var(--admin-workspace, #F8FAFC) 92%, transparent);
+}
+
 /* 1. AURORA & LIQUID GRADIENT MESH */
 .fzn-bg-aurora-layer {
   position: absolute;

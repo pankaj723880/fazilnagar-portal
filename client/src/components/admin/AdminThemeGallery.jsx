@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { THEMES, getThemeById, DEFAULT_THEME_ID } from "../../constants/themes";
 import { useTheme, DEFAULT_BG_ANIMATIONS } from "../../context/ThemeContext";
+import BackgroundAnimations from "../BackgroundAnimations";
 import {
   Palette,
   Check,
@@ -21,12 +22,13 @@ import {
 } from "lucide-react";
 
 export default function AdminThemeGallery({ onSaveSuccess }) {
-  const { themeConfig, applyAdminTheme, previewTheme } = useTheme();
+  const { themeConfig, publishedThemeConfig, applyAdminTheme, previewTheme } = useTheme();
 
-  // Current active configuration from backend/context
-  const activeThemeId = themeConfig?.themeId || DEFAULT_THEME_ID;
-  const activeMode = themeConfig?.mode || "light";
-  const activeBgAnim = themeConfig?.bgAnimations || DEFAULT_BG_ANIMATIONS;
+  // Published authoritative configuration from database/context
+  const published = publishedThemeConfig || themeConfig;
+  const activeThemeId = published?.themeId || DEFAULT_THEME_ID;
+  const activeMode = published?.mode || "light";
+  const activeBgAnim = published?.bgAnimations || DEFAULT_BG_ANIMATIONS;
 
   // Admin selection state for preview & staging
   const [selectedThemeId, setSelectedThemeId] = useState(activeThemeId);
@@ -36,12 +38,12 @@ export default function AdminThemeGallery({ onSaveSuccess }) {
   const [toast, setToast] = useState({ message: "", type: "success" });
   const [filterCategory, setFilterCategory] = useState("all");
 
-  // Keep state synchronized if external changes occur
+  // Keep state synchronized when published settings update from database
   useEffect(() => {
     setSelectedThemeId(activeThemeId);
     setSelectedMode(activeMode);
-    setBgAnim(themeConfig?.bgAnimations || DEFAULT_BG_ANIMATIONS);
-  }, [activeThemeId, activeMode, themeConfig?.bgAnimations]);
+    setBgAnim(activeBgAnim);
+  }, [activeThemeId, activeMode, activeBgAnim]);
 
   const selectedTheme = getThemeById(selectedThemeId);
   const previewPalette = selectedMode === "dark" ? selectedTheme.dark : selectedTheme.light;
@@ -612,126 +614,131 @@ export default function AdminThemeGallery({ onSaveSuccess }) {
 
         {/* Mock Portal Preview Box */}
         <div
-          className="rounded-xl border p-4 sm:p-6 transition-all duration-300 space-y-4"
+          className="rounded-xl border p-4 sm:p-6 transition-all duration-300 relative overflow-hidden"
           style={{
             backgroundColor: previewPalette.bg,
             borderColor: previewPalette.border,
             color: previewPalette.textPrimary,
           }}
         >
-          {/* Mock Navigation Header */}
-          <div
-            className="flex items-center justify-between p-3 rounded-xl border transition-colors shadow-2xs"
-            style={{
-              backgroundColor: previewPalette.surface,
-              borderColor: previewPalette.border,
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <div
-                className="w-7 h-7 rounded-lg text-white font-black text-xs flex items-center justify-center shadow-xs"
-                style={{ backgroundColor: previewPalette.action }}
-              >
-                F
-              </div>
-              <span className="font-extrabold text-xs tracking-tight" style={{ color: previewPalette.textPrimary }}>
-                FAZIL<span style={{ color: previewPalette.action }}>NAGAR</span>
-              </span>
-            </div>
+          {/* Real-time Ambient Background & Motion Architecture Canvas Preview */}
+          <BackgroundAnimations config={bgAnim} isPreview={true} />
 
-            <div className="flex items-center gap-2">
-              <span
-                className="text-[10px] font-bold px-2.5 py-1 rounded-lg text-white shadow-xs"
-                style={{ backgroundColor: previewPalette.action }}
-              >
-                + Add Story
-              </span>
-              <span
-                className="text-[10px] font-bold px-2.5 py-1 rounded-lg border"
-                style={{
-                  backgroundColor: previewPalette.surfaceSecondary,
-                  borderColor: previewPalette.border,
-                  color: previewPalette.textSecondary,
-                }}
-              >
-                Directory
-              </span>
-            </div>
-          </div>
-
-          {/* Mock Hero Heading & Action Buttons */}
-          <div className="space-y-2 py-2">
+          <div className="relative z-10 space-y-4">
+            {/* Mock Navigation Header */}
             <div
-              className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full border"
+              className="flex items-center justify-between p-3 rounded-xl border transition-colors shadow-2xs backdrop-blur-xs"
               style={{
-                backgroundColor: previewPalette.surfaceSecondary,
+                backgroundColor: previewPalette.surface,
                 borderColor: previewPalette.border,
-                color: previewPalette.action,
               }}
             >
-              <span>🏛️</span> {selectedTheme.tagline}
-            </div>
-            <h4 className="text-base sm:text-lg font-black tracking-tight" style={{ color: previewPalette.textPrimary }}>
-              Explore Fazilnagar: {selectedTheme.nameHindi}
-            </h4>
-            <p className="text-xs max-w-lg leading-relaxed" style={{ color: previewPalette.textSecondary }}>
-              {selectedTheme.description}
-            </p>
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-7 h-7 rounded-lg text-white font-black text-xs flex items-center justify-center shadow-xs"
+                  style={{ backgroundColor: previewPalette.action }}
+                >
+                  F
+                </div>
+                <span className="font-extrabold text-xs tracking-tight" style={{ color: previewPalette.textPrimary }}>
+                  FAZIL<span style={{ color: previewPalette.action }}>NAGAR</span>
+                </span>
+              </div>
 
-            <div className="flex flex-wrap items-center gap-2.5 pt-1">
-              <button
-                type="button"
-                className="px-4 py-2 rounded-xl text-white font-bold text-xs shadow-xs transition"
-                style={{ backgroundColor: previewPalette.action }}
-              >
-                Primary Civic Action
-              </button>
-              <button
-                type="button"
-                className="px-4 py-2 rounded-xl font-bold text-xs border transition"
+              <div className="flex items-center gap-2">
+                <span
+                  className="text-[10px] font-bold px-2.5 py-1 rounded-lg text-white shadow-xs"
+                  style={{ backgroundColor: previewPalette.action }}
+                >
+                  + Add Story
+                </span>
+                <span
+                  className="text-[10px] font-bold px-2.5 py-1 rounded-lg border"
+                  style={{
+                    backgroundColor: previewPalette.surfaceSecondary,
+                    borderColor: previewPalette.border,
+                    color: previewPalette.textSecondary,
+                  }}
+                >
+                  Directory
+                </span>
+              </div>
+            </div>
+
+            {/* Mock Hero Heading & Action Buttons */}
+            <div className="space-y-2 py-2">
+              <div
+                className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full border backdrop-blur-xs"
                 style={{
                   backgroundColor: previewPalette.surfaceSecondary,
                   borderColor: previewPalette.border,
-                  color: previewPalette.textPrimary,
-                }}
-              >
-                Secondary Surface
-              </button>
-              <span
-                className="text-xs font-bold underline cursor-pointer"
-                style={{ color: previewPalette.accent }}
-              >
-                Sandstone Accent Link &rarr;
-              </span>
-            </div>
-          </div>
-
-          {/* Mock Place Card */}
-          <div
-            className="p-3.5 rounded-xl border max-w-sm shadow-xs transition-colors"
-            style={{
-              backgroundColor: previewPalette.surface,
-              borderColor: previewPalette.border,
-            }}
-          >
-            <div className="flex items-center justify-between mb-1.5">
-              <span
-                className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                style={{
-                  backgroundColor: previewPalette.surfaceSecondary,
                   color: previewPalette.action,
                 }}
               >
-                24/7 Healthcare Facility
-              </span>
-              <span className="text-[10px]" style={{ color: previewPalette.accent }}>★ 4.9 Verified</span>
+                <span>🏛️</span> {selectedTheme.tagline}
+              </div>
+              <h4 className="text-base sm:text-lg font-black tracking-tight" style={{ color: previewPalette.textPrimary }}>
+                Explore Fazilnagar: {selectedTheme.nameHindi}
+              </h4>
+              <p className="text-xs max-w-lg leading-relaxed" style={{ color: previewPalette.textSecondary }}>
+                {selectedTheme.description}
+              </p>
+
+              <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-xl text-white font-bold text-xs shadow-xs transition cursor-pointer"
+                  style={{ backgroundColor: previewPalette.action }}
+                >
+                  Primary Civic Action
+                </button>
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-xl font-bold text-xs border transition cursor-pointer"
+                  style={{
+                    backgroundColor: previewPalette.surfaceSecondary,
+                    borderColor: previewPalette.border,
+                    color: previewPalette.textPrimary,
+                  }}
+                >
+                  Secondary Surface
+                </button>
+                <span
+                  className="text-xs font-bold underline cursor-pointer"
+                  style={{ color: previewPalette.accent }}
+                >
+                  Sandstone Accent Link &rarr;
+                </span>
+              </div>
             </div>
-            <h5 className="text-xs font-bold" style={{ color: previewPalette.textPrimary }}>
-              Community Health Centre (CHC Fazilnagar)
-            </h5>
-            <p className="text-[11px] mt-0.5" style={{ color: previewPalette.textSecondary }}>
-              Hospital Road, Ward No. 4, Fazilnagar - 274401
-            </p>
+
+            {/* Mock Place Card */}
+            <div
+              className="p-3.5 rounded-xl border max-w-sm shadow-xs transition-colors backdrop-blur-xs"
+              style={{
+                backgroundColor: previewPalette.surface,
+                borderColor: previewPalette.border,
+              }}
+            >
+              <div className="flex items-center justify-between mb-1.5">
+                <span
+                  className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                  style={{
+                    backgroundColor: previewPalette.surfaceSecondary,
+                    color: previewPalette.action,
+                  }}
+                >
+                  24/7 Healthcare Facility
+                </span>
+                <span className="text-[10px]" style={{ color: previewPalette.accent }}>★ 4.9 Verified</span>
+              </div>
+              <h5 className="text-xs font-bold" style={{ color: previewPalette.textPrimary }}>
+                Community Health Centre (CHC Fazilnagar)
+              </h5>
+              <p className="text-[11px] mt-0.5" style={{ color: previewPalette.textSecondary }}>
+                Hospital Road, Ward No. 4, Fazilnagar - 274401
+              </p>
+            </div>
           </div>
         </div>
       </div>

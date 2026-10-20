@@ -30,6 +30,7 @@ const ThemeContext = createContext({
   themeId: DEFAULT_THEME_ID,
   mode: "light",
   bgAnimations: DEFAULT_BG_ANIMATIONS,
+  publishedThemeConfig: null,
   toggleTheme: () => {},
   setTheme: () => {},
   applyAdminTheme: async () => {},
@@ -59,7 +60,40 @@ function broadcastThemeUpdate(config) {
   } catch {}
 }
 
+export function mergeBgAnimations(bg) {
+  if (!bg || typeof bg !== "object") return DEFAULT_BG_ANIMATIONS;
+  return {
+    ...DEFAULT_BG_ANIMATIONS,
+    ...bg,
+    effects: {
+      ...DEFAULT_BG_ANIMATIONS.effects,
+      ...(bg.effects || {}),
+    },
+  };
+}
+
 export function ThemeProvider({ children }) {
+  const [publishedThemeConfig, setPublishedThemeConfig] = useState(() => {
+    try {
+      const globalStored = localStorage.getItem(GLOBAL_THEME_STORAGE_KEY);
+      if (globalStored) {
+        const parsed = JSON.parse(globalStored);
+        if (parsed && parsed.themeId) {
+          return {
+            themeId: parsed.themeId,
+            mode: parsed.mode === "dark" ? "dark" : "light",
+            bgAnimations: mergeBgAnimations(parsed.bgAnimations),
+          };
+        }
+      }
+    } catch {}
+    return {
+      themeId: DEFAULT_THEME_ID,
+      mode: DEFAULT_THEME_MODE,
+      bgAnimations: DEFAULT_BG_ANIMATIONS,
+    };
+  });
+
   const [themeConfig, setThemeConfig] = useState(() => {
     try {
       // Check for user-selected personal appearance mode first (light/dark preference)
@@ -74,7 +108,7 @@ export function ThemeProvider({ children }) {
           return {
             themeId: parsed.themeId,
             mode: initialMode || (parsed.mode === "dark" ? "dark" : "light"),
-            bgAnimations: parsed.bgAnimations || DEFAULT_BG_ANIMATIONS,
+            bgAnimations: mergeBgAnimations(parsed.bgAnimations),
           };
         }
       }
@@ -172,7 +206,7 @@ export function ThemeProvider({ children }) {
     }
 
     // Configure background animations system tokens
-    const anim = cfg?.bgAnimations || DEFAULT_BG_ANIMATIONS;
+    const anim = mergeBgAnimations(cfg?.bgAnimations);
     const speedFactor = anim.speed === "slow" ? "1.8" : anim.speed === "fast" ? "0.6" : "1.0";
     root.style.setProperty("--fzn-anim-speed-factor", speedFactor);
     root.style.setProperty("--fzn-anim-opacity", String(anim.opacity ?? 0.6));
@@ -202,6 +236,14 @@ export function ThemeProvider({ children }) {
           const serverConfig = res.data.settings.themeConfig;
           const serverThemeId = serverConfig.themeId || DEFAULT_THEME_ID;
           const serverDefaultMode = serverConfig.mode === "dark" ? "dark" : "light";
+          const serverBg = mergeBgAnimations(serverConfig.bgAnimations);
+
+          const publishedConfig = {
+            themeId: serverThemeId,
+            mode: serverDefaultMode,
+            bgAnimations: serverBg,
+          };
+          setPublishedThemeConfig(publishedConfig);
 
           // Check if user has explicitly chosen a personal light/dark preference
           const userSavedMode = localStorage.getItem(USER_MODE_STORAGE_KEY);
@@ -210,21 +252,14 @@ export function ThemeProvider({ children }) {
           const mergedConfig = {
             themeId: serverThemeId,
             mode: effectiveMode,
-            bgAnimations: serverConfig.bgAnimations || DEFAULT_BG_ANIMATIONS,
+            bgAnimations: serverBg,
           };
 
           setThemeConfig(mergedConfig);
           applyThemeToDOM(mergedConfig);
 
           try {
-            localStorage.setItem(
-              GLOBAL_THEME_STORAGE_KEY,
-              JSON.stringify({
-                themeId: serverThemeId,
-                mode: serverDefaultMode,
-                bgAnimations: serverConfig.bgAnimations || DEFAULT_BG_ANIMATIONS,
-              })
-            );
+            localStorage.setItem(GLOBAL_THEME_STORAGE_KEY, JSON.stringify(publishedConfig));
           } catch {}
         }
       } catch (err) {
@@ -242,22 +277,18 @@ export function ThemeProvider({ children }) {
     applyThemeToDOM(themeConfig);
   }, [themeConfig, applyThemeToDOM]);
 
-  // Admin-only preview function (instant DOM preview across portal without requiring DB commit yet)
+  // Admin-only preview function (instant DOM preview across portal without overwriting published settings)
   const previewTheme = useCallback(
     (cfg) => {
       const previewCfg = {
         themeId: cfg.themeId || themeConfig.themeId,
         mode: cfg.mode === "dark" ? "dark" : "light",
-        bgAnimations: cfg.bgAnimations !== undefined ? cfg.bgAnimations : (themeConfig.bgAnimations || DEFAULT_BG_ANIMATIONS),
+        bgAnimations: cfg.bgAnimations !== undefined ? mergeBgAnimations(cfg.bgAnimations) : (themeConfig.bgAnimations || DEFAULT_BG_ANIMATIONS),
       };
       setThemeConfig(previewCfg);
       applyThemeToDOM(previewCfg);
-      try {
-        localStorage.setItem(GLOBAL_THEME_STORAGE_KEY, JSON.stringify(previewCfg));
-        localStorage.setItem(USER_MODE_STORAGE_KEY, previewCfg.mode);
-        localStorage.setItem(STORAGE_KEY, previewCfg.mode);
-        broadcastThemeUpdate(previewCfg);
-      } catch {}
+      // NOTE: Unsaved preview updates do NOT overwrite GLOBAL_THEME_STORAGE_KEY
+      // to cleanly separate staging from published database settings
     },
     [themeConfig, applyThemeToDOM]
   );
@@ -272,7 +303,7 @@ export function ThemeProvider({ children }) {
       const payload = {
         themeId: newConfig.themeId,
         mode: newConfig.mode === "dark" ? "dark" : "light",
-        bgAnimations: newConfig.bgAnimations !== undefined ? newConfig.bgAnimations : (themeConfig.bgAnimations || DEFAULT_BG_ANIMATIONS),
+        bgAnimations: newConfig.bgAnimations !== undefined ? mergeBgAnimations(newConfig.bgAnimations) : (themeConfig.bgAnimations || DEFAULT_BG_ANIMATIONS),
       };
 
       const res = await API.put("/settings/theme", payload, {
@@ -280,11 +311,13 @@ export function ThemeProvider({ children }) {
       });
 
       if (res.data?.success) {
+        const serverConfig = res.data.themeConfig;
         const updated = {
-          themeId: res.data.themeConfig.themeId,
-          mode: res.data.themeConfig.mode,
-          bgAnimations: res.data.themeConfig.bgAnimations || payload.bgAnimations,
+          themeId: serverConfig.themeId,
+          mode: serverConfig.mode,
+          bgAnimations: mergeBgAnimations(serverConfig.bgAnimations || payload.bgAnimations),
         };
+        setPublishedThemeConfig(updated);
         setThemeConfig(updated);
         applyThemeToDOM(updated);
         try {
@@ -421,6 +454,7 @@ export function ThemeProvider({ children }) {
       mode: themeConfig.mode,
       rawTheme: themeConfig.mode,
       bgAnimations: themeConfig.bgAnimations || DEFAULT_BG_ANIMATIONS,
+      publishedThemeConfig,
       toggleTheme,
       setTheme,
       applyAdminTheme,
@@ -430,7 +464,7 @@ export function ThemeProvider({ children }) {
       isTransitioning,
       themeConfig,
     }),
-    [themeConfig, isAdminPage, toggleTheme, setTheme, applyAdminTheme, previewTheme, isTransitioning]
+    [themeConfig, publishedThemeConfig, isAdminPage, toggleTheme, setTheme, applyAdminTheme, previewTheme, isTransitioning]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
