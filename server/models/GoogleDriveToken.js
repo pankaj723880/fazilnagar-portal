@@ -44,6 +44,14 @@ const googleDriveTokenSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    lastError: {
+      type: String,
+      default: null,
+    },
+    lastErrorAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

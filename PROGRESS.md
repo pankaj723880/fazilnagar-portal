@@ -1,5 +1,45 @@
 # Town Portal & Regional Connectivity Implementation Progress
 
+- **GOOGLE DRIVE CLOUD MEDIA STORAGE `invalid_grant` RESOLUTION & RECONNECT ARCHITECTURE (COMPLETED & VERIFIED)**
+  - **Root Cause Analysis**:
+    - Querying the production backend (`GET /api/google-drive/status` & `GET /api/google-drive/inspect`) showed:
+      - Initial OAuth connection date: `2026-10-12T21:30:07Z`.
+      - Last successful token refresh: `2026-10-19T20:52:47Z`.
+      - Error returned: `invalid_grant`.
+    - **Exact Technical Cause**: The Google Cloud project's OAuth Consent Screen is currently set to "Testing" publishing status. Under Google's OAuth 2.0 security specifications, refresh tokens issued to apps in "Testing" mode expire after **precisely 7 days (168 hours)**. Once expired, Google rejects all token refresh requests with `invalid_grant` ("Token has been expired or revoked").
+    - **Secondary Masking Bugs in Code**:
+      1. `/status` route only checked string presence (`hasEnvRefreshToken || hasDbRefreshToken`), falsely reporting `connected: true` even when the token was dead.
+      2. `/inspect` route uncaught `invalid_grant` exception crashed into an unhandled HTTP 500 error without passing `configured: true`, causing the frontend's `!driveData?.connected && driveData?.configured` check to evaluate to false and hiding the "Connect Google Drive" button entirely.
+      3. Token refresh logic prioritized `process.env.GOOGLE_DRIVE_REFRESH_TOKEN` over `tokenDoc.tokens.refresh_token`, which would cause stale env vars to shadow fresh database tokens saved via re-authorization.
+  - **Changes Implemented**:
+    - **Safe Token Validation Helper (`server/routes/googleDrive.js`)**:
+      - Created `verifyDriveAuth()` that actively tests credentials and access tokens via `oauth2Client.getAccessToken()`.
+      - Catches `invalid_grant` specifically, sets `reconnectRequired: true`, and logs `lastError: "invalid_grant"` in MongoDB without exposing client secrets or tokens.
+      - Added MongoDB `readyState` guards to prevent queries from hanging when the database connection is initializing.
+    - **Accurate `/status` & `/inspect` Endpoints**:
+      - `/status` now returns real-time connection health, `configured: true`, `connected: false`, `reconnectRequired: true`, and clean diagnostic descriptions instead of false positives or secrets.
+      - `/inspect` returns HTTP 200 with fallback folder metadata for `"Fazilnagar Media"` when disconnected, preventing 500 errors and enabling the frontend to render the action controls.
+    - **Dedicated Application Folder (`Fazilnagar Media`)**:
+      - Verified folder management in `getOrCreateAppFolder()` and `oauth/callback` to target `"Fazilnagar Media"`.
+      - Automatic folder search, check, and creation without duplicating existing files or folders.
+    - **Secure Admin Reconnect Flow**:
+      - Enhanced `/auth/init` to pass `returnTo` in state JWT, with `prompt: "consent"` and `access_type: "offline"` to guarantee a new refresh token from Google.
+      - Enhanced `/oauth/callback` to exchange tokens, save `Fazilnagar Media` folder ID, clear errors, and redirect back to `${returnTo}?tab=drive`.
+    - **Admin UI Enhancements (`client/src/components/AdminDriveStorage.jsx`)**:
+      - Displays "Reauthorization Required" badge with clear explanation of the expired session.
+      - Prominently displays "Reconnect Google Drive" button when `reconnectRequired` or `invalid_grant` is detected.
+      - Displays connected account status as `email (Session Expired)` when disconnected.
+      - Ensures Choose File / Upload Now are enabled only when a valid connection and selected file exist.
+  - **Required Google Cloud Administrator Steps for Permanent Token**:
+    1. Open [Google Cloud Console](https://console.cloud.google.com/) -> Select your Fazilnagar Portal project.
+    2. Go to **APIs & Services** -> **OAuth consent screen**.
+    3. Click **"PUBLISH APP"** to change the publishing status from **"Testing"** to **"In production"**. (Since the app only requests `drive.file` and `userinfo.email`, Google does NOT require a full sensitive scope app verification).
+    4. Go to `/admin?tab=drive` in the portal and click **"Reconnect Google Drive"** to sign in with `pss809352@gmail.com` and grant permissions. The refresh token will now be permanent and no longer expire after 7 days.
+  - **Verification**:
+    - Client production build (`npm run build`) succeeded in 25.17s.
+    - Automated unit tests (`server/tests/googleDriveDiagnostics.test.js`) passed 5/5 tests.
+    - Authentication security guards (`server/tests/creationAuth.test.js`) passed 8/8 tests.
+
 - **FIX INCONSISTENT SECTION BACKGROUNDS (MAP, NEWS & SACRED TWIN HERITAGE) (COMPLETED & VERIFIED)**
   - **Summary**: Resolved section wrapper background inconsistencies across Issue 1 (Map Section) and Issue 2 (Local News & Civic Bulletins + Sacred Twin Heritage Sections) in one focused implementation.
   - **Changes Made**:

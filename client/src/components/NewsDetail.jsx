@@ -74,6 +74,7 @@ export default function NewsDetail() {
             <video
               key={videoUrl}
               src={videoUrl}
+              poster={imageUrl || undefined}
               controls
               playsInline
               webkit-playsinline="true"

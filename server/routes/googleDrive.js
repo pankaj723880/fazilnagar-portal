@@ -54,10 +54,19 @@ export async function getAuthenticatedDriveClient() {
     throw new Error("Google OAuth credentials missing on server. GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is not set.");
   }
 
-  const envRefreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
-  const tokenDoc = await GoogleDriveToken.findOne({ key: "default_drive_account" });
+  let tokenDoc = null;
+  if (mongoose.connection && mongoose.connection.readyState === 1) {
+    try {
+      tokenDoc = await GoogleDriveToken.findOne({ key: "default_drive_account" });
+    } catch (e) {
+      console.warn("[GoogleDrive] DB token query warning:", e.message);
+    }
+  }
 
-  const refreshToken = envRefreshToken || tokenDoc?.tokens?.refresh_token;
+  const envRefreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
+
+  // Prefer database refresh token (saved via admin OAuth flow), fallback to env var
+  const refreshToken = tokenDoc?.tokens?.refresh_token || envRefreshToken;
   if (!refreshToken) {
     throw new Error("Google Drive is not connected. No refresh token available.");
   }
@@ -70,25 +79,131 @@ export async function getAuthenticatedDriveClient() {
 
   oauth2Client.on("tokens", async (newTokens) => {
     try {
-      const update = {
-        lastRefreshedAt: new Date(),
-        "tokens.access_token": newTokens.access_token,
-        "tokens.expiry_date": newTokens.expiry_date,
-      };
-      if (newTokens.refresh_token) {
-        update["tokens.refresh_token"] = newTokens.refresh_token;
+      if (mongoose.connection && mongoose.connection.readyState === 1) {
+        const update = {
+          lastRefreshedAt: new Date(),
+          lastError: null,
+          "tokens.access_token": newTokens.access_token,
+          "tokens.expiry_date": newTokens.expiry_date,
+        };
+        if (newTokens.refresh_token) {
+          update["tokens.refresh_token"] = newTokens.refresh_token;
+        }
+        await GoogleDriveToken.findOneAndUpdate(
+          { key: "default_drive_account" },
+          { $set: update }
+        );
       }
-      await GoogleDriveToken.findOneAndUpdate(
-        { key: "default_drive_account" },
-        { $set: update }
-      );
     } catch (e) {
       console.warn("[GoogleDrive] Failed to persist refreshed tokens:", e.message);
     }
   });
 
   const drive = google.drive({ version: "v3", auth: oauth2Client });
-  return { drive, accountEmail: tokenDoc?.accountEmail || "pss809352@gmail.com", tokenDoc };
+  return { drive, accountEmail: tokenDoc?.accountEmail || "pss809352@gmail.com", tokenDoc, oauth2Client };
+}
+
+/**
+ * Diagnostic helper to verify whether Google Drive OAuth credentials and tokens are active,
+ * detecting invalid_grant, token revocation, or expiry without exposing sensitive values.
+ */
+export async function verifyDriveAuth() {
+  const hasClientId = !!process.env.GOOGLE_CLIENT_ID;
+  const hasClientSecret = !!process.env.GOOGLE_CLIENT_SECRET;
+  const configured = hasClientId && hasClientSecret;
+
+  if (!configured) {
+    return {
+      configured: false,
+      connected: false,
+      reconnectRequired: false,
+      error: "missing_credentials",
+      message: "Google OAuth credentials (GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET) missing on server.",
+      folderName: "Fazilnagar Media",
+    };
+  }
+
+  let tokenDoc = null;
+  if (mongoose.connection && mongoose.connection.readyState === 1) {
+    try {
+      tokenDoc = await GoogleDriveToken.findOne({ key: "default_drive_account" });
+    } catch (e) {
+      console.warn("[GoogleDrive] DB token query warning:", e.message);
+    }
+  }
+
+  const envRefreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
+  const refreshToken = tokenDoc?.tokens?.refresh_token || envRefreshToken;
+
+  if (!refreshToken) {
+    return {
+      configured: true,
+      connected: false,
+      reconnectRequired: true,
+      error: "not_connected",
+      message: "Google Drive is not connected. Authorization required.",
+      accountEmail: tokenDoc?.accountEmail || null,
+      folderId: tokenDoc?.folderId || null,
+      folderName: tokenDoc?.folderName || "Fazilnagar Media",
+      storageType: "none",
+    };
+  }
+
+  const oauth2Client = createOAuth2Client();
+  oauth2Client.setCredentials({
+    refresh_token: refreshToken,
+    access_token: tokenDoc?.tokens?.access_token || undefined,
+    expiry_date: tokenDoc?.tokens?.expiry_date || undefined,
+  });
+
+  try {
+    const tokenRes = await oauth2Client.getAccessToken();
+    if (!tokenRes || !tokenRes.token) {
+      throw new Error("Unable to obtain access token from Google.");
+    }
+
+    return {
+      configured: true,
+      connected: true,
+      reconnectRequired: false,
+      error: null,
+      message: "Google Drive OAuth connection is active and healthy.",
+      storageType: tokenDoc?.tokens?.refresh_token ? "database" : "environment_variable",
+      accountEmail: tokenDoc?.accountEmail || null,
+      folderId: tokenDoc?.folderId || null,
+      folderName: tokenDoc?.folderName || "Fazilnagar Media",
+      tokenDoc,
+      oauth2Client,
+    };
+  } catch (err) {
+    const errMsg = err.message || "";
+    const isInvalidGrant =
+      errMsg.includes("invalid_grant") ||
+      err.response?.data?.error === "invalid_grant" ||
+      errMsg.includes("expired or revoked");
+
+    if (isInvalidGrant) {
+      await GoogleDriveToken.findOneAndUpdate(
+        { key: "default_drive_account" },
+        { $set: { isConfigured: false, lastError: "invalid_grant", lastErrorAt: new Date() } }
+      ).catch(() => {});
+    }
+
+    return {
+      configured: true,
+      connected: false,
+      reconnectRequired: true,
+      error: isInvalidGrant ? "invalid_grant" : errMsg,
+      message: isInvalidGrant
+        ? "Google authorization expired or was revoked (invalid_grant). Reconnection required to resume media uploads."
+        : `Google Drive connection error: ${errMsg}`,
+      storageType: tokenDoc?.tokens?.refresh_token ? "database" : "environment_variable",
+      accountEmail: tokenDoc?.accountEmail || null,
+      folderId: tokenDoc?.folderId || null,
+      folderName: tokenDoc?.folderName || "Fazilnagar Media",
+      tokenDoc,
+    };
+  }
 }
 
 /**
@@ -224,7 +339,11 @@ export async function uploadMediaToDrive({
     uploadedBy: user?.id || null,
   });
 
-  const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal.onrender.com").replace(/\/+$/, "");
+  const defaultBase =
+    process.env.NODE_ENV === "production"
+      ? "https://fazilnagar-portal.onrender.com"
+      : `http://localhost:${process.env.PORT || 5000}`;
+  const backendBase = (process.env.BACKEND_URL || defaultBase).replace(/\/+$/, "");
   mediaDoc.deliveryUrl = `${backendBase}/api/google-drive/media/${mediaDoc._id}`;
   await mediaDoc.save();
 
@@ -238,32 +357,36 @@ export async function uploadMediaToDrive({
  */
 router.get("/status", async (req, res) => {
   try {
-    const hasClientId = !!process.env.GOOGLE_CLIENT_ID;
-    const hasClientSecret = !!process.env.GOOGLE_CLIENT_SECRET;
-    const hasEnvRefreshToken = !!process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
-
-    const storedDoc = await GoogleDriveToken.findOne({ key: "default_drive_account" }).lean();
-    const hasDbRefreshToken = !!storedDoc?.tokens?.refresh_token;
-
-    const isConnected = hasEnvRefreshToken || hasDbRefreshToken;
-    const mediaCount = await GoogleDriveMedia.countDocuments();
+    const authStatus = await verifyDriveAuth();
+    const isDbReady = mongoose.connection && mongoose.connection.readyState === 1;
+    const mediaCount = isDbReady ? await GoogleDriveMedia.countDocuments().catch(() => 0) : 0;
+    const storedDoc = authStatus.tokenDoc || (isDbReady ? await GoogleDriveToken.findOne({ key: "default_drive_account" }).lean().catch(() => null) : null);
 
     res.status(200).json({
-      configured: hasClientId && hasClientSecret,
-      connected: isConnected,
-      storageType: hasEnvRefreshToken ? "environment_variable" : hasDbRefreshToken ? "database" : "none",
-      accountEmail: storedDoc?.accountEmail || null,
-      folderId: storedDoc?.folderId || null,
-      folderName: storedDoc?.folderName || null,
+      configured: authStatus.configured,
+      connected: authStatus.connected,
+      reconnectRequired: authStatus.reconnectRequired,
+      error: authStatus.error || null,
+      message: authStatus.message || (authStatus.connected ? "Active" : "Disconnected"),
+      storageType: authStatus.storageType || "none",
+      accountEmail: authStatus.accountEmail || storedDoc?.accountEmail || null,
+      folderId: authStatus.folderId || storedDoc?.folderId || null,
+      folderName: authStatus.folderName || storedDoc?.folderName || "Fazilnagar Media",
       mediaCount,
-      scope: storedDoc?.tokens?.scope || (isConnected ? DRIVE_FILE_SCOPE : null),
+      scope: storedDoc?.tokens?.scope || (authStatus.configured ? DRIVE_FILE_SCOPE : null),
       connectedAt: storedDoc?.connectedAt || null,
       lastRefreshedAt: storedDoc?.lastRefreshedAt || null,
       redirectUri: EXACT_REDIRECT_URI,
     });
   } catch (err) {
     console.error("[GoogleDrive] Status Check Error:", err);
-    res.status(500).json({ message: "Failed to query Google Drive connection status." });
+    res.status(500).json({
+      configured: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+      connected: false,
+      reconnectRequired: true,
+      error: err.message,
+      message: "Failed to query Google Drive connection status.",
+    });
   }
 });
 
@@ -275,12 +398,9 @@ router.get("/status", async (req, res) => {
  */
 router.get("/inspect", async (req, res) => {
   try {
-    const hasClientId = !!process.env.GOOGLE_CLIENT_ID;
-    const hasClientSecret = !!process.env.GOOGLE_CLIENT_SECRET;
-    const configured = hasClientId && hasClientSecret;
-
-    const mongoMediaCount = await GoogleDriveMedia.countDocuments();
-    const mongoMedia = await GoogleDriveMedia.find().sort({ createdAt: -1 }).limit(10).lean();
+    const isDbReady = mongoose.connection && mongoose.connection.readyState === 1;
+    const mongoMediaCount = isDbReady ? await GoogleDriveMedia.countDocuments().catch(() => 0) : 0;
+    const mongoMedia = isDbReady ? await GoogleDriveMedia.find().sort({ createdAt: -1 }).limit(10).lean().catch(() => []) : [];
     const mappedMongoMedia = mongoMedia.map((m) => ({
       id: m._id,
       driveFileId: m.driveFileId,
@@ -294,16 +414,23 @@ router.get("/inspect", async (req, res) => {
       createdAt: m.createdAt,
     }));
 
-    let driveClientResult = null;
-    try {
-      driveClientResult = await getAuthenticatedDriveClient();
-    } catch (authErr) {
-      // Gracefully return HTTP 200 with diagnostic status rather than 500 Internal Server Error
+    const authCheck = await verifyDriveAuth();
+    if (!authCheck.connected) {
       return res.status(200).json({
         connected: false,
-        configured,
-        message: authErr.message || "Google Drive is not connected.",
-        folder: null,
+        configured: authCheck.configured,
+        reconnectRequired: authCheck.reconnectRequired,
+        error: authCheck.error,
+        message: authCheck.message,
+        accountEmail: authCheck.accountEmail,
+        folder: {
+          folderExists: false,
+          folderId: authCheck.folderId,
+          folderName: authCheck.folderName || "Fazilnagar Media",
+          folderWebViewLink: authCheck.folderId ? `https://drive.google.com/drive/folders/${authCheck.folderId}` : null,
+          filesUploadedCount: 0,
+          files: [],
+        },
         mongo: {
           totalCount: mongoMediaCount,
           recentFiles: mappedMongoMedia,
@@ -311,12 +438,13 @@ router.get("/inspect", async (req, res) => {
       });
     }
 
-    const { drive, accountEmail } = driveClientResult;
+    const { drive, accountEmail } = await getAuthenticatedDriveClient();
     const folderInspection = await inspectMediaFolder(drive, "Fazilnagar Media");
 
     res.status(200).json({
       connected: true,
       configured: true,
+      reconnectRequired: false,
       accountEmail,
       folder: folderInspection,
       mongo: {
@@ -326,9 +454,29 @@ router.get("/inspect", async (req, res) => {
     });
   } catch (err) {
     console.error("[GoogleDrive] Inspect Error:", err);
-    res.status(500).json({
+    const isInvalidGrant =
+      err.message?.includes("invalid_grant") ||
+      err.response?.data?.error === "invalid_grant" ||
+      err.message?.includes("expired or revoked");
+
+    res.status(200).json({
       connected: false,
-      message: err.message || "Failed to inspect Google Drive media folder.",
+      configured: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+      reconnectRequired: true,
+      error: isInvalidGrant ? "invalid_grant" : err.message,
+      message: isInvalidGrant
+        ? "Google authorization expired or was revoked (invalid_grant). Click 'Reconnect Google Drive' to authorize."
+        : (err.message || "Failed to inspect Google Drive media folder."),
+      folder: {
+        folderExists: false,
+        folderName: "Fazilnagar Media",
+        filesUploadedCount: 0,
+        files: [],
+      },
+      mongo: {
+        totalCount: await GoogleDriveMedia.countDocuments().catch(() => 0),
+        recentFiles: [],
+      },
     });
   }
 });
@@ -347,6 +495,7 @@ router.get("/auth/init", verifyToken, requireAdmin, async (req, res) => {
       });
     }
 
+    const returnTo = req.query.returnTo || req.headers.referer || `${FRONTEND_ADMIN_URL}?tab=drive`;
     const nonce = crypto.randomBytes(16).toString("hex");
     const secretKey = process.env.JWT_SECRET || "fallback_secret_key";
     const stateToken = jwt.sign(
@@ -355,6 +504,7 @@ router.get("/auth/init", verifyToken, requireAdmin, async (req, res) => {
         userId: req.user.id,
         role: req.user.role,
         purpose: "google_drive_oauth",
+        returnTo,
       },
       secretKey,
       { expiresIn: "15m" }
@@ -395,7 +545,7 @@ router.get("/oauth/callback", async (req, res) => {
         <body style="font-family:sans-serif;text-align:center;padding:50px;background:#0f172a;color:#f87171;">
           <h2>❌ Google Drive Connection Failed</h2>
           <p>Reason: ${sanitizeHtml(String(error))}</p>
-          <a href="${FRONTEND_ADMIN_URL}" style="color:#38bdf8;text-decoration:none;font-weight:bold;">Return to Admin Dashboard</a>
+          <a href="${FRONTEND_ADMIN_URL}?tab=drive" style="color:#38bdf8;text-decoration:none;font-weight:bold;">Return to Admin Dashboard</a>
         </body>
       </html>
     `);
@@ -409,7 +559,7 @@ router.get("/oauth/callback", async (req, res) => {
         <body style="font-family:sans-serif;text-align:center;padding:50px;background:#0f172a;color:#f87171;">
           <h2>❌ Invalid Request</h2>
           <p>Missing authorization code or state parameter.</p>
-          <a href="${FRONTEND_ADMIN_URL}" style="color:#38bdf8;text-decoration:none;font-weight:bold;">Return to Admin Dashboard</a>
+          <a href="${FRONTEND_ADMIN_URL}?tab=drive" style="color:#38bdf8;text-decoration:none;font-weight:bold;">Return to Admin Dashboard</a>
         </body>
       </html>
     `);
@@ -431,7 +581,7 @@ router.get("/oauth/callback", async (req, res) => {
         <body style="font-family:sans-serif;text-align:center;padding:50px;background:#0f172a;color:#f87171;">
           <h2>⚠️ Security Validation Error</h2>
           <p>OAuth state verification failed or session expired. Please re-initiate authorization from the admin panel.</p>
-          <a href="${FRONTEND_ADMIN_URL}" style="color:#38bdf8;text-decoration:none;font-weight:bold;">Return to Admin Dashboard</a>
+          <a href="${FRONTEND_ADMIN_URL}?tab=drive" style="color:#38bdf8;text-decoration:none;font-weight:bold;">Return to Admin Dashboard</a>
         </body>
       </html>
     `);
@@ -441,6 +591,9 @@ router.get("/oauth/callback", async (req, res) => {
   if (!oauth2Client) {
     return res.status(500).send("Google OAuth Client is not configured on this server.");
   }
+
+  const returnUrl = decodedState.returnTo || `${FRONTEND_ADMIN_URL}?tab=drive`;
+  const safeReturnUrl = returnUrl.includes("tab=") ? returnUrl : `${returnUrl}?tab=drive`;
 
   try {
     const { tokens } = await oauth2Client.getToken(String(code));
@@ -455,17 +608,32 @@ router.get("/oauth/callback", async (req, res) => {
       console.warn("[GoogleDrive] Could not fetch user email:", e.message);
     }
 
+    const drive = google.drive({ version: "v3", auth: oauth2Client });
+    let dedicatedFolderId = null;
+    try {
+      dedicatedFolderId = await getOrCreateAppFolder(drive, null, "Fazilnagar Media");
+    } catch (folderErr) {
+      console.warn("[GoogleDrive] Folder ensure failed on OAuth callback:", folderErr.message);
+    }
+
     const updatePayload = {
       isConfigured: true,
+      lastError: null,
+      lastErrorAt: null,
       connectedAt: new Date(),
       lastRefreshedAt: new Date(),
       connectedBy: decodedState.userId || null,
       accountEmail,
+      folderName: "Fazilnagar Media",
       "tokens.access_token": tokens.access_token,
       "tokens.scope": tokens.scope,
       "tokens.token_type": tokens.token_type,
       "tokens.expiry_date": tokens.expiry_date,
     };
+
+    if (dedicatedFolderId) {
+      updatePayload.folderId = dedicatedFolderId;
+    }
 
     if (tokens.refresh_token) {
       updatePayload["tokens.refresh_token"] = tokens.refresh_token;
@@ -486,6 +654,7 @@ router.get("/oauth/callback", async (req, res) => {
           <title>Google Drive Connected Successfully</title>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <meta http-equiv="refresh" content="3;url=${safeReturnUrl}" />
           <style>
             body { background: #0B1118; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
             .card { background: #18232E; border: 1px solid #334155; border-radius: 20px; padding: 36px 28px; max-width: 460px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
@@ -503,13 +672,14 @@ router.get("/oauth/callback", async (req, res) => {
           <div class="card">
             <div class="badge">✓ Connected</div>
             <h1>Google Drive Connected</h1>
-            <p>Fazilnagar Portal backend is now securely linked with Google Drive. Tokens have been safely stored in persistent server storage.</p>
+            <p>Fazilnagar Portal backend is now securely linked with Google Drive folder <strong>Fazilnagar Media</strong>. Redirecting you back to Admin Storage...</p>
             <div class="details">
               <div class="details-row"><span>Status:</span><strong style="color:#34d399">Active</strong></div>
               ${accountEmail ? `<div class="details-row"><span>Account:</span><strong>${sanitizeHtml(accountEmail)}</strong></div>` : ""}
+              <div class="details-row"><span>Folder:</span><strong>Fazilnagar Media</strong></div>
               <div class="details-row"><span>Scope:</span><strong>drive.file (Minimal)</strong></div>
             </div>
-            <a href="${FRONTEND_ADMIN_URL}" class="btn">Return to Admin Dashboard</a>
+            <a href="${safeReturnUrl}" class="btn">Return to Drive Storage Desk</a>
           </div>
         </body>
       </html>
@@ -523,7 +693,7 @@ router.get("/oauth/callback", async (req, res) => {
         <body style="font-family:sans-serif;text-align:center;padding:50px;background:#0f172a;color:#f87171;">
           <h2>❌ Token Exchange Failed</h2>
           <p>Failed to exchange authorization code for Google tokens. Please try again.</p>
-          <a href="${FRONTEND_ADMIN_URL}" style="color:#38bdf8;text-decoration:none;font-weight:bold;">Return to Admin Dashboard</a>
+          <a href="${safeReturnUrl}" style="color:#38bdf8;text-decoration:none;font-weight:bold;">Return to Admin Dashboard</a>
         </body>
       </html>
     `);
@@ -577,6 +747,24 @@ router.post(
       });
     } catch (err) {
       console.error("[GoogleDrive] Upload Handler Error:", err);
+      const isInvalidGrant =
+        err.message?.includes("invalid_grant") ||
+        err.response?.data?.error === "invalid_grant" ||
+        err.message?.includes("expired or revoked");
+
+      if (isInvalidGrant) {
+        await GoogleDriveToken.findOneAndUpdate(
+          { key: "default_drive_account" },
+          { $set: { isConfigured: false, lastError: "invalid_grant", lastErrorAt: new Date() } }
+        ).catch(() => {});
+        return res.status(401).json({
+          success: false,
+          reconnectRequired: true,
+          error: "invalid_grant",
+          message: "Google Drive authorization expired (invalid_grant). Please reconnect Google Drive in Admin panel.",
+        });
+      }
+
       res.status(500).json({
         success: false,
         message: err.message || "Failed to upload file to Google Drive.",
@@ -633,6 +821,24 @@ router.post(
       });
     } catch (err) {
       console.error("[GoogleDrive] Admin Upload Error:", err);
+      const isInvalidGrant =
+        err.message?.includes("invalid_grant") ||
+        err.response?.data?.error === "invalid_grant" ||
+        err.message?.includes("expired or revoked");
+
+      if (isInvalidGrant) {
+        await GoogleDriveToken.findOneAndUpdate(
+          { key: "default_drive_account" },
+          { $set: { isConfigured: false, lastError: "invalid_grant", lastErrorAt: new Date() } }
+        ).catch(() => {});
+        return res.status(401).json({
+          success: false,
+          reconnectRequired: true,
+          error: "invalid_grant",
+          message: "Google Drive authorization expired (invalid_grant). Click 'Reconnect Google Drive' above to authorize.",
+        });
+      }
+
       res.status(500).json({
         success: false,
         message: err.message || "Failed to upload file to Google Drive.",
@@ -805,6 +1011,16 @@ router.get("/media/:id", async (req, res) => {
   } catch (err) {
     console.error("[GoogleDrive] Media Retrieval Error:", err);
     if (!res.headersSent) {
+      if (
+        mediaDoc?.mimeType?.startsWith("video/") ||
+        /\.(mp4|webm|mov|ogg|m4v)($|\?)/i.test(mediaDoc?.fileName || "")
+      ) {
+        return res.status(502).json({
+          success: false,
+          message: "Video media stream temporarily unavailable from storage provider.",
+          error: err.message,
+        });
+      }
       const clientBase = (process.env.CLIENT_URL || "https://fazilnagar.vercel.app").replace(/\/+$/, "");
       return res.redirect(302, `${clientBase}/images/fazilnagar_pawanagar.webp`);
     }

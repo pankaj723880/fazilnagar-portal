@@ -21,7 +21,7 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Allowed MIME types for story photos and video clips
+// Allowed MIME types for story photos, video clips, and audio narration
 const ALLOWED_IMAGE_MIMES = [
   "image/jpeg",
   "image/jpg",
@@ -38,7 +38,21 @@ const ALLOWED_VIDEO_MIMES = [
   "video/x-msvideo",
 ];
 
-// Multer storage setup for image and video uploads
+const ALLOWED_AUDIO_MIMES = [
+  "audio/mpeg",
+  "audio/mp3",
+  "audio/wav",
+  "audio/x-wav",
+  "audio/wave",
+  "audio/webm",
+  "audio/ogg",
+  "audio/aac",
+  "audio/m4a",
+  "audio/x-m4a",
+  "audio/mp4",
+];
+
+// Multer storage setup for image, video, and audio uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
@@ -55,10 +69,17 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
   fileFilter: (req, file, cb) => {
     const mime = (file.mimetype || "").toLowerCase();
-    if (ALLOWED_IMAGE_MIMES.includes(mime) || ALLOWED_VIDEO_MIMES.includes(mime)) {
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    const isAudioExt = [".mp3", ".wav", ".m4a", ".ogg", ".webm", ".aac"].includes(ext);
+    if (
+      ALLOWED_IMAGE_MIMES.includes(mime) ||
+      ALLOWED_VIDEO_MIMES.includes(mime) ||
+      ALLOWED_AUDIO_MIMES.includes(mime) ||
+      isAudioExt
+    ) {
       cb(null, true);
     } else {
-      cb(new Error("Unsupported file format. Please upload a valid image (JPG, PNG, WebP, GIF, SVG) or video (MP4, WebM, MOV)."));
+      cb(new Error("Unsupported file format. Please upload a valid image (JPG, PNG, WebP), video (MP4, WebM), or audio (WAV, MP3, M4A, WebM)."));
     }
   },
 });
@@ -147,7 +168,10 @@ export function formatNewsMedia(item, req) {
     video = mediaUrl;
   }
 
-  return { image, video, mediaUrl, mediaType };
+  let audio = normalizeMediaUrl(item.audio, req);
+  let audioMeta = item.audioMeta || null;
+
+  return { image, video, mediaUrl, mediaType, audio, audioMeta };
 }
 
 // Helper to sanitize comment text (prevents stored XSS)
@@ -964,6 +988,7 @@ router.post(
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "video", maxCount: 1 },
+    { name: "audio", maxCount: 1 },
     { name: "media", maxCount: 1 },
     { name: "file", maxCount: 1 },
   ]),
@@ -981,6 +1006,8 @@ router.post(
         source,
         imageUrl: providedImageUrl,
         videoUrl: providedVideoUrl,
+        audioUrl: providedAudioUrl,
+        audioDuration: providedAudioDuration,
         mediaUrl: providedMediaUrl,
         mediaType: providedMediaType,
         isFeatured,
@@ -995,14 +1022,19 @@ router.post(
       // Check for and reject invalid blob URLs
       let imagePath = (providedImageUrl || "").trim();
       let videoPath = (providedVideoUrl || "").trim();
+      let audioPath = (providedAudioUrl || "").trim();
       let mediaUrl = (providedMediaUrl || "").trim();
 
       if (imagePath.startsWith("blob:")) imagePath = "";
       if (videoPath.startsWith("blob:")) videoPath = "";
+      if (audioPath.startsWith("blob:")) audioPath = "";
       if (mediaUrl.startsWith("blob:")) mediaUrl = "";
 
       let mediaType = (providedMediaType || "none").toLowerCase();
       let mediaMeta = null;
+      let audioMeta = providedAudioDuration
+        ? { duration: parseFloat(providedAudioDuration) || 0 }
+        : null;
 
       // Identify uploaded file from fields (image, video, media, file)
       const rawImageFile = req.files?.image?.[0];
@@ -1119,6 +1151,35 @@ router.post(
         }
       }
 
+      // Handle audio narration recording or upload
+      const rawAudioFile = req.files?.audio?.[0];
+      if (rawAudioFile) {
+        createdLocalFiles.push(rawAudioFile.path);
+        const fileBuffer = fs.readFileSync(rawAudioFile.path);
+        const mime = (rawAudioFile.mimetype || "audio/wav").toLowerCase();
+        audioMeta = {
+          originalName: rawAudioFile.originalname || "reporter_audio.wav",
+          mimeType: mime,
+          size: rawAudioFile.size,
+          duration: parseFloat(providedAudioDuration) || 0,
+        };
+
+        try {
+          const { mediaDoc } = await uploadMediaToDrive({
+            buffer: fileBuffer,
+            originalName: rawAudioFile.originalname || "reporter_audio.wav",
+            mimeType: mime,
+            user: req.user,
+          });
+          audioPath = mediaDoc.deliveryUrl;
+          try { fs.unlinkSync(rawAudioFile.path); } catch (_) {}
+          createdLocalFiles = createdLocalFiles.filter((p) => p !== rawAudioFile.path);
+        } catch (driveErr) {
+          console.warn("[News] Audio Drive upload fallback to local storage:", driveErr.message);
+          audioPath = `/uploads/${rawAudioFile.filename}`;
+        }
+      }
+
       // Consolidate final mediaUrl and mediaType
       if (videoPath) {
         mediaUrl = videoPath;
@@ -1152,6 +1213,8 @@ router.post(
         source: (source || (isAuthorAdmin ? "Town Bureau" : "Citizen Reporter")).trim(),
         image: imagePath,
         video: videoPath,
+        audio: audioPath,
+        audioMeta: audioMeta,
         mediaUrl: mediaUrl,
         mediaType: mediaType,
         mediaMeta: mediaMeta,
@@ -1175,6 +1238,8 @@ router.post(
       const resp = news.toObject();
       resp.image = normalizeMediaUrl(resp.image, req);
       resp.video = normalizeMediaUrl(resp.video, req);
+      resp.audio = normalizeMediaUrl(resp.audio, req);
+      resp.audioMeta = resp.audioMeta || audioMeta;
       resp.mediaUrl = normalizeMediaUrl(resp.mediaUrl || resp.video || resp.image, req);
       resp.mediaType = resp.mediaType || (resp.video ? "video" : resp.image ? "image" : "none");
 
@@ -1208,6 +1273,7 @@ router.put(
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "video", maxCount: 1 },
+    { name: "audio", maxCount: 1 },
     { name: "media", maxCount: 1 },
     { name: "file", maxCount: 1 },
   ]),
@@ -1230,6 +1296,8 @@ router.put(
         source,
         imageUrl: providedImageUrl,
         videoUrl: providedVideoUrl,
+        audioUrl: providedAudioUrl,
+        audioDuration: providedAudioDuration,
         mediaUrl: providedMediaUrl,
         mediaType: providedMediaType,
         isFeatured,
@@ -1273,6 +1341,21 @@ router.put(
 
       if (providedVideoUrl && !providedVideoUrl.startsWith("blob:")) {
         article.video = providedVideoUrl.trim();
+      }
+
+      if (providedAudioUrl !== undefined) {
+        if (!providedAudioUrl || providedAudioUrl.trim() === "") {
+          article.audio = "";
+          article.audioMeta = null;
+        } else if (!providedAudioUrl.startsWith("blob:")) {
+          article.audio = providedAudioUrl.trim();
+          if (providedAudioDuration) {
+            article.audioMeta = {
+              ...(article.audioMeta || {}),
+              duration: parseFloat(providedAudioDuration) || 0,
+            };
+          }
+        }
       }
 
       if (providedMediaUrl && !providedMediaUrl.startsWith("blob:")) {
@@ -1384,6 +1467,35 @@ router.put(
         }
       }
 
+      // Handle newly uploaded audio file
+      const rawAudioFile = req.files?.audio?.[0];
+      if (rawAudioFile) {
+        createdLocalFiles.push(rawAudioFile.path);
+        const fileBuffer = fs.readFileSync(rawAudioFile.path);
+        const mime = (rawAudioFile.mimetype || "audio/wav").toLowerCase();
+        article.audioMeta = {
+          originalName: rawAudioFile.originalname || "reporter_audio.wav",
+          mimeType: mime,
+          size: rawAudioFile.size,
+          duration: parseFloat(providedAudioDuration) || article.audioMeta?.duration || 0,
+        };
+
+        try {
+          const { mediaDoc } = await uploadMediaToDrive({
+            buffer: fileBuffer,
+            originalName: rawAudioFile.originalname || "reporter_audio.wav",
+            mimeType: mime,
+            user: req.user,
+          });
+          article.audio = mediaDoc.deliveryUrl;
+          try { fs.unlinkSync(rawAudioFile.path); } catch (_) {}
+          createdLocalFiles = createdLocalFiles.filter((p) => p !== rawAudioFile.path);
+        } catch (driveErr) {
+          console.warn("[News] Audio Drive upload fallback:", driveErr.message);
+          article.audio = `/uploads/${rawAudioFile.filename}`;
+        }
+      }
+
       if (!article.mediaUrl) {
         article.mediaUrl = article.video || article.image || "";
       }
@@ -1418,6 +1530,8 @@ router.put(
       const resp = article.toObject();
       resp.image = normalizeMediaUrl(resp.image, req);
       resp.video = normalizeMediaUrl(resp.video, req);
+      resp.audio = normalizeMediaUrl(resp.audio, req);
+      resp.audioMeta = resp.audioMeta || article.audioMeta || null;
       resp.mediaUrl = normalizeMediaUrl(resp.mediaUrl || resp.video || resp.image, req);
       resp.mediaType = resp.mediaType || (resp.video ? "video" : resp.image ? "image" : "none");
 

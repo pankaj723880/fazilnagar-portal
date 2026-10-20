@@ -141,7 +141,15 @@ export default function AdminDriveStorage() {
         icon={HardDrive}
         title="Google Drive Cloud Storage"
         subtitle="Persistent cloud asset synchronization with dedicated Google Drive folder & CDN delivery proxy"
-        badgeText={driveData?.connected ? "OAuth 2.0 Connected" : driveData?.configured ? "Auth Required" : "Setup Required"}
+        badgeText={
+          driveData?.connected
+            ? "OAuth 2.0 Connected"
+            : driveData?.reconnectRequired || driveData?.error === "invalid_grant"
+            ? "Reauthorization Required"
+            : driveData?.configured
+            ? "Auth Required"
+            : "Setup Required"
+        }
         primaryAction={{
           label: "Refresh Storage",
           icon: RefreshCw,
@@ -165,9 +173,15 @@ export default function AdminDriveStorage() {
                   <span>OAuth Connected</span>
                 </span>
               ) : (
-                <span className="bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-bold uppercase px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
-                  <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-                  <span>{driveData?.configured ? "Authorization Required" : "Setup Required"}</span>
+                <span className="bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold uppercase px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
+                  <span>
+                    {driveData?.reconnectRequired || driveData?.error === "invalid_grant"
+                      ? "Reauthorization Required"
+                      : driveData?.configured
+                      ? "Authorization Required"
+                      : "Setup Required"}
+                  </span>
                 </span>
               )}
               <span className="bg-slate-100 text-slate-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
@@ -182,7 +196,9 @@ export default function AdminDriveStorage() {
             <p className="text-xs text-slate-500 mt-0.5">
               {driveData?.connected
                 ? "Persistent storage account for municipal records, brochures, high-res photos, and site backups."
-                : (driveData?.message || "Google Drive cloud integration is currently inactive or requires setup.")}
+                : (driveData?.reconnectRequired || driveData?.error === "invalid_grant"
+                    ? "Google OAuth authorization expired or was revoked (invalid_grant). Reconnection required to resume cloud uploads."
+                    : (driveData?.message || "Google Drive cloud integration is currently inactive or requires setup."))}
             </p>
           </div>
 
@@ -199,14 +215,18 @@ export default function AdminDriveStorage() {
               </a>
             )}
 
-            {!driveData?.connected && driveData?.configured && (
+            {!driveData?.connected && (driveData?.configured || driveData?.reconnectRequired) && (
               <button
                 type="button"
                 onClick={handleConnectDrive}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
                 <KeyRound className="w-3.5 h-3.5" />
-                <span>Connect Google Drive</span>
+                <span>
+                  {driveData?.reconnectRequired || driveData?.error === "invalid_grant"
+                    ? "Reconnect Google Drive"
+                    : "Connect Google Drive"}
+                </span>
               </button>
             )}
           </div>
@@ -217,7 +237,9 @@ export default function AdminDriveStorage() {
           <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80">
             <span className="text-[10px] font-bold uppercase text-slate-400 block mb-0.5">Connected Account</span>
             <span className="font-semibold text-slate-800 truncate block">
-              {driveData?.connected ? (driveData?.accountEmail || "pss809352@gmail.com") : "Not Connected"}
+              {driveData?.connected
+                ? (driveData?.accountEmail || "pss809352@gmail.com")
+                : (driveData?.accountEmail ? `${driveData.accountEmail} (Session Expired)` : "Not Connected")}
             </span>
           </div>
 
@@ -249,12 +271,17 @@ export default function AdminDriveStorage() {
             <p className="text-xs text-slate-300 mt-0.5">
               {driveData?.connected
                 ? "Files are automatically uploaded to the Fazilnagar Media directory and given permanent CDN URLs."
-                : "Google Drive storage is currently disconnected. Add OAuth credentials in server environment to enable cloud uploads."}
+                : (driveData?.reconnectRequired || driveData?.error === "invalid_grant"
+                    ? "Google Drive authorization expired (invalid_grant). Click 'Reconnect Google Drive' above to re-authorize and resume cloud uploads."
+                    : "Google Drive storage is currently disconnected. Add OAuth credentials in server environment to enable cloud uploads.")}
             </p>
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <label className={`bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl px-4 py-2 text-xs font-semibold text-white flex items-center gap-2 transition ${!driveData?.connected ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}>
+            <label
+              title={!driveData?.connected ? "Google Drive is disconnected. Reconnect above to enable uploads." : "Choose media file"}
+              className={`bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl px-4 py-2 text-xs font-semibold text-white flex items-center gap-2 transition ${!driveData?.connected ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
+            >
               <Upload className="w-4 h-4 text-emerald-400" />
               <span className="truncate max-w-[150px]">{driveUploadFile ? driveUploadFile.name : "Choose File"}</span>
               <input

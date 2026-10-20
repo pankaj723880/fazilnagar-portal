@@ -30,8 +30,17 @@ import {
   RotateCcw,
   Loader2,
   AlertCircle,
+  Maximize,
+  Minimize,
 } from "lucide-react";
 import { resolveStoryMedia, resolveMediaUrl } from "../utils/mediaUtils";
+
+function formatDuration(seconds) {
+  if (isNaN(seconds) || seconds < 0) return "0:00";
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s < 10 ? "0" : ""}${s}`;
+}
 
 const FALLBACK_COVER_IMAGE =
   "https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1200&auto=format&fit=crop";
@@ -45,12 +54,14 @@ const CATEGORY_FALLBACK_IMAGES = {
   General: "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?q=80&w=1200&auto=format&fit=crop",
 };
 
-// Robust Story Media Cover: Plays user's uploaded video/photo with buffering, error retry, and civic poster fallback
+// Robust Story Media Cover: Plays user's uploaded video/photo with buffering, error retry, seek bar, and civic poster fallback
 function StoryMediaCover({ story, active, muted, isPaused = false }) {
   const [imgFailed, setImgFailed] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const videoRef = useRef(null);
   const retryCountRef = useRef(0);
 
@@ -271,6 +282,17 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
           className={`absolute inset-0 w-full h-full object-cover z-10 transition-opacity duration-300 ${
             videoFailed ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
+          onTimeUpdate={(e) => {
+            const v = e.target;
+            if (v) {
+              setCurrentTime(v.currentTime);
+              if (v.duration && !isNaN(v.duration)) setDuration(v.duration);
+            }
+          }}
+          onLoadedMetadata={(e) => {
+            const v = e.target;
+            if (v && v.duration && !isNaN(v.duration)) setDuration(v.duration);
+          }}
           onWaiting={() => setIsBuffering(true)}
           onPlaying={() => {
             setIsBuffering(false);
@@ -280,6 +302,36 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
           onCanPlay={() => setIsBuffering(false)}
           onError={handleVideoError}
         />
+      )}
+
+      {/* Interactive Video Seek / Progress Scrubber */}
+      {hasVideo && active && !videoFailed && duration > 0 && (
+        <div
+          className="absolute inset-x-0 bottom-0 z-35 px-4 pb-2 pt-6 bg-gradient-to-t from-black/85 via-black/40 to-transparent flex items-center gap-2 group/seek pointer-events-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <input
+            type="range"
+            min="0"
+            max={duration || 100}
+            step="0.1"
+            value={currentTime}
+            onChange={(e) => {
+              e.stopPropagation();
+              const video = videoRef.current;
+              if (video) {
+                const targetTime = parseFloat(e.target.value);
+                video.currentTime = targetTime;
+                setCurrentTime(targetTime);
+              }
+            }}
+            aria-label="Seek reel video position"
+            className="w-full h-1 bg-white/30 hover:h-2 rounded-full appearance-none cursor-pointer accent-red-600 transition-all focus:outline-none"
+          />
+          <span className="text-[10px] font-mono text-white/90 shrink-0 select-none drop-shadow-xs">
+            {formatDuration(currentTime)} / {formatDuration(duration)}
+          </span>
+        </div>
       )}
 
       {/* Buffering Spinner */}

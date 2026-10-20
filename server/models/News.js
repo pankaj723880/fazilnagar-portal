@@ -12,6 +12,7 @@ const newsSchema = new mongoose.Schema(
     source: { type: String, default: "Town Bureau", trim: true },
     image: { type: String, default: "" },
     video: { type: String, default: "" },
+    audio: { type: String, default: "" },
     mediaUrl: { type: String, default: "" },
     mediaType: {
       type: String,
@@ -22,6 +23,12 @@ const newsSchema = new mongoose.Schema(
       originalName: { type: String, default: "" },
       mimeType: { type: String, default: "" },
       size: { type: Number, default: 0 },
+    },
+    audioMeta: {
+      originalName: { type: String, default: "" },
+      mimeType: { type: String, default: "" },
+      size: { type: Number, default: 0 },
+      duration: { type: Number, default: 0 },
     },
     author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     status: {

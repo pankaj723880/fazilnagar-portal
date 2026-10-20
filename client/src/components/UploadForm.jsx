@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
 import { getAuthToken } from "../utils/authStorage";
+import AudioRecorderTrimmer from "./AudioRecorderTrimmer";
 import {
   Sparkles,
   CheckCircle2,
@@ -14,6 +15,7 @@ import {
   Film,
   Camera,
   X,
+  Mic,
 } from "lucide-react";
 
 const ALLOWED_IMAGE_MIMES = [
@@ -49,6 +51,20 @@ export default function UploadForm() {
   const [mediaPreviewUrl, setMediaPreviewUrl] = useState("");
   const [mediaMeta, setMediaMeta] = useState(null); // { name, size, type }
   const [webImageUrl, setWebImageUrl] = useState("");
+
+  // Audio narration state
+  const [audioFile, setAudioFile] = useState(null); // Blob or File
+  const [audioDuration, setAudioDuration] = useState(0);
+
+  const handleAudioChange = ({ blob, duration }) => {
+    setAudioFile(blob);
+    setAudioDuration(duration);
+  };
+
+  const handleAudioClear = () => {
+    setAudioFile(null);
+    setAudioDuration(0);
+  };
 
   const [validationError, setValidationError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -159,7 +175,7 @@ export default function UploadForm() {
       reporterName.trim() ? `${reporterName.trim()} (Citizen)` : "Citizen Reporter"
     );
 
-    // Attach media
+    // Attach media (photo or video)
     if (selectedFile) {
       if (mediaType === "video") {
         formData.append("video", selectedFile);
@@ -175,6 +191,12 @@ export default function UploadForm() {
     } else if (webImageUrl.trim() && !webImageUrl.startsWith("blob:")) {
       formData.append("imageUrl", webImageUrl.trim());
       formData.append("mediaType", "image");
+    }
+
+    // Attach audio narration
+    if (audioFile) {
+      formData.append("audio", audioFile, "reporter_audio.wav");
+      formData.append("audioDuration", String(audioDuration || 0));
     }
 
     try {
@@ -511,6 +533,16 @@ export default function UploadForm() {
               />
             </div>
           )}
+        </div>
+
+        {/* ------------------------------------------------------------- */}
+        {/* REPORTER AUDIO RECORDING & ADVANCED TRIMMING SECTION          */}
+        {/* ------------------------------------------------------------- */}
+        <div className="pt-1">
+          <AudioRecorderTrimmer
+            onAudioChange={handleAudioChange}
+            onAudioClear={handleAudioClear}
+          />
         </div>
 
         <div>
