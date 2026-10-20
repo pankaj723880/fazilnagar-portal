@@ -73,6 +73,7 @@ const civicDirectoryItemSchema = new mongoose.Schema(
 );
 
 civicDirectoryItemSchema.index({ displayOrder: 1, createdAt: 1 });
+civicDirectoryItemSchema.index({ isActive: 1, category: 1, displayOrder: 1 });
 
 const CivicDirectoryItem = mongoose.model("CivicDirectoryItem", civicDirectoryItemSchema);
 export default CivicDirectoryItem;

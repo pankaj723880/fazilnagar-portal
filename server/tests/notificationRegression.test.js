@@ -50,6 +50,7 @@ function createMockReqRes({
     },
     json(data) {
       responseData = data;
+      if (this._onDone) this._onDone();
       return this;
     },
     getStatusCode: () => statusCode,
@@ -71,18 +72,33 @@ function getRouteHandler(router, path, method) {
             let nextCalled = false;
             let errorPassed = null;
             await new Promise((resolve) => {
+              let resolved = false;
+              const finish = () => {
+                if (!resolved) {
+                  resolved = true;
+                  resolve();
+                }
+              };
+              res._onDone = finish;
               try {
-                handle.handle(req, res, (err) => {
+                const maybePromise = handle.handle(req, res, (err) => {
                   nextCalled = true;
                   errorPassed = err;
-                  resolve();
+                  finish();
                 });
+                if (maybePromise && typeof maybePromise.then === "function") {
+                  maybePromise.then(() => {
+                    setTimeout(finish, 10);
+                  }).catch((e) => {
+                    errorPassed = e;
+                    finish();
+                  });
+                }
               } catch (e) {
                 errorPassed = e;
-                resolve();
+                finish();
               }
-              // If handle sent response without calling next, resolve
-              setTimeout(resolve, 50);
+              setTimeout(finish, 2000);
             });
             if (errorPassed) throw errorPassed;
             if (!nextCalled) break;

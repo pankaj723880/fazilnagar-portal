@@ -200,6 +200,14 @@ function getOptionalUser(req) {
   }
 }
 
+// Helper to check admin authorization safely without hardcoded email strings
+function isUserAdmin(user) {
+  if (!user) return false;
+  if (user.role === "admin") return true;
+  const adminEmail = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+  return Boolean(adminEmail && user.email && user.email.toLowerCase() === adminEmail);
+}
+
 // ====================================================================
 // REELS-STYLE NEWS FEED (PUBLIC)
 // ====================================================================
@@ -724,7 +732,7 @@ router.delete("/:id/comments/:commentId", verifyToken, async (req, res) => {
       if (parentWithReply) {
         const reply = parentWithReply.replies.id(commentId);
         if (reply) {
-          const isAdmin = user?.role === "admin" || user?.email === "pankaj723880@gmail.com";
+          const isAdmin = isUserAdmin(user);
           const isReplyAuthor = user?.id && reply.userId && String(reply.userId) === String(user.id);
           const isStoryAuthor = user?.id && story?.author && String(story.author) === String(user.id);
 
@@ -752,7 +760,7 @@ router.delete("/:id/comments/:commentId", verifyToken, async (req, res) => {
     }
 
     // Check authorization:
-    const isAdmin = user?.role === "admin" || user?.email === "pankaj723880@gmail.com";
+    const isAdmin = isUserAdmin(user);
     const isCommentAuthor = user?.id && comment.userId && String(comment.userId) === String(user.id);
     const isStoryAuthor = user?.id && story?.author && String(story.author) === String(user.id);
 
@@ -826,7 +834,7 @@ router.delete("/:id/comments/:commentId/replies/:replyId", verifyToken, async (r
       if (parentWithReply) {
         const reply = parentWithReply.replies.id(replyId);
         if (reply) {
-          const isAdmin = user?.role === "admin" || user?.email === "pankaj723880@gmail.com";
+          const isAdmin = isUserAdmin(user);
           const isReplyAuthor = user?.id && reply.userId && String(reply.userId) === String(user.id);
           const isStoryAuthor = user?.id && story?.author && String(story.author) === String(user.id);
 
@@ -853,7 +861,7 @@ router.delete("/:id/comments/:commentId/replies/:replyId", verifyToken, async (r
       return res.status(404).json({ message: "Reply not found." });
     }
 
-    const isAdmin = user?.role === "admin" || user?.email === "pankaj723880@gmail.com";
+    const isAdmin = isUserAdmin(user);
     const isReplyAuthor = user?.id && comment.userId && String(comment.userId) === String(user.id);
     const isStoryAuthor = user?.id && story?.author && String(story.author) === String(user.id);
 

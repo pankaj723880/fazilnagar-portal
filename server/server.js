@@ -11,10 +11,48 @@ import newsRoutes from "./routes/news.js";
 import placesRoutes from "./routes/places.js";
 import profileRoutes from "./routes/profile.js";
 import messagesRoutes from "./routes/messages.js";
+import mongoSanitize from "./middleware/mongoSanitize.js";
 import { initSocket } from "./socket.js";
 
 dotenv.config();
 const app = express();
+app.set("trust proxy", 1);
+app.disable("x-powered-by");
+
+// Enforce HTTPS in production behind reverse proxies (Render / Vercel)
+if (process.env.NODE_ENV === "production") {
+  app.use((req, res, next) => {
+    if (req.headers["x-forwarded-proto"] && req.headers["x-forwarded-proto"] !== "https") {
+      return res.redirect(301, `https://${req.headers.host}${req.url}`);
+    }
+    next();
+  });
+}
+
+// Reject unsupported or hazardous HTTP methods (e.g. TRACE, TRACK)
+app.use((req, res, next) => {
+  const allowedMethods = ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"];
+  if (!allowedMethods.includes(req.method)) {
+    return res.status(405).json({
+      success: false,
+      message: `HTTP method ${req.method} is not allowed.`,
+    });
+  }
+  next();
+});
+
+// Sensible request timeouts (30s) to protect server socket resources
+app.use((req, res, next) => {
+  req.setTimeout(30000, () => {
+    if (!res.headersSent) {
+      res.status(408).json({
+        success: false,
+        message: "Request timeout. The server took too long to respond.",
+      });
+    }
+  });
+  next();
+});
 
 import fs from "fs";
 
@@ -70,10 +108,21 @@ app.use((req, res, next) => {
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(self)");
   next();
 });
 
-app.use(express.json());
+// Enforce Content-Security-Policy for API endpoints
+app.use("/api", (req, res, next) => {
+  res.setHeader("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none';");
+  next();
+});
+
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: true, limit: "2mb" }));
+app.use(mongoSanitize);
 
 // Serve uploaded media files publicly with cross-origin resource policy enabled
 app.use(
@@ -85,16 +134,14 @@ app.use(
   express.static(uploadsDir)
 );
 
-// Root health check endpoint
+// Root health check endpoint (sanitized to avoid internal host/connection string leakage)
 app.get(["/", "/health", "/api/health"], (req, res) => {
   const states = ["disconnected", "connected", "connecting", "disconnecting"];
   const dbState = states[mongoose.connection.readyState] || "unknown";
-  res.json({
-    status: dbState === "connected" ? "healthy" : "database_issue",
+  const isHealthy = dbState === "connected";
+  res.status(isHealthy ? 200 : 503).json({
+    status: isHealthy ? "healthy" : "database_issue",
     database: dbState,
-    databaseHost: mongoose.connection.host || null,
-    uriSource: detectedUriSource,
-    dbConnectionError: dbConnectionError || null,
     uptimeSeconds: Math.floor(process.uptime()),
     timestamp: new Date().toISOString(),
   });
@@ -217,10 +264,10 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/messages", messagesRoutes);
 
 // Fallback mounts in case client calls without /api prefix
-app.use("/auth", authRoutes);
+app.use("/auth", authLimiter, authRoutes);
 app.use("/news", newsRoutes);
-app.use("/places", placesRoutes);
-app.use("/submissions", submissionsRoutes);
+app.use("/places", searchLimiter, placesRoutes);
+app.use("/submissions", writeLimiter, submissionsRoutes);
 app.use("/forms", formsRoutes);
 app.use("/contributions", writeLimiter, contributionSubmissionsRoutes);
 app.use("/advertisements", advertisementsRoutes);
@@ -267,9 +314,15 @@ app.use((err, req, res, next) => {
     console.error(`[API Error] ${req.method} ${req.originalUrl} - ${err.message}`);
   }
 
+  // Sanitize 500 responses in production to avoid leaking internal database or system details
+  const clientMessage =
+    statusCode >= 500 && process.env.NODE_ENV === "production"
+      ? "An unexpected internal server error occurred."
+      : err.message || "An unexpected error occurred.";
+
   res.status(statusCode).json({
     success: false,
-    message: err.message || "An unexpected internal server error occurred.",
+    message: clientMessage,
     ...(process.env.NODE_ENV === "development" ? { stack: err.stack } : {}),
   });
 });

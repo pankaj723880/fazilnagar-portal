@@ -105,6 +105,7 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.index({ name: 1 });
+userSchema.index({ role: 1, status: 1, createdAt: -1 });
 userSchema.index({ findByEmail: 1, email: 1 });
 userSchema.index(
   { username: 1 },

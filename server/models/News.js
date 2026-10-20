@@ -73,6 +73,8 @@ const newsSchema = new mongoose.Schema(
 );
 
 newsSchema.index({ isPublished: 1, isFeatured: -1, publishedAt: -1 });
+newsSchema.index({ status: 1, createdAt: -1 });
+newsSchema.index({ isPublished: 1, category: 1, publishedAt: -1 });
 
 const News = mongoose.model("News", newsSchema);
 export default News;

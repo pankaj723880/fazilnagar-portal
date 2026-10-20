@@ -3,8 +3,10 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import mongoose from "mongoose";
 import Advertisement from "../models/Advertisement.js";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
+import { analyticsLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
@@ -124,8 +126,11 @@ router.get("/active", async (req, res) => {
 // @route   POST /api/advertisements/:id/impression
 // @desc    Increment genuine impression count
 // @access  Public
-router.post("/:id/impression", async (req, res) => {
+router.post("/:id/impression", analyticsLimiter, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid advertisement ID." });
+    }
     const ad = await Advertisement.findByIdAndUpdate(
       req.params.id,
       { $inc: { impressions: 1 } },
@@ -144,8 +149,11 @@ router.post("/:id/impression", async (req, res) => {
 // @route   POST /api/advertisements/:id/click
 // @desc    Increment genuine click count
 // @access  Public
-router.post("/:id/click", async (req, res) => {
+router.post("/:id/click", analyticsLimiter, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid advertisement ID." });
+    }
     const ad = await Advertisement.findByIdAndUpdate(
       req.params.id,
       { $inc: { clicks: 1 } },
@@ -164,8 +172,11 @@ router.post("/:id/click", async (req, res) => {
 // @route   POST /api/advertisements/:id/dismiss
 // @desc    Increment genuine dismissal count
 // @access  Public
-router.post("/:id/dismiss", async (req, res) => {
+router.post("/:id/dismiss", analyticsLimiter, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid advertisement ID." });
+    }
     const ad = await Advertisement.findByIdAndUpdate(
       req.params.id,
       { $inc: { dismissals: 1 } },

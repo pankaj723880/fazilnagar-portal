@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import RevokedToken from "../models/RevokedToken.js";
 import User from "../models/User.js";
+import { logSecurityEvent, SecurityEventType } from "../utils/securityLogger.js";
 
 const verifyToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -54,6 +55,11 @@ const verifyToken = async (req, res, next) => {
 
 export const requireAdmin = async (req, res, next) => {
   if (!req.user || req.user.role !== "admin") {
+    logSecurityEvent(SecurityEventType.FORBIDDEN_ACCESS, {
+      req,
+      details: "Non-admin attempted to access protected administrative endpoint.",
+      severity: "WARN",
+    });
     return res.status(403).json({ message: "Access denied. Admin privileges required." });
   }
 

@@ -421,6 +421,20 @@ router.get("/inspect", async (req, res) => {
     }));
 
     const authCheck = await verifyDriveAuth();
+    const adminUser = (() => {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
+      const token = authHeader.split(" ")[1];
+      if (!token || token === "undefined" || token === "null") return null;
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret_key");
+        return decoded?.role === "admin" ? decoded : null;
+      } catch (_) {
+        return null;
+      }
+    })();
+    const isAdmin = Boolean(adminUser);
+
     if (!authCheck.connected) {
       return res.status(200).json({
         connected: false,
@@ -439,7 +453,7 @@ router.get("/inspect", async (req, res) => {
         },
         mongo: {
           totalCount: mongoMediaCount,
-          recentFiles: mappedMongoMedia,
+          recentFiles: isAdmin ? mappedMongoMedia : [],
         },
       });
     }
@@ -452,10 +466,10 @@ router.get("/inspect", async (req, res) => {
       configured: true,
       reconnectRequired: false,
       accountEmail,
-      folder: folderInspection,
+      folder: isAdmin ? folderInspection : { ...folderInspection, files: [] },
       mongo: {
         totalCount: mongoMediaCount,
-        recentFiles: mappedMongoMedia,
+        recentFiles: isAdmin ? mappedMongoMedia : [],
       },
     });
   } catch (err) {

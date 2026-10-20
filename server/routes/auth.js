@@ -19,10 +19,14 @@ import {
   otpRequestLimiter,
   otpVerifyLimiter,
   passwordResetLimiter,
+  checkAccountLockout,
+  recordFailedLogin,
+  recordSuccessfulLogin,
 } from "../middleware/rateLimiter.js";
 import { normalizePhone } from "../utils/submissionUtils.js";
 import { sendRegistrationOtpEmail, sendPasswordResetOtpEmail } from "../utils/emailService.js";
 import { verifyGoogleIdToken } from "../utils/googleAuth.js";
+import { logSecurityEvent, SecurityEventType } from "../utils/securityLogger.js";
 
 const router = express.Router();
 
@@ -617,14 +621,43 @@ router.post("/login", authLimiter, validateLoginInput, async (req, res) => {
     const { email, password } = req.body;
 
     const normalizedEmail = email.trim().toLowerCase();
+
+    // Check account-level lockout to prevent brute-force against specific target accounts
+    const lockout = checkAccountLockout(normalizedEmail);
+    if (lockout.locked) {
+      logSecurityEvent(SecurityEventType.RATE_LIMIT_EXCEEDED, {
+        req,
+        email: normalizedEmail,
+        details: `Account temporarily locked due to consecutive failed attempts (${lockout.waitSeconds}s remaining).`,
+        severity: "WARN",
+      });
+      return res.status(429).json({
+        message: `Too many failed login attempts for this account. Please wait ${lockout.waitSeconds} seconds before trying again.`,
+        retryAfterSeconds: lockout.waitSeconds,
+      });
+    }
+
     const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
+      recordFailedLogin(normalizedEmail);
+      logSecurityEvent(SecurityEventType.AUTH_FAILURE, {
+        req,
+        email: normalizedEmail,
+        details: "Login failure: account not found.",
+        severity: "WARN",
+      });
       return res.status(400).json({ message: "Invalid email or password." });
     }
 
     // Check account status
     if (user.status === "inactive" || user.status === "suspended") {
+      logSecurityEvent(SecurityEventType.FORBIDDEN_ACCESS, {
+        req,
+        email: normalizedEmail,
+        details: `Login blocked: account is ${user.status}.`,
+        severity: "WARN",
+      });
       return res.status(403).json({
         message: "Your account has been deactivated or suspended. Please contact portal administration.",
       });
@@ -640,8 +673,18 @@ router.post("/login", authLimiter, validateLoginInput, async (req, res) => {
     // Compare password hash
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      recordFailedLogin(normalizedEmail);
+      logSecurityEvent(SecurityEventType.AUTH_FAILURE, {
+        req,
+        email: normalizedEmail,
+        details: "Login failure: incorrect password.",
+        severity: "WARN",
+      });
       return res.status(400).json({ message: "Invalid email or password." });
     }
+
+    // Clear failed login tracker on success
+    recordSuccessfulLogin(normalizedEmail);
 
     // Update lastLogin timestamp
     user.lastLogin = new Date();
@@ -655,6 +698,14 @@ router.post("/login", authLimiter, validateLoginInput, async (req, res) => {
     );
 
     setAuthCookie(res, token);
+
+    logSecurityEvent(SecurityEventType.AUTH_SUCCESS, {
+      req,
+      userId: user._id,
+      email: user.email,
+      details: "Citizen logged in successfully with password.",
+      severity: "INFO",
+    });
 
     res.status(200).json({
       message: "Login successful.",

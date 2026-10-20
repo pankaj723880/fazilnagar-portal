@@ -180,5 +180,9 @@ const submissionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+submissionSchema.index({ type: 1, status: 1, createdAt: -1 });
+submissionSchema.index({ "submittedBy.email": 1, createdAt: -1 });
+submissionSchema.index({ status: 1, createdAt: -1 });
+
 const Submission = mongoose.model("Submission", submissionSchema);
 export default Submission;

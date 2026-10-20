@@ -47,7 +47,9 @@ export const isOriginAllowed = (origin) => {
 
   return (
     allowed.includes(normalized) ||
-    normalized.endsWith(".vercel.app") ||
+    normalized === "https://fazilnagar.vercel.app" ||
+    normalized === "https://fazilnagar-portal-nine.vercel.app" ||
+    /^https:\/\/fazilnagar(-[a-z0-9-]+)?\.vercel\.app$/.test(normalized) ||
     /^https?:\/\/localhost(:\d+)?$/.test(normalized) ||
     /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(normalized) ||
     normalized === "https://fazilnagar.me" ||
