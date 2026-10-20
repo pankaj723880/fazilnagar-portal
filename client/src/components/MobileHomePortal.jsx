@@ -1276,20 +1276,31 @@ export default function MobileHomePortal({
       <ScrollReveal variant="fade-up" once={true}>
       <section className="px-4 sm:px-6 py-3" aria-label="Sacred Heritage">
         <div
-          className="text-white rounded-2xl p-5 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.08)] border space-y-4"
+          className="rounded-2xl p-5 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] border space-y-4"
           style={{
-            background: "linear-gradient(135deg, color-mix(in srgb, var(--surface-card) 92%, #0F172A), color-mix(in srgb, var(--background-secondary) 88%, #000000))",
+            background: "linear-gradient(135deg, color-mix(in srgb, var(--surface-card) 95%, var(--background-secondary)), var(--surface-card))",
             borderColor: "var(--border-color)",
+            color: "var(--text-primary)",
           }}
         >
           {/* Header & Twin Badges */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-amber-400 text-xs font-bold uppercase tracking-wider font-heading">
+            <div
+              className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider font-heading"
+              style={{ color: "var(--heritage-action, #A83D32)" }}
+            >
               <span>🏛️</span>
               <span>Sacred Twin Heritage (2,600+ Years)</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="px-2.5 py-0.5 rounded-lg bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] font-bold">
+              <span
+                className="px-2.5 py-0.5 rounded-lg border text-[10px] font-bold"
+                style={{
+                  backgroundColor: "color-mix(in srgb, var(--heritage-accent, #B3945B) 15%, transparent)",
+                  borderColor: "color-mix(in srgb, var(--heritage-accent, #B3945B) 35%, transparent)",
+                  color: "var(--heritage-accent, #B3945B)",
+                }}
+              >
                 Pawanagar ⇄ Kushinagar
               </span>
             </div>
@@ -1297,15 +1308,30 @@ export default function MobileHomePortal({
 
           {/* 2 Feature Micro-Cards */}
           <div className="grid grid-cols-2 gap-2.5 text-xs">
-            <div className="bg-[color-mix(in_srgb,var(--surface-card)_80%,transparent)] rounded-xl p-3 border border-white/10 flex flex-col justify-between">
+            <div
+              className="rounded-xl p-3 border flex flex-col justify-between shadow-xs"
+              style={{
+                backgroundColor: "color-mix(in srgb, var(--surface-card) 90%, var(--background-secondary))",
+                borderColor: "var(--border-color)",
+              }}
+            >
               <div>
-                <p className="font-bold text-white text-[11px] leading-tight">
+                <p
+                  className="font-bold text-[11px] leading-tight font-heading"
+                  style={{ color: "var(--text-primary)" }}
+                >
                   Pawapuri Jain Tirth
                 </p>
-                <p className="text-[10px] text-amber-300 font-medium mt-0.5">
+                <p
+                  className="text-[10px] font-semibold mt-0.5"
+                  style={{ color: "var(--heritage-accent, #B3945B)" }}
+                >
                   05:30 AM – 08:30 PM
                 </p>
-                <p className="text-[9px] text-slate-300 mt-1">
+                <p
+                  className="text-[9px] mt-1 leading-normal"
+                  style={{ color: "var(--text-secondary)" }}
+                >
                   Nirvana bhoomi of 24th Tirthankara • Free Entry
                 </p>
               </div>
@@ -1319,27 +1345,48 @@ export default function MobileHomePortal({
                     landmark: "Pawanagar Tirth Marg, Fazilnagar",
                   })
                 }
-                className="mt-3 py-1.5 px-2 rounded-lg bg-amber-400 text-slate-900 font-bold text-[10px] active:scale-95 transition text-center cursor-pointer"
+                className="mt-3 py-1.5 px-2 rounded-lg font-bold text-[10px] active:scale-95 transition text-center cursor-pointer shadow-xs"
+                style={{
+                  backgroundColor: "var(--heritage-action, #A83D32)",
+                  color: "#FFFFFF",
+                }}
               >
                 Directions →
               </button>
             </div>
 
-            <div className="bg-[color-mix(in_srgb,var(--surface-card)_80%,transparent)] rounded-xl p-3 border border-white/10 flex flex-col justify-between">
+            <div
+              className="rounded-xl p-3 border flex flex-col justify-between shadow-xs"
+              style={{
+                backgroundColor: "color-mix(in srgb, var(--surface-card) 90%, var(--background-secondary))",
+                borderColor: "var(--border-color)",
+              }}
+            >
               <div>
-                <p className="font-bold text-white text-[11px] leading-tight">
+                <p
+                  className="font-bold text-[11px] leading-tight font-heading"
+                  style={{ color: "var(--text-primary)" }}
+                >
                   Historic Kakodha Ghat
                 </p>
-                <p className="text-[10px] text-emerald-300 font-medium mt-0.5">
+                <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold mt-0.5">
                   Ancient Holy River Bath
                 </p>
-                <p className="text-[9px] text-slate-300 mt-1">
+                <p
+                  className="text-[9px] mt-1 leading-normal"
+                  style={{ color: "var(--text-secondary)" }}
+                >
                   Lord Buddha holy river bathing site en route Kushinagar
                 </p>
               </div>
               <Link
                 to="/directory"
-                className="mt-3 py-1.5 px-2 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-[10px] active:scale-95 transition text-center"
+                className="mt-3 py-1.5 px-2 rounded-lg font-bold text-[10px] active:scale-95 transition text-center border shadow-xs"
+                style={{
+                  backgroundColor: "var(--surface-card)",
+                  borderColor: "var(--border-color)",
+                  color: "var(--text-primary)",
+                }}
               >
                 View Map →
               </Link>
@@ -1347,11 +1394,15 @@ export default function MobileHomePortal({
           </div>
 
           {/* Collapsible History Accordion with Micro Fact-sheets */}
-          <div className="pt-2 border-t border-white/10">
+          <div
+            className="pt-2 border-t"
+            style={{ borderColor: "var(--border-color)" }}
+          >
             <button
               type="button"
               onClick={() => setIsHeritageHistoryOpen((prev) => !prev)}
-              className="w-full flex items-center justify-between text-[11px] font-bold text-amber-300 hover:text-amber-200 transition cursor-pointer"
+              className="w-full flex items-center justify-between text-[11px] font-bold transition cursor-pointer"
+              style={{ color: "var(--heritage-action, #A83D32)" }}
             >
               <span>🏛️ Sacred Twin Heritage (Pawanagar & Kushinagar) [{isHeritageHistoryOpen ? "Collapse ↑" : "Expand ↓"}]</span>
               {isHeritageHistoryOpen ? (
@@ -1364,28 +1415,99 @@ export default function MobileHomePortal({
             {isHeritageHistoryOpen && (
               <div className="mt-2.5 space-y-2.5 animate-in fade-in duration-200">
                 {/* 4 Micro Fact-sheets */}
-                <div className="grid grid-cols-4 gap-1.5 text-center text-[9px] font-medium text-slate-300">
-                  <div className="bg-[color-mix(in_srgb,var(--surface-card)_85%,transparent)] rounded-lg p-2 border border-white/10">
-                    <span className="block text-[8px] text-slate-400">Antiquity</span>
-                    <strong className="text-white font-bold">2600+ yrs</strong>
+                <div className="grid grid-cols-4 gap-1.5 text-center text-[9px] font-medium">
+                  <div
+                    className="rounded-lg p-2 border"
+                    style={{
+                      backgroundColor: "color-mix(in srgb, var(--surface-card) 92%, var(--background-secondary))",
+                      borderColor: "var(--border-color)",
+                    }}
+                  >
+                    <span
+                      className="block text-[8px]"
+                      style={{ color: "var(--text-muted, var(--text-secondary))" }}
+                    >
+                      Antiquity
+                    </span>
+                    <strong
+                      className="font-bold text-[10px]"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      2600+ yrs
+                    </strong>
                   </div>
-                  <div className="bg-[color-mix(in_srgb,var(--surface-card)_85%,transparent)] rounded-lg p-2 border border-white/10">
-                    <span className="block text-[8px] text-slate-400">Dynasty</span>
-                    <strong className="text-white font-bold">Malla</strong>
+                  <div
+                    className="rounded-lg p-2 border"
+                    style={{
+                      backgroundColor: "color-mix(in srgb, var(--surface-card) 92%, var(--background-secondary))",
+                      borderColor: "var(--border-color)",
+                    }}
+                  >
+                    <span
+                      className="block text-[8px]"
+                      style={{ color: "var(--text-muted, var(--text-secondary))" }}
+                    >
+                      Dynasty
+                    </span>
+                    <strong
+                      className="font-bold text-[10px]"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      Malla
+                    </strong>
                   </div>
-                  <div className="bg-[color-mix(in_srgb,var(--surface-card)_85%,transparent)] rounded-lg p-2 border border-white/10">
-                    <span className="block text-[8px] text-slate-400">PIN</span>
-                    <strong className="text-white font-bold">274401</strong>
+                  <div
+                    className="rounded-lg p-2 border"
+                    style={{
+                      backgroundColor: "color-mix(in srgb, var(--surface-card) 92%, var(--background-secondary))",
+                      borderColor: "var(--border-color)",
+                    }}
+                  >
+                    <span
+                      className="block text-[8px]"
+                      style={{ color: "var(--text-muted, var(--text-secondary))" }}
+                    >
+                      PIN
+                    </span>
+                    <strong
+                      className="font-bold text-[10px]"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      274401
+                    </strong>
                   </div>
-                  <div className="bg-[color-mix(in_srgb,var(--surface-card)_85%,transparent)] rounded-lg p-2 border border-white/10">
-                    <span className="block text-[8px] text-slate-400">Highway</span>
-                    <strong className="text-white font-bold">NH-27</strong>
+                  <div
+                    className="rounded-lg p-2 border"
+                    style={{
+                      backgroundColor: "color-mix(in srgb, var(--surface-card) 92%, var(--background-secondary))",
+                      borderColor: "var(--border-color)",
+                    }}
+                  >
+                    <span
+                      className="block text-[8px]"
+                      style={{ color: "var(--text-muted, var(--text-secondary))" }}
+                    >
+                      Highway
+                    </span>
+                    <strong
+                      className="font-bold text-[10px]"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      NH-27
+                    </strong>
                   </div>
                 </div>
 
-                <div className="text-[11px] text-slate-300 space-y-2 leading-relaxed bg-[color-mix(in_srgb,var(--surface-card)_70%,transparent)] rounded-xl p-3 border border-white/10">
+                <div
+                  className="text-[11px] space-y-2 leading-relaxed rounded-xl p-3 border"
+                  style={{
+                    backgroundColor: "color-mix(in srgb, var(--surface-card) 92%, var(--background-secondary))",
+                    borderColor: "var(--border-color)",
+                    color: "var(--text-secondary)",
+                  }}
+                >
                   <p>
-                    Fazilnagar represents the historic site of ancient <strong>Pawanagar (Pawa)</strong> of the Malla Republic. It is revered worldwide where Bhagwan Mahavira attained Nirvana on Kartik Amavasya in 527 BCE, commemorating the very genesis of the <strong>Deepavali (Festival of Lights)</strong> celebration.
+                    Fazilnagar represents the historic site of ancient <strong style={{ color: "var(--text-primary)" }}>Pawanagar (Pawa)</strong> of the Malla Republic. It is revered worldwide where Bhagwan Mahavira attained Nirvana on Kartik Amavasya in 527 BCE, commemorating the very genesis of the <strong style={{ color: "var(--text-primary)" }}>Deepavali (Festival of Lights)</strong> celebration.
                   </p>
                   <p>
                     Adjacent to Pawanagar lies Kushinagar (just 16 km west), where Bhagwan Buddha attained Mahaparinirvana, binding these twin centers in immortal spiritual harmony.
