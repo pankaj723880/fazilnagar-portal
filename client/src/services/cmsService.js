@@ -199,6 +199,7 @@ export const DEFAULT_SITE_SETTINGS = {
   },
   contributionFormSettings: {
     hideNavbarAndFooter: false,
+    hideContactAndVerification: false,
   },
   footer: {
     copyrightText: "© 2026 Fazilnagar Town Portal. Dedicated to the residents and visitors of Fazilnagar, Kushinagar, UP.",

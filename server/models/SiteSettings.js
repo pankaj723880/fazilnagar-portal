@@ -96,6 +96,7 @@ const themeConfigSchema = new mongoose.Schema({
 
 const contributionFormSettingsSchema = new mongoose.Schema({
   hideNavbarAndFooter: { type: Boolean, default: false },
+  hideContactAndVerification: { type: Boolean, default: false },
 });
 
 export const liveVisitorCounterSchema = new mongoose.Schema(

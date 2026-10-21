@@ -943,6 +943,31 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
                       </div>
                     );
                   })()}
+
+                  {(() => {
+                    const isContactHidden = Boolean(settings.contributionFormSettings?.hideContactAndVerification);
+                    return (
+                      <div
+                        id="toggle-hide-contact-verification-section"
+                        onClick={() => updateField("contributionFormSettings.hideContactAndVerification", !isContactHidden)}
+                        className={`p-3 rounded-xl border transition cursor-pointer flex items-center justify-between gap-2.5 active:scale-98 ${
+                          isContactHidden
+                            ? "bg-amber-50/70 border-amber-300 text-slate-900"
+                            : "bg-slate-50/70 border-slate-200 text-slate-500"
+                        }`}
+                      >
+                        <div className="min-w-0 pr-1">
+                          <h5 className="text-xs font-bold truncate">Contact &amp; Verification Note Section</h5>
+                          <p className="text-[10px] text-slate-500 truncate">
+                            {isContactHidden ? "Hidden on all public forms" : "Visible (Default)"}
+                          </p>
+                        </div>
+                        <div className={`w-9 h-5 rounded-full transition-colors relative shrink-0 ${isContactHidden ? 'bg-amber-500' : 'bg-slate-300'}`}>
+                          <div className={`w-3.5 h-3.5 rounded-full bg-white transition-transform absolute top-[3px] ${isContactHidden ? 'left-[19px]' : 'left-[3px]'}`} />
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>

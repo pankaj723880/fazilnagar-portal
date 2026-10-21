@@ -785,7 +785,7 @@ router.patch("/:id/review", verifyToken, requireAdmin, async (req, res) => {
           name: patchData.name || submission.targetEntityName || "New Contributed Place",
           hindiName: patchData.hindiName || "",
           category: patchData.category || submission.entityType || "general",
-          entityType: patchData.entityType || (submission.targetModule === "map" ? "village" : "place"),
+          entityType: patchData.entityType || (submission.targetModule === "map" ? (submission.entityType || "village") : "place"),
           subcategory: patchData.subcategory || "",
           locality: patchData.locality || "Fazilnagar",
           district: patchData.district || "Kushinagar",

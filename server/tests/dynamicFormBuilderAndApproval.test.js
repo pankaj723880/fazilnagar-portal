@@ -80,9 +80,9 @@ describe("Dynamic Form Builder & Public Contribution Approval System", () => {
 
     // Clean up test collections
     await User.deleteMany({ email: { $in: ["admin_form_test@fazilnagar.in", "citizen_form_test@fazilnagar.in"] } });
-    await ContributionForm.deleteMany({ slug: { $in: ["test-map-correction", "test-dir-correction", "test-new-entity"] } });
+    await ContributionForm.deleteMany({ $or: [{ slug: { $in: ["test-map-correction", "test-dir-correction", "test-new-entity"] } }, { slug: /^test-category-/ }] });
     await ContributionSubmission.deleteMany({ evidenceNotes: /Test Suite/ });
-    await Place.deleteMany({ slug: { $in: ["test-target-establishment", "test-new-village-proposal"] } });
+    await Place.deleteMany({ slug: { $in: ["test-target-establishment", "test-new-village-proposal", "test-landmark-proposal"] } });
 
     // Seed test users
     adminUser = await User.create({
@@ -147,9 +147,9 @@ describe("Dynamic Form Builder & Public Contribution Approval System", () => {
     }
     // Clean up
     await User.deleteMany({ email: { $in: ["admin_form_test@fazilnagar.in", "citizen_form_test@fazilnagar.in"] } });
-    await ContributionForm.deleteMany({ slug: { $in: ["test-map-correction", "test-dir-correction", "test-new-entity"] } });
+    await ContributionForm.deleteMany({ $or: [{ slug: { $in: ["test-map-correction", "test-dir-correction", "test-new-entity"] } }, { slug: /^test-category-/ }] });
     await ContributionSubmission.deleteMany({ evidenceNotes: /Test Suite/ });
-    await Place.deleteMany({ slug: { $in: ["test-target-establishment", "test-new-village-proposal"] } });
+    await Place.deleteMany({ slug: { $in: ["test-target-establishment", "test-new-village-proposal", "test-landmark-proposal"] } });
     await mongoose.disconnect();
   });
 
@@ -635,6 +635,203 @@ describe("Dynamic Form Builder & Public Contribution Approval System", () => {
       });
 
       assert.equal(duplicateRes.status, 400, "Re-approving an already processed submission must return 400");
+    });
+  });
+
+  // =========================================================================
+  // Section 6: Dynamic Entity Type / Category Dropdown & Scope Verification
+  // =========================================================================
+  describe("6. Dynamic Entity Type / Category Dropdown & Scope Verification", () => {
+    const supportedCategories = ["village", "locality", "town", "city", "landmark", "hub", "place"];
+
+    it("Admin can create dynamic forms for all 7 supported map categories", async () => {
+      for (const cat of supportedCategories) {
+        const payload = {
+          title: `Test Form for ${cat}`,
+          slug: `test-category-${cat}`,
+          description: `Form collecting information for ${cat}`,
+          instructions: `Please enter accurate details for ${cat}.`,
+          targetModule: "map",
+          entityType: cat,
+          purpose: "both",
+          fields: [
+            {
+              name: "name",
+              label: `${cat.toUpperCase()} Name`,
+              type: "text",
+              required: true,
+              order: 0,
+            },
+            {
+              name: "latitude",
+              label: "Latitude",
+              type: "latitude",
+              required: true,
+              order: 1,
+            },
+            {
+              name: "longitude",
+              label: "Longitude",
+              type: "longitude",
+              required: true,
+              order: 2,
+            },
+          ],
+          status: "published",
+        };
+
+        const res = await makeRequest({
+          path: "/api/forms",
+          method: "POST",
+          token: adminToken,
+          body: payload,
+        });
+
+        assert.equal(res.status, 201, `Failed to create form for category '${cat}': ${JSON.stringify(res.data)}`);
+        assert.equal(res.data.form.entityType, cat, `Form entityType should be '${cat}'`);
+        assert.equal(res.data.form.targetModule, "map");
+        assert.equal(res.data.form.purpose, "both");
+      }
+    });
+
+    it("Rejects form creation with unsupported entityType/category", async () => {
+      const payload = {
+        title: "Invalid Category Form",
+        slug: "test-category-invalid",
+        targetModule: "map",
+        entityType: "unsupported_universe",
+        fields: [{ name: "name", label: "Name", type: "text", required: true, order: 0 }],
+      };
+
+      const res = await makeRequest({
+        path: "/api/forms",
+        method: "POST",
+        token: adminToken,
+        body: payload,
+      });
+
+      assert.equal(res.status, 400, "Should return 400 for unsupported entityType");
+      assert.ok(res.data.message.includes("Invalid entityType"), "Should mention invalid entityType");
+    });
+
+    it("Admin can update form category to another supported category", async () => {
+      const form = await ContributionForm.findOne({ slug: "test-category-hub" });
+      assert.ok(form, "test-category-hub form should exist");
+
+      const updateRes = await makeRequest({
+        path: `/api/forms/${form._id}`,
+        method: "PUT",
+        token: adminToken,
+        body: {
+          title: "Updated Form Title for Landmark",
+          entityType: "landmark",
+          purpose: "correction",
+          fields: form.fields,
+        },
+      });
+
+      assert.equal(updateRes.status, 200, `Update should succeed: ${JSON.stringify(updateRes.data)}`);
+      assert.equal(updateRes.data.form.entityType, "landmark");
+      assert.equal(updateRes.data.form.purpose, "correction");
+      assert.equal(updateRes.data.form.targetModule, "map");
+    });
+
+    it("Rejects form update with unsupported entityType", async () => {
+      const form = await ContributionForm.findOne({ slug: "test-category-town" });
+      assert.ok(form, "test-category-town form should exist");
+
+      const updateRes = await makeRequest({
+        path: `/api/forms/${form._id}`,
+        method: "PUT",
+        token: adminToken,
+        body: {
+          entityType: "invalid_category_xyz",
+        },
+      });
+
+      assert.equal(updateRes.status, 400, "Update with invalid entityType should return 400");
+    });
+
+    it("GET /api/forms/entities/map filters records strictly by entityType", async () => {
+      // 1. Query for landmarks
+      const landmarkRes = await makeRequest({
+        path: "/api/forms/entities/map?entityType=landmark",
+        method: "GET",
+        token: adminToken,
+      });
+
+      assert.equal(landmarkRes.status, 200);
+      assert.ok(Array.isArray(landmarkRes.data));
+      for (const ent of landmarkRes.data) {
+        const entType = (ent.entityType || ent.category || "").toLowerCase();
+        assert.equal(entType, "landmark", `Entity ${ent.name} must be a landmark`);
+      }
+
+      // 2. Query for villages
+      const villageRes = await makeRequest({
+        path: "/api/forms/entities/map?entityType=village",
+        method: "GET",
+        token: adminToken,
+      });
+
+      assert.equal(villageRes.status, 200);
+      assert.ok(Array.isArray(villageRes.data));
+      for (const ent of villageRes.data) {
+        const entType = (ent.entityType || ent.category || "").toLowerCase();
+        assert.equal(entType, "village", `Entity ${ent.name} must be a village`);
+      }
+    });
+
+    it("Submitting and approving a new entity preserves the form's category in the created Place", async () => {
+      const form = await ContributionForm.findOne({ slug: "test-category-landmark" });
+      assert.ok(form, "test-category-landmark form should exist");
+
+      const submissionPayload = {
+        submissionType: "new_entity",
+        submittedData: {
+          name: "Test Historic Pawa Stupa",
+          latitude: 26.6850,
+          longitude: 84.0490,
+          googleMapsUrl: "https://www.google.com/maps?q=26.6850,84.0490",
+        },
+        evidenceNotes: "Test Suite landmark submission verification",
+        submitterName: "Heritage Volunteer",
+      };
+
+      const submitRes = await makeRequest({
+        path: `/api/forms/public/${form.slug}/submit`,
+        method: "POST",
+        body: submissionPayload,
+      });
+
+      assert.equal(submitRes.status, 201, `Submission failed: ${JSON.stringify(submitRes.data)}`);
+      assert.ok(submitRes.data.submissionId);
+
+      // Verify the pending submission has entityType: landmark
+      const sub = await ContributionSubmission.findById(submitRes.data.submissionId);
+      assert.ok(sub);
+      assert.equal(sub.entityType, "landmark");
+
+      // Approve the submission
+      const reviewRes = await makeRequest({
+        path: `/api/contributions/${sub._id}/review`,
+        method: "PATCH",
+        token: adminToken,
+        body: {
+          decision: "approve",
+          approvedFields: ["name", "latitude", "longitude", "googleMapsUrl"],
+          reviewerComments: "Approved as verified historic landmark",
+        },
+      });
+
+      assert.equal(reviewRes.status, 200);
+
+      // Verify the newly created Place record has entityType: landmark
+      const createdPlace = await Place.findOne({ name: "Test Historic Pawa Stupa" });
+      assert.ok(createdPlace, "Place record must be created for approved new entity");
+      assert.equal(createdPlace.entityType, "landmark", "Created place must inherit form entityType: landmark");
+      assert.equal(createdPlace.latitude, 26.6850);
+      assert.equal(createdPlace.longitude, 84.0490);
     });
   });
 });

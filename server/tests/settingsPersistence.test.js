@@ -258,19 +258,20 @@ describe("Settings Persistence & Live Version Endpoint Verification", () => {
     );
   });
 
-  it("8. GET /api/settings includes contributionFormSettings with default hideNavbarAndFooter: false", async () => {
+  it("8. GET /api/settings includes contributionFormSettings with default hideNavbarAndFooter: false and hideContactAndVerification: false", async () => {
     const res = await makeRequest("GET", "/api/settings");
     assert.equal(res.status, 200);
     assert.equal(res.data.success, true);
     assert.ok(res.data.settings.contributionFormSettings);
     assert.equal(res.data.settings.contributionFormSettings.hideNavbarAndFooter, false);
+    assert.equal(res.data.settings.contributionFormSettings.hideContactAndVerification, false);
   });
 
   it("9. PUT /api/settings: Citizen cannot modify contributionFormSettings (403 Forbidden)", async () => {
     const res = await makeRequest(
       "PUT",
       "/api/settings",
-      { contributionFormSettings: { hideNavbarAndFooter: true } },
+      { contributionFormSettings: { hideNavbarAndFooter: true, hideContactAndVerification: true } },
       citizenToken
     );
     assert.equal(res.status, 403);
@@ -309,6 +310,39 @@ describe("Settings Persistence & Live Version Endpoint Verification", () => {
 
     const dbDoc = await SiteSettings.findOne({ key: "primary_settings" }).lean();
     assert.equal(dbDoc.contributionFormSettings?.hideNavbarAndFooter, false);
+  });
+
+  it("11b. PUT /api/settings: Admin toggling hideContactAndVerification to true and false persists in DB and preserves other settings", async () => {
+    // 1. Toggle hideContactAndVerification to true
+    const putRes = await makeRequest(
+      "PUT",
+      "/api/settings",
+      { contributionFormSettings: { hideContactAndVerification: true } },
+      adminToken
+    );
+    assert.equal(putRes.status, 200);
+    assert.equal(putRes.data.settings.contributionFormSettings.hideContactAndVerification, true);
+
+    let dbDoc = await SiteSettings.findOne({ key: "primary_settings" }).lean();
+    assert.equal(dbDoc.contributionFormSettings?.hideContactAndVerification, true);
+    assert.equal(dbDoc.contributionFormSettings?.hideNavbarAndFooter, false, "Preserves hideNavbarAndFooter");
+
+    let getRes = await makeRequest("GET", "/api/settings");
+    assert.equal(getRes.status, 200);
+    assert.equal(getRes.data.settings.contributionFormSettings?.hideContactAndVerification, true);
+
+    // 2. Toggle hideContactAndVerification back to false
+    const putRes2 = await makeRequest(
+      "PUT",
+      "/api/settings",
+      { contributionFormSettings: { hideContactAndVerification: false } },
+      adminToken
+    );
+    assert.equal(putRes2.status, 200);
+    assert.equal(putRes2.data.settings.contributionFormSettings.hideContactAndVerification, false);
+
+    dbDoc = await SiteSettings.findOne({ key: "primary_settings" }).lean();
+    assert.equal(dbDoc.contributionFormSettings?.hideContactAndVerification, false);
   });
 
   it("12. GET /api/forms/public/area-details returns the published area-details form with 200", async () => {

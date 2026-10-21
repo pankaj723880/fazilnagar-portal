@@ -19,6 +19,10 @@ export const VALID_ENTITY_TYPES = {
     "Hotels",
     "Government",
     "Other Services",
+    "business",
+    "place",
+    "general",
+    "other",
   ],
 };
 

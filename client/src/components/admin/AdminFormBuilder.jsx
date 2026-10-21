@@ -35,6 +35,102 @@ import {
   Compass,
 } from "lucide-react";
 
+export const SUPPORTED_MAP_ENTITY_TYPES = [
+  "village",
+  "locality",
+  "town",
+  "city",
+  "landmark",
+  "hub",
+  "place",
+];
+
+export const SUPPORTED_DIRECTORY_CATEGORIES = [
+  "Schools & Colleges",
+  "Hospitals & Clinics",
+  "Petrol Pumps",
+  "Pharmacies",
+  "Banks & ATMs",
+  "Restaurants",
+  "Markets",
+  "Hotels",
+  "Government",
+  "Other Services",
+];
+
+export const MAP_ENTITY_META = {
+  village: {
+    label: "🏡 Village / Gram Panchayat",
+    singular: "Village",
+    plural: "villages",
+    nameLabel: "Village / Gram Panchayat Name",
+    nameDesc: "Official recognized name of the village in English",
+  },
+  locality: {
+    label: "📍 Locality / Ward",
+    singular: "Locality / Ward",
+    plural: "localities / wards",
+    nameLabel: "Locality / Ward Name",
+    nameDesc: "Official recognized name of the locality or ward in English",
+  },
+  town: {
+    label: "🏛️ Town / Nagar Panchayat",
+    singular: "Town",
+    plural: "towns",
+    nameLabel: "Town / Nagar Panchayat Name",
+    nameDesc: "Official recognized name of the town in English",
+  },
+  city: {
+    label: "🏙️ City / Urban Centre",
+    singular: "City",
+    plural: "cities",
+    nameLabel: "City / Urban Centre Name",
+    nameDesc: "Official recognized name of the city in English",
+  },
+  landmark: {
+    label: "🚩 Landmark / Heritage Site",
+    singular: "Landmark / Heritage Site",
+    plural: "landmarks / heritage sites",
+    nameLabel: "Landmark / Site Name",
+    nameDesc: "Official recognized name of the landmark, monument, or heritage site in English",
+  },
+  hub: {
+    label: "🚦 Transport & Commercial Hub",
+    singular: "Hub / Junction",
+    plural: "hubs / junctions",
+    nameLabel: "Hub / Junction Name",
+    nameDesc: "Name of the key transport, crossroads, bus stand, or market hub",
+  },
+  place: {
+    label: "📌 Place / Public Space",
+    singular: "Place / Public Space",
+    plural: "places",
+    nameLabel: "Place Name",
+    nameDesc: "Official name of the place in English",
+  },
+};
+
+export function getEntityDisplayLabel(type, targetModule = "map") {
+  if (targetModule === "map" && MAP_ENTITY_META[type]) {
+    return MAP_ENTITY_META[type].label;
+  }
+  return type;
+}
+
+export function getEntitySingular(type, targetModule = "map") {
+  if (targetModule === "map" && MAP_ENTITY_META[type]) {
+    return MAP_ENTITY_META[type].singular;
+  }
+  return type || "Record";
+}
+
+export function getEntityPlural(type, targetModule = "map") {
+  if (targetModule === "map" && MAP_ENTITY_META[type]) {
+    return MAP_ENTITY_META[type].plural;
+  }
+  return type ? `${type} listings` : "directory establishments";
+}
+
 export default function AdminFormBuilder({ onStatsChange = () => {} }) {
   const [forms, setForms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -93,6 +189,10 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
   const [hideNavbarAndFooter, setHideNavbarAndFooter] = useState(false);
   const [updatingNavbarSetting, setUpdatingNavbarSetting] = useState(false);
 
+  // Public Form Contact & Verification Note Visibility State
+  const [hideContactAndVerification, setHideContactAndVerification] = useState(false);
+  const [updatingContactSetting, setUpdatingContactSetting] = useState(false);
+
   // Fetch catalog & forms on mount
   const fetchFormsAndCatalog = useCallback(async () => {
     setLoading(true);
@@ -107,6 +207,7 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
       setForms(Array.isArray(formsRes.data) ? formsRes.data : []);
       if (settingsRes.data?.settings?.contributionFormSettings) {
         setHideNavbarAndFooter(Boolean(settingsRes.data.settings.contributionFormSettings.hideNavbarAndFooter));
+        setHideContactAndVerification(Boolean(settingsRes.data.settings.contributionFormSettings.hideContactAndVerification));
       }
     } catch (err) {
       console.error("Failed to load forms:", err);
@@ -149,17 +250,54 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
     }
   };
 
+  const handleToggleContactSection = async () => {
+    const nextVal = !hideContactAndVerification;
+    setUpdatingContactSetting(true);
+    try {
+      const res = await API.put(
+        "/settings",
+        {
+          contributionFormSettings: {
+            hideContactAndVerification: nextVal,
+          },
+        },
+        { headers: authHeaders }
+      );
+      if (res.data?.success || res.status === 200) {
+        setHideContactAndVerification(nextVal);
+        clearCMSCache("settings");
+        clearCMSCache();
+        setSuccessMessage(
+          nextVal
+            ? "Public Form 'Your Contact & Verification Note' section turned OFF (Hidden on all public forms)."
+            : "Public Form 'Your Contact & Verification Note' section turned ON (Visible on all public forms)."
+        );
+        setTimeout(() => setSuccessMessage(""), 4000);
+      }
+    } catch (err) {
+      console.error("Failed to update contact section setting:", err);
+      setError(err.response?.data?.message || "Failed to update contact section setting.");
+      setTimeout(() => setError(""), 4000);
+    } finally {
+      setUpdatingContactSetting(false);
+    }
+  };
+
   useEffect(() => {
     fetchFormsAndCatalog();
   }, [fetchFormsAndCatalog]);
 
-  // Fetch entities when module changes or user searches
+  // Fetch entities when module or category changes or user searches
   const fetchEntitiesForModule = useCallback(
-    async (targetModule, search = "") => {
+    async (targetModule, entityType = "", search = "") => {
       setLoadingEntities(true);
       try {
+        const queryParams = new URLSearchParams();
+        if (entityType) queryParams.set("entityType", entityType);
+        if (search) queryParams.set("search", search);
+        const qStr = queryParams.toString() ? `?${queryParams.toString()}` : "";
         const res = await API.get(
-          `/forms/entities/${targetModule}?search=${encodeURIComponent(search)}`,
+          `/forms/entities/${targetModule}${qStr}`,
           { headers: authHeaders }
         );
         setAvailableEntities(Array.isArray(res.data) ? res.data : []);
@@ -174,9 +312,78 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
 
   useEffect(() => {
     if (isEditorOpen && formData.purpose !== "new_entity") {
-      fetchEntitiesForModule(formData.targetModule, entitySearch);
+      fetchEntitiesForModule(formData.targetModule, formData.entityType, entitySearch);
     }
-  }, [isEditorOpen, formData.targetModule, formData.purpose, entitySearch, fetchEntitiesForModule]);
+  }, [isEditorOpen, formData.targetModule, formData.entityType, formData.purpose, entitySearch, fetchEntitiesForModule]);
+
+  // Dynamic entity type / category options with fallback to all supported categories
+  const entityTypeOptions = useMemo(() => {
+    const fromCatalog = catalog?.entityTypes?.[formData.targetModule];
+    if (Array.isArray(fromCatalog) && fromCatalog.length > 0) return fromCatalog;
+    return formData.targetModule === "map"
+      ? SUPPORTED_MAP_ENTITY_TYPES
+      : SUPPORTED_DIRECTORY_CATEGORIES;
+  }, [catalog, formData.targetModule]);
+
+  // Filter available entities strictly matching selected category
+  const filteredAvailableEntities = useMemo(() => {
+    if (!Array.isArray(availableEntities)) return [];
+    if (!formData.entityType) return availableEntities;
+    const cleanType = String(formData.entityType).toLowerCase().trim();
+    return availableEntities.filter((ent) => {
+      if (formData.targetModule === "map") {
+        const entType = String(ent.entityType || ent.category || "").toLowerCase().trim();
+        return entType === cleanType;
+      }
+      return String(ent.category || "").toLowerCase().trim() === cleanType;
+    });
+  }, [availableEntities, formData.entityType, formData.targetModule]);
+
+  // Handle category change dynamically without wiping unrelated form inputs
+  const handleEntityTypeChange = (newEntityType) => {
+    setEntitySearch("");
+    setFormData((prev) => {
+      // If current targetEntityId is incompatible with the new category, clear it gracefully
+      let nextTargetId = prev.targetEntityId;
+      let nextTargetName = prev.targetEntityName;
+      if (nextTargetId && availableEntities.length > 0) {
+        const cleanNew = String(newEntityType).toLowerCase().trim();
+        const found = availableEntities.find((e) => {
+          if (e.id !== nextTargetId) return false;
+          const eCat = String(e.category || e.entityType || "").toLowerCase().trim();
+          return eCat === cleanNew;
+        });
+        if (!found) {
+          nextTargetId = "";
+          nextTargetName = "";
+        }
+      }
+
+      // Synchronize schema field labels or defaults for the selected map entity type
+      const meta = MAP_ENTITY_META[newEntityType];
+      const updatedFields = prev.fields.map((f) => {
+        if (f.name === "entityType") {
+          return { ...f, defaultValue: newEntityType };
+        }
+        if (prev.targetModule === "map" && f.name === "name" && meta) {
+          return {
+            ...f,
+            label: meta.nameLabel,
+            description: meta.nameDesc,
+          };
+        }
+        return f;
+      });
+
+      return {
+        ...prev,
+        entityType: newEntityType,
+        targetEntityId: nextTargetId,
+        targetEntityName: nextTargetName,
+        fields: updatedFields,
+      };
+    });
+  };
 
   // Handle open create modal
   const handleOpenCreate = () => {
@@ -341,6 +548,10 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
     e.preventDefault();
     if (!formData.title.trim()) {
       alert("Please provide a title for the form.");
+      return;
+    }
+    if (!formData.entityType || !formData.entityType.trim()) {
+      alert("Please select a valid Entity Type / Category.");
       return;
     }
     if (formData.fields.length === 0) {
@@ -785,15 +996,18 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
                 <label className="block text-xs font-bold text-slate-700 mb-1">Entity Type / Category *</label>
                 <select
                   value={formData.entityType}
-                  onChange={(e) => setFormData({ ...formData, entityType: e.target.value })}
+                  onChange={(e) => handleEntityTypeChange(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 >
-                  {(catalog?.entityTypes?.[formData.targetModule] || []).map((t) => (
+                  {entityTypeOptions.map((t) => (
                     <option key={t} value={t}>
-                      {t}
+                      {getEntityDisplayLabel(t, formData.targetModule)}
                     </option>
                   ))}
                 </select>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Scope: <span className="font-semibold text-emerald-700">{getEntitySingular(formData.entityType, formData.targetModule)}</span> records
+                </p>
               </div>
 
               <div>
@@ -813,23 +1027,37 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
             {/* Specific Entity Selection for Correction Forms */}
             {formData.purpose !== "new_entity" && (
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                <label className="block text-xs font-bold text-slate-800">
-                  Target Specific Existing Record (Optional — for record-specific updates)
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-800">
+                    Target Specific Existing {getEntitySingular(formData.entityType, formData.targetModule)} (Optional — for record-specific updates)
+                  </label>
+                  {loadingEntities && (
+                    <span className="text-[11px] text-slate-400">Loading {getEntityPlural(formData.entityType, formData.targetModule)}...</span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={entitySearch}
                     onChange={(e) => setEntitySearch(e.target.value)}
-                    placeholder={`Search existing ${formData.targetModule === "map" ? "villages/localities" : "directory places"}...`}
+                    placeholder={`Search existing ${getEntityPlural(formData.entityType, formData.targetModule)}...`}
                     className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   />
+                  {entitySearch && (
+                    <button
+                      type="button"
+                      onClick={() => setEntitySearch("")}
+                      className="px-2.5 py-2 text-xs bg-slate-200 hover:bg-slate-300 rounded-lg text-slate-700 font-semibold cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  )}
                 </div>
 
                 <select
                   value={formData.targetEntityId}
                   onChange={(e) => {
-                    const chosen = availableEntities.find((ent) => ent.id === e.target.value);
+                    const chosen = filteredAvailableEntities.find((ent) => ent.id === e.target.value);
                     setFormData({
                       ...formData,
                       targetEntityId: e.target.value,
@@ -838,17 +1066,35 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
                   }}
                   className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 >
-                  <option value="">-- Allow user to select record at submission time --</option>
-                  {availableEntities.map((ent) => (
+                  <option value="">
+                    -- Allow contributor to select any {getEntitySingular(formData.entityType, formData.targetModule).toLowerCase()} at submission time --
+                  </option>
+                  {filteredAvailableEntities.map((ent) => (
                     <option key={ent.id} value={ent.id}>
-                      {ent.name} {ent.hindiName ? `(${ent.hindiName})` : ""} &bull; {ent.category}
+                      {ent.name} {ent.hindiName ? `(${ent.hindiName})` : ""} &bull; {ent.category || ent.entityType}
                     </option>
                   ))}
                 </select>
-                {formData.targetEntityName && (
-                  <p className="text-[11px] text-emerald-700 font-semibold">
-                    Selected Target: {formData.targetEntityName} (ID: {formData.targetEntityId})
+
+                {filteredAvailableEntities.length === 0 && !loadingEntities && (
+                  <p className="text-[11px] text-slate-500 italic">
+                    No matching {getEntityPlural(formData.entityType, formData.targetModule)} found. Contributors can submit new records or specify an entity manually.
                   </p>
+                )}
+
+                {formData.targetEntityName && (
+                  <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-[11px] text-emerald-800 font-medium">
+                    <span>
+                      Selected Target: <strong className="font-bold">{formData.targetEntityName}</strong> (ID: {formData.targetEntityId})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, targetEntityId: "", targetEntityName: "" })}
+                      className="text-emerald-700 hover:text-emerald-900 font-bold underline ml-2 cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -1603,6 +1849,58 @@ export default function AdminFormBuilder({ onStatsChange = () => {} }) {
               <div
                 className={`w-3.5 h-3.5 rounded-full bg-white transition-transform absolute top-[3px] shadow-xs ${
                   hideNavbarAndFooter ? "left-[19px]" : "left-[3px]"
+                }`}
+              />
+            </div>
+          </button>
+
+          {/* Public Form Contact & Verification Note Turn ON/OFF Toggle */}
+          <button
+            type="button"
+            id="form-builder-contact-section-toggle"
+            title="Turn on/off 'Your Contact & Verification Note' section on public contribution forms (/forms/* & /contribute/*)"
+            onClick={handleToggleContactSection}
+            disabled={updatingContactSetting}
+            className={`px-3 py-2 rounded-xl border transition flex items-center gap-2.5 select-none active:scale-95 cursor-pointer text-left ${
+              hideContactAndVerification
+                ? "bg-amber-50/90 border-amber-300 text-slate-900 shadow-2xs hover:bg-amber-100/70"
+                : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
+            } ${updatingContactSetting ? "opacity-60 cursor-not-allowed" : ""}`}
+          >
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 ${
+                    hideContactAndVerification ? "bg-amber-500 animate-pulse" : "bg-emerald-500"
+                  }`}
+                />
+                <span className="text-[11px] font-bold">Contact &amp; Verification Note:</span>
+                <span
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
+                    hideContactAndVerification
+                      ? "bg-amber-200 text-amber-900"
+                      : "bg-emerald-100 text-emerald-800"
+                  }`}
+                >
+                  {hideContactAndVerification ? "OFF (Hidden)" : "ON (Visible)"}
+                </span>
+              </div>
+              <div className="text-[10px] text-slate-500 mt-0.5">
+                {hideContactAndVerification
+                  ? "Name, phone/email & note hidden"
+                  : "Name, phone/email & note shown"}
+              </div>
+            </div>
+
+            {/* Switch pill visual */}
+            <div
+              className={`w-9 h-5 rounded-full transition-colors relative shrink-0 ${
+                hideContactAndVerification ? "bg-amber-500" : "bg-slate-300"
+              }`}
+            >
+              <div
+                className={`w-3.5 h-3.5 rounded-full bg-white transition-transform absolute top-[3px] shadow-xs ${
+                  hideContactAndVerification ? "left-[19px]" : "left-[3px]"
                 }`}
               />
             </div>

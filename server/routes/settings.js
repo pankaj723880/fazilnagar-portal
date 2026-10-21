@@ -51,6 +51,7 @@ async function getOrCreateSettings(bypassCache = false) {
       stats: DEFAULT_STATS,
       contributionFormSettings: {
         hideNavbarAndFooter: false,
+        hideContactAndVerification: false,
       },
       themeConfig: {
         themeId: "heritage-terracotta",
@@ -69,6 +70,7 @@ async function getOrCreateSettings(bypassCache = false) {
     if (!settings.contributionFormSettings) {
       settings.contributionFormSettings = {
         hideNavbarAndFooter: false,
+        hideContactAndVerification: false,
       };
       changed = true;
     }
@@ -331,9 +333,15 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
     }
 
     if (updateData.contributionFormSettings && typeof updateData.contributionFormSettings === "object") {
+      const current = safeObj(settings.contributionFormSettings);
       settings.contributionFormSettings = {
-        ...safeObj(settings.contributionFormSettings),
-        hideNavbarAndFooter: Boolean(updateData.contributionFormSettings.hideNavbarAndFooter),
+        ...current,
+        ...(updateData.contributionFormSettings.hideNavbarAndFooter !== undefined
+          ? { hideNavbarAndFooter: Boolean(updateData.contributionFormSettings.hideNavbarAndFooter) }
+          : {}),
+        ...(updateData.contributionFormSettings.hideContactAndVerification !== undefined
+          ? { hideContactAndVerification: Boolean(updateData.contributionFormSettings.hideContactAndVerification) }
+          : {}),
       };
     }
 

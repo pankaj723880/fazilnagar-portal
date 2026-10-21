@@ -41,6 +41,7 @@ export default function PublicContributionForm() {
   }, []);
 
   const hideNavbarAndFooter = Boolean(siteSettings?.contributionFormSettings?.hideNavbarAndFooter);
+  const hideContactAndVerification = Boolean(siteSettings?.contributionFormSettings?.hideContactAndVerification);
 
   // Submitter Form State
   const [formData, setFormData] = useState({});
@@ -801,44 +802,46 @@ export default function PublicContributionForm() {
                 </div>
               )}
 
-              {/* Submitter Details & Evidence Notes */}
-              <div className="pt-3 border-t border-slate-200 space-y-2.5">
-                <h4 className="text-xs font-bold text-slate-800">Your Contact &amp; Verification Note</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Your Name (Optional)</label>
-                    <input
-                      type="text"
-                      value={submitterName}
-                      onChange={(e) => setSubmitterName(e.target.value)}
-                      placeholder="e.g. Ramesh Kumar"
-                      className="w-full px-3 h-10 sm:h-10.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
-                    />
+              {/* Submitter Details & Evidence Notes (Hidden when disabled by admin) */}
+              {!hideContactAndVerification && (
+                <div className="pt-3 border-t border-slate-200 space-y-2.5">
+                  <h4 className="text-xs font-bold text-slate-800">Your Contact &amp; Verification Note</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Your Name (Optional)</label>
+                      <input
+                        type="text"
+                        value={submitterName}
+                        onChange={(e) => setSubmitterName(e.target.value)}
+                        placeholder="e.g. Ramesh Kumar"
+                        className="w-full px-3 h-10 sm:h-10.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Phone / Email (Optional)</label>
+                      <input
+                        type="text"
+                        value={submitterContact}
+                        onChange={(e) => setSubmitterContact(e.target.value)}
+                        placeholder="For verification follow-up if needed"
+                        className="w-full px-3 h-10 sm:h-10.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                      />
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Phone / Email (Optional)</label>
-                    <input
-                      type="text"
-                      value={submitterContact}
-                      onChange={(e) => setSubmitterContact(e.target.value)}
-                      placeholder="For verification follow-up if needed"
-                      className="w-full px-3 h-10 sm:h-10.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Additional Evidence / Comments</label>
+                    <textarea
+                      rows={2}
+                      value={evidenceNotes}
+                      onChange={(e) => setEvidenceNotes(e.target.value)}
+                      placeholder="Provide any details that will help the administrator verify your proposed coordinates or information (e.g. 'I am the shop owner', 'Census 2011 code', etc.)"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
                     />
                   </div>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Additional Evidence / Comments</label>
-                  <textarea
-                    rows={2}
-                    value={evidenceNotes}
-                    onChange={(e) => setEvidenceNotes(e.target.value)}
-                    placeholder="Provide any details that will help the administrator verify your proposed coordinates or information (e.g. 'I am the shop owner', 'Census 2011 code', etc.)"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
-                  />
-                </div>
-              </div>
+              )}
 
               {/* Submit Button */}
               <div className="pt-3 border-t border-slate-200">

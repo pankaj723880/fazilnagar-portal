@@ -1,4 +1,7 @@
 import express from "express";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import ContributionForm from "../models/ContributionForm.js";
 import ContributionSubmission from "../models/ContributionSubmission.js";
 import Place from "../models/Place.js";
@@ -21,6 +24,8 @@ import { writeLimiter } from "../middleware/rateLimiter.js";
 import { ensureAreaDetailsForm } from "../config/db.js";
 
 const router = express.Router();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Generate a clean, URL-safe slug
@@ -525,31 +530,88 @@ router.get("/entities/:module", verifyToken, requireAdmin, async (req, res) => {
     const { module } = req.params;
     const { search = "", entityType = "" } = req.query;
 
-    const query = { isArchived: { $ne: true } };
+    const conditions = [{ isArchived: { $ne: true } }];
 
     if (module === "map") {
-      query.entityType = { $in: ["village", "locality", "town", "city", "landmark", "hub", "place"] };
+      if (entityType && entityType !== "all") {
+        const cleanType = entityType.trim();
+        conditions.push({
+          $or: [{ entityType: cleanType }, { category: cleanType }],
+        });
+      } else {
+        conditions.push({
+          $or: [
+            { entityType: { $in: ["village", "locality", "town", "city", "landmark", "hub", "place"] } },
+            { category: { $in: ["village", "locality", "town", "city", "landmark", "hub", "place"] } },
+          ],
+        });
+      }
     } else if (module === "directory") {
       if (entityType && entityType !== "all") {
-        query.category = entityType;
+        conditions.push({ category: entityType.trim() });
       }
     }
 
-    if (search.trim()) {
-      query.$or = [
-        { name: { $regex: search.trim(), $options: "i" } },
-        { hindiName: { $regex: search.trim(), $options: "i" } },
-        { id: { $regex: search.trim(), $options: "i" } },
-      ];
+    if (search && search.trim()) {
+      const s = search.trim();
+      conditions.push({
+        $or: [
+          { name: { $regex: s, $options: "i" } },
+          { hindiName: { $regex: s, $options: "i" } },
+          { id: { $regex: s, $options: "i" } },
+        ],
+      });
     }
 
-    const items = await Place.find(query)
+    const query = conditions.length === 1 ? conditions[0] : { $and: conditions };
+
+    let items = await Place.find(query)
       .select("id name hindiName category entityType locality latitude longitude mapsUrl")
       .sort({ name: 1 })
       .limit(100)
       .lean();
 
-    const mapped = items.map((i) => ({
+    // Fallback to static regional locations if DB returned no map records
+    if (module === "map" && (!items || items.length === 0)) {
+      try {
+        const regionalLocationsPath = path.resolve(__dirname, "../../client/src/data/regionalLocations.js");
+        if (fs.existsSync(regionalLocationsPath)) {
+          const { REGIONAL_LOCATIONS } = await import(`file://${regionalLocationsPath.replace(/\\/g, "/")}`);
+          let filteredStatic = Array.isArray(REGIONAL_LOCATIONS) ? REGIONAL_LOCATIONS : [];
+          if (entityType && entityType !== "all") {
+            const cleanType = entityType.trim().toLowerCase();
+            filteredStatic = filteredStatic.filter(
+              (l) => (l.type || l.category || "").toLowerCase() === cleanType
+            );
+          }
+          if (search && search.trim()) {
+            const sLower = search.trim().toLowerCase();
+            filteredStatic = filteredStatic.filter(
+              (l) =>
+                (l.name && l.name.toLowerCase().includes(sLower)) ||
+                (l.hindiName && l.hindiName.toLowerCase().includes(sLower)) ||
+                (l.id && String(l.id).toLowerCase().includes(sLower))
+            );
+          }
+          items = filteredStatic.slice(0, 100).map((l) => ({
+            id: l.id || `loc-${l.sno}`,
+            _id: l.id || `loc-${l.sno}`,
+            name: l.name,
+            hindiName: l.hindiName || "",
+            category: l.category || l.type || "village",
+            entityType: l.type || l.category || "village",
+            locality: l.block || "Fazilnagar",
+            latitude: l.lat,
+            longitude: l.lng,
+            mapsUrl: l.mapsUrl || "",
+          }));
+        }
+      } catch (staticErr) {
+        console.warn("[Forms] Static regional locations fallback skipped:", staticErr.message);
+      }
+    }
+
+    const mapped = (items || []).map((i) => ({
       id: i.id || String(i._id),
       _id: String(i._id),
       name: i.name,
@@ -633,6 +695,14 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
 
     if (!entityType || !entityType.trim()) {
       return res.status(400).json({ message: "Entity type or category is required." });
+    }
+
+    const cleanEntityType = entityType.trim();
+    const allowedEntityTypes = VALID_ENTITY_TYPES[targetModule] || [];
+    if (!allowedEntityTypes.includes(cleanEntityType)) {
+      return res.status(400).json({
+        message: `Invalid entityType '${cleanEntityType}' for module '${targetModule}'. Supported: ${allowedEntityTypes.join(", ")}`,
+      });
     }
 
     // Slug generation and uniqueness
@@ -724,8 +794,20 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
     if (title && title.trim()) form.title = title.trim();
     if (description !== undefined) form.description = description.trim();
     if (instructions !== undefined) form.instructions = instructions.trim();
-    if (entityType && entityType.trim()) form.entityType = entityType.trim();
     if (purpose) form.purpose = purpose;
+    if (entityType !== undefined) {
+      if (!entityType || !entityType.trim()) {
+        return res.status(400).json({ message: "Entity type or category cannot be empty." });
+      }
+      const cleanEntityType = entityType.trim();
+      const allowedEntityTypes = VALID_ENTITY_TYPES[form.targetModule] || [];
+      if (!allowedEntityTypes.includes(cleanEntityType)) {
+        return res.status(400).json({
+          message: `Invalid entityType '${cleanEntityType}' for module '${form.targetModule}'. Supported: ${allowedEntityTypes.join(", ")}`,
+        });
+      }
+      form.entityType = cleanEntityType;
+    }
     if (targetEntityId !== undefined) form.targetEntityId = targetEntityId || null;
     if (targetEntityName !== undefined) form.targetEntityName = targetEntityName.trim();
     if (status && ["draft", "published", "disabled", "closed"].includes(status)) {
