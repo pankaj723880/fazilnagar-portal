@@ -1,5 +1,51 @@
 # Town Portal & Regional Connectivity Implementation Progress
 
+- **GOOGLE & APPLE MAPS URL HANDLING & COORDINATE EXTRACTION FIX (COMPLETED & VERIFIED)**
+  - **1. Root Cause Analysis**:
+    - **Bug 1 (Submitted link does not open when clicked)**:
+      - In `AdminContributionReview.jsx`, the diff table rendered `diff.proposedValue` as a plain text string (`String(...)`) instead of an anchor element.
+      - In the submissions table list view, the location column rendered only an unclickable status badge without an external link.
+      - Where hyperlinks existed, raw URLs lacking protocol schemes (e.g. `maps.app.goo.gl/...` or `maps.apple.com/...`) were parsed by browsers as relative routes on the local portal, causing 404 errors.
+    - **Bug 2 (Latitude and longitude not extracted)**:
+      - The previous regex in `PublicContributionForm.jsx` and `googleMapsValidator.js` only checked simple `@lat,lng` and standard query formats, failing on:
+        - URL-encoded commas (`%2C`), e.g., `?q=26.6%2C84.0`
+        - Reverse-order protobuf pins (`!4dLNG!3dLAT`)
+        - Direction routes (`/dir/.../26.6,84.0`)
+        - Apple Maps URLs (`maps.apple.com/?ll=...`, `maps.apple.com/?daddr=...`, `maps.apple.com/?sll=...`, `maps.apple.com/?near=...`) which were previously rejected as a disallowed provider.
+        - Shortened links (`maps.app.goo.gl`, `apple.co`), which immediately aborted with `coordinates: null` without server-side HTTP redirect expansion.
+      - `ContributionSubmission` lacked top-level `latitude` and `longitude` fields in its Mongoose schema.
+  - **2. Required Fixes Implemented**:
+    - **Centralized Google & Apple Maps URL Parser & Validator (`server/utils/googleMapsValidator.js` & `client/src/utils/googleMapsValidator.js`)**:
+      - Accepts both Google Maps and Apple Maps formats:
+        - Google: `@26.6,84.0,15z`, `maps.google.com/?q=26.6,84.0`, `www.google.com/maps?q=26.6,84.0`, `maps.app.goo.gl/...`, `goo.gl/maps/...`, `/maps/dir/...`, and protobuf `!3dLAT!4dLNG` / `!4dLNG!3dLAT`.
+        - Apple: `maps.apple.com/?ll=26.6,84.0`, `maps.apple.com/?daddr=26.6,84.0`, `maps.apple.com/?sll=...`, `maps.apple.com/?near=...`, `maps.apple.com/?q=Fazilnagar`, `apple.co/...`.
+      - Strict coordinate validation: `-90 <= latitude <= 90` and `-180 <= longitude <= 180`.
+      - URL-decoding: Parameters like `ll`, `daddr`, `q`, and `near` are decoded (`decodeURIComponent`) prior to parsing coordinate floats.
+      - Place names / search links: If `daddr`, `q`, or `near` specifies a place name or address (e.g., `?daddr=Fazilnagar+Hospital` or `?q=Fazilnagar`), coordinates are safely left unavailable (`null`) without generating fake coordinates or mistaking zoom levels for coordinates. The original URL is preserved intact.
+      - Disallowed providers: Rejects third-party providers (OpenStreetMap, Bing Maps, Mapbox, Yandex, etc.) while allowing Google Maps and Apple Maps.
+      - SSRF-protected shortened link resolution: Restricts destination to trusted Google Maps and Apple Maps domains (`maps.apple.com`, `apple.co`, `.apple.com`), blocks private/local IP destinations (`127.0.0.1`, `10.x`, `172.16-31.x`, `192.168.x`, `169.254.x`, `localhost`, `::1`), limits redirects to max 3 hops with a 3-second timeout, and strictly avoids arbitrary user URLs.
+    - **Submitted Link Rendering**:
+      - Submitted Google Maps and Apple Maps links are rendered as secure clickable links with validated HTTPS URLs (`getSafeHttpsUrl`), `target="_blank"`, and `rel="noopener noreferrer"`.
+      - Invalid URLs fall back to safe plain text instead of clickable links.
+    - **Schema & Database Persistence**:
+      - Added top-level `latitude` and `longitude` fields to `ContributionSubmission` schema alongside `googleMapsUrl` and `locationComparison`.
+      - `POST /api/forms/public/:slug/submit` asynchronously extracts coordinates from submitted Google & Apple Maps URLs and stores them in both `proposedValues.latitude/longitude` and top-level `latitude/longitude`.
+      - `POST /api/forms/extract-coords` endpoint supports asynchronous on-demand extraction for both Google and Apple Maps links.
+      - Safe approval logic in `PATCH /api/contributions/:id/review`: prevents overwriting existing valid Place coordinates with `null` or `NaN` if a submission contains only a link without extractable coordinates.
+  - **3. Changed Files**:
+    - `server/utils/googleMapsValidator.js`
+    - `server/models/ContributionSubmission.js`
+    - `server/routes/forms.js`
+    - `server/routes/contributionSubmissions.js`
+    - `client/src/utils/googleMapsValidator.js`
+    - `client/src/components/admin/AdminContributionReview.jsx`
+    - `client/src/pages/PublicContributionForm.jsx`
+    - `server/tests/googleMapsUrlHandling.test.js`
+  - **4. Verification & Test Results**:
+    - Dedicated test suite `server/tests/googleMapsUrlHandling.test.js` passed 32/32 tests (100% pass) covering 19 Google Maps + 13 Apple Maps test scenarios.
+    - Existing test suite `server/tests/dynamicFormBuilderAndApproval.test.js` passed 17/17 tests (100% pass).
+    - Client production build `npm run build` completed with code 0 and all 17 static route HTML pages generated.
+
 - **NOTIFICATION BADGE & LIVE VISITOR COUNTER IMPLEMENTATION (COMPLETED & VERIFIED)**
   - **1. Notification Badge Root Cause & Resolution**:
     - **Root Cause**: `GET /api/notifications` in `server/routes/notifications.js` previously treated all broadcast notifications without `clientId` in `readBy` as unread for ANY visitor (including new/unauthenticated visitors), generating 10+ unread notifications. Combined with `client/src/components/NotificationCenter.jsx` formatting (`{unreadCount > 9 ? "9+" : unreadCount}`), every fresh visitor saw a hardcoded-looking `9+` badge.

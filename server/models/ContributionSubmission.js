@@ -81,6 +81,16 @@ const contributionSubmissionSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    latitude: {
+      type: Number,
+      default: null,
+      index: true,
+    },
+    longitude: {
+      type: Number,
+      default: null,
+      index: true,
+    },
     locationComparison: {
       submittedLat: { type: Number, default: null },
       submittedLng: { type: Number, default: null },

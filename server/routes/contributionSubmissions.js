@@ -13,6 +13,7 @@ import { invalidatePlacesCache, syncJsonPlaces } from "./places.js";
 import {
   buildGoogleMapsCoordinateUrl,
   calculateHaversineDistanceKm,
+  extractCoordinatesFromMapsUrl,
 } from "../utils/googleMapsValidator.js";
 import { emitPlacesUpdated } from "../socket.js";
 import { uploadMediaToDrive } from "./googleDrive.js";
@@ -409,22 +410,38 @@ router.patch("/:id/review", verifyToken, requireAdmin, async (req, res) => {
 
         // Apply only approved fields to existingPlace
         for (const [k, v] of Object.entries(patchData)) {
+          // Do not overwrite existing valid coordinates with null, empty, or NaN
+          if (
+            (k === "latitude" || k === "longitude") &&
+            (v === null || v === undefined || v === "" || isNaN(Number(v)))
+          ) {
+            continue;
+          }
           existingPlace[k] = v;
           afterSnapshot[k] = v;
         }
 
-        // Synchronize Google Maps search URL & distance if coordinates updated
-        if (patchData.latitude !== undefined || patchData.longitude !== undefined) {
-          const newLat = Number(existingPlace.latitude);
-          const newLng = Number(existingPlace.longitude);
-          if (!isNaN(newLat) && !isNaN(newLng) && newLat >= -90 && newLat <= 90 && newLng >= -180 && newLng <= 180) {
-            existingPlace.mapsUrl = buildGoogleMapsCoordinateUrl(newLat, newLng);
-            existingPlace.googleMapsUrl = existingPlace.mapsUrl;
-            existingPlace.calculatedDistanceKm = calculateHaversineDistanceKm(newLat, newLng, 26.6804068, 84.046655);
-            afterSnapshot.mapsUrl = existingPlace.mapsUrl;
-            afterSnapshot.googleMapsUrl = existingPlace.googleMapsUrl;
-            afterSnapshot.calculatedDistanceKm = existingPlace.calculatedDistanceKm;
+        // If existing place coordinates are missing, try extracting from approved googleMapsUrl
+        if ((existingPlace.latitude == null || existingPlace.longitude == null) && existingPlace.googleMapsUrl) {
+          const extracted = extractCoordinatesFromMapsUrl(existingPlace.googleMapsUrl);
+          if (extracted) {
+            existingPlace.latitude = extracted.lat;
+            existingPlace.longitude = extracted.lng;
+            afterSnapshot.latitude = extracted.lat;
+            afterSnapshot.longitude = extracted.lng;
           }
+        }
+
+        // Synchronize Google Maps search URL & distance if valid coordinates exist
+        const curLat = Number(existingPlace.latitude);
+        const curLng = Number(existingPlace.longitude);
+        if (!isNaN(curLat) && !isNaN(curLng) && curLat >= -90 && curLat <= 90 && curLng >= -180 && curLng <= 180) {
+          existingPlace.mapsUrl = buildGoogleMapsCoordinateUrl(curLat, curLng);
+          existingPlace.googleMapsUrl = existingPlace.googleMapsUrl || existingPlace.mapsUrl;
+          existingPlace.calculatedDistanceKm = calculateHaversineDistanceKm(curLat, curLng, 26.6804068, 84.046655);
+          afterSnapshot.mapsUrl = existingPlace.mapsUrl;
+          afterSnapshot.googleMapsUrl = existingPlace.googleMapsUrl;
+          afterSnapshot.calculatedDistanceKm = existingPlace.calculatedDistanceKm;
         } else if (patchData.googleMapsUrl) {
           existingPlace.mapsUrl = patchData.googleMapsUrl;
           existingPlace.googleMapsUrl = patchData.googleMapsUrl;
@@ -462,9 +479,20 @@ router.patch("/:id/review", verifyToken, requireAdmin, async (req, res) => {
         });
       } else {
         // Create brand new entity record from approved proposal
-        const lat = parseFloat(patchData.latitude);
-        const lng = parseFloat(patchData.longitude);
-        const validCoords = !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+        let lat = parseFloat(patchData.latitude);
+        let lng = parseFloat(patchData.longitude);
+        let validCoords = !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+
+        // If coordinates were not in patchData, try extracting from googleMapsUrl
+        if (!validCoords && (patchData.googleMapsUrl || submission.googleMapsUrl)) {
+          const urlToParse = patchData.googleMapsUrl || submission.googleMapsUrl;
+          const extracted = extractCoordinatesFromMapsUrl(urlToParse);
+          if (extracted) {
+            lat = extracted.lat;
+            lng = extracted.lng;
+            validCoords = true;
+          }
+        }
 
         const newDoc = {
           id: `p-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,

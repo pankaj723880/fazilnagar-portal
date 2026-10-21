@@ -11,8 +11,11 @@ import {
 } from "../config/formFieldCatalog.js";
 import {
   validateGoogleMapsUrl,
+  extractCoordinatesFromMapsUrl,
+  extractCoordinatesAsync,
   compareLocationCoordinates,
   buildGoogleMapsCoordinateUrl,
+  getSafeHttpsUrl,
 } from "../utils/googleMapsValidator.js";
 import { writeLimiter } from "../middleware/rateLimiter.js";
 import { ensureAreaDetailsForm } from "../config/db.js";
@@ -34,6 +37,41 @@ function slugify(text) {
 // ==========================================
 // 1. PUBLIC ENDPOINTS
 // ==========================================
+
+// @route   POST /api/forms/extract-coords
+// @desc    Extract coordinates from a Google Maps URL (resolving shortened URLs if needed)
+// @access  Public
+router.post("/extract-coords", async (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!url || typeof url !== "string") {
+      return res.status(400).json({ isValid: false, coordinates: null, error: "URL is required." });
+    }
+
+    const validation = validateGoogleMapsUrl(url);
+    if (!validation.isValid) {
+      return res.status(400).json({ isValid: false, coordinates: null, error: validation.error });
+    }
+
+    let coordinates = validation.coordinates;
+    if (!coordinates && (validation.isShortened || url.includes("maps.apple.com"))) {
+      coordinates = await extractCoordinatesAsync(url);
+    }
+
+    return res.status(200).json({
+      success: true,
+      isValid: true,
+      provider: validation.provider,
+      isShortened: validation.isShortened,
+      coordinates: coordinates || null,
+      safeUrl: validation.safeUrl,
+      message: coordinates ? "Coordinates extracted successfully." : "Coordinates unavailable from this map link.",
+      error: coordinates ? null : "Coordinates unavailable from this map link.",
+    });
+  } catch (err) {
+    return res.status(500).json({ isValid: false, coordinates: null, error: "Failed to extract coordinates." });
+  }
+});
 
 // @route   GET /api/forms/public/:slug
 // @desc    Get published public form details and configured fields
@@ -291,10 +329,16 @@ router.post("/public/:slug/submit", writeLimiter, async (req, res) => {
 
     // Process mapsLink and location verification
     if (mapsLink) {
+      let resolvedCoords = extractCoordinatesFromMapsUrl(mapsLink);
+      if (!resolvedCoords && (mapsLink.includes("maps.app.goo.gl") || mapsLink.includes("goo.gl/maps") || mapsLink.includes("maps.apple.com"))) {
+        resolvedCoords = await extractCoordinatesAsync(mapsLink);
+      }
+
       locationComparison = compareLocationCoordinates(
         hasLat ? proposedValues.latitude : null,
         hasLng ? proposedValues.longitude : null,
-        mapsLink
+        mapsLink,
+        resolvedCoords
       );
 
       // If coordinates were not explicitly submitted in form fields, but exist in Google Maps URL, populate them
@@ -398,14 +442,16 @@ router.post("/public/:slug/submit", writeLimiter, async (req, res) => {
     const submission = new ContributionSubmission({
       formId: form._id,
       formSlug: form.slug,
-      targetModule: form.targetModule,
-      entityType: form.entityType,
+      targetModule: form.targetModule || "map",
+      entityType: form.entityType || "general",
       submissionType,
       targetEntityId: effectiveEntityId || null,
       targetEntityName: resolvedEntity?.name || form.targetEntityName || proposedValues.name || "",
       proposedValues,
       originalValues,
       googleMapsUrl: mapsLink,
+      latitude: (proposedValues.latitude !== undefined && proposedValues.latitude !== null && proposedValues.latitude !== "") ? Number(proposedValues.latitude) : null,
+      longitude: (proposedValues.longitude !== undefined && proposedValues.longitude !== null && proposedValues.longitude !== "") ? Number(proposedValues.longitude) : null,
       locationComparison,
       evidenceNotes: String(evidenceNotes || "").trim(),
       evidenceUrls: Array.isArray(evidenceUrls) ? evidenceUrls : [],
@@ -435,6 +481,7 @@ router.post("/public/:slug/submit", writeLimiter, async (req, res) => {
     res.status(201).json({
       message: "Thank you! Your submission has been received and is pending administrator verification.",
       referenceId: submission.referenceId,
+      submissionId: submission._id,
       status: "pending",
     });
   } catch (err) {

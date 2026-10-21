@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import API from "../../api";
 import { getAuthToken } from "../../utils/authStorage";
+import { getSafeHttpsUrl } from "../../utils/googleMapsValidator";
 import {
   CheckCircle2,
   XCircle,
@@ -23,6 +24,56 @@ import {
   RefreshCw,
   Image as ImageIcon,
 } from "lucide-react";
+
+/**
+ * Safely renders field values in review diffs.
+ * For Google Maps URLs and external links, renders an active clickable link with HTTPS validation.
+ * If invalid, renders as plain text. For missing coordinates, displays "Coordinates unavailable".
+ */
+function renderDiffValue(fieldName, val) {
+  if (val === null || val === undefined || val === "") {
+    if (fieldName === "latitude" || fieldName === "longitude") {
+      return <span className="text-amber-700 italic text-[11px] font-semibold">Coordinates unavailable</span>;
+    }
+    return <span className="text-slate-300 italic">None</span>;
+  }
+
+  const strVal = String(val).trim();
+  const isUrlField =
+    fieldName === "googleMapsUrl" ||
+    fieldName === "mapsUrl" ||
+    fieldName.toLowerCase().includes("url") ||
+    fieldName.toLowerCase().includes("link");
+
+  const isUrlFormat =
+    /^https?:\/\//i.test(strVal) ||
+    /^(?:www\.)?google\.[a-z.]+\/maps/i.test(strVal) ||
+    /^maps\.google\.[a-z.]+/i.test(strVal) ||
+    /^maps\.app\.goo\.gl\//i.test(strVal) ||
+    /^goo\.gl\/maps\//i.test(strVal) ||
+    /^(?:www\.)?maps\.apple\.com/i.test(strVal);
+
+  if (isUrlField || isUrlFormat) {
+    const safeUrl = getSafeHttpsUrl(strVal);
+    if (safeUrl) {
+      return (
+        <a
+          href={safeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:underline inline-flex items-center gap-1 max-w-full break-all font-mono text-xs"
+          title={strVal}
+        >
+          <span>{strVal}</span>
+          <ExternalLink className="w-3 h-3 shrink-0" />
+        </a>
+      );
+    }
+    return <span className="font-mono text-xs text-slate-700 break-all">{strVal}</span>;
+  }
+
+  return <span>{strVal}</span>;
+}
 
 export default function AdminContributionReview({ onStatsChange = () => {} }) {
   const [submissions, setSubmissions] = useState([]);
@@ -341,19 +392,39 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                       </td>
                       <td className="py-3 px-4">
                         {sub.googleMapsUrl ? (
-                          locStatus === "consistent" ? (
-                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-flex items-center gap-1">
-                              ✓ Verified Pin
-                            </span>
-                          ) : locStatus === "mismatch" ? (
-                            <span className="text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 inline-flex items-center gap-1">
-                              ⚠️ Coord Mismatch
-                            </span>
-                          ) : (
-                            <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 inline-flex items-center gap-1">
-                              ⚠️ Check Pin
-                            </span>
-                          )
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {locStatus === "consistent" ? (
+                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-flex items-center gap-1">
+                                ✓ Verified Pin
+                              </span>
+                            ) : locStatus === "mismatch" ? (
+                              <span className="text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 inline-flex items-center gap-1">
+                                ⚠️ Coord Mismatch
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 inline-flex items-center gap-1">
+                                ⚠️ Coordinates unavailable
+                              </span>
+                            )}
+                            {(() => {
+                              const safeUrl = getSafeHttpsUrl(sub.googleMapsUrl);
+                              if (safeUrl) {
+                                return (
+                                  <a
+                                    href={safeUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    title="Open submitted Google Maps link"
+                                    className="p-1 rounded text-blue-600 hover:bg-blue-50 transition inline-flex items-center"
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                  </a>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
                         ) : (
                           <span className="text-[10px] text-slate-400">Non-location</span>
                         )}
@@ -497,11 +568,11 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                       <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-emerald-700" />
                         <h4 className="text-xs font-bold text-emerald-900">
-                          Google Maps Location Review &amp; Coordinate Verification
+                          Location Map Link Review &amp; Coordinate Verification
                         </h4>
                       </div>
                       <span className="text-[10px] font-black uppercase text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200">
-                        Google Maps Only
+                        Google &amp; Apple Maps
                       </span>
                     </div>
 
@@ -509,21 +580,33 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                       <div>
                         <span className="text-slate-400 block text-[10px] font-bold">Proposed Coordinates:</span>
                         <div className="font-mono font-bold text-slate-800 text-sm mt-0.5">
-                          {detailData.submission.proposedValues?.latitude ?? "—"}, {detailData.submission.proposedValues?.longitude ?? "—"}
+                          {(() => {
+                            const lat = detailData.submission.proposedValues?.latitude ?? detailData.submission.latitude;
+                            const lng = detailData.submission.proposedValues?.longitude ?? detailData.submission.longitude;
+                            if (lat !== null && lat !== undefined && !isNaN(Number(lat)) && lng !== null && lng !== undefined && !isNaN(Number(lng))) {
+                              return `${lat}, ${lng}`;
+                            }
+                            return <span className="text-amber-700 italic font-semibold text-xs">Coordinates unavailable</span>;
+                          })()}
                         </div>
-                        {detailData.submission.proposedValues?.latitude && detailData.submission.proposedValues?.longitude && (
-                          <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                              `${detailData.submission.proposedValues.latitude},${detailData.submission.proposedValues.longitude}`
-                            )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0D5E49] hover:underline mt-1"
-                          >
-                            <span>Open Proposed Pin in Google Maps</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
+                        {(() => {
+                          const lat = detailData.submission.proposedValues?.latitude ?? detailData.submission.latitude;
+                          const lng = detailData.submission.proposedValues?.longitude ?? detailData.submission.longitude;
+                          if (lat !== null && lat !== undefined && !isNaN(Number(lat)) && lng !== null && lng !== undefined && !isNaN(Number(lng))) {
+                            return (
+                              <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lng}`)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0D5E49] hover:underline mt-1"
+                              >
+                                <span>Open Proposed Pin in Google Maps</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
 
                       <div>
@@ -536,17 +619,25 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                           if (!mapsLink) {
                             return <span className="text-slate-400 italic text-xs mt-0.5 block">None provided</span>;
                           }
+                          const safeUrl = getSafeHttpsUrl(mapsLink);
                           return (
                             <>
-                              <a
-                                href={mapsLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-mono text-xs text-blue-700 hover:underline block truncate max-w-full mt-0.5"
-                                title={mapsLink}
-                              >
-                                {mapsLink}
-                              </a>
+                              {safeUrl ? (
+                                <a
+                                  href={safeUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="font-mono text-xs text-blue-700 hover:underline inline-flex items-center gap-1 max-w-full break-all mt-0.5"
+                                  title={mapsLink}
+                                >
+                                  <span className="truncate">{mapsLink}</span>
+                                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                                </a>
+                              ) : (
+                                <span className="font-mono text-xs text-slate-700 block truncate max-w-full mt-0.5" title={mapsLink}>
+                                  {mapsLink}
+                                </span>
+                              )}
                               <div className="mt-1 text-[11px]">
                                 {detailData.submission.locationComparison?.status === "consistent" ? (
                                   <span className="text-emerald-700 font-bold">✓ Coordinates match Google Maps URL link</span>
@@ -556,7 +647,7 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                                   </span>
                                 ) : (
                                   <span className="text-amber-700 font-bold">
-                                    ⚠️ {detailData.submission.locationComparison?.warningMessage || "Inspect pin manually on Google Maps"}
+                                    ⚠️ {detailData.submission.locationComparison?.warningMessage || "Coordinates unavailable from link. Inspect pin manually on Google Maps"}
                                   </span>
                                 )}
                               </div>
@@ -615,18 +706,10 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                                 </div>
                               </td>
                               <td className="py-2.5 px-3 text-slate-600 max-w-xs break-words">
-                                {diff.currentLiveValue !== null && diff.currentLiveValue !== undefined && diff.currentLiveValue !== "" ? (
-                                  String(diff.currentLiveValue)
-                                ) : (
-                                  <span className="text-slate-300 italic">None</span>
-                                )}
+                                {renderDiffValue(diff.field, diff.currentLiveValue)}
                               </td>
                               <td className="py-2.5 px-3 font-semibold text-slate-900 max-w-xs break-words">
-                                {diff.proposedValue !== null && diff.proposedValue !== undefined && diff.proposedValue !== "" ? (
-                                  String(diff.proposedValue)
-                                ) : (
-                                  <span className="text-slate-300 italic">None</span>
-                                )}
+                                {renderDiffValue(diff.field, diff.proposedValue)}
                               </td>
                               <td className="py-2.5 px-3 text-center">
                                 {diff.isChanged ? (

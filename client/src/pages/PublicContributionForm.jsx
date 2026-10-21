@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import API from "../api";
 import { usePageSEO } from "../utils/seo";
 import { getCachedSettings, getSiteSettings, subscribeToCMSLiveUpdates } from "../services/cmsService";
+import { extractCoordinatesFromMapsUrl, validateGoogleMapsUrl, getSafeHttpsUrl } from "../utils/googleMapsValidator";
 import {
   FileText,
   MapPin,
@@ -56,6 +57,8 @@ export default function PublicContributionForm() {
 
   // Google Maps Helper
   const [extractSuccess, setExtractSuccess] = useState(false);
+  const [extractingCoords, setExtractingCoords] = useState(false);
+  const [coordMessage, setCoordMessage] = useState(null);
 
   usePageSEO({
     title: form ? `${form.title} | Fazilnagar Town Portal` : "Public Contribution | Fazilnagar",
@@ -144,45 +147,53 @@ export default function PublicContributionForm() {
   };
 
   // Google Maps coordinate extraction helper
-  const handleExtractCoordsFromMapsLink = () => {
+  const handleExtractCoordsFromMapsLink = async () => {
     const mapsField = form?.fields?.find((f) => f.type === "googleMapsUrl" || f.name === "googleMapsUrl")?.name || "googleMapsUrl";
     const mapsUrl = formData[mapsField] || "";
     if (!mapsUrl.trim()) return;
 
-    // Pattern 1: /@26.7095,84.0507,17z
-    let lat = null;
-    let lng = null;
+    setExtractingCoords(true);
+    setCoordMessage(null);
 
-    const pathMatch = mapsUrl.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
-    if (pathMatch) {
-      lat = parseFloat(pathMatch[1]);
-      lng = parseFloat(pathMatch[2]);
-    } else {
-      const queryMatch = mapsUrl.match(/[?&](?:q|query|ll|destination)=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/i);
-      if (queryMatch) {
-        lat = parseFloat(queryMatch[1]);
-        lng = parseFloat(queryMatch[2]);
-      } else {
-        const protoMatch = mapsUrl.match(/!3d(-?\d+(?:\.\d+)?)[^!]*!4d(-?\d+(?:\.\d+)?)/);
-        if (protoMatch) {
-          lat = parseFloat(protoMatch[1]);
-          lng = parseFloat(protoMatch[2]);
+    // 1. Try centralized client-side extractor first
+    let coords = extractCoordinatesFromMapsUrl(mapsUrl);
+
+    // 2. If not found client-side (e.g. shortened link maps.app.goo.gl or goo.gl/maps), call backend resolver
+    if (!coords) {
+      try {
+        const res = await API.post("/forms/extract-coords", { url: mapsUrl });
+        if (res.data?.success && res.data?.coordinates) {
+          coords = res.data.coordinates;
         }
+      } catch (err) {
+        console.warn("Backend coordinate extraction failed:", err);
       }
     }
 
-    if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
+    setExtractingCoords(false);
+
+    if (coords && coords.latitude !== null && coords.longitude !== null && !isNaN(coords.latitude) && !isNaN(coords.longitude)) {
       const latField = form?.fields?.find((f) => f.type === "latitude" || f.name === "latitude")?.name || "latitude";
       const lngField = form?.fields?.find((f) => f.type === "longitude" || f.name === "longitude")?.name || "longitude";
       setFormData((prev) => ({
         ...prev,
-        [latField]: lat,
-        [lngField]: lng,
+        [latField]: coords.latitude,
+        [lngField]: coords.longitude,
       }));
       setExtractSuccess(true);
-      setTimeout(() => setExtractSuccess(false), 3000);
+      setCoordMessage({
+        type: "success",
+        text: `Extracted coordinates: ${coords.latitude}, ${coords.longitude}`,
+      });
+      setTimeout(() => {
+        setExtractSuccess(false);
+        setCoordMessage(null);
+      }, 4000);
     } else {
-      alert("Could not automatically extract numeric coordinates from this link. Please enter latitude and longitude manually.");
+      setCoordMessage({
+        type: "info",
+        text: "Coordinates unavailable in this link. The original link will still be saved with your submission, and you may enter latitude and longitude manually if known.",
+      });
     }
   };
 
@@ -254,35 +265,9 @@ export default function PublicContributionForm() {
             errors[field.name] = "Longitude must be a valid decimal coordinate between -180 and 180.";
           }
         } else if (field.name === "googleMapsUrl" || field.type === "googleMapsUrl") {
-          const trimmed = String(val).trim();
-          const disallowed = [
-            /openstreetmap\.org/i,
-            /osm\.org/i,
-            /bing\.com\/maps/i,
-            /maps\.apple\.com/i,
-            /here\.com/i,
-            /mapbox\.com/i,
-            /yandex\.[a-z.]+\/maps/i,
-            /mapquest\.com/i,
-          ];
-          let isDisallowed = false;
-          for (const pat of disallowed) {
-            if (pat.test(trimmed)) {
-              errors[field.name] = "Alternative map providers (like OpenStreetMap, Bing, or Apple Maps) are not permitted. Only Google Maps links are accepted.";
-              isDisallowed = true;
-              break;
-            }
-          }
-          if (!isDisallowed) {
-            const isGoogleMaps = [
-              /^https?:\/\/(?:www\.)?google\.[a-z.]+\/maps/i,
-              /^https?:\/\/maps\.google\.[a-z.]+/i,
-              /^https?:\/\/maps\.app\.goo\.gl\/[a-zA-Z0-9_\-]+/i,
-              /^https?:\/\/goo\.gl\/maps\/[a-zA-Z0-9_\-]+/i,
-            ].some((pat) => pat.test(trimmed));
-            if (!isGoogleMaps) {
-              errors[field.name] = "Please enter an authentic Google Maps location link (e.g. https://www.google.com/maps/... or https://maps.app.goo.gl/...).";
-            }
+          const check = validateGoogleMapsUrl(String(val));
+          if (!check.isValid) {
+            errors[field.name] = check.error || "Please enter an authentic Google Maps location link (e.g. https://www.google.com/maps/... or https://maps.app.goo.gl/...).";
           }
         }
       }
@@ -595,7 +580,7 @@ export default function PublicContributionForm() {
 
                         {isGoogleMaps && (
                           <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full border border-rose-200">
-                            📍 Google Maps Only
+                            📍 Google &amp; Apple Maps
                           </span>
                         )}
                         {isLatitude && (
@@ -614,19 +599,19 @@ export default function PublicContributionForm() {
                         <p className="text-[11px] text-slate-500">{field.description}</p>
                       )}
 
-                      {/* Location Helper Instructions for Google Maps URL */}
+                      {/* Location Helper Instructions for Google Maps / Apple Maps URL */}
                       {isGoogleMaps && (
                         <div className="p-2.5 bg-white/90 border border-rose-200 rounded-xl text-[11px] text-slate-700 space-y-1 shadow-2xs">
                           <p className="font-bold flex items-center gap-1 text-rose-900">
-                            <span>🧭 How to get your Google Maps Share Link:</span>
+                            <span>🧭 How to get your Google Maps or Apple Maps Share Link:</span>
                           </p>
                           <ol className="list-decimal pl-4 space-y-0.5 text-slate-600">
-                            <li>Open Google Maps on your phone or web browser.</li>
+                            <li>Open Google Maps or Apple Maps on your phone or computer.</li>
                             <li>Search or drop a pin at the exact location.</li>
                             <li>Tap <strong>Share</strong> &rarr; <strong>Copy Link</strong> and paste the link below.</li>
                           </ol>
                           <p className="text-[10px] text-amber-800 font-semibold bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80 mt-0.5">
-                            Note: Google Maps is strictly the only permitted location source. Links from other map services are rejected.
+                            Note: Google Maps and Apple Maps are the permitted location sources. Links from other map services are rejected.
                           </p>
                         </div>
                       )}
@@ -684,7 +669,7 @@ export default function PublicContributionForm() {
                             onChange={(e) => handleInputChange(field.name, e.target.value)}
                             placeholder={
                               isGoogleMaps
-                                ? "https://maps.app.goo.gl/... or https://www.google.com/maps/..."
+                                ? "https://maps.google.com/... or https://maps.apple.com/..."
                                 : isLatitude
                                 ? "e.g. 26.7095 (between -90 and 90)"
                                 : isLongitude
@@ -698,17 +683,53 @@ export default function PublicContributionForm() {
                             } rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all`}
                           />
 
-                          {/* Quick helper button under Google Maps link */}
+                          {/* Quick helper controls under Google Maps link */}
                           {isGoogleMaps && formData[field.name] && (
-                            <button
-                              type="button"
-                              onClick={handleExtractCoordsFromMapsLink}
-                              className="text-[11px] font-bold text-[#0D5E49] hover:underline flex items-center gap-1 cursor-pointer pt-0.5"
-                            >
-                              <Compass className="w-3.5 h-3.5" />
-                              <span>Auto-extract Latitude &amp; Longitude coordinates from this link</span>
-                              {extractSuccess && <span className="text-emerald-600 font-extrabold">✓ Coordinates Extracted!</span>}
-                            </button>
+                            <div className="pt-1.5 space-y-1.5">
+                              <div className="flex flex-wrap items-center gap-3 text-[11px]">
+                                <button
+                                  type="button"
+                                  onClick={handleExtractCoordsFromMapsLink}
+                                  disabled={extractingCoords}
+                                  className="font-bold text-[#0D5E49] hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-60"
+                                >
+                                  {extractingCoords ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0D5E49]" />
+                                  ) : (
+                                    <Compass className="w-3.5 h-3.5" />
+                                  )}
+                                  <span>{extractingCoords ? "Extracting coordinates..." : "Auto-extract Latitude & Longitude"}</span>
+                                </button>
+
+                                {(() => {
+                                  const safeUrl = getSafeHttpsUrl(formData[field.name]);
+                                  if (!safeUrl) return null;
+                                  return (
+                                    <a
+                                      href={safeUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="font-bold text-blue-600 hover:underline inline-flex items-center gap-1"
+                                    >
+                                      <ExternalLink className="w-3.5 h-3.5" />
+                                      <span>Test / Open Map Link in new tab</span>
+                                    </a>
+                                  );
+                                })()}
+                              </div>
+
+                              {coordMessage && (
+                                <p
+                                  className={`text-[11px] font-semibold px-2 py-1 rounded-md border ${
+                                    coordMessage.type === "success"
+                                      ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                      : "bg-amber-50 text-amber-800 border-amber-200"
+                                  }`}
+                                >
+                                  {coordMessage.text}
+                                </p>
+                              )}
+                            </div>
                           )}
                         </div>
                       )}
