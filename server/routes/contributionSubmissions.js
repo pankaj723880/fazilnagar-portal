@@ -25,20 +25,40 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Safely reparses location data on a submission if map link exists but coordinates are missing.
+ * Safely reparses location data on a submission if map link exists or coordinates exist in aliases.
  * Does NOT fabricate coordinates. Updates MongoDB document if valid coordinates extracted.
  */
 async function ensureSubmissionLocationParsed(sub) {
   if (!sub) return sub;
 
-  const mapUrl =
+  let mapUrl =
     sub.googleMapsUrl ||
-    sub.proposedValues?.googleMapsUrl ||
-    sub.proposedValues?.mapUrl ||
-    sub.proposedValues?.appleMapsUrl ||
-    sub.proposedValues?.locationUrl ||
+    sub.appleMapsUrl ||
     sub.mapUrl ||
+    sub.proposedValues?.googleMapsUrl ||
+    sub.proposedValues?.appleMapsUrl ||
+    sub.proposedValues?.mapUrl ||
+    sub.proposedValues?.locationUrl ||
+    sub.proposedValues?.mapsLink ||
+    sub.proposedValues?.mapLink ||
     "";
+
+  if (!mapUrl && sub.proposedValues && typeof sub.proposedValues === "object") {
+    for (const val of Object.values(sub.proposedValues)) {
+      if (
+        typeof val === "string" &&
+        (val.includes("google.com/maps") ||
+          val.includes("maps.google.") ||
+          val.includes("maps.app.goo.gl") ||
+          val.includes("goo.gl/maps") ||
+          val.includes("maps.apple.com") ||
+          val.includes("apple.co"))
+      ) {
+        mapUrl = val.trim();
+        break;
+      }
+    }
+  }
 
   let needsDbUpdate = false;
   const updateFields = {};
@@ -49,18 +69,66 @@ async function ensureSubmissionLocationParsed(sub) {
     needsDbUpdate = true;
   }
 
-  const hasCoords =
-    sub.latitude !== null &&
-    sub.latitude !== undefined &&
-    !isNaN(Number(sub.latitude)) &&
-    sub.longitude !== null &&
-    sub.longitude !== undefined &&
-    !isNaN(Number(sub.longitude));
+  const isValidNumber = (n) =>
+    n !== null && n !== undefined && n !== "" && !isNaN(Number(n));
 
-  // If coordinates are missing and we have a map URL, attempt safe extraction
-  if (!hasCoords && mapUrl) {
+  // Check if valid coordinates already exist across any alias
+  let existingLat = null;
+  let existingLng = null;
+
+  if (isValidNumber(sub.latitude) && isValidNumber(sub.longitude)) {
+    existingLat = Number(sub.latitude);
+    existingLng = Number(sub.longitude);
+  } else if (isValidNumber(sub.proposedValues?.latitude) && isValidNumber(sub.proposedValues?.longitude)) {
+    existingLat = Number(sub.proposedValues.latitude);
+    existingLng = Number(sub.proposedValues.longitude);
+  } else if (isValidNumber(sub.proposedValues?.lat) && isValidNumber(sub.proposedValues?.lng)) {
+    existingLat = Number(sub.proposedValues.lat);
+    existingLng = Number(sub.proposedValues.lng);
+  } else if (isValidNumber(sub.locationComparison?.urlLat) && isValidNumber(sub.locationComparison?.urlLng)) {
+    existingLat = Number(sub.locationComparison.urlLat);
+    existingLng = Number(sub.locationComparison.urlLng);
+  } else if (isValidNumber(sub.locationComparison?.submittedLat) && isValidNumber(sub.locationComparison?.submittedLng)) {
+    existingLat = Number(sub.locationComparison.submittedLat);
+    existingLng = Number(sub.locationComparison.submittedLng);
+  }
+
+  if (existingLat !== null && existingLng !== null) {
+    // Validate range bounds
+    if (existingLat >= -90 && existingLat <= 90 && existingLng >= -180 && existingLng <= 180) {
+      if (sub.latitude === null || sub.latitude === undefined || isNaN(Number(sub.latitude))) {
+        sub.latitude = existingLat;
+        sub.longitude = existingLng;
+        updateFields.latitude = existingLat;
+        updateFields.longitude = existingLng;
+        needsDbUpdate = true;
+      }
+      if (!sub.proposedValues) sub.proposedValues = {};
+      if (sub.proposedValues.latitude === undefined || sub.proposedValues.latitude === null) {
+        sub.proposedValues.latitude = existingLat;
+        sub.proposedValues.longitude = existingLng;
+        updateFields["proposedValues.latitude"] = existingLat;
+        updateFields["proposedValues.longitude"] = existingLng;
+        needsDbUpdate = true;
+      }
+      if (!sub.locationComparison || sub.locationComparison.status === "none" || sub.locationComparison.status === "shortened_requires_admin_pin_check") {
+        sub.locationComparison = {
+          submittedLat: existingLat,
+          submittedLng: existingLng,
+          urlLat: existingLat,
+          urlLng: existingLng,
+          distanceKm: 0,
+          status: "consistent",
+          warningMessage: "",
+        };
+        updateFields.locationComparison = sub.locationComparison;
+        needsDbUpdate = true;
+      }
+    }
+  } else if (mapUrl) {
+    // Missing coordinates and we have a map URL: attempt safe extraction
     let coords = extractCoordinatesFromMapsUrl(mapUrl);
-    if (!coords) {
+    if (!coords && (mapUrl.includes("goo.gl") || mapUrl.includes("apple.co"))) {
       coords = await extractCoordinatesAsync(mapUrl);
     }
 
@@ -309,9 +377,16 @@ router.post("/backfill-coordinates", verifyToken, requireAdmin, async (req, res)
         {
           $or: [
             { googleMapsUrl: { $exists: true, $ne: "" } },
+            { appleMapsUrl: { $exists: true, $ne: "" } },
+            { mapUrl: { $exists: true, $ne: "" } },
             { "proposedValues.googleMapsUrl": { $exists: true, $ne: "" } },
-            { "proposedValues.mapUrl": { $exists: true, $ne: "" } },
             { "proposedValues.appleMapsUrl": { $exists: true, $ne: "" } },
+            { "proposedValues.mapUrl": { $exists: true, $ne: "" } },
+            { "proposedValues.locationUrl": { $exists: true, $ne: "" } },
+            { "proposedValues.mapsLink": { $exists: true, $ne: "" } },
+            { "proposedValues.latitude": { $exists: true, $ne: null } },
+            { "proposedValues.lat": { $exists: true, $ne: null } },
+            { "locationComparison.urlLat": { $exists: true, $ne: null } },
           ],
         },
       ],
@@ -319,28 +394,63 @@ router.post("/backfill-coordinates", verifyToken, requireAdmin, async (req, res)
 
     let updatedCount = 0;
     for (const sub of candidates) {
-      const mapUrl =
+      let mapUrl =
         sub.googleMapsUrl ||
+        sub.appleMapsUrl ||
+        sub.mapUrl ||
         sub.proposedValues?.googleMapsUrl ||
-        sub.proposedValues?.mapUrl ||
         sub.proposedValues?.appleMapsUrl ||
+        sub.proposedValues?.mapUrl ||
+        sub.proposedValues?.locationUrl ||
+        sub.proposedValues?.mapsLink ||
+        sub.proposedValues?.mapLink ||
         "";
 
-      if (!mapUrl) continue;
+      if (!mapUrl && sub.proposedValues && typeof sub.proposedValues === "object") {
+        for (const val of Object.values(sub.proposedValues)) {
+          if (
+            typeof val === "string" &&
+            (val.includes("google.com/maps") ||
+              val.includes("maps.google.") ||
+              val.includes("maps.app.goo.gl") ||
+              val.includes("goo.gl/maps") ||
+              val.includes("maps.apple.com") ||
+              val.includes("apple.co"))
+          ) {
+            mapUrl = val.trim();
+            break;
+          }
+        }
+      }
 
-      let coords = extractCoordinatesFromMapsUrl(mapUrl);
-      if (!coords && (mapUrl.includes("goo.gl") || mapUrl.includes("apple.co"))) {
-        coords = await extractCoordinatesAsync(mapUrl);
+      const isValidNumber = (n) =>
+        n !== null && n !== undefined && n !== "" && !isNaN(Number(n));
+
+      // Check if coordinates exist in proposedValues or locationComparison
+      let coords = null;
+      if (isValidNumber(sub.proposedValues?.latitude) && isValidNumber(sub.proposedValues?.longitude)) {
+        coords = { lat: Number(sub.proposedValues.latitude), lng: Number(sub.proposedValues.longitude) };
+      } else if (isValidNumber(sub.proposedValues?.lat) && isValidNumber(sub.proposedValues?.lng)) {
+        coords = { lat: Number(sub.proposedValues.lat), lng: Number(sub.proposedValues.lng) };
+      } else if (isValidNumber(sub.locationComparison?.urlLat) && isValidNumber(sub.locationComparison?.urlLng)) {
+        coords = { lat: Number(sub.locationComparison.urlLat), lng: Number(sub.locationComparison.urlLng) };
+      } else if (isValidNumber(sub.locationComparison?.submittedLat) && isValidNumber(sub.locationComparison?.submittedLng)) {
+        coords = { lat: Number(sub.locationComparison.submittedLat), lng: Number(sub.locationComparison.submittedLng) };
+      } else if (mapUrl) {
+        coords = extractCoordinatesFromMapsUrl(mapUrl);
+        if (!coords && (mapUrl.includes("goo.gl") || mapUrl.includes("apple.co"))) {
+          coords = await extractCoordinatesAsync(mapUrl);
+        }
       }
 
       let modified = false;
-      if (coords && coords.lat !== null && coords.lng !== null) {
+      if (coords && coords.lat !== null && coords.lng !== null && coords.lat >= -90 && coords.lat <= 90 && coords.lng >= -180 && coords.lng <= 180) {
         sub.latitude = coords.lat;
         sub.longitude = coords.lng;
         if (!sub.proposedValues) sub.proposedValues = {};
         sub.proposedValues.latitude = coords.lat;
         sub.proposedValues.longitude = coords.lng;
-        sub.googleMapsUrl = mapUrl;
+        if (mapUrl) sub.googleMapsUrl = mapUrl;
         sub.locationComparison = {
           submittedLat: coords.lat,
           submittedLng: coords.lng,
@@ -397,14 +507,27 @@ router.get("/:id", verifyToken, requireAdmin, async (req, res) => {
     let isStale = false;
     let changedFields = [];
 
-    const entityLookupId = submission.targetEntityId || submission.appliedPlaceId?._id;
-    if (entityLookupId) {
-      liveEntity = await Place.findOne({
-        $or: [
-          { id: entityLookupId },
-          { _id: entityLookupId.match(/^[0-9a-fA-F]{24}$/) ? entityLookupId : null },
-        ],
-      }).lean();
+    if (submission.appliedPlaceId && typeof submission.appliedPlaceId === "object" && submission.appliedPlaceId.name) {
+      liveEntity = submission.appliedPlaceId;
+    } else {
+      const entityLookupId =
+        submission.targetEntityId ||
+        (submission.appliedPlaceId?._id
+          ? String(submission.appliedPlaceId._id)
+          : submission.appliedPlaceId
+          ? String(submission.appliedPlaceId)
+          : null);
+
+      if (entityLookupId) {
+        const lookupStr = String(entityLookupId).trim();
+        const isOid = mongoose.isValidObjectId(lookupStr);
+        liveEntity = await Place.findOne({
+          $or: [
+            { id: lookupStr },
+            ...(isOid ? [{ _id: lookupStr }] : []),
+          ],
+        }).lean();
+      }
     }
 
     // Determine field-level differences

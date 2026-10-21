@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   Bell,
   CheckCheck,
@@ -33,7 +34,10 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
   const [isTesting, setIsTesting] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isAdmin, setIsAdmin] = useState(() => getAuthUser()?.role === "admin");
+  const [panelStyle, setPanelStyle] = useState({});
   const containerRef = useRef(null);
+  const buttonRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   // Load notifications and permissions on mount
   useEffect(() => {
@@ -92,20 +96,91 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
     };
   }, []);
 
-  // Close dropdown on click outside
+  const updatePosition = useCallback(() => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const isMobile = vw < 768;
+
+    if (isMobile) {
+      const top = Math.max(12, Math.min(rect.bottom + 8, vh - 220));
+      const maxHeight = Math.max(200, vh - top - 16);
+      setPanelStyle({
+        position: "fixed",
+        top: `${top}px`,
+        left: "12px",
+        right: "12px",
+        width: "auto",
+        maxWidth: "calc(100vw - 24px)",
+        maxHeight: `${maxHeight}px`,
+        zIndex: 9999,
+      });
+    } else {
+      const panelWidth = 410;
+      let left = rect.right - panelWidth;
+      // Clamp within viewport with 16px safety margin
+      left = Math.max(16, Math.min(left, vw - panelWidth - 16));
+
+      const spaceBelow = vh - rect.bottom - 16;
+      const spaceAbove = rect.top - 16;
+
+      // Flip above if space below is too small (< 280px) and space above is larger
+      if (spaceBelow < 280 && spaceAbove > spaceBelow) {
+        const maxHeight = Math.min(600, Math.max(200, spaceAbove));
+        setPanelStyle({
+          position: "fixed",
+          bottom: `${vh - rect.top + 8}px`,
+          left: `${left}px`,
+          width: `${panelWidth}px`,
+          maxHeight: `${maxHeight}px`,
+          zIndex: 9999,
+        });
+      } else {
+        const top = Math.max(16, rect.bottom + 8);
+        const maxHeight = Math.min(600, Math.max(200, vh - top - 16));
+        setPanelStyle({
+          position: "fixed",
+          top: `${top}px`,
+          left: `${left}px`,
+          width: `${panelWidth}px`,
+          maxHeight: `${maxHeight}px`,
+          zIndex: 9999,
+        });
+      }
+    }
+  }, []);
+
+  // Update dropdown position and listen for click outside & scroll/resize
   useEffect(() => {
+    if (!isOpen) return;
+    updatePosition();
+
+    const handleScrollOrResize = () => {
+      updatePosition();
+    };
+
+    window.addEventListener("scroll", handleScrollOrResize, { passive: true, capture: true });
+    window.addEventListener("resize", handleScrollOrResize, { passive: true });
+
     const handleClickOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target)
+      ) {
         setIsOpen(false);
       }
     };
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
+    document.addEventListener("mousedown", handleClickOutside);
+
     return () => {
+      window.removeEventListener("scroll", handleScrollOrResize, { capture: true });
+      window.removeEventListener("resize", handleScrollOrResize);
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isOpen, updatePosition]);
 
   const loadNotifications = async (triggerPopups = false) => {
     const data = await fetchAndCheckNotifications({ triggerPopups });
@@ -268,6 +343,7 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
     <div className="relative inline-block" ref={containerRef}>
       {/* Bell Button */}
       <button
+        ref={buttonRef}
         onClick={() => {
           setIsOpen(!isOpen);
           if (!isOpen) loadNotifications(false);
@@ -297,9 +373,11 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
       </button>
 
       {/* Dropdown Panel */}
-      {isOpen && (
+      {isOpen && typeof document !== "undefined" && createPortal(
         <div
-          className="fixed inset-x-2 top-16 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2.5 w-auto md:w-[410px] max-h-[85vh] md:max-h-[600px] flex flex-col bg-slate-900/95 backdrop-blur-xl border border-slate-800/90 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+          ref={dropdownRef}
+          style={panelStyle}
+          className="flex flex-col bg-slate-900/95 backdrop-blur-xl border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         >
           {/* Header */}
           <div className="p-3.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/60">
@@ -400,7 +478,7 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
           )}
 
           {/* Notification List (No external tabs; Notifications ONLY) */}
-          <div className="flex-1 overflow-y-auto divide-y divide-slate-800/40 max-h-[380px] scrollbar-thin">
+          <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-slate-800/40 scrollbar-thin">
             {notifications.length === 0 ? (
               <div className="py-10 px-4 text-center">
                 <div className="w-10 h-10 rounded-full bg-slate-800/80 text-slate-400 mx-auto flex items-center justify-center mb-2.5">
@@ -499,7 +577,8 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
             <span>Fazilnagar Town Alert Center</span>
             <span className="text-slate-500">Auto-synced</span>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

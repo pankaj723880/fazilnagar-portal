@@ -97,6 +97,7 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
   // Detail Modal & Partial Approval
   const [detailData, setDetailData] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [detailError, setDetailError] = useState("");
   const [selectedFieldsToApprove, setSelectedFieldsToApprove] = useState([]);
   const [reviewerComments, setReviewerComments] = useState("");
   const [submittingAction, setSubmittingAction] = useState(false);
@@ -136,6 +137,7 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
   const handleOpenDetail = async (submissionId) => {
     setSelectedSubmissionId(submissionId);
     setLoadingDetail(true);
+    setDetailError("");
     setDetailData(null);
     setReviewerComments("");
     try {
@@ -145,7 +147,8 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
       const changed = res.data.changedFields || Object.keys(res.data.submission?.proposedValues || {});
       setSelectedFieldsToApprove(changed);
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to load submission details.");
+      console.error("Error loading submission details:", err);
+      setDetailError(err.response?.data?.message || "Failed to load submission details.");
     } finally {
       setLoadingDetail(false);
     }
@@ -374,16 +377,48 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
               <tbody className="divide-y divide-slate-100">
                 {submissions.map((sub) => {
                   const locStatus = sub.locationComparison?.status;
-                  const mapUrl =
+                  let mapUrl =
                     sub.googleMapsUrl ||
-                    sub.proposedValues?.googleMapsUrl ||
-                    sub.proposedValues?.mapUrl ||
-                    sub.proposedValues?.appleMapsUrl ||
-                    sub.proposedValues?.locationUrl ||
+                    sub.appleMapsUrl ||
                     sub.mapUrl ||
+                    sub.proposedValues?.googleMapsUrl ||
+                    sub.proposedValues?.appleMapsUrl ||
+                    sub.proposedValues?.mapUrl ||
+                    sub.proposedValues?.locationUrl ||
+                    sub.proposedValues?.mapsLink ||
+                    sub.proposedValues?.mapLink ||
                     "";
-                  const lat = sub.latitude ?? sub.proposedValues?.latitude;
-                  const lng = sub.longitude ?? sub.proposedValues?.longitude;
+
+                  if (!mapUrl && sub.proposedValues && typeof sub.proposedValues === "object") {
+                    for (const val of Object.values(sub.proposedValues)) {
+                      if (
+                        typeof val === "string" &&
+                        (val.includes("google.com/maps") ||
+                          val.includes("maps.google.") ||
+                          val.includes("maps.app.goo.gl") ||
+                          val.includes("goo.gl/maps") ||
+                          val.includes("maps.apple.com") ||
+                          val.includes("apple.co"))
+                      ) {
+                        mapUrl = val.trim();
+                        break;
+                      }
+                    }
+                  }
+
+                  const lat =
+                    sub.latitude ??
+                    sub.proposedValues?.latitude ??
+                    sub.proposedValues?.lat ??
+                    sub.locationComparison?.urlLat ??
+                    sub.locationComparison?.submittedLat;
+
+                  const lng =
+                    sub.longitude ??
+                    sub.proposedValues?.longitude ??
+                    sub.proposedValues?.lng ??
+                    sub.locationComparison?.urlLng ??
+                    sub.locationComparison?.submittedLng;
                   const hasValidCoords =
                     lat !== null &&
                     lat !== undefined &&
@@ -544,6 +579,7 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                 onClick={() => {
                   setSelectedSubmissionId(null);
                   setDetailData(null);
+                  setDetailError("");
                 }}
                 className="text-slate-400 hover:text-white p-1 rounded-lg"
               >
@@ -551,8 +587,24 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
               </button>
             </div>
 
-            {loadingDetail || !detailData ? (
+            {loadingDetail ? (
               <div className="p-16 text-center text-xs text-slate-500">Loading proposal details...</div>
+            ) : detailError ? (
+              <div className="p-16 text-center text-xs space-y-3">
+                <div className="inline-flex p-3 rounded-full bg-red-50 text-red-600 mb-1">
+                  <ShieldAlert className="w-6 h-6" />
+                </div>
+                <p className="font-bold text-red-600">{detailError}</p>
+                <button
+                  type="button"
+                  onClick={() => handleOpenDetail(selectedSubmissionId)}
+                  className="px-3.5 py-1.5 bg-slate-800 text-white hover:bg-slate-700 rounded-lg text-xs font-bold transition cursor-pointer shadow-xs"
+                >
+                  Retry Loading
+                </button>
+              </div>
+            ) : !detailData ? (
+              <div className="p-16 text-center text-xs text-slate-500">No submission details available.</div>
             ) : (
               <div className="p-6 overflow-y-auto flex-1 space-y-6">
                 {/* Stale Warning Banner if live record changed */}
@@ -647,8 +699,16 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                         <span className="text-slate-400 block text-[10px] font-bold">Proposed Coordinates:</span>
                         <div className="font-mono font-bold text-slate-800 text-sm mt-0.5">
                           {(() => {
-                            const lat = detailData.submission.proposedValues?.latitude ?? detailData.submission.latitude;
-                            const lng = detailData.submission.proposedValues?.longitude ?? detailData.submission.longitude;
+                            const lat =
+                              detailData.submission.proposedValues?.latitude ??
+                              detailData.submission.latitude ??
+                              detailData.submission.proposedValues?.lat ??
+                              detailData.submission.locationComparison?.urlLat;
+                            const lng =
+                              detailData.submission.proposedValues?.longitude ??
+                              detailData.submission.longitude ??
+                              detailData.submission.proposedValues?.lng ??
+                              detailData.submission.locationComparison?.urlLng;
                             if (lat !== null && lat !== undefined && !isNaN(Number(lat)) && lng !== null && lng !== undefined && !isNaN(Number(lng))) {
                               return `${lat}, ${lng}`;
                             }
@@ -656,8 +716,16 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                           })()}
                         </div>
                         {(() => {
-                          const lat = detailData.submission.proposedValues?.latitude ?? detailData.submission.latitude;
-                          const lng = detailData.submission.proposedValues?.longitude ?? detailData.submission.longitude;
+                          const lat =
+                            detailData.submission.proposedValues?.latitude ??
+                            detailData.submission.latitude ??
+                            detailData.submission.proposedValues?.lat ??
+                            detailData.submission.locationComparison?.urlLat;
+                          const lng =
+                            detailData.submission.proposedValues?.longitude ??
+                            detailData.submission.longitude ??
+                            detailData.submission.proposedValues?.lng ??
+                            detailData.submission.locationComparison?.urlLng;
                           if (lat !== null && lat !== undefined && !isNaN(Number(lat)) && lng !== null && lng !== undefined && !isNaN(Number(lng))) {
                             return (
                               <a
@@ -678,15 +746,44 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                       <div>
                         <span className="text-slate-400 block text-[10px] font-bold">Submitted Location Map Link (Google &amp; Apple Maps):</span>
                         {(() => {
-                          const mapsLink =
+                          let mapsLink =
                             detailData.submission.googleMapsUrl ||
+                            detailData.submission.appleMapsUrl ||
                             detailData.submission.proposedValues?.googleMapsUrl ||
-                            detailData.submission.proposedValues?.mapUrl ||
                             detailData.submission.proposedValues?.appleMapsUrl ||
+                            detailData.submission.proposedValues?.mapUrl ||
+                            detailData.submission.proposedValues?.locationUrl ||
+                            detailData.submission.proposedValues?.mapsLink ||
                             detailData.submission.mapUrl ||
                             "";
-                          const lat = detailData.submission.proposedValues?.latitude ?? detailData.submission.latitude;
-                          const lng = detailData.submission.proposedValues?.longitude ?? detailData.submission.longitude;
+
+                          if (!mapsLink && detailData.submission.proposedValues && typeof detailData.submission.proposedValues === "object") {
+                            for (const val of Object.values(detailData.submission.proposedValues)) {
+                              if (
+                                typeof val === "string" &&
+                                (val.includes("google.com/maps") ||
+                                  val.includes("maps.google.") ||
+                                  val.includes("maps.app.goo.gl") ||
+                                  val.includes("goo.gl/maps") ||
+                                  val.includes("maps.apple.com") ||
+                                  val.includes("apple.co"))
+                              ) {
+                                mapsLink = val.trim();
+                                break;
+                              }
+                            }
+                          }
+
+                          const lat =
+                            detailData.submission.proposedValues?.latitude ??
+                            detailData.submission.latitude ??
+                            detailData.submission.proposedValues?.lat ??
+                            detailData.submission.locationComparison?.urlLat;
+                          const lng =
+                            detailData.submission.proposedValues?.longitude ??
+                            detailData.submission.longitude ??
+                            detailData.submission.proposedValues?.lng ??
+                            detailData.submission.locationComparison?.urlLng;
                           const hasValidCoords =
                             lat !== null &&
                             lat !== undefined &&

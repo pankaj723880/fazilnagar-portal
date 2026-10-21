@@ -853,5 +853,102 @@ describe("Google Maps URL Handling, Extraction & Form Submission Verification", 
         "Non-location"
       );
     });
+
+    it("39. BUG 1: Backfill and reparse resolves coordinates across all aliases (Patherwa scenario)", async () => {
+      // Create Patherwa submission scenario where link and coordinates are nested in proposedValues
+      const patherwaSub = await ContributionSubmission.create({
+        formId: testForm._id,
+        formSlug: testForm.slug,
+        targetModule: "map",
+        entityType: "general",
+        submissionType: "new_entity",
+        targetEntityName: "Patherwa Community Point",
+        proposedValues: {
+          name: "Patherwa Community Point",
+          googleMapsUrl: "https://www.google.com/maps/place/Patherwa/@26.6872,84.0512,17z",
+          lat: 26.6872,
+          lng: 84.0512,
+        },
+        googleMapsUrl: "",
+        latitude: null,
+        longitude: null,
+        status: "pending",
+        submitterInfo: { name: "Patherwa Resident" },
+      });
+
+      const res = await makeRequest({
+        path: `/api/contributions/${patherwaSub._id}`,
+        method: "GET",
+        token: adminToken,
+      });
+
+      assert.equal(res.status, 200);
+      assert.equal(res.data.submission.latitude, 26.6872);
+      assert.equal(res.data.submission.longitude, 84.0512);
+      assert.equal(res.data.submission.googleMapsUrl, "https://www.google.com/maps/place/Patherwa/@26.6872,84.0512,17z");
+      assert.equal(res.data.submission.locationComparison?.status, "consistent");
+    });
+
+    it("40. BUG 2: GET /api/contributions/:id retrieves previously approved submission with populated appliedPlaceId without 500 error", async () => {
+      // Create an approved submission with appliedPlaceId pointing to an existing Place
+      const approvedSub = await ContributionSubmission.create({
+        formId: testForm._id,
+        formSlug: testForm.slug,
+        targetModule: "map",
+        entityType: "general",
+        submissionType: "correction",
+        targetEntityId: testPlace._id,
+        appliedPlaceId: testPlace._id,
+        targetEntityName: "Approved Place With AppliedPlaceId",
+        proposedValues: {
+          name: "Updated Approved Place Name",
+          address: "Main Market, Fazilnagar",
+        },
+        status: "approved",
+        reviewedBy: null,
+        reviewedAt: new Date(),
+        submitterInfo: { name: "Submitter A" },
+      });
+
+      const res = await makeRequest({
+        path: `/api/contributions/${approvedSub._id}`,
+        method: "GET",
+        token: adminToken,
+      });
+
+      assert.equal(res.status, 200, "Must return HTTP 200 instead of 500 TypeError on appliedPlaceId.match");
+      assert.ok(res.data.submission, "Must return submission object");
+      assert.equal(String(res.data.submission._id), String(approvedSub._id));
+      assert.ok(res.data.liveEntity, "Must return populated liveEntity");
+      assert.equal(res.data.liveEntity.name, testPlace.name);
+    });
+
+    it("41. BUG 2: GET /api/contributions/:id retrieves pending submission and provides side-by-side diff", async () => {
+      const pendingSub = await ContributionSubmission.create({
+        formId: testForm._id,
+        formSlug: testForm.slug,
+        targetModule: "map",
+        entityType: "general",
+        submissionType: "correction",
+        targetEntityId: testPlace._id,
+        targetEntityName: "Pending Place Diff Check",
+        proposedValues: {
+          name: "Different Proposed Name",
+        },
+        status: "pending",
+        submitterInfo: { name: "Submitter B" },
+      });
+
+      const res = await makeRequest({
+        path: `/api/contributions/${pendingSub._id}`,
+        method: "GET",
+        token: adminToken,
+      });
+
+      assert.equal(res.status, 200);
+      assert.ok(res.data.submission);
+      assert.equal(res.data.submission.status, "pending");
+      assert.ok(res.data.liveEntity);
+    });
   });
 });
