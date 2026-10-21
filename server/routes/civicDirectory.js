@@ -67,6 +67,9 @@ router.get("/", async (req, res) => {
     await seedDefaultCivicIfEmpty();
     const { all, includeInactive } = req.query;
     const showAll = all === "true" || includeInactive === "true";
+    if (!showAll) {
+      res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
+    }
 
     const filter = showAll ? {} : { isActive: { $ne: false } };
     let items = [];

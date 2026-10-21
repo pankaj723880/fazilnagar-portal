@@ -139,7 +139,7 @@ export function invalidateHeritageCache() {
 // @access  Public
 router.get("/", async (req, res) => {
   try {
-    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
     if (cachedHeritage && Date.now() - cachedHeritageTime < HERITAGE_CACHE_TTL_MS) {
       return res.status(200).json({ success: true, count: cachedHeritage.length, sites: cachedHeritage });
     }

@@ -128,8 +128,9 @@ router.get("/", async (req, res) => {
         }
       }
 
+      const { readBy, ...cleanNotif } = notif;
       return {
-        ...notif,
+        ...cleanNotif,
         isRead,
       };
     });

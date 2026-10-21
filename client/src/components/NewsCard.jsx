@@ -7,6 +7,8 @@ export default function NewsCard({ news }) {
         src={news.image || news.mediaUrl || "https://images.unsplash.com/photo-1548013146-72479768bada"}
         alt={news.title}
         className="w-full h-40 object-cover"
+        loading="lazy"
+        decoding="async"
         onError={(e) => {
           e.currentTarget.src = "https://images.unsplash.com/photo-1548013146-72479768bada";
         }}

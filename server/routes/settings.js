@@ -154,14 +154,21 @@ async function getOrCreateSettings(bypassCache = false) {
 // @access  Public
 router.get("/", async (req, res) => {
   try {
-    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    res.setHeader("Pragma", "no-cache");
-    res.setHeader("Expires", "0");
     const settings = await getOrCreateSettings();
+    const updatedAtTime = settings.updatedAt ? new Date(settings.updatedAt).getTime() : 0;
+    const etag = `"settings_${updatedAtTime}"`;
+
+    res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
+    res.setHeader("ETag", etag);
+
+    if (req.headers["if-none-match"] === etag) {
+      return res.status(304).end();
+    }
+
     res.status(200).json({
       success: true,
       settings,
-      updatedAt: settings.updatedAt ? new Date(settings.updatedAt).getTime() : Date.now(),
+      updatedAt: updatedAtTime || Date.now(),
     });
   } catch (err) {
     console.error("[Settings] Fetch error:", err);

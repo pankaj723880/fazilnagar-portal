@@ -13,6 +13,7 @@ import profileRoutes from "./routes/profile.js";
 import messagesRoutes from "./routes/messages.js";
 import mongoSanitize from "./middleware/mongoSanitize.js";
 import { initSocket } from "./socket.js";
+import zlib from "node:zlib";
 
 dotenv.config();
 const app = express();
@@ -120,18 +121,84 @@ app.use("/api", (req, res, next) => {
   next();
 });
 
+// Lightweight native gzip/deflate response compression (zero extra dependencies)
+app.use((req, res, next) => {
+  const accept = req.headers["accept-encoding"] || "";
+  const supportsGzip = accept.includes("gzip");
+  const supportsDeflate = accept.includes("deflate");
+
+  if (!supportsGzip && !supportsDeflate) {
+    return next();
+  }
+
+  const originalSend = res.send;
+  res.send = function (body) {
+    if (res.headersSent || !body) {
+      return originalSend.call(this, body);
+    }
+
+    const contentType = (res.getHeader("Content-Type") || "").toString();
+    const isCompressible =
+      contentType.includes("application/json") ||
+      contentType.includes("text/") ||
+      contentType.includes("application/javascript") ||
+      contentType.includes("application/xml");
+
+    if (!isCompressible) {
+      return originalSend.call(this, body);
+    }
+
+    let buffer;
+    if (Buffer.isBuffer(body)) {
+      buffer = body;
+    } else if (typeof body === "string") {
+      buffer = Buffer.from(body);
+    } else {
+      return originalSend.call(this, body);
+    }
+
+    if (buffer.length > 1024) {
+      try {
+        if (supportsGzip) {
+          const compressed = zlib.gzipSync(buffer, { level: 6 });
+          res.setHeader("Content-Encoding", "gzip");
+          res.setHeader("Vary", "Accept-Encoding");
+          res.removeHeader("Content-Length");
+          return originalSend.call(this, compressed);
+        } else if (supportsDeflate) {
+          const compressed = zlib.deflateSync(buffer, { level: 6 });
+          res.setHeader("Content-Encoding", "deflate");
+          res.setHeader("Vary", "Accept-Encoding");
+          res.removeHeader("Content-Length");
+          return originalSend.call(this, compressed);
+        }
+      } catch (_) {
+        return originalSend.call(this, body);
+      }
+    }
+
+    return originalSend.call(this, body);
+  };
+
+  next();
+});
+
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 app.use(mongoSanitize);
 
-// Serve uploaded media files publicly with cross-origin resource policy enabled
+// Serve uploaded media files publicly with cross-origin resource policy enabled and 7-day browser caching
 app.use(
   "/uploads",
   (req, res, next) => {
     res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
     next();
   },
-  express.static(uploadsDir)
+  express.static(uploadsDir, {
+    maxAge: "7d",
+    etag: true,
+    lastModified: true,
+  })
 );
 
 // Root health check endpoint (sanitized to avoid internal host/connection string leakage)

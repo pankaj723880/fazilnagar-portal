@@ -946,6 +946,13 @@ router.get("/media/:id", async (req, res) => {
       resolvedMime = MIME_MAP[ext] || "application/octet-stream";
     }
 
+    const etag = `"${mediaDoc.driveFileId}_${mediaDoc.fileSize || 0}"`;
+    if (req.headers["if-none-match"] === etag) {
+      res.setHeader("ETag", etag);
+      res.setHeader("Cache-Control", "public, max-age=86400, stale-while-revalidate=43200");
+      return res.status(304).end();
+    }
+
     const { drive } = await getAuthenticatedDriveClient();
 
     const rangeHeader = req.headers.range;
@@ -953,6 +960,8 @@ router.get("/media/:id", async (req, res) => {
     if (rangeHeader) {
       driveReqHeaders.Range = rangeHeader;
     }
+
+    res.setHeader("ETag", etag);
 
     const driveStream = await drive.files.get(
       { fileId: mediaDoc.driveFileId, alt: "media" },

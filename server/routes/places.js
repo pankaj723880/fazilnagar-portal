@@ -35,6 +35,7 @@ export function invalidatePlacesCache() {
 // @access  Public
 router.get("/map-entities", async (req, res) => {
   try {
+    res.setHeader("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
     if (cachedMapEntities && Date.now() - cachedMapEntitiesTime < PLACES_CACHE_TTL_MS) {
       return res.status(200).json(cachedMapEntities);
     }
@@ -111,8 +112,11 @@ router.get("/", async (req, res) => {
       !search &&
       sort === "name";
 
-    if (isDefaultQuery && cachedPublicPlaces && Date.now() - cachedPublicPlacesTime < PLACES_CACHE_TTL_MS) {
-      return res.status(200).json(cachedPublicPlaces);
+    if (isDefaultQuery) {
+      res.setHeader("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
+      if (cachedPublicPlaces && Date.now() - cachedPublicPlacesTime < PLACES_CACHE_TTL_MS) {
+        return res.status(200).json(cachedPublicPlaces);
+      }
     }
 
     const conditions = [

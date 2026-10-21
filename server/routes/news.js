@@ -924,10 +924,14 @@ export function invalidateNewsCache() {
 router.get("/", async (req, res) => {
   try {
     const { status, all } = req.query;
-    const isDefaultQuery = !status && !all;
+    const limit = parseInt(req.query.limit, 10);
+    const hasLimit = !isNaN(limit) && limit > 0;
 
-    if (isDefaultQuery && cachedPublicNews && Date.now() - cachedPublicNewsTime < NEWS_CACHE_TTL_MS) {
-      return res.status(200).json(cachedPublicNews);
+    if (isDefaultQuery) {
+      res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
+      if (!hasLimit && cachedPublicNews && Date.now() - cachedPublicNewsTime < NEWS_CACHE_TTL_MS) {
+        return res.status(200).json(cachedPublicNews);
+      }
     }
 
     let query = {};
@@ -943,10 +947,15 @@ router.get("/", async (req, res) => {
       };
     }
 
-    const news = await News.find(query)
+    let newsQuery = News.find(query)
       .populate("author", "name email role")
-      .sort({ isFeatured: -1, publishedAt: -1, createdAt: -1 })
-      .lean();
+      .sort({ isFeatured: -1, publishedAt: -1, createdAt: -1 });
+
+    if (hasLimit) {
+      newsQuery = newsQuery.limit(Math.min(limit, 100));
+    }
+
+    const news = await newsQuery.lean();
 
     const normalizedNews = news.map((item) => {
       const media = formatNewsMedia(item, req);

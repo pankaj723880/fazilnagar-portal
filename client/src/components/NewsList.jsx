@@ -49,6 +49,8 @@ export default function NewsList() {
               src={item.image} 
               alt={item.title} 
               className="w-full h-48 object-cover rounded-xl mb-4" 
+              loading="lazy"
+              decoding="async"
             />
           )}
           <span className="text-xs font-bold uppercase text-red-700 bg-red-50 px-2.5 py-1 rounded-md">

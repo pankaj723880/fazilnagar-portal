@@ -52,11 +52,11 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
       loadNotifications(false);
     }, 800);
 
-    // Poll when tab is visible, pausing background wakeups when hidden
+    // Poll when tab is visible, pausing background wakeups when hidden (45s window; instant check on visibilitychange)
     const interval = setInterval(() => {
       if (typeof document !== "undefined" && document.hidden) return;
       fetchAndCheckNotifications({ triggerPopups: true });
-    }, 20000);
+    }, 45000);
 
     const handleVisibilityChange = () => {
       if (typeof document !== "undefined" && !document.hidden) {

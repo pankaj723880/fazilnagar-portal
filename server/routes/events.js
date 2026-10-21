@@ -92,7 +92,7 @@ router.get("/", async (req, res) => {
       filter.startDate = { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) };
     }
 
-    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
     const events = await Event.find(filter).sort({ startDate: 1, createdAt: -1 }).lean();
 
     if (isDefaultQuery) {

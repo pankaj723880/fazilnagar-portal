@@ -279,7 +279,7 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
           muted={muted}
           playsInline
           webkit-playsinline="true"
-          preload="auto"
+          preload={active ? "auto" : "none"}
           className={`absolute inset-0 w-full h-full object-cover z-10 transition-opacity duration-300 ${
             videoFailed ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}

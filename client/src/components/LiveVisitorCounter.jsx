@@ -54,8 +54,11 @@ export default function LiveVisitorCounter({ compact = false, className = "" }) 
     // 1. Initial heartbeat
     sendHeartbeat();
 
-    // 2. Regular 20-second heartbeat
-    const interval = setInterval(sendHeartbeat, 20000);
+    // 2. Regular 35-second heartbeat when active (safely within backend 45s cutoff)
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      sendHeartbeat();
+    }, 35000);
 
     // 3. Re-sync immediately on tab focus
     const handleVisibilityChange = () => {

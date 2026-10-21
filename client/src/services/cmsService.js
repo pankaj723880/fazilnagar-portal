@@ -584,8 +584,8 @@ function setupLiveListeners() {
   document.addEventListener("visibilitychange", handleVisibility);
   window.addEventListener("focus", handleVisibility);
 
-  // Background version check every 30s when visible; immediate revalidation happens on visibilitychange
-  livePollingInterval = setInterval(checkLiveServerVersion, 30000);
+  // Background version check every 60s when visible; immediate revalidation happens on visibilitychange
+  livePollingInterval = setInterval(checkLiveServerVersion, 60000);
 }
 
 async function checkLiveServerVersion() {
