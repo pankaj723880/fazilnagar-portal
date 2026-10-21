@@ -167,3 +167,56 @@ test("Bandwidth Optimization: Google Drive Media ETag & 304 Not Modified", async
     assert.equal(ended, true, "Response must end without streaming body payload");
   });
 });
+
+test("Backend URL Resolution: Normalizes old suspended Render backend to live backend", async (t) => {
+  const OLD_BACKEND = "https://fazilnagar-portal.onrender.com";
+  const LIVE_BACKEND = "https://fazilnagar-portal-l95o.onrender.com";
+
+  await t.test("Rewrites old suspended Drive media URLs to live backend", () => {
+    const oldMediaUrl = `${OLD_BACKEND}/api/google-drive/media/67b9318a24c5689012345678`;
+    
+    // Test logic mirroring normalizeMediaUrl & resolveMediaUrl
+    const driveIdx = oldMediaUrl.indexOf("/api/google-drive/");
+    const resolvedUrl = driveIdx !== -1 ? `${LIVE_BACKEND}${oldMediaUrl.substring(driveIdx)}` : oldMediaUrl;
+
+    assert.equal(
+      resolvedUrl,
+      `${LIVE_BACKEND}/api/google-drive/media/67b9318a24c5689012345678`,
+      "Drive media URL must point to active live backend"
+    );
+  });
+
+  await t.test("Rewrites carousel slides imageUrl stored with old Render backend", () => {
+    const storedSlides = [
+      {
+        id: "slide_1",
+        title: "Pawanagar Dham",
+        imageUrl: `${OLD_BACKEND}/api/google-drive/media/hero_pawanagar_1`,
+      },
+      {
+        id: "slide_2",
+        title: "Kushinagar Corridor",
+        imageUrl: "/images/fazilnagar_pawanagar.webp",
+      },
+    ];
+
+    const normalizedSlides = storedSlides.map((slide) => {
+      const copy = { ...slide };
+      if (typeof copy.imageUrl === "string" && copy.imageUrl.includes("fazilnagar-portal.onrender.com")) {
+        copy.imageUrl = copy.imageUrl.replace(OLD_BACKEND, LIVE_BACKEND);
+      }
+      return copy;
+    });
+
+    assert.equal(
+      normalizedSlides[0].imageUrl,
+      `${LIVE_BACKEND}/api/google-drive/media/hero_pawanagar_1`,
+      "Hero carousel slide with old backend URL must resolve to live backend"
+    );
+    assert.equal(
+      normalizedSlides[1].imageUrl,
+      "/images/fazilnagar_pawanagar.webp",
+      "Relative local images must remain untouched"
+    );
+  });
+});

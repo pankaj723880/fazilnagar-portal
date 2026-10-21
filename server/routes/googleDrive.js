@@ -20,7 +20,7 @@ const uploadMem = multer({
 
 const EXACT_REDIRECT_URI =
   process.env.GOOGLE_DRIVE_REDIRECT_URI ||
-  "https://fazilnagar-portal.onrender.com/api/google-drive/oauth/callback";
+  "https://fazilnagar-portal-l95o.onrender.com/api/google-drive/oauth/callback";
 
 // Minimum required scope for uploading and managing files created by this app
 const DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file";
@@ -341,7 +341,7 @@ export async function uploadMediaToDrive({
 
   const defaultBase =
     process.env.NODE_ENV === "production"
-      ? "https://fazilnagar-portal.onrender.com"
+      ? "https://fazilnagar-portal-l95o.onrender.com"
       : `http://localhost:${process.env.PORT || 5000}`;
   const backendBase = (process.env.BACKEND_URL || defaultBase).replace(/\/+$/, "");
   mediaDoc.deliveryUrl = `${backendBase}/api/google-drive/media/${mediaDoc._id}`;

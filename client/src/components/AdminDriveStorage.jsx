@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import API from "../api";
 import { getAuthToken } from "../utils/authStorage";
+import { resolveMediaUrl } from "../utils/mediaUtils";
 import {
   HardDrive,
   Upload,
@@ -123,7 +124,7 @@ export default function AdminDriveStorage() {
   };
 
   const handleCopyUrl = (url, id) => {
-    const fullUrl = url.startsWith("http") ? url : `https://fazilnagar-portal.onrender.com${url}`;
+    const fullUrl = resolveMediaUrl(url);
     navigator.clipboard.writeText(fullUrl);
     setCopiedFileId(id);
     showToast("success", "Direct Delivery URL copied to clipboard!");
@@ -343,9 +344,7 @@ export default function AdminDriveStorage() {
             const fileName = file.fileName || file.name || "Media File";
             const fileSize = file.fileSize || file.size || 0;
             const deliveryUrl = file.deliveryUrl || `/api/google-drive/media/${fileId}`;
-            const fullDeliveryUrl = deliveryUrl.startsWith("http")
-              ? deliveryUrl
-              : `https://fazilnagar-portal.onrender.com${deliveryUrl}`;
+            const fullDeliveryUrl = resolveMediaUrl(deliveryUrl);
             const driveWebLink = file.webViewLink || `https://drive.google.com/file/d/${driveFileId}/view`;
 
             return (

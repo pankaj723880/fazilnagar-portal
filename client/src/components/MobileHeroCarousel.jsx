@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, MapPin } from "lucide-react";
+import { resolveMediaUrl } from "../utils/mediaUtils";
 
 /**
  * Mobile 16:9 Hero Carousel for Fazilnagar Town Portal.
@@ -117,7 +118,7 @@ export default function MobileHeroCarousel({
         {/* Carousel Slide Images */}
         {slides.map((slide, idx) => {
           const isCurrent = idx === currentIndex;
-          const imageSrc = slide.src || slide.imageUrl;
+          const imageSrc = resolveMediaUrl(slide.src || slide.imageUrl);
           if (!imageSrc) return null;
 
           return (

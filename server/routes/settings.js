@@ -165,9 +165,24 @@ router.get("/", async (req, res) => {
       return res.status(304).end();
     }
 
+    const targetBackend = (process.env.BACKEND_URL || "https://fazilnagar-portal-l95o.onrender.com").replace(/\/+$/, "");
+    let sanitizedSettings = settings?.toObject ? settings.toObject() : { ...settings };
+    if (sanitizedSettings?.heroSettings?.slides && Array.isArray(sanitizedSettings.heroSettings.slides)) {
+      sanitizedSettings.heroSettings.slides = sanitizedSettings.heroSettings.slides.map((s) => {
+        if (!s) return s;
+        const slide = { ...s };
+        if (typeof slide.imageUrl === "string" && slide.imageUrl.includes("fazilnagar-portal.onrender.com")) {
+          slide.imageUrl = slide.imageUrl
+            .replace("https://fazilnagar-portal.onrender.com", targetBackend)
+            .replace("http://fazilnagar-portal.onrender.com", targetBackend);
+        }
+        return slide;
+      });
+    }
+
     res.status(200).json({
       success: true,
-      settings,
+      settings: sanitizedSettings,
       updatedAt: updatedAtTime || Date.now(),
     });
   } catch (err) {

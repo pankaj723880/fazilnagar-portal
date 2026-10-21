@@ -9,7 +9,7 @@ import { usePageSEO } from "../utils/seo";
 const CommunityPlaceModal = lazy(() => import("../components/CommunityPlaceModal"));
 import MobileHomePortal from "../components/MobileHomePortal";
 import { getAuthUser, clearAuthSession, getAuthToken, isUserAdmin } from "../utils/authStorage";
-import { performLogout } from "../api";
+import { resolveMediaUrl } from "../utils/mediaUtils";
 const StoryVideoPreview = lazy(() => import("../components/StoryVideoPreview"));
 import {
   getSiteSettings,
@@ -356,7 +356,7 @@ export default function TownPortal() {
 
   const dynamicHeroSlides = slidesToUse.map((s, idx) => ({
     id: s._id || idx,
-    src: s.imageUrl,
+    src: resolveMediaUrl(s.imageUrl || s.src),
     title: s.title || "Fazilnagar",
     location: s.subtitle || "Fazilnagar",
     caption: s.caption || "",

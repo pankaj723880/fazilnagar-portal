@@ -19,7 +19,7 @@ export function getOrCreateClientId() {
   }
 }
 
-const RENDER_PROD_API = "https://fazilnagar-portal.onrender.com/api";
+const RENDER_PROD_API = "https://fazilnagar-portal-l95o.onrender.com/api";
 
 const isLocalhost =
   typeof window !== "undefined" &&
@@ -29,7 +29,10 @@ const isLocalhost =
     window.location.hostname.startsWith("10.") ||
     window.location.hostname.endsWith(".local"));
 
-const envApiUrl = import.meta.env.VITE_API_URL?.trim();
+let envApiUrl = import.meta.env.VITE_API_URL?.trim();
+if (envApiUrl && envApiUrl.includes("fazilnagar-portal.onrender.com")) {
+  envApiUrl = envApiUrl.replace("https://fazilnagar-portal.onrender.com", "https://fazilnagar-portal-l95o.onrender.com");
+}
 
 let rawUrl;
 if (envApiUrl) {

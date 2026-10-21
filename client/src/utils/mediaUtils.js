@@ -1,6 +1,7 @@
 import API from "../api";
 
-export const RENDER_PRODUCTION_BACKEND = "https://fazilnagar-portal.onrender.com";
+export const RENDER_PRODUCTION_BACKEND = "https://fazilnagar-portal-l95o.onrender.com";
+export const OLD_SUSPENDED_BACKEND = "https://fazilnagar-portal.onrender.com";
 
 /**
  * Gets the effective reachable backend URL (without trailing /api)
@@ -12,7 +13,11 @@ export function getBackendBase() {
     if (isLocalhost) {
       const configured = API?.defaults?.baseURL;
       if (configured && typeof configured === "string") {
-        return configured.trim().replace(/\/api\/?$/, "");
+        const cleaned = configured.trim().replace(/\/api\/?$/, "");
+        if (cleaned.includes("fazilnagar-portal.onrender.com")) {
+          return RENDER_PRODUCTION_BACKEND;
+        }
+        return cleaned;
       }
       return "http://localhost:5000";
     }
@@ -22,6 +27,9 @@ export function getBackendBase() {
   if (configured && typeof configured === "string") {
     const cleaned = configured.trim().replace(/\/api\/?$/, "");
     if (!cleaned.includes("localhost") && !cleaned.includes("127.0.0.1")) {
+      if (cleaned.includes("fazilnagar-portal.onrender.com")) {
+        return RENDER_PRODUCTION_BACKEND;
+      }
       return cleaned;
     }
   }
@@ -32,7 +40,9 @@ export function getBackendBase() {
  * Resolves a media or avatar URL to a fully-qualified reachable URL.
  * Handles:
  * - relative backend uploads (/uploads/avatars/..., /uploads/messages/...)
+ * - relative Google Drive media (/api/google-drive/media/:id)
  * - blob / data URLs from local previews
+ * - absolute URLs with old suspended backend (fazilnagar-portal.onrender.com) -> rewritten to active backend
  * - absolute URLs (Cloudinary, Google Drive, or production Render backend)
  * - legacy localhost URLs redirecting to production Render backend (only when running on production client)
  */
@@ -62,6 +72,21 @@ export function resolveMediaUrl(url) {
   }
 
   const backendBase = getBackendBase();
+
+  // Rewrite any legacy or suspended backend URL to the active reachable backendBase
+  if (trimmed.includes("fazilnagar-portal.onrender.com")) {
+    const driveIdx = trimmed.indexOf("/api/google-drive/");
+    if (driveIdx !== -1) {
+      return `${backendBase}${trimmed.substring(driveIdx)}`;
+    }
+    const uploadsIdx = trimmed.indexOf("/uploads/");
+    if (uploadsIdx !== -1) {
+      return `${backendBase}${trimmed.substring(uploadsIdx)}`;
+    }
+    return trimmed
+      .replace("https://fazilnagar-portal.onrender.com", backendBase)
+      .replace("http://fazilnagar-portal.onrender.com", backendBase);
+  }
 
   // If already absolute HTTP(S) URL
   if (/^https?:\/\//i.test(trimmed)) {

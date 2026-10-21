@@ -83,7 +83,7 @@ router.post(
         return res.status(400).json({ message: "No photos were received. Please select an image." });
       }
 
-      const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal.onrender.com").replace(/\/+$/, "");
+      const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal-l95o.onrender.com").replace(/\/+$/, "");
 
       const getFileUrl = async (file) => {
         try {

@@ -116,7 +116,7 @@ router.post(
       }
 
       const { title, altText, caption, tags } = req.body;
-      const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal.onrender.com").replace(/\/+$/, "");
+      const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal-l95o.onrender.com").replace(/\/+$/, "");
 
       let finalUrl = `${backendBase}/uploads/media/${file.filename}`;
       let driveFileId = null;

@@ -220,7 +220,7 @@ router.post(
         return res.status(400).json({ message: "No files received." });
       }
 
-      const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal.onrender.com").replace(/\/+$/, "");
+      const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal-l95o.onrender.com").replace(/\/+$/, "");
       const uploadedUrls = [];
 
       for (const file of files) {

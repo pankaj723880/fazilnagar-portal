@@ -8,9 +8,12 @@ const isLocalhost =
 
 const DEFAULT_SOCKET_URL = isLocalhost
   ? "http://localhost:5000"
-  : "https://fazilnagar-portal.onrender.com";
+  : "https://fazilnagar-portal-l95o.onrender.com";
 
-const rawSocketUrl = (import.meta.env.VITE_API_URL || DEFAULT_SOCKET_URL).trim();
+let rawSocketUrl = (import.meta.env.VITE_API_URL || DEFAULT_SOCKET_URL).trim();
+if (rawSocketUrl.includes("fazilnagar-portal.onrender.com")) {
+  rawSocketUrl = rawSocketUrl.replace("https://fazilnagar-portal.onrender.com", "https://fazilnagar-portal-l95o.onrender.com");
+}
 const SOCKET_URL = rawSocketUrl.replace(/\/api\/?$/, "");
 
 let socket = null;

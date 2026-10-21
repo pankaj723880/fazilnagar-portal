@@ -102,10 +102,14 @@ export function normalizeMediaUrl(rawUrl, req) {
     const host = req.get("host") || "localhost:5000";
     hostBase = `${protocol}://${host}`;
   }
-  const effectiveBase = configuredBase || hostBase || "https://fazilnagar-portal.onrender.com";
+  const effectiveBase = configuredBase || hostBase || "https://fazilnagar-portal-l95o.onrender.com";
 
-  // Rewrite legacy hardcoded localhost / loopback URLs to the active reachable backend base
-  if (trimmed.includes("localhost:") || trimmed.includes("127.0.0.1:")) {
+  // Rewrite legacy hardcoded localhost, loopback, or suspended Render URLs to the active reachable backend base
+  if (
+    trimmed.includes("fazilnagar-portal.onrender.com") ||
+    trimmed.includes("localhost:") ||
+    trimmed.includes("127.0.0.1:")
+  ) {
     const uploadsIdx = trimmed.indexOf("/uploads/");
     if (uploadsIdx !== -1) {
       return `${effectiveBase}${trimmed.substring(uploadsIdx)}`;
