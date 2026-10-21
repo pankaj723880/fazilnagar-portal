@@ -61,13 +61,21 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    const syncAdmin = () => setIsAdmin(getAuthUser()?.role === "admin");
-    window.addEventListener("auth-change", syncAdmin);
+    const handleAuthChange = () => {
+      const user = getAuthUser();
+      setIsAdmin(user?.role === "admin");
+      if (!user) {
+        setUnreadCount(0);
+      }
+      loadNotifications(false);
+    };
+    window.addEventListener("auth-change", handleAuthChange);
 
     // Listen for custom notification update events
     const handleUpdate = (e) => {
       if (e.detail) {
-        setUnreadCount(e.detail.unreadCount || 0);
+        const user = getAuthUser();
+        setUnreadCount(user ? (e.detail.unreadCount || 0) : 0);
         if (e.detail.notifications) {
           setNotifications(e.detail.notifications);
         }
@@ -79,7 +87,7 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
       clearTimeout(initialTimer);
       clearInterval(interval);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("auth-change", syncAdmin);
+      window.removeEventListener("auth-change", handleAuthChange);
       window.removeEventListener("fazilnagar-notifications-updated", handleUpdate);
     };
   }, []);
@@ -103,7 +111,8 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
     const data = await fetchAndCheckNotifications({ triggerPopups });
     if (data && data.notifications) {
       setNotifications(data.notifications);
-      setUnreadCount(data.unreadCount || 0);
+      const user = getAuthUser();
+      setUnreadCount(user ? (data.unreadCount || 0) : 0);
     }
   };
 
@@ -159,7 +168,17 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
       setNotifications((prev) =>
         prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
       );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      setUnreadCount((prev) => {
+        const next = Math.max(0, prev - 1);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("fazilnagar-notifications-updated", {
+              detail: { unreadCount: next },
+            })
+          );
+        }
+        return next;
+      });
     } catch (err) {
       console.warn("Failed to mark as read:", err);
     }
@@ -170,6 +189,13 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
       await API.post("/notifications/mark-all-read");
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setUnreadCount(0);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("fazilnagar-notifications-updated", {
+            detail: { unreadCount: 0 },
+          })
+        );
+      }
     } catch (err) {
       console.warn("Failed to mark all as read:", err);
     }
@@ -259,7 +285,7 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
         aria-label="Open notifications"
       >
         <Bell className="w-5 h-5 transition-transform active:scale-90" />
-        {unreadCount > 0 && (
+        {getAuthUser() && unreadCount > 0 && (
           subtleDot ? (
             <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-red-600 ring-2 ring-white animate-pulse" />
           ) : (

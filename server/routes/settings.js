@@ -71,6 +71,16 @@ async function getOrCreateSettings(bypassCache = false) {
       };
       changed = true;
     }
+    if (!settings.liveVisitorCounter || !settings.liveVisitorCounter.mode) {
+      settings.liveVisitorCounter = {
+        mode: "real",
+        simulatedCount: 120,
+        randomVariance: false,
+        varianceMin: 100,
+        varianceMax: 150,
+      };
+      changed = true;
+    }
     if (!settings.heroSettings) {
       settings.heroSettings = {
         animationSpeed: 5000,
@@ -389,6 +399,28 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
           ...(updateData.homepageSections.heritage || {}),
         },
       };
+    }
+
+    if (updateData.liveVisitorCounter && typeof updateData.liveVisitorCounter === "object") {
+      const mode = updateData.liveVisitorCounter.mode === "simulated" ? "simulated" : "real";
+      const simulatedCount = Math.min(1500, Math.max(0, parseInt(updateData.liveVisitorCounter.simulatedCount, 10) || 0));
+      const randomVariance = Boolean(updateData.liveVisitorCounter.randomVariance);
+      let varianceMin = Math.min(1500, Math.max(0, parseInt(updateData.liveVisitorCounter.varianceMin, 10) || 0));
+      let varianceMax = Math.min(1500, Math.max(0, parseInt(updateData.liveVisitorCounter.varianceMax, 10) || 1500));
+      if (varianceMin > varianceMax) {
+        const temp = varianceMin;
+        varianceMin = varianceMax;
+        varianceMax = temp;
+      }
+
+      settings.liveVisitorCounter = {
+        mode,
+        simulatedCount,
+        randomVariance,
+        varianceMin,
+        varianceMax,
+      };
+      settings.markModified("liveVisitorCounter");
     }
 
     await settings.save();

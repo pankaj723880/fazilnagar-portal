@@ -98,6 +98,39 @@ const contributionFormSettingsSchema = new mongoose.Schema({
   hideNavbarAndFooter: { type: Boolean, default: false },
 });
 
+export const liveVisitorCounterSchema = new mongoose.Schema(
+  {
+    mode: {
+      type: String,
+      enum: ["real", "simulated"],
+      default: "real",
+    },
+    simulatedCount: {
+      type: Number,
+      default: 120,
+      min: 0,
+      max: 1500,
+    },
+    randomVariance: {
+      type: Boolean,
+      default: false,
+    },
+    varianceMin: {
+      type: Number,
+      default: 100,
+      min: 0,
+      max: 1500,
+    },
+    varianceMax: {
+      type: Number,
+      default: 150,
+      min: 0,
+      max: 1500,
+    },
+  },
+  { _id: false }
+);
+
 const sectionVisibilitySchema = new mongoose.Schema({
   announcementBanner: { type: Boolean, default: true },
   heroCarousel: { type: Boolean, default: true },
@@ -333,6 +366,17 @@ const siteSettingsSchema = new mongoose.Schema(
       default: () => ({
         themeId: "heritage-terracotta",
         mode: "light",
+      }),
+    },
+    // Live Visitor Counter Settings (Admin-Controlled: Real vs Simulated)
+    liveVisitorCounter: {
+      type: liveVisitorCounterSchema,
+      default: () => ({
+        mode: "real",
+        simulatedCount: 120,
+        randomVariance: false,
+        varianceMin: 100,
+        varianceMax: 150,
       }),
     },
     // Footer configuration

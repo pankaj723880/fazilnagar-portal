@@ -42,6 +42,7 @@ import BackgroundAnimations from "./components/BackgroundAnimations";
 import EditProfileModal from "./components/EditProfileModal";
 import SplashScreen from "./components/SplashScreen";
 import ErrorBoundary from "./components/ErrorBoundary";
+import LiveVisitorCounter from "./components/LiveVisitorCounter";
 const DirectionsModal = lazy(() => import("./components/DirectionsModal"));
 const NotificationCenter = lazy(() => import("./components/NotificationCenter"));
 const GlobalFloatingAndStickyAds = lazy(() =>
@@ -405,6 +406,8 @@ export default function App() {
 
             {/* Auth & Post Actions Bar */}
             <div className="hidden sm:flex items-center gap-2.5 shrink-0">
+              <LiveVisitorCounter compact={false} />
+
               <Suspense fallback={<div className="w-11 h-11 shrink-0" />}>
                 <NotificationCenter />
               </Suspense>
@@ -867,6 +870,9 @@ export default function App() {
               <p className="text-slate-400 text-xs leading-relaxed">
                 An independent, community-operated civic digital directory offering verified local listings, emergency helplines, public utilities, and town news (PIN 274401, Kushinagar, UP).
               </p>
+              <div className="flex items-center gap-3 pt-2">
+                <LiveVisitorCounter compact={false} />
+              </div>
               <div className="flex items-center gap-2 pt-1">
                 <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span className="text-[11px] font-semibold text-emerald-400">Unofficial, Community-Run Resource</span>

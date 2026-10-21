@@ -1,5 +1,41 @@
 # Town Portal & Regional Connectivity Implementation Progress
 
+- **NOTIFICATION BADGE & LIVE VISITOR COUNTER IMPLEMENTATION (COMPLETED & VERIFIED)**
+  - **1. Notification Badge Root Cause & Resolution**:
+    - **Root Cause**: `GET /api/notifications` in `server/routes/notifications.js` previously treated all broadcast notifications without `clientId` in `readBy` as unread for ANY visitor (including new/unauthenticated visitors), generating 10+ unread notifications. Combined with `client/src/components/NotificationCenter.jsx` formatting (`{unreadCount > 9 ? "9+" : unreadCount}`), every fresh visitor saw a hardcoded-looking `9+` badge.
+    - **Fixes**:
+      - `server/routes/notifications.js`: Unauthenticated visitors (`!req.user?.id`) strictly receive `unreadCount: 0`. For authenticated users, unread notifications strictly query the database for recipient matches (`notif.recipient === userIdStr && !notif.isRead`) or broadcast notifications not in `readBy` for that specific user ID.
+      - MongoDB Persistence: Marking as read (`PATCH /api/notifications/:id/read` and `POST /api/notifications/mark-all-read`) atomically updates `readBy` using `$addToSet: { readBy: userIdStr }` and persists to MongoDB.
+      - Client UI: `client/src/components/NotificationCenter.jsx` only displays the badge when a user is authenticated (`getAuthUser()`) AND `unreadCount > 0`. Zero unread renders no badge. Marking as read decrements the count immediately, and `fazilnagar-notifications-updated` custom events synchronize components without duplicate socket listeners.
+  - **2. Live Visitor Presence Counter**:
+    - **Tracking & Multi-Tab Deduplication**: Added `server/models/VisitorSession.js` (with MongoDB TTL index) and `server/routes/visitors.js`. Each browser generates and retains a UUID `visitorId` in `localStorage`, sent with regular 20-second heartbeats (`POST /api/visitors/heartbeat`). Multiple tabs from the same browser/device share the same `visitorId`, deduplicating to 1 visitor.
+    - **Session Expiry**: Sessions expire after 45 seconds of inactivity (`VISITOR_TIMEOUT_MS = 45 * 1000`). Page visibility listeners pause heartbeats when hidden and trigger an immediate heartbeat upon returning.
+    - **Integrity**: Real visitor count is computed purely from active heartbeats—never substituted with registered user counts or arbitrary placeholders.
+  - **3. Admin Modes (Real Live Count & Simulated Count)**:
+    - **Mode A (Real Live Count)**: Public displays actual active heartbeat count.
+    - **Mode B (Simulated Count)**: Configured in **Admin → Live Visitor Counter Settings** (`AdminSettingsCMS.jsx`). Server-side logic (`server/routes/visitors.js`) strictly validates and clamps all parameters (`displayCount`, `minCount`, `maxCount`) between `0` and `1500`.
+    - **Synchronized Figures**: Uses an epoch-based hash slice (`Math.floor(Date.now() / 30000)`) so that all concurrent visitors across the web view the exact same simulated count at any given moment.
+    - **Isolation & Persistence**: Settings persist in MongoDB `SiteSettings` collection under `liveVisitorCounter`. Actual visitor analytics remain tracked and viewable in an isolated card in the admin dashboard.
+  - **4. Changed Files**:
+    - `server/models/SiteSettings.js`
+    - `server/models/VisitorSession.js`
+    - `server/routes/notifications.js`
+    - `server/routes/visitors.js`
+    - `server/routes/settings.js`
+    - `server/server.js`
+    - `server/package.json`
+    - `server/tests/notificationAndVisitorCounter.test.js`
+    - `client/src/components/NotificationCenter.jsx`
+    - `client/src/components/LiveVisitorCounter.jsx`
+    - `client/src/components/AdminSettingsCMS.jsx`
+    - `client/src/utils/notificationService.js`
+    - `client/src/App.jsx`
+    - `client/src/components/MobileHomePortal.jsx`
+  - **5. Verification & Test Results**:
+    - Automated Regression Suite: `server/tests/notificationAndVisitorCounter.test.js` (8/8 tests passed).
+    - Client Build: `npm run build` in `client/` passed with exit code 0 and all 17 static route HTML pages generated.
+    - Manual Verification Note: Live MongoDB Atlas multi-node cluster deployment will automatically enforce the 120s TTL index on `visitor_sessions`.
+
 - **GOOGLE DRIVE CLOUD MEDIA STORAGE `invalid_grant` RESOLUTION & RECONNECT ARCHITECTURE (COMPLETED & VERIFIED)**
   - **Root Cause Analysis**:
     - Querying the production backend (`GET /api/google-drive/status` & `GET /api/google-drive/inspect`) showed:

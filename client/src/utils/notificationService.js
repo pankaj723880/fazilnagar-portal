@@ -3,6 +3,7 @@
  * Manages OS-level desktop laptop popups, mobile push alerts, and in-app notifications.
  */
 import API from "../api";
+import { getAuthUser } from "./authStorage";
 
 const SUBMISSIONS_STORAGE_KEY = "fazilnagar_user_submissions";
 const USER_PHONE_STORAGE_KEY = "fazilnagar_user_phone";
@@ -273,14 +274,16 @@ export async function fetchAndCheckNotifications({ triggerPopups = true } = {}) 
     }
 
     // Broadcast update event ONLY if unreadCount or notifications list actually changed
-    const currentSig = `${data.unreadCount || 0}:${notifications.map((n) => `${n._id}:${n.isRead ? 1 : 0}`).join(",")}`;
+    const user = getAuthUser();
+    const effectiveUnreadCount = user ? (data.unreadCount || 0) : 0;
+    const currentSig = `${effectiveUnreadCount}:${notifications.map((n) => `${n._id}:${n.isRead ? 1 : 0}`).join(",")}`;
     if (currentSig !== lastNotificationSignature) {
       lastNotificationSignature = currentSig;
       if (typeof window !== "undefined") {
         window.dispatchEvent(
           new CustomEvent("fazilnagar-notifications-updated", {
             detail: {
-              unreadCount: data.unreadCount || 0,
+              unreadCount: effectiveUnreadCount,
               notifications,
             },
           })
@@ -288,7 +291,7 @@ export async function fetchAndCheckNotifications({ triggerPopups = true } = {}) 
       }
     }
 
-    return data;
+    return { ...data, unreadCount: effectiveUnreadCount };
   } catch (err) {
     console.warn("[NotificationService] Fetch error:", err.message);
     return { notifications: [], unreadCount: 0 };

@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import NotificationCenter from "./NotificationCenter";
 import ThemeToggle from "./ThemeToggle";
+import LiveVisitorCounter from "./LiveVisitorCounter";
 import MobileHeroCarousel from "./MobileHeroCarousel";
 import ScrollReveal from "./ScrollReveal";
 import { openGoogleMapsDirections } from "../utils/directions";
@@ -511,7 +512,8 @@ export default function MobileHomePortal({
             </p>
           </div>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          <LiveVisitorCounter compact={true} />
           <ThemeToggle compact={true} />
           <NotificationCenter lightMode={true} subtleDot={true} />
           {authUser ? (

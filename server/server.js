@@ -233,6 +233,7 @@ import auditRoutes from "./routes/audit.js";
 import civicDirectoryRoutes from "./routes/civicDirectory.js";
 import formsRoutes from "./routes/forms.js";
 import contributionSubmissionsRoutes from "./routes/contributionSubmissions.js";
+import visitorsRoutes from "./routes/visitors.js";
 import { authLimiter, writeLimiter, searchLimiter } from "./middleware/rateLimiter.js";
 import seedMapEntities from "./config/seedMapEntities.js";
 
@@ -262,6 +263,7 @@ app.use("/api/audit", auditRoutes);
 app.use("/api/civic-directory", civicDirectoryRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/messages", messagesRoutes);
+app.use("/api/visitors", visitorsRoutes);
 
 // Fallback mounts in case client calls without /api prefix
 app.use("/auth", authLimiter, authRoutes);
@@ -283,6 +285,7 @@ app.use("/audit", auditRoutes);
 app.use("/civic-directory", civicDirectoryRoutes);
 app.use("/profile", profileRoutes);
 app.use("/messages", messagesRoutes);
+app.use("/visitors", visitorsRoutes);
 
 // 404 JSON handler for unmapped API routes
 app.all("/api/*", (req, res) => {

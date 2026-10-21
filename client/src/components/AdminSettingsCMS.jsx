@@ -29,6 +29,7 @@ import {
   Link as LinkIcon,
   Palette,
   ExternalLink,
+  Users,
 } from "lucide-react";
 
 export default function AdminSettingsCMS({ onSaveSuccess }) {
@@ -37,8 +38,9 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState({ message: "", type: "success" });
-  const [activeTab, setActiveTab] = useState("general"); // general | announcement | contact | sections | seo | footer
+  const [activeTab, setActiveTab] = useState("general"); // general | visitor-counter | themes | announcement | contact | sections | seo | footer
   const [isDirty, setIsDirty] = useState(false);
+  const [realVisitorStats, setRealVisitorStats] = useState(null);
 
   // Media Picker state
   const [mediaPickerTarget, setMediaPickerTarget] = useState(null); // "logoUrl" | "ogImage"
@@ -59,6 +61,15 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
         setInitialSettings(JSON.parse(JSON.stringify(res.data.settings)));
         setIsDirty(false);
       }
+      try {
+        const token = getAuthToken();
+        const visRes = await API.get("/visitors/settings", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (visRes.data?.success) {
+          setRealVisitorStats(visRes.data.realActiveCount);
+        }
+      } catch (_) {}
     } catch (err) {
       console.warn("Failed to load settings:", err);
       showToast("Failed to load portal configuration.", "error");
@@ -141,6 +152,7 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
 
   const tabs = [
     { id: "general", label: "General Identity", icon: Globe },
+    { id: "visitor-counter", label: "Live Visitor Counter", icon: Users },
     { id: "themes", label: "Theme Gallery", icon: Palette },
     { id: "announcement", label: "Announcement Ticker", icon: Megaphone },
     { id: "contact", label: "Official Contacts", icon: Phone },
@@ -156,7 +168,11 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight truncate font-heading">
-              {activeTab === "themes" ? "Theme Gallery & Visual Identity" : "Site Settings & Controls"}
+              {activeTab === "themes"
+                ? "Theme Gallery & Visual Identity"
+                : activeTab === "visitor-counter"
+                ? "Live Visitor Counter Settings"
+                : "Site Settings & Controls"}
             </h1>
             {activeTab !== "themes" && (
               isDirty ? (
@@ -173,6 +189,8 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
           <p className="text-[11px] text-slate-500 truncate hidden sm:block">
             {activeTab === "themes"
               ? "12 themes with Light/Dark appearance mode. Saved to database and applied across public portal."
+              : activeTab === "visitor-counter"
+              ? "Mode A: Real Active Presence vs Mode B: Simulated Counter (0–1500) with clear admin labeling"
               : "Brand identity, announcement ticker, official helplines, and homepage visibility"}
           </p>
         </div>
@@ -324,6 +342,197 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* SUBTAB: LIVE VISITOR COUNTER SETTINGS */}
+        {activeTab === "visitor-counter" && (
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-5 space-y-5 shadow-2xs">
+            <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                  <Users className="w-4 h-4 text-emerald-600" /> Live Visitor Counter Settings
+                </h2>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Configure whether visitors see the real active presence or an admin-simulated count (0–1500).
+                </p>
+              </div>
+
+              {/* Real Analytics Live Indicator (Completely separate from simulated figures) */}
+              <div className="flex items-center gap-2 self-start sm:self-auto bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5 text-xs">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-slate-500 font-medium">Actual Analytics (Real Visitors):</span>
+                <span className="font-mono font-bold text-slate-900">
+                  {realVisitorStats !== null ? `${realVisitorStats} active` : "Counting..."}
+                </span>
+              </div>
+            </div>
+
+            {/* Mode Selection Grid */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-slate-800">
+                Visitor Counter Mode *
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Mode A: Real Live Count */}
+                <label
+                  className={`relative flex flex-col p-4 rounded-xl border-2 cursor-pointer transition ${
+                    (settings.liveVisitorCounter?.mode || "real") === "real"
+                      ? "border-emerald-600 bg-emerald-50/40 text-emerald-950 shadow-xs"
+                      : "border-slate-200 hover:border-slate-300 bg-white text-slate-700"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-extrabold text-sm flex items-center gap-2">
+                      <span>🟢</span> Mode A: Real Live Count
+                    </span>
+                    <input
+                      type="radio"
+                      name="counterMode"
+                      checked={(settings.liveVisitorCounter?.mode || "real") === "real"}
+                      onChange={() => updateField("liveVisitorCounter.mode", "real")}
+                      className="accent-emerald-600 w-4 h-4 cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                    Displays the genuine, deduplicated active visitor presence on the portal using real-time heartbeats and stale session expiration.
+                  </p>
+                </label>
+
+                {/* Mode B: Simulated Count */}
+                <label
+                  className={`relative flex flex-col p-4 rounded-xl border-2 cursor-pointer transition ${
+                    settings.liveVisitorCounter?.mode === "simulated"
+                      ? "border-amber-600 bg-amber-50/40 text-amber-950 shadow-xs"
+                      : "border-slate-200 hover:border-slate-300 bg-white text-slate-700"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-extrabold text-sm flex items-center gap-2">
+                      <span>⚡</span> Mode B: Simulated Count
+                    </span>
+                    <input
+                      type="radio"
+                      name="counterMode"
+                      checked={settings.liveVisitorCounter?.mode === "simulated"}
+                      onChange={() => updateField("liveVisitorCounter.mode", "simulated")}
+                      className="accent-amber-600 w-4 h-4 cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                    Allows admins to broadcast a shared demonstration number (0–1500) with optional synchronized random variation across all visitors.
+                  </p>
+                </label>
+              </div>
+            </div>
+
+            {/* Clear Warning Banner when Simulated Mode is Active */}
+            {settings.liveVisitorCounter?.mode === "simulated" && (
+              <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 flex items-start gap-3 text-xs leading-relaxed animate-in fade-in duration-150">
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold">⚠️ SIMULATED MODE ACTIVATED</p>
+                  <p className="text-[11px] text-amber-800 mt-0.5">
+                    The public portal visitor counter is currently displaying the simulated figures configured below. Real analytics remain completely separate, unaffected, and unmanipulated.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Simulated Configuration Form Controls */}
+            {settings.liveVisitorCounter?.mode === "simulated" && (
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 space-y-4 animate-in fade-in duration-150">
+                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  Simulated Parameters (Enforced 0–1500 Server-Side)
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[12px] font-bold text-slate-800 mb-1">
+                      Base Public Display Count (0–1500) *
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="1500"
+                      value={settings.liveVisitorCounter?.simulatedCount ?? 120}
+                      onChange={(e) => {
+                        const raw = parseInt(e.target.value, 10);
+                        const val = isNaN(raw) ? 0 : Math.min(1500, Math.max(0, raw));
+                        updateField("liveVisitorCounter.simulatedCount", val);
+                      }}
+                      className="w-full h-[42px] px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white font-mono focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none transition"
+                      required
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Default display number seen by all public visitors when variation is disabled.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col justify-center">
+                    <label className="flex items-center gap-2.5 cursor-pointer pt-2 sm:pt-0">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(settings.liveVisitorCounter?.randomVariance)}
+                        onChange={(e) => updateField("liveVisitorCounter.randomVariance", e.target.checked)}
+                        className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 cursor-pointer"
+                      />
+                      <span className="text-xs font-bold text-slate-800">
+                        Enable Automatic Random Variation
+                      </span>
+                    </label>
+                    <p className="text-[10px] text-slate-500 mt-1 pl-6">
+                      Smoothly varies the display number between minimum and maximum. All visitors see the same synchronized count.
+                    </p>
+                  </div>
+                </div>
+
+                {Boolean(settings.liveVisitorCounter?.randomVariance) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-slate-200/80">
+                    <div>
+                      <label className="block text-[12px] font-bold text-slate-800 mb-1">
+                        Minimum Count (0–1500) *
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="1500"
+                        value={settings.liveVisitorCounter?.varianceMin ?? 100}
+                        onChange={(e) => {
+                          const raw = parseInt(e.target.value, 10);
+                          const val = isNaN(raw) ? 0 : Math.min(1500, Math.max(0, raw));
+                          updateField("liveVisitorCounter.varianceMin", val);
+                        }}
+                        className="w-full h-[42px] px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white font-mono focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none transition"
+                      />
+                      <p className="text-[10px] text-slate-500 mt-1">Lower variation bound.</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-[12px] font-bold text-slate-800 mb-1">
+                        Maximum Count (0–1500) *
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="1500"
+                        value={settings.liveVisitorCounter?.varianceMax ?? 150}
+                        onChange={(e) => {
+                          const raw = parseInt(e.target.value, 10);
+                          const val = isNaN(raw) ? 0 : Math.min(1500, Math.max(0, raw));
+                          updateField("liveVisitorCounter.varianceMax", val);
+                        }}
+                        className="w-full h-[42px] px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white font-mono focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none transition"
+                      />
+                      <p className="text-[10px] text-slate-500 mt-1">Upper variation bound.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 

@@ -101,21 +101,31 @@ router.get("/", async (req, res) => {
       .limit(limit)
       .lean();
 
+    const isAuthenticated = !!(user && user.id);
+    const userIdStr = isAuthenticated ? String(user.id) : null;
+
     let unreadCount = 0;
     const notifications = rawNotifications.map((notif) => {
       const readByList = Array.isArray(notif.readBy) ? notif.readBy : [];
       let isRead = false;
 
-      if (clientId && readByList.includes(clientId)) {
-        isRead = true;
-      } else if (rawDeviceId && readByList.includes(rawDeviceId)) {
-        isRead = true;
-      } else if (notif.recipient && user?.id && String(notif.recipient) === String(user.id) && notif.isRead) {
-        isRead = true;
-      }
+      if (isAuthenticated) {
+        if (readByList.includes(userIdStr)) {
+          isRead = true;
+        } else if (notif.recipient && String(notif.recipient) === userIdStr && notif.isRead) {
+          isRead = true;
+        }
 
-      if (!isRead) {
-        unreadCount++;
+        if (!isRead) {
+          unreadCount++;
+        }
+      } else {
+        // Unauthenticated guests: unread count is strictly 0. Check client/device ID only for per-device styling
+        if (clientId && readByList.includes(clientId)) {
+          isRead = true;
+        } else if (rawDeviceId && readByList.includes(rawDeviceId)) {
+          isRead = true;
+        }
       }
 
       return {
@@ -156,7 +166,8 @@ router.patch("/:id/read", async (req, res) => {
     }
 
     const idsToAdd = [];
-    if (clientId) idsToAdd.push(clientId);
+    if (user?.id) idsToAdd.push(String(user.id));
+    if (clientId && !idsToAdd.includes(clientId)) idsToAdd.push(clientId);
     if (rawDeviceId && !idsToAdd.includes(rawDeviceId)) idsToAdd.push(rawDeviceId);
 
     if (idsToAdd.length > 0) {
@@ -191,7 +202,8 @@ router.post("/mark-all-read", async (req, res) => {
     const rawDeviceId = req.headers["x-client-id"] || req.headers["x-anon-id"] || req.body?.clientId || null;
 
     const idsToAdd = [];
-    if (clientId) idsToAdd.push(clientId);
+    if (user?.id) idsToAdd.push(String(user.id));
+    if (clientId && !idsToAdd.includes(clientId)) idsToAdd.push(clientId);
     if (rawDeviceId && !idsToAdd.includes(rawDeviceId)) idsToAdd.push(rawDeviceId);
 
     if (idsToAdd.length === 0) {
