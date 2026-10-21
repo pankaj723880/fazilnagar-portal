@@ -127,15 +127,11 @@ export default function MobileHeroCarousel({
               className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
                 isCurrent ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
               }`}
-              style={{
-                backgroundImage: `url(${imageSrc})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
             >
               <img
                 src={imageSrc}
                 alt={slide.title || "Fazilnagar"}
+                fetchPriority={idx === 0 ? "high" : "low"}
                 loading={idx === 0 ? "eager" : "lazy"}
                 decoding={idx === 0 ? "sync" : "async"}
                 referrerPolicy="no-referrer"

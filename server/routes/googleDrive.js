@@ -908,6 +908,104 @@ router.options("/media/:id", (req, res) => {
   return res.sendStatus(204);
 });
 
+const DRIVE_MIME_MAP = {
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
+  ".mov": "video/quicktime",
+  ".mkv": "video/x-matroska",
+  ".avi": "video/x-msvideo",
+  ".mp3": "audio/mpeg",
+  ".wav": "audio/wav",
+  ".m4a": "audio/mp4",
+  ".ogg": "audio/ogg",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".gif": "image/gif",
+  ".pdf": "application/pdf",
+  ".zip": "application/zip",
+};
+
+/**
+ * Flexible ETag matcher supporting weak ETags (W/"..."), multiple comma-separated ETags, and wildcards.
+ */
+export function matchesEtag(ifNoneMatch, targetEtag) {
+  if (!ifNoneMatch || !targetEtag) return false;
+  const cleanTarget = targetEtag.replace(/^W\//i, "").replace(/"/g, "").trim();
+  const tokens = ifNoneMatch
+    .split(",")
+    .map((t) => t.trim().replace(/^W\//i, "").replace(/"/g, ""));
+  return tokens.includes("*") || tokens.includes(cleanTarget);
+}
+
+/**
+ * @route   HEAD /api/google-drive/media/:id
+ * @desc    Fast header/metadata inspection for media without downloading stream from Google Drive
+ * @access  Public
+ */
+router.head("/media/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    let mediaDoc = null;
+
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      mediaDoc = await GoogleDriveMedia.findById(id).lean();
+    }
+    if (!mediaDoc) {
+      mediaDoc = await GoogleDriveMedia.findOne({ driveFileId: id }).lean();
+    }
+    if (!mediaDoc && mongoose.Types.ObjectId.isValid(id)) {
+      const msg = await Message.findById(id).lean();
+      if (msg && (msg.driveFileId || msg.storageProvider === "google_drive")) {
+        mediaDoc = {
+          driveFileId: msg.driveFileId,
+          fileName: msg.fileName || "media",
+          mimeType: msg.mimeType,
+          fileSize: msg.fileSize,
+        };
+      }
+    }
+
+    if (!mediaDoc || !mediaDoc.driveFileId) {
+      return res.status(404).end();
+    }
+
+    let resolvedMime = mediaDoc.mimeType;
+    const ext = path.extname(mediaDoc.fileName || "").toLowerCase();
+    if (!resolvedMime || resolvedMime === "application/octet-stream") {
+      resolvedMime = DRIVE_MIME_MAP[ext] || "application/octet-stream";
+    }
+
+    const etag = `"${mediaDoc.driveFileId}_${mediaDoc.fileSize || 0}"`;
+    const origin = req.headers.origin;
+    if (origin) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+    } else {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+    }
+    res.setHeader("Accept-Ranges", "bytes");
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    res.setHeader("Access-Control-Expose-Headers", "Content-Range, Content-Length, Accept-Ranges, Content-Type");
+    res.setHeader("Content-Type", resolvedMime);
+    if (mediaDoc.fileSize) {
+      res.setHeader("Content-Length", mediaDoc.fileSize);
+    }
+    res.setHeader("ETag", etag);
+    res.setHeader("Cache-Control", "public, max-age=2592000, stale-while-revalidate=86400, immutable");
+    res.setHeader("Content-Disposition", `inline; filename="${mediaDoc.fileName || "attachment"}"`);
+
+    if (matchesEtag(req.headers["if-none-match"], etag)) {
+      return res.status(304).end();
+    }
+
+    return res.status(200).end();
+  } catch (_) {
+    return res.status(500).end();
+  }
+});
+
 /**
  * @route   GET /api/google-drive/media/:id
  * @desc    Retrieves and streams media from Google Drive with proper caching and Content-Type.
@@ -944,33 +1042,15 @@ router.get("/media/:id", async (req, res) => {
     // Resolve accurate MIME type based on extension if missing or generic
     let resolvedMime = mediaDoc.mimeType;
     const ext = path.extname(mediaDoc.fileName || "").toLowerCase();
-    const MIME_MAP = {
-      ".mp4": "video/mp4",
-      ".webm": "video/webm",
-      ".mov": "video/quicktime",
-      ".mkv": "video/x-matroska",
-      ".avi": "video/x-msvideo",
-      ".mp3": "audio/mpeg",
-      ".wav": "audio/wav",
-      ".m4a": "audio/mp4",
-      ".ogg": "audio/ogg",
-      ".jpg": "image/jpeg",
-      ".jpeg": "image/jpeg",
-      ".png": "image/png",
-      ".webp": "image/webp",
-      ".gif": "image/gif",
-      ".pdf": "application/pdf",
-      ".zip": "application/zip",
-    };
 
     if (!resolvedMime || resolvedMime === "application/octet-stream") {
-      resolvedMime = MIME_MAP[ext] || "application/octet-stream";
+      resolvedMime = DRIVE_MIME_MAP[ext] || "application/octet-stream";
     }
 
     const etag = `"${mediaDoc.driveFileId}_${mediaDoc.fileSize || 0}"`;
-    if (req.headers["if-none-match"] === etag) {
+    if (matchesEtag(req.headers["if-none-match"], etag)) {
       res.setHeader("ETag", etag);
-      res.setHeader("Cache-Control", "public, max-age=86400, stale-while-revalidate=43200");
+      res.setHeader("Cache-Control", "public, max-age=2592000, stale-while-revalidate=86400, immutable");
       return res.status(304).end();
     }
 
@@ -1047,7 +1127,7 @@ router.get("/media/:id", async (req, res) => {
       }
     }
 
-    res.setHeader("Cache-Control", "public, max-age=86400, stale-while-revalidate=43200");
+    res.setHeader("Cache-Control", "public, max-age=2592000, stale-while-revalidate=86400, immutable");
     res.setHeader("Content-Disposition", `inline; filename="${mediaDoc.fileName || "attachment"}"`);
 
     driveStream.data.on("error", (err) => {

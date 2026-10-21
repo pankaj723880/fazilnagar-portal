@@ -930,10 +930,17 @@ router.get("/", async (req, res) => {
     const { status, all } = req.query;
     const limit = parseInt(req.query.limit, 10);
     const hasLimit = !isNaN(limit) && limit > 0;
+    const isDefaultQuery = !status && !all;
 
     if (isDefaultQuery) {
       res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
       if (!hasLimit && cachedPublicNews && Date.now() - cachedPublicNewsTime < NEWS_CACHE_TTL_MS) {
+        const etag = `"news_${cachedPublicNewsTime}_${cachedPublicNews.length}"`;
+        res.setHeader("ETag", etag);
+        const ifNoneMatch = req.headers["if-none-match"];
+        if (ifNoneMatch && (ifNoneMatch === etag || ifNoneMatch === `W/${etag}`)) {
+          return res.status(304).end();
+        }
         return res.status(200).json(cachedPublicNews);
       }
     }
@@ -952,11 +959,14 @@ router.get("/", async (req, res) => {
     }
 
     let newsQuery = News.find(query)
+      .select("-__v")
       .populate("author", "name email role")
       .sort({ isFeatured: -1, publishedAt: -1, createdAt: -1 });
 
     if (hasLimit) {
       newsQuery = newsQuery.limit(Math.min(limit, 100));
+    } else if (isDefaultQuery) {
+      newsQuery = newsQuery.limit(25);
     }
 
     const news = await newsQuery.lean();
@@ -969,6 +979,12 @@ router.get("/", async (req, res) => {
     if (isDefaultQuery) {
       cachedPublicNews = normalizedNews;
       cachedPublicNewsTime = Date.now();
+      const etag = `"news_${cachedPublicNewsTime}_${normalizedNews.length}"`;
+      res.setHeader("ETag", etag);
+      const ifNoneMatch = req.headers["if-none-match"];
+      if (ifNoneMatch && (ifNoneMatch === etag || ifNoneMatch === `W/${etag}`)) {
+        return res.status(304).end();
+      }
     }
 
     res.status(200).json(normalizedNews);

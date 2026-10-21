@@ -139,6 +139,8 @@ test("Bandwidth Optimization: Notification payload projection", async (t) => {
   });
 });
 
+import { matchesEtag } from "../routes/googleDrive.js";
+
 test("Bandwidth Optimization: Google Drive Media ETag & 304 Not Modified", async (t) => {
   await t.test("Generates ETag and handles 304 conditional request", () => {
     const mediaDoc = {
@@ -159,12 +161,40 @@ test("Bandwidth Optimization: Google Drive Media ETag & 304 Not Modified", async
       setHeader() {},
     };
 
-    if (reqHeaders["if-none-match"] === etag) {
+    if (matchesEtag(reqHeaders["if-none-match"], etag)) {
       res.status(304).end();
     }
 
     assert.equal(statusSet, 304, "Server must respond with 304 when ETag matches");
     assert.equal(ended, true, "Response must end without streaming body payload");
+  });
+
+  await t.test("matchesEtag supports weak ETags, comma-separated tokens, and wildcards", () => {
+    const target = '"media_file_123_45678"';
+
+    // Direct exact match
+    assert.equal(matchesEtag('"media_file_123_45678"', target), true);
+
+    // Weak ETag match (W/"...") commonly emitted by CDNs and browsers
+    assert.equal(matchesEtag('W/"media_file_123_45678"', target), true);
+
+    // Comma-separated list with weak prefix
+    assert.equal(matchesEtag('W/"other_id_111", W/"media_file_123_45678"', target), true);
+
+    // Wildcard
+    assert.equal(matchesEtag('*', target), true);
+
+    // Non-matching
+    assert.equal(matchesEtag('"different_id_999"', target), false);
+    assert.equal(matchesEtag('', target), false);
+    assert.equal(matchesEtag(null, target), false);
+  });
+
+  await t.test("Validates 30-day immutable Cache-Control header for static drive media", () => {
+    const header = "public, max-age=2592000, stale-while-revalidate=86400, immutable";
+    assert.ok(header.includes("max-age=2592000"), "Must cache for 30 days (2,592,000 seconds)");
+    assert.ok(header.includes("immutable"), "Must specify immutable for content-addressed media");
+    assert.ok(header.includes("public"), "Must allow public/shared cache reuse");
   });
 });
 

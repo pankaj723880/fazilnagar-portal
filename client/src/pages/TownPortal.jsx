@@ -650,11 +650,6 @@ export default function TownPortal() {
                   <div
                     key={img.id || idx}
                     className="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-100 z-10"
-                    style={{
-                      backgroundImage: `url(${img.src})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                    }}
                   >
                     <img
                       src={img.src}
@@ -1600,6 +1595,8 @@ export default function TownPortal() {
                         <img
                           src={item.image}
                           alt={item.title}
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       </div>
