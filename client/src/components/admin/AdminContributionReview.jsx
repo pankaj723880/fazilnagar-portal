@@ -51,7 +51,8 @@ function renderDiffValue(fieldName, val) {
     /^maps\.google\.[a-z.]+/i.test(strVal) ||
     /^maps\.app\.goo\.gl\//i.test(strVal) ||
     /^goo\.gl\/maps\//i.test(strVal) ||
-    /^(?:www\.)?maps\.apple\.com/i.test(strVal);
+    /^(?:www\.)?maps\.apple\.com/i.test(strVal) ||
+    /^(?:www\.)?apple\.co\//i.test(strVal);
 
   if (isUrlField || isUrlFormat) {
     const safeUrl = getSafeHttpsUrl(strVal);
@@ -373,6 +374,30 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
               <tbody className="divide-y divide-slate-100">
                 {submissions.map((sub) => {
                   const locStatus = sub.locationComparison?.status;
+                  const mapUrl =
+                    sub.googleMapsUrl ||
+                    sub.proposedValues?.googleMapsUrl ||
+                    sub.proposedValues?.mapUrl ||
+                    sub.proposedValues?.appleMapsUrl ||
+                    sub.proposedValues?.locationUrl ||
+                    sub.mapUrl ||
+                    "";
+                  const lat = sub.latitude ?? sub.proposedValues?.latitude;
+                  const lng = sub.longitude ?? sub.proposedValues?.longitude;
+                  const hasValidCoords =
+                    lat !== null &&
+                    lat !== undefined &&
+                    lat !== "" &&
+                    lng !== null &&
+                    lng !== undefined &&
+                    lng !== "" &&
+                    !isNaN(Number(lat)) &&
+                    !isNaN(Number(lng)) &&
+                    Number(lat) >= -90 &&
+                    Number(lat) <= 90 &&
+                    Number(lng) >= -180 &&
+                    Number(lng) <= 180;
+
                   return (
                     <tr key={sub._id} className="hover:bg-slate-50/80 transition">
                       <td className="py-3 px-4 font-mono font-bold text-slate-800">{sub.referenceId}</td>
@@ -391,23 +416,13 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                         {sub.targetEntityName || sub.proposedValues?.name || "Unnamed"}
                       </td>
                       <td className="py-3 px-4">
-                        {sub.googleMapsUrl ? (
+                        {locStatus === "mismatch" ? (
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            {locStatus === "consistent" ? (
-                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-flex items-center gap-1">
-                                ✓ Verified Pin
-                              </span>
-                            ) : locStatus === "mismatch" ? (
-                              <span className="text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 inline-flex items-center gap-1">
-                                ⚠️ Coord Mismatch
-                              </span>
-                            ) : (
-                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 inline-flex items-center gap-1">
-                                ⚠️ Coordinates unavailable
-                              </span>
-                            )}
+                            <span className="text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 inline-flex items-center gap-1">
+                              ⚠️ Coord Mismatch
+                            </span>
                             {(() => {
-                              const safeUrl = getSafeHttpsUrl(sub.googleMapsUrl);
+                              const safeUrl = getSafeHttpsUrl(mapUrl);
                               if (safeUrl) {
                                 return (
                                   <a
@@ -415,7 +430,58 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={(e) => e.stopPropagation()}
-                                    title="Open submitted Google Maps link"
+                                    title="Open submitted map location in new tab"
+                                    className="p-1 rounded text-blue-600 hover:bg-blue-50 transition inline-flex items-center"
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                  </a>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                        ) : hasValidCoords ? (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-flex items-center gap-1">
+                              ✓ Verified Pin
+                            </span>
+                            {(() => {
+                              const targetLink =
+                                mapUrl ||
+                                `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lng}`)}`;
+                              const safeUrl = getSafeHttpsUrl(targetLink);
+                              if (safeUrl) {
+                                return (
+                                  <a
+                                    href={safeUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    title={mapUrl ? `Open submitted map link: ${mapUrl}` : "Open coordinates on map"}
+                                    className="p-1 rounded text-blue-600 hover:bg-blue-50 transition inline-flex items-center"
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                  </a>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                        ) : mapUrl ? (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 inline-flex items-center gap-1">
+                              ⚠️ Coordinates unavailable
+                            </span>
+                            {(() => {
+                              const safeUrl = getSafeHttpsUrl(mapUrl);
+                              if (safeUrl) {
+                                return (
+                                  <a
+                                    href={safeUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    title={`Open submitted map link: ${mapUrl}`}
                                     className="p-1 rounded text-blue-600 hover:bg-blue-50 transition inline-flex items-center"
                                   >
                                     <ExternalLink className="w-3.5 h-3.5" />
@@ -610,12 +676,31 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                       </div>
 
                       <div>
-                        <span className="text-slate-400 block text-[10px] font-bold">Submitted Google Maps Link:</span>
+                        <span className="text-slate-400 block text-[10px] font-bold">Submitted Location Map Link (Google &amp; Apple Maps):</span>
                         {(() => {
                           const mapsLink =
                             detailData.submission.googleMapsUrl ||
                             detailData.submission.proposedValues?.googleMapsUrl ||
+                            detailData.submission.proposedValues?.mapUrl ||
+                            detailData.submission.proposedValues?.appleMapsUrl ||
+                            detailData.submission.mapUrl ||
                             "";
+                          const lat = detailData.submission.proposedValues?.latitude ?? detailData.submission.latitude;
+                          const lng = detailData.submission.proposedValues?.longitude ?? detailData.submission.longitude;
+                          const hasValidCoords =
+                            lat !== null &&
+                            lat !== undefined &&
+                            lat !== "" &&
+                            lng !== null &&
+                            lng !== undefined &&
+                            lng !== "" &&
+                            !isNaN(Number(lat)) &&
+                            !isNaN(Number(lng)) &&
+                            Number(lat) >= -90 &&
+                            Number(lat) <= 90 &&
+                            Number(lng) >= -180 &&
+                            Number(lng) <= 180;
+
                           if (!mapsLink) {
                             return <span className="text-slate-400 italic text-xs mt-0.5 block">None provided</span>;
                           }
@@ -639,15 +724,15 @@ export default function AdminContributionReview({ onStatsChange = () => {} }) {
                                 </span>
                               )}
                               <div className="mt-1 text-[11px]">
-                                {detailData.submission.locationComparison?.status === "consistent" ? (
-                                  <span className="text-emerald-700 font-bold">✓ Coordinates match Google Maps URL link</span>
+                                {detailData.submission.locationComparison?.status === "consistent" || hasValidCoords ? (
+                                  <span className="text-emerald-700 font-bold">✓ Coordinates verified</span>
                                 ) : detailData.submission.locationComparison?.status === "mismatch" ? (
                                   <span className="text-red-700 font-bold">
                                     ⚠️ {detailData.submission.locationComparison.warningMessage}
                                   </span>
                                 ) : (
                                   <span className="text-amber-700 font-bold">
-                                    ⚠️ {detailData.submission.locationComparison?.warningMessage || "Coordinates unavailable from link. Inspect pin manually on Google Maps"}
+                                    ⚠️ {detailData.submission.locationComparison?.warningMessage || "Coordinates unavailable from link. Inspect pin manually on map."}
                                   </span>
                                 )}
                               </div>

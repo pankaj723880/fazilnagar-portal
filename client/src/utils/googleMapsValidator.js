@@ -18,6 +18,8 @@ export const GOOGLE_MAPS_PATTERNS = [
 export const APPLE_MAPS_PATTERNS = [
   /^https?:\/\/(?:www\.)?maps\.apple\.com(?:\/.*)?$/i,
   /^(?:www\.)?maps\.apple\.com(?:\/.*)?$/i,
+  /^https?:\/\/(?:www\.)?apple\.co\/[a-zA-Z0-9_\-]+/i,
+  /^(?:www\.)?apple\.co\/[a-zA-Z0-9_\-]+/i,
 ];
 
 // All supported map patterns (Google Maps + Apple Maps)
@@ -64,7 +66,8 @@ export function getSafeHttpsUrl(urlStr) {
       /^maps\.google\.[a-z.]+/i.test(trimmed) ||
       /^maps\.app\.goo\.gl\//i.test(trimmed) ||
       /^goo\.gl\/maps\//i.test(trimmed) ||
-      /^(?:www\.)?maps\.apple\.com/i.test(trimmed)
+      /^(?:www\.)?maps\.apple\.com/i.test(trimmed) ||
+      /^(?:www\.)?apple\.co\//i.test(trimmed)
     ) {
       fullUrl = `https://${trimmed}`;
     } else {
@@ -118,10 +121,10 @@ export function extractCoordinatesFromMapsUrl(urlString) {
     if (valid) return valid;
   }
 
-  // 2. Query params ?ll=, ?sll=, ?coordinate=, ?daddr=, ?saddr=, ?near=, ?q=, ?query=, ?destination=
+  // 2. Query params ?ll=, ?sll=, ?coordinate=, ?daddr=, ?saddr=, ?near=, ?center=, ?loc=, ?q=, ?query=, ?destination=
   // Notice: daddr, near, and q only extract if they contain numeric coordinates; text place names are ignored.
   const queryMatch = decoded.match(
-    /[?&](?:ll|sll|coordinate|daddr|saddr|near|address|q|query|destination)=(?:loc:)?(-?\d+(?:\.\d+)?)[,+](-?\d+(?:\.\d+)?)(?:[&#/+]|$)/i
+    /[?&](?:ll|sll|coordinate|daddr|saddr|near|address|center|loc|location|q|query|destination)=(?:loc:)?(-?\d+(?:\.\d+)?)(?:[,+]|\s+)\s*(-?\d+(?:\.\d+)?)(?![0-9.])/i
   );
   if (queryMatch) {
     const valid = validateCoords(queryMatch[1], queryMatch[2]);
@@ -130,7 +133,7 @@ export function extractCoordinatesFromMapsUrl(urlString) {
 
   // 3. Path /place/, /search/, /dir/
   const dirMatch = decoded.match(
-    /(?:place|search|dir)\/(?:.*\/)?(-?\d+(?:\.\d+)?)[,+](-?\d+(?:\.\d+)?)(?:[/?]|#|$)/i
+    /(?:place|search|dir)\/(?:.*\/)?(-?\d+(?:\.\d+)?)(?:[,+]|\s+)\s*(-?\d+(?:\.\d+)?)(?![0-9.])/i
   );
   if (dirMatch) {
     const valid = validateCoords(dirMatch[1], dirMatch[2]);
@@ -138,7 +141,7 @@ export function extractCoordinatesFromMapsUrl(urlString) {
   }
 
   // 4. Path @lat,lng,zoom (viewport camera center fallback)
-  const pathMatch = decoded.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)(?:[,/?z]|$)/);
+  const pathMatch = decoded.match(/@(-?\d+(?:\.\d+)?)(?:[,+]|\s+)\s*(-?\d+(?:\.\d+)?)(?![0-9.])/);
   if (pathMatch) {
     const valid = validateCoords(pathMatch[1], pathMatch[2]);
     if (valid) return valid;
@@ -197,7 +200,8 @@ export function validateGoogleMapsUrl(urlString) {
 
   const isShortened =
     trimmed.includes("maps.app.goo.gl") ||
-    trimmed.includes("goo.gl/maps");
+    trimmed.includes("goo.gl/maps") ||
+    trimmed.includes("apple.co");
 
   const coordinates = extractCoordinatesFromMapsUrl(trimmed);
   const safeUrl = getSafeHttpsUrl(trimmed);

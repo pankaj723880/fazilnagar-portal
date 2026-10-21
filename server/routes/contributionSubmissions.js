@@ -14,6 +14,7 @@ import {
   buildGoogleMapsCoordinateUrl,
   calculateHaversineDistanceKm,
   extractCoordinatesFromMapsUrl,
+  extractCoordinatesAsync,
 } from "../utils/googleMapsValidator.js";
 import { emitPlacesUpdated } from "../socket.js";
 import { uploadMediaToDrive } from "./googleDrive.js";
@@ -22,6 +23,81 @@ import { writeLimiter } from "../middleware/rateLimiter.js";
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+/**
+ * Safely reparses location data on a submission if map link exists but coordinates are missing.
+ * Does NOT fabricate coordinates. Updates MongoDB document if valid coordinates extracted.
+ */
+async function ensureSubmissionLocationParsed(sub) {
+  if (!sub) return sub;
+
+  const mapUrl =
+    sub.googleMapsUrl ||
+    sub.proposedValues?.googleMapsUrl ||
+    sub.proposedValues?.mapUrl ||
+    sub.proposedValues?.appleMapsUrl ||
+    sub.proposedValues?.locationUrl ||
+    sub.mapUrl ||
+    "";
+
+  let needsDbUpdate = false;
+  const updateFields = {};
+
+  if (!sub.googleMapsUrl && mapUrl) {
+    sub.googleMapsUrl = mapUrl;
+    updateFields.googleMapsUrl = mapUrl;
+    needsDbUpdate = true;
+  }
+
+  const hasCoords =
+    sub.latitude !== null &&
+    sub.latitude !== undefined &&
+    !isNaN(Number(sub.latitude)) &&
+    sub.longitude !== null &&
+    sub.longitude !== undefined &&
+    !isNaN(Number(sub.longitude));
+
+  // If coordinates are missing and we have a map URL, attempt safe extraction
+  if (!hasCoords && mapUrl) {
+    let coords = extractCoordinatesFromMapsUrl(mapUrl);
+    if (!coords) {
+      coords = await extractCoordinatesAsync(mapUrl);
+    }
+
+    if (coords && coords.lat !== null && coords.lng !== null) {
+      sub.latitude = coords.lat;
+      sub.longitude = coords.lng;
+      if (!sub.proposedValues) sub.proposedValues = {};
+      sub.proposedValues.latitude = coords.lat;
+      sub.proposedValues.longitude = coords.lng;
+
+      sub.locationComparison = {
+        submittedLat: coords.lat,
+        submittedLng: coords.lng,
+        urlLat: coords.lat,
+        urlLng: coords.lng,
+        distanceKm: 0,
+        status: "consistent",
+        warningMessage: "",
+      };
+
+      updateFields.latitude = coords.lat;
+      updateFields.longitude = coords.lng;
+      updateFields["proposedValues.latitude"] = coords.lat;
+      updateFields["proposedValues.longitude"] = coords.lng;
+      updateFields.locationComparison = sub.locationComparison;
+      needsDbUpdate = true;
+    }
+  }
+
+  if (needsDbUpdate && sub._id) {
+    ContributionSubmission.updateOne({ _id: sub._id }, { $set: updateFields }).catch((e) =>
+      console.warn("Backfill coordinate update warning:", e?.message)
+    );
+  }
+
+  return sub;
+}
 
 // Configure Uploads Directory for Contribution Attachments
 const uploadDir = path.join(__dirname, "../uploads/contributions");
@@ -198,6 +274,8 @@ router.get("/", verifyToken, requireAdmin, async (req, res) => {
       statusCounts.all += sc.count;
     });
 
+    await Promise.all(submissions.map(ensureSubmissionLocationParsed));
+
     res.status(200).json({
       submissions,
       pagination: {
@@ -211,6 +289,88 @@ router.get("/", verifyToken, requireAdmin, async (req, res) => {
   } catch (err) {
     console.error("List Contributions Error:", err);
     res.status(500).json({ message: "Failed to retrieve contribution submissions." });
+  }
+});
+
+// @route   POST /api/contributions/backfill-coordinates
+// @desc    Backfill coordinates for existing submissions with map links but missing coordinates
+// @access  Admin Only
+router.post("/backfill-coordinates", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const candidates = await ContributionSubmission.find({
+      $and: [
+        {
+          $or: [
+            { latitude: null },
+            { latitude: { $exists: false } },
+            { latitude: "" },
+          ],
+        },
+        {
+          $or: [
+            { googleMapsUrl: { $exists: true, $ne: "" } },
+            { "proposedValues.googleMapsUrl": { $exists: true, $ne: "" } },
+            { "proposedValues.mapUrl": { $exists: true, $ne: "" } },
+            { "proposedValues.appleMapsUrl": { $exists: true, $ne: "" } },
+          ],
+        },
+      ],
+    });
+
+    let updatedCount = 0;
+    for (const sub of candidates) {
+      const mapUrl =
+        sub.googleMapsUrl ||
+        sub.proposedValues?.googleMapsUrl ||
+        sub.proposedValues?.mapUrl ||
+        sub.proposedValues?.appleMapsUrl ||
+        "";
+
+      if (!mapUrl) continue;
+
+      let coords = extractCoordinatesFromMapsUrl(mapUrl);
+      if (!coords) {
+        coords = await extractCoordinatesAsync(mapUrl);
+      }
+
+      let modified = false;
+      if (coords && coords.lat !== null && coords.lng !== null) {
+        sub.latitude = coords.lat;
+        sub.longitude = coords.lng;
+        if (!sub.proposedValues) sub.proposedValues = {};
+        sub.proposedValues.latitude = coords.lat;
+        sub.proposedValues.longitude = coords.lng;
+        sub.googleMapsUrl = mapUrl;
+        sub.locationComparison = {
+          submittedLat: coords.lat,
+          submittedLng: coords.lng,
+          urlLat: coords.lat,
+          urlLng: coords.lng,
+          distanceKm: 0,
+          status: "consistent",
+          warningMessage: "",
+        };
+        modified = true;
+        updatedCount++;
+      } else if (!sub.googleMapsUrl && mapUrl) {
+        sub.googleMapsUrl = mapUrl;
+        modified = true;
+      }
+
+      if (modified) {
+        await sub.save();
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Backfilled coordinates for ${updatedCount} submissions.`,
+      totalCandidates: candidates.length,
+      updatedCount,
+    });
+  } catch (err) {
+    console.error("Backfill coordinates error:", err);
+    return res.status(500).json({ message: "Failed to backfill coordinates." });
   }
 });
 
@@ -228,6 +388,8 @@ router.get("/:id", verifyToken, requireAdmin, async (req, res) => {
     if (!submission) {
       return res.status(404).json({ message: "Submission not found." });
     }
+
+    await ensureSubmissionLocationParsed(submission);
 
     // Load current live record if correction or applied
     let liveEntity = null;

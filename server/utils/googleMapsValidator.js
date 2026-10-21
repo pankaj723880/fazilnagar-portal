@@ -21,6 +21,8 @@ export const GOOGLE_MAPS_PATTERNS = [
 export const APPLE_MAPS_PATTERNS = [
   /^https?:\/\/(?:www\.)?maps\.apple\.com(?:\/.*)?$/i,
   /^(?:www\.)?maps\.apple\.com(?:\/.*)?$/i,
+  /^https?:\/\/(?:www\.)?apple\.co\/[a-zA-Z0-9_\-]+/i,
+  /^(?:www\.)?apple\.co\/[a-zA-Z0-9_\-]+/i,
 ];
 
 // All supported map patterns (Google Maps + Apple Maps)
@@ -68,7 +70,8 @@ export function getSafeHttpsUrl(urlStr) {
       /^maps\.google\.[a-z.]+/i.test(trimmed) ||
       /^maps\.app\.goo\.gl\//i.test(trimmed) ||
       /^goo\.gl\/maps\//i.test(trimmed) ||
-      /^(?:www\.)?maps\.apple\.com/i.test(trimmed)
+      /^(?:www\.)?maps\.apple\.com/i.test(trimmed) ||
+      /^(?:www\.)?apple\.co\//i.test(trimmed)
     ) {
       fullUrl = `https://${trimmed}`;
     } else {
@@ -89,10 +92,10 @@ export function getSafeHttpsUrl(urlStr) {
 }
 
 /**
- * Synchronous coordinate extractor supporting recognized Google Maps URL patterns:
+ * Synchronous coordinate extractor supporting recognized Google Maps and Apple Maps URL patterns:
  * 1. Protobuf data coordinates (!3dlat!4dlng)
  * 2. Path coordinates (@lat,lng)
- * 3. Query parameters (?q=lat,lng, ?query=lat,lng, ?ll=lat,lng, ?destination=lat,lng)
+ * 3. Query parameters (?ll=lat,lng, ?sll=lat,lng, ?daddr=lat,lng, ?near=lat,lng, ?q=lat,lng, ?center=lat,lng, etc.)
  * 4. Coordinate paths (/maps/place/lat,lng, /maps/search/lat,lng, /maps/dir/.../lat,lng)
  *
  * Validates latitude [-90, 90] and longitude [-180, 180].
@@ -131,11 +134,11 @@ export function extractCoordinatesFromMapsUrl(urlString) {
     if (valid) return valid;
   }
 
-  // Pattern 2: Query parameters: ?ll=lat,lng, ?sll=lat,lng, ?coordinate=lat,lng, ?daddr=lat,lng, ?near=lat,lng, ?q=lat,lng, ?query=lat,lng, ?destination=lat,lng
-  // Supports comma or space/+ separation, optional loc: prefix
+  // Pattern 2: Query parameters: ?ll=lat,lng, ?sll=lat,lng, ?coordinate=lat,lng, ?daddr=lat,lng, ?near=lat,lng, ?center=lat,lng, ?loc=lat,lng, ?q=lat,lng, ?query=lat,lng, ?destination=lat,lng
+  // Supports comma, plus, or space separation, optional loc: prefix
   // Notice: daddr, near, and q only extract if they contain numeric coordinates; text place names are ignored.
   const queryMatch = decoded.match(
-    /[?&](?:ll|sll|coordinate|daddr|saddr|near|address|q|query|destination)=(?:loc:)?(-?\d+(?:\.\d+)?)[,+](-?\d+(?:\.\d+)?)(?:[&#/+]|$)/i
+    /[?&](?:ll|sll|coordinate|daddr|saddr|near|address|center|loc|location|q|query|destination)=(?:loc:)?(-?\d+(?:\.\d+)?)(?:[,+]|\s+)\s*(-?\d+(?:\.\d+)?)(?![0-9.])/i
   );
   if (queryMatch) {
     const valid = validateCoords(queryMatch[1], queryMatch[2]);
@@ -144,7 +147,7 @@ export function extractCoordinatesFromMapsUrl(urlString) {
 
   // Pattern 3: Specific path routes & places: /maps/place/lat,lng, /maps/search/lat,lng, /maps/dir/.../lat,lng
   const dirMatch = decoded.match(
-    /(?:place|search|dir)\/(?:.*\/)?(-?\d+(?:\.\d+)?)[,+](-?\d+(?:\.\d+)?)(?:[/?]|#|$)/i
+    /(?:place|search|dir)\/(?:.*\/)?(-?\d+(?:\.\d+)?)(?:[,+]|\s+)\s*(-?\d+(?:\.\d+)?)(?![0-9.])/i
   );
   if (dirMatch) {
     const valid = validateCoords(dirMatch[1], dirMatch[2]);
@@ -153,7 +156,7 @@ export function extractCoordinatesFromMapsUrl(urlString) {
 
   // Pattern 4: Camera viewport center: /@lat,lng,zoom (fallback when no specific pin/route coordinates exist)
   // Ensures zoom levels like 15z are not treated as coordinates
-  const pathMatch = decoded.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)(?:[,/?z]|$)/);
+  const pathMatch = decoded.match(/@(-?\d+(?:\.\d+)?)(?:[,+]|\s+)\s*(-?\d+(?:\.\d+)?)(?![0-9.])/);
   if (pathMatch) {
     const valid = validateCoords(pathMatch[1], pathMatch[2]);
     if (valid) return valid;
@@ -163,10 +166,10 @@ export function extractCoordinatesFromMapsUrl(urlString) {
 }
 
 /**
- * Resolves shortened Google Maps links (maps.app.goo.gl or goo.gl/maps) safely with SSRF protections.
+ * Resolves shortened Google Maps and Apple Maps links safely with SSRF protections.
  *
  * Security measures:
- * - Restricts destination to trusted Google Maps domains only.
+ * - Restricts destination to trusted Google Maps and Apple Maps domains only.
  * - Rejects private/local IP destinations (localhost, 127.0.0.1, 10.x, 192.168.x, 169.254.x, ::1).
  * - Enforces max 3 redirects.
  * - 3000ms timeout per request.
@@ -183,9 +186,11 @@ export async function resolveGoogleMapsShortUrl(shortUrl) {
     /^https?:\/\/maps\.app\.goo\.gl\/[a-zA-Z0-9_\-]+/i.test(trimmed) ||
     /^https?:\/\/goo\.gl\/maps\/[a-zA-Z0-9_\-]+/i.test(trimmed) ||
     /^https?:\/\/(?:www\.)?maps\.apple\.com\/[a-zA-Z0-9_\-?=&.]+/i.test(trimmed) ||
+    /^https?:\/\/(?:www\.)?apple\.co\/[a-zA-Z0-9_\-]+/i.test(trimmed) ||
     /^maps\.app\.goo\.gl\/[a-zA-Z0-9_\-]+/i.test(trimmed) ||
     /^goo\.gl\/maps\/[a-zA-Z0-9_\-]+/i.test(trimmed) ||
-    /^maps\.apple\.com\/[a-zA-Z0-9_\-?=&.]+/i.test(trimmed);
+    /^maps\.apple\.com\/[a-zA-Z0-9_\-?=&.]+/i.test(trimmed) ||
+    /^apple\.co\/[a-zA-Z0-9_\-]+/i.test(trimmed);
 
   if (!isShortUrl) return null;
 
@@ -213,7 +218,9 @@ export async function resolveGoogleMapsShortUrl(shortUrl) {
         /^google\.[a-z.]+$/.test(hostname) ||
         /^[a-z0-9-]+\.google\.[a-z.]+$/.test(hostname) ||
         hostname === "maps.apple.com" ||
-        hostname.endsWith(".apple.com");
+        hostname.endsWith(".apple.com") ||
+        hostname === "apple.co" ||
+        hostname.endsWith(".apple.co");
 
       if (!isTrustedMapHost) {
         return null;
@@ -257,6 +264,19 @@ export async function resolveGoogleMapsShortUrl(shortUrl) {
               "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
           },
         });
+
+        // Some hosts return 405 on HEAD, retry once with GET
+        if (response.status === 405) {
+          response = await fetch(currentUrl, {
+            method: "GET",
+            redirect: "manual",
+            signal: controller.signal,
+            headers: {
+              "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            },
+          });
+        }
       } catch {
         clearTimeout(timeoutId);
         return null;
@@ -289,14 +309,15 @@ export const resolveMapShortUrl = resolveGoogleMapsShortUrl;
  * @returns {Promise<{ lat: number, lng: number } | null>}
  */
 export async function extractCoordinatesAsync(urlString) {
+  if (!urlString || typeof urlString !== "string") return null;
   const syncCoords = extractCoordinatesFromMapsUrl(urlString);
   if (syncCoords) return syncCoords;
 
   if (
-    urlString &&
-    (urlString.includes("maps.app.goo.gl") ||
-      urlString.includes("goo.gl/maps") ||
-      urlString.includes("maps.apple.com"))
+    urlString.includes("maps.app.goo.gl") ||
+    urlString.includes("goo.gl/maps") ||
+    urlString.includes("apple.co") ||
+    urlString.includes("goo.gl")
   ) {
     const resolvedUrl = await resolveGoogleMapsShortUrl(urlString);
     if (resolvedUrl) {
@@ -359,7 +380,8 @@ export function validateGoogleMapsUrl(urlString) {
 
   const isShortened =
     trimmed.includes("maps.app.goo.gl") ||
-    trimmed.includes("goo.gl/maps");
+    trimmed.includes("goo.gl/maps") ||
+    trimmed.includes("apple.co");
 
   const coordinates = extractCoordinatesFromMapsUrl(trimmed);
   const safeUrl = getSafeHttpsUrl(trimmed);
@@ -423,7 +445,7 @@ export function compareLocationCoordinates(submittedLat, submittedLng, googleMap
       urlLng: null,
       distanceKm: null,
       status: "invalid_url",
-      warningMessage: urlValidation.error || "Invalid Google Maps link.",
+      warningMessage: urlValidation.error || "Invalid location map link.",
     };
   }
 
@@ -436,7 +458,7 @@ export function compareLocationCoordinates(submittedLat, submittedLng, googleMap
       urlLat: null,
       urlLng: null,
       distanceKm: null,
-      status: urlValidation.isShortened ? "shortened_requires_admin_pin_check" : "shortened_requires_admin_pin_check",
+      status: urlValidation.isShortened ? "shortened_requires_admin_pin_check" : "none",
       warningMessage: "Coordinates unavailable",
     };
   }
@@ -466,7 +488,7 @@ export function compareLocationCoordinates(submittedLat, submittedLng, googleMap
         urlLng,
         distanceKm,
         status: "mismatch",
-        warningMessage: `Coordinate mismatch: Proposed coordinates are ${distanceKm} km away from the coordinates in the submitted Google Maps link. Manual admin pin review required.`,
+        warningMessage: `Coordinate mismatch: Proposed coordinates are ${distanceKm} km away from the coordinates in the submitted map link. Manual admin pin review required.`,
       };
     }
 
@@ -481,26 +503,17 @@ export function compareLocationCoordinates(submittedLat, submittedLng, googleMap
     };
   }
 
-  if (urlValidation.isShortened) {
-    return {
-      submittedLat: numLat,
-      submittedLng: numLng,
-      urlLat: null,
-      urlLng: null,
-      distanceKm: null,
-      status: "shortened_requires_admin_pin_check",
-      warningMessage: "Coordinates unavailable",
-    };
-  }
-
+  // Valid submitted coordinates provided with link that has no embedded coordinates
   return {
     submittedLat: numLat,
     submittedLng: numLng,
     urlLat: null,
     urlLng: null,
     distanceKm: null,
-    status: "shortened_requires_admin_pin_check",
-    warningMessage: "Coordinates unavailable",
+    status: "consistent",
+    warningMessage: urlValidation.isShortened
+      ? "Coordinates verified from submitted input. Short link preserved."
+      : "Coordinates verified from submitted input. Map link preserved.",
   };
 }
 

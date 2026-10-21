@@ -54,7 +54,7 @@ router.post("/extract-coords", async (req, res) => {
     }
 
     let coordinates = validation.coordinates;
-    if (!coordinates && (validation.isShortened || url.includes("maps.apple.com"))) {
+    if (!coordinates) {
       coordinates = await extractCoordinatesAsync(url);
     }
 
@@ -300,9 +300,21 @@ router.post("/public/:slug/submit", writeLimiter, async (req, res) => {
     const hasLng = proposedValues.longitude !== undefined && proposedValues.longitude !== null && proposedValues.longitude !== "";
     let mapsLink =
       proposedValues.googleMapsUrl ||
-      Object.entries(proposedValues).find(([k]) => {
+      proposedValues.mapUrl ||
+      proposedValues.appleMapsUrl ||
+      proposedValues.locationUrl ||
+      Object.entries(proposedValues).find(([k, v]) => {
         const fDef = form.fields.find((f) => f.name === k);
-        return fDef?.type === "googleMapsUrl";
+        return (
+          fDef?.type === "googleMapsUrl" ||
+          (typeof v === "string" &&
+            (v.includes("google.com/maps") ||
+              v.includes("maps.google.") ||
+              v.includes("maps.app.goo.gl") ||
+              v.includes("goo.gl/maps") ||
+              v.includes("maps.apple.com") ||
+              v.includes("apple.co")))
+        );
       })?.[1] ||
       "";
 
@@ -330,7 +342,7 @@ router.post("/public/:slug/submit", writeLimiter, async (req, res) => {
     // Process mapsLink and location verification
     if (mapsLink) {
       let resolvedCoords = extractCoordinatesFromMapsUrl(mapsLink);
-      if (!resolvedCoords && (mapsLink.includes("maps.app.goo.gl") || mapsLink.includes("goo.gl/maps") || mapsLink.includes("maps.apple.com"))) {
+      if (!resolvedCoords) {
         resolvedCoords = await extractCoordinatesAsync(mapsLink);
       }
 

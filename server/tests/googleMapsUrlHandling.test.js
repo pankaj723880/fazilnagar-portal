@@ -624,5 +624,230 @@ describe("Google Maps URL Handling, Extraction & Form Submission Verification", 
       assert.equal(savedDoc.latitude, null, "Must not fabricate coordinates for text search link");
       assert.equal(savedDoc.longitude, null);
     });
+
+    it("33. Extracts coordinates from query parameters with whitespace or parenthesis labels", () => {
+      const withParens = "https://maps.google.com/?q=26.6827,84.0498(Fazilnagar+Hospital)";
+      const coordsParens = extractCoordinatesFromMapsUrl(withParens);
+      assert.ok(coordsParens);
+      assert.equal(coordsParens.lat, 26.6827);
+      assert.equal(coordsParens.lng, 84.0498);
+
+      const appleWhitespace = "https://maps.apple.com/?ll=26.6827,%2084.0498";
+      const coordsApple = extractCoordinatesFromMapsUrl(appleWhitespace);
+      assert.ok(coordsApple);
+      assert.equal(coordsApple.lat, 26.6827);
+      assert.equal(coordsApple.lng, 84.0498);
+    });
+
+    it("34. Validates apple.co short links and upgrades protocol to HTTPS", () => {
+      const appleShort = "apple.co/3xYzFazil";
+      const validated = validateGoogleMapsUrl(appleShort);
+      assert.equal(validated.isValid, true);
+      assert.equal(validated.provider, "apple");
+      assert.equal(validated.isShortened, true);
+
+      const safeUrl = getSafeHttpsUrl(appleShort);
+      assert.equal(safeUrl, "https://apple.co/3xYzFazil");
+    });
+
+    it("35. Targeted backfill endpoint updates existing submissions with map URLs but missing coordinates", async () => {
+      // Create an existing legacy submission with map URL but missing top-level latitude/longitude
+      const legacySub = await ContributionSubmission.create({
+        formId: testForm._id,
+        formSlug: testForm.slug,
+        targetModule: "map",
+        entityType: "hospital",
+        submissionType: "new_entity",
+        targetEntityName: "Legacy Hospital",
+        proposedValues: {
+          name: "Legacy Hospital",
+          googleMapsUrl: "https://maps.apple.com/?ll=26.6811,84.0488",
+        },
+        googleMapsUrl: "",
+        latitude: null,
+        longitude: null,
+        locationComparison: {
+          submittedLat: null,
+          submittedLng: null,
+          urlLat: null,
+          urlLng: null,
+          distanceKm: null,
+          status: "shortened_requires_admin_pin_check",
+          warningMessage: "Coordinates unavailable",
+        },
+        status: "pending",
+        submitterInfo: { name: "Legacy Submitter" },
+      });
+
+      const res = await makeRequest({
+        path: "/api/contributions/backfill-coordinates",
+        method: "POST",
+        token: adminToken,
+      });
+
+      assert.equal(res.status, 200);
+      assert.equal(res.data.success, true);
+      assert.ok(res.data.updatedCount >= 1);
+
+      const updated = await ContributionSubmission.findById(legacySub._id);
+      assert.ok(updated);
+      assert.equal(updated.latitude, 26.6811);
+      assert.equal(updated.longitude, 84.0488);
+      assert.equal(updated.proposedValues.latitude, 26.6811);
+      assert.equal(updated.proposedValues.longitude, 84.0488);
+      assert.equal(updated.googleMapsUrl, "https://maps.apple.com/?ll=26.6811,84.0488");
+      assert.equal(updated.locationComparison.status, "consistent");
+    });
+
+    it("36. GET /api/contributions automatically reparses missing coordinates on existing records", async () => {
+      const existingSub = await ContributionSubmission.create({
+        formId: testForm._id,
+        formSlug: testForm.slug,
+        targetModule: "map",
+        entityType: "general",
+        submissionType: "new_entity",
+        targetEntityName: "Auto Reparse Place",
+        proposedValues: {
+          name: "Auto Reparse Place",
+          googleMapsUrl: "https://www.google.com/maps?q=26.6844,84.0477",
+        },
+        googleMapsUrl: "https://www.google.com/maps?q=26.6844,84.0477",
+        latitude: null,
+        longitude: null,
+        status: "pending",
+        submitterInfo: { name: "Tester" },
+      });
+
+      const res = await makeRequest({
+        path: `/api/contributions?search=Auto%20Reparse%20Place`,
+        method: "GET",
+        token: adminToken,
+      });
+
+      assert.equal(res.status, 200);
+      const match = res.data.submissions.find((s) => String(s._id) === String(existingSub._id));
+      assert.ok(match, "Must find existing submission");
+      assert.equal(match.latitude, 26.6844);
+      assert.equal(match.longitude, 84.0477);
+      assert.equal(match.locationComparison.status, "consistent");
+    });
+
+    it("37. Preserves previously saved valid coordinates when an approval or update occurs without new coordinates", async () => {
+      // Existing place has verified coordinates
+      const initialLat = testPlace.latitude;
+      const initialLng = testPlace.longitude;
+
+      // Submission proposes name change with a text-only search link (no coordinates)
+      const submitRes = await makeRequest({
+        path: `/api/forms/public/${testForm.slug}/submit`,
+        method: "POST",
+        body: {
+          submissionType: "correction",
+          targetEntityId: testPlace._id,
+          submittedData: {
+            name: "Updated Name Only",
+            googleMapsUrl: "https://maps.apple.com/?q=Fazilnagar",
+          },
+          submitterName: "Coordinate Preservation Tester",
+        },
+      });
+
+      assert.equal(submitRes.status, 201);
+      const subId = submitRes.data.submissionId;
+
+      // Admin approves the submission
+      const reviewRes = await makeRequest({
+        path: `/api/contributions/${subId}/review`,
+        method: "PATCH",
+        token: adminToken,
+        body: {
+          action: "approved",
+          approvedFields: ["name"],
+          reviewNotes: "Preserve coordinates on place",
+        },
+      });
+
+      assert.equal(reviewRes.status, 200);
+      const placeAfter = await Place.findById(testPlace._id);
+      assert.equal(placeAfter.latitude, initialLat, "Original coordinates must not be overwritten with null");
+      assert.equal(placeAfter.longitude, initialLng);
+    });
+
+    it("38. Location Check table logic: Verified Pin vs Coordinates unavailable vs Non-location", () => {
+      // Helper replicating the updated AdminContributionReview table rendering logic
+      const computeTableStatus = (sub) => {
+        const mapUrl =
+          sub.googleMapsUrl ||
+          sub.proposedValues?.googleMapsUrl ||
+          sub.proposedValues?.mapUrl ||
+          sub.proposedValues?.appleMapsUrl ||
+          sub.proposedValues?.locationUrl ||
+          sub.mapUrl ||
+          "";
+        const lat = sub.latitude ?? sub.proposedValues?.latitude;
+        const lng = sub.longitude ?? sub.proposedValues?.longitude;
+        const hasValidCoords =
+          lat !== null &&
+          lat !== undefined &&
+          lat !== "" &&
+          lng !== null &&
+          lng !== undefined &&
+          lng !== "" &&
+          !isNaN(Number(lat)) &&
+          !isNaN(Number(lng)) &&
+          Number(lat) >= -90 &&
+          Number(lat) <= 90 &&
+          Number(lng) >= -180 &&
+          Number(lng) <= 180;
+        const locStatus = sub.locationComparison?.status;
+
+        if (locStatus === "mismatch") return "Coord Mismatch";
+        if (hasValidCoords) return "Verified Pin";
+        if (mapUrl) return "Coordinates unavailable";
+        return "Non-location";
+      };
+
+      // Case A: Valid coordinates saved with link -> Verified Pin
+      assert.equal(
+        computeTableStatus({
+          googleMapsUrl: "https://maps.apple.com/?ll=26.6,84.0",
+          latitude: 26.6,
+          longitude: 84.0,
+        }),
+        "Verified Pin"
+      );
+
+      // Case B: Link exists but no coordinates (place search) -> Coordinates unavailable
+      assert.equal(
+        computeTableStatus({
+          googleMapsUrl: "https://maps.apple.com/?q=Fazilnagar",
+          latitude: null,
+          longitude: null,
+        }),
+        "Coordinates unavailable"
+      );
+
+      // Case C: Legacy submission with link inside proposedValues -> Coordinates unavailable (if no coords)
+      assert.equal(
+        computeTableStatus({
+          googleMapsUrl: "",
+          proposedValues: { mapUrl: "https://apple.co/xyz" },
+          latitude: null,
+          longitude: null,
+        }),
+        "Coordinates unavailable"
+      );
+
+      // Case D: Genuinely non-location submission (no link, no coords) -> Non-location
+      assert.equal(
+        computeTableStatus({
+          googleMapsUrl: "",
+          proposedValues: { title: "General Notice" },
+          latitude: null,
+          longitude: null,
+        }),
+        "Non-location"
+      );
+    });
   });
 });
