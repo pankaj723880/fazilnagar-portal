@@ -319,7 +319,7 @@ export async function uploadMediaToDrive({
       mimeType,
       body: Readable.from(buffer),
     },
-    fields: "id, name, mimeType, size, createdTime, modifiedTime, owners",
+    fields: "id, name, mimeType, size, createdTime, modifiedTime, owners, thumbnailLink",
   });
 
   const fileData = driveRes.data;
@@ -335,6 +335,7 @@ export async function uploadMediaToDrive({
     fileSize,
     owner,
     folderId,
+    thumbnailLink: fileData.thumbnailLink || "",
     isTest: !!isTest,
     uploadedBy: user?.id || null,
   });
@@ -977,7 +978,17 @@ router.head("/media/:id", async (req, res) => {
       resolvedMime = DRIVE_MIME_MAP[ext] || "application/octet-stream";
     }
 
-    const etag = `"${mediaDoc.driveFileId}_${mediaDoc.fileSize || 0}"`;
+    const reqWidth = parseInt(req.query.w || req.query.width, 10);
+    const isThumbRequested = Boolean(
+      req.query.thumb === "1" ||
+      req.query.thumb === "true" ||
+      (reqWidth > 0 && reqWidth <= 1200)
+    );
+
+    const etag = isThumbRequested
+      ? `"${mediaDoc.driveFileId}_thumb_${reqWidth || 400}"`
+      : `"${mediaDoc.driveFileId}_${mediaDoc.fileSize || 0}"`;
+
     const origin = req.headers.origin;
     if (origin) {
       res.setHeader("Access-Control-Allow-Origin", origin);
@@ -988,12 +999,12 @@ router.head("/media/:id", async (req, res) => {
     res.setHeader("Accept-Ranges", "bytes");
     res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
     res.setHeader("Access-Control-Expose-Headers", "Content-Range, Content-Length, Accept-Ranges, Content-Type");
-    res.setHeader("Content-Type", resolvedMime);
-    if (mediaDoc.fileSize) {
+    res.setHeader("Content-Type", isThumbRequested ? "image/jpeg" : resolvedMime);
+    if (!isThumbRequested && mediaDoc.fileSize) {
       res.setHeader("Content-Length", mediaDoc.fileSize);
     }
     res.setHeader("ETag", etag);
-    res.setHeader("Cache-Control", "public, max-age=2592000, stale-while-revalidate=86400, immutable");
+    res.setHeader("Cache-Control", "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=86400, immutable");
     res.setHeader("Content-Disposition", `inline; filename="${mediaDoc.fileName || "attachment"}"`);
 
     if (matchesEtag(req.headers["if-none-match"], etag)) {
@@ -1047,14 +1058,68 @@ router.get("/media/:id", async (req, res) => {
       resolvedMime = DRIVE_MIME_MAP[ext] || "application/octet-stream";
     }
 
-    const etag = `"${mediaDoc.driveFileId}_${mediaDoc.fileSize || 0}"`;
+    const reqWidth = parseInt(req.query.w || req.query.width, 10);
+    const isThumbRequested = Boolean(
+      req.query.thumb === "1" ||
+      req.query.thumb === "true" ||
+      (reqWidth > 0 && reqWidth <= 1200)
+    );
+
+    const etag = isThumbRequested
+      ? `"${mediaDoc.driveFileId}_thumb_${reqWidth || 400}"`
+      : `"${mediaDoc.driveFileId}_${mediaDoc.fileSize || 0}"`;
+
     if (matchesEtag(req.headers["if-none-match"], etag)) {
       res.setHeader("ETag", etag);
-      res.setHeader("Cache-Control", "public, max-age=2592000, stale-while-revalidate=86400, immutable");
+      res.setHeader("Cache-Control", "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=86400, immutable");
       return res.status(304).end();
     }
 
-    const { drive } = await getAuthenticatedDriveClient();
+    const { drive, oauth2Client } = await getAuthenticatedDriveClient();
+
+    // High-Efficiency Resized Thumbnail Fast-Path (Google Cloud-Powered Resizing)
+    if (isThumbRequested && (resolvedMime.startsWith("image/") || ext.match(/\.(jpg|jpeg|png|webp)/i))) {
+      try {
+        let thumbUrl = mediaDoc.thumbnailLink;
+        if (!thumbUrl) {
+          const fileMeta = await drive.files.get({
+            fileId: mediaDoc.driveFileId,
+            fields: "thumbnailLink",
+          });
+          thumbUrl = fileMeta.data?.thumbnailLink;
+          if (thumbUrl && mongoose.connection.readyState === 1) {
+            GoogleDriveMedia.updateOne({ _id: mediaDoc._id }, { $set: { thumbnailLink: thumbUrl } }).catch(() => {});
+          }
+        }
+
+        if (thumbUrl) {
+          const targetSize = reqWidth && reqWidth > 0 ? Math.min(reqWidth, 1200) : 400;
+          const customThumbUrl = thumbUrl.replace(/=s\d+.*$/, `=s${targetSize}`);
+
+          const thumbStream = await oauth2Client.request({
+            url: customThumbUrl,
+            responseType: "stream",
+          });
+
+          const origin = req.headers.origin;
+          if (origin) {
+            res.setHeader("Access-Control-Allow-Origin", origin);
+            res.setHeader("Access-Control-Allow-Credentials", "true");
+          } else {
+            res.setHeader("Access-Control-Allow-Origin", "*");
+          }
+          res.setHeader("Accept-Ranges", "bytes");
+          res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+          res.setHeader("Content-Type", "image/jpeg");
+          res.setHeader("ETag", etag);
+          res.setHeader("Cache-Control", "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=86400, immutable");
+          res.setHeader("Content-Disposition", `inline; filename="thumb_${mediaDoc.fileName || "image.jpg"}"`);
+          return thumbStream.data.pipe(res);
+        }
+      } catch (thumbErr) {
+        console.warn("[GoogleDrive] Fast thumbnail stream fallback to full media:", thumbErr.message);
+      }
+    }
 
     const rangeHeader = req.headers.range;
     const driveReqHeaders = {};
@@ -1127,7 +1192,7 @@ router.get("/media/:id", async (req, res) => {
       }
     }
 
-    res.setHeader("Cache-Control", "public, max-age=2592000, stale-while-revalidate=86400, immutable");
+    res.setHeader("Cache-Control", "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=86400, immutable");
     res.setHeader("Content-Disposition", `inline; filename="${mediaDoc.fileName || "attachment"}"`);
 
     driveStream.data.on("error", (err) => {

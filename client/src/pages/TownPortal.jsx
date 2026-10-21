@@ -9,7 +9,7 @@ import { usePageSEO } from "../utils/seo";
 const CommunityPlaceModal = lazy(() => import("../components/CommunityPlaceModal"));
 import MobileHomePortal from "../components/MobileHomePortal";
 import { getAuthUser, clearAuthSession, getAuthToken, isUserAdmin } from "../utils/authStorage";
-import { resolveMediaUrl } from "../utils/mediaUtils";
+import { resolveMediaUrl, getThumbnailUrl } from "../utils/mediaUtils";
 const StoryVideoPreview = lazy(() => import("../components/StoryVideoPreview"));
 import {
   getSiteSettings,
@@ -1587,13 +1587,13 @@ export default function TownPortal() {
                           story={item}
                           className="h-44 w-full"
                           aspectRatio="aspect-auto"
-                          fallbackPoster={item.image || ""}
+                          fallbackPoster={getThumbnailUrl(item.image, 400) || ""}
                         />
                       </Suspense>
                     ) : item.image ? (
                       <div className="h-44 w-full overflow-hidden bg-slate-100 dark:bg-slate-950">
                         <img
-                          src={item.image}
+                          src={getThumbnailUrl(item.image, 400)}
                           alt={item.title}
                           loading="lazy"
                           decoding="async"

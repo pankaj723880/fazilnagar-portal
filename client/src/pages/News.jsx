@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import API from "../api";
 import { usePageSEO } from "../utils/seo";
+import { getThumbnailUrl } from "../utils/mediaUtils";
 import { Newspaper, PlusCircle, Search, Calendar, User, Tag, Sparkles } from "lucide-react";
 import StoryVideoPreview from "../components/StoryVideoPreview";
 import ReporterAudioPlayer from "../components/ReporterAudioPlayer";
@@ -181,13 +182,15 @@ export default function News() {
                     story={article}
                     className="h-48 w-full"
                     aspectRatio="aspect-auto"
-                    fallbackPoster={article.image || ""}
+                    fallbackPoster={getThumbnailUrl(article.image, 400) || ""}
                   />
                 ) : (article.image || article.mediaUrl) ? (
                   <div className="h-48 w-full overflow-hidden bg-slate-100">
                     <img
-                      src={article.image || article.mediaUrl}
+                      src={getThumbnailUrl(article.image || article.mediaUrl, 400)}
                       alt={article.title}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";

@@ -35,6 +35,10 @@ const googleDriveMediaSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    thumbnailLink: {
+      type: String,
+      default: "",
+    },
     isTest: {
       type: Boolean,
       default: false,

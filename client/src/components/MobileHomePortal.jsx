@@ -40,6 +40,7 @@ import MobileHeroCarousel from "./MobileHeroCarousel";
 import ScrollReveal from "./ScrollReveal";
 import { openGoogleMapsDirections } from "../utils/directions";
 import { getAuthUser, isUserAdmin } from "../utils/authStorage";
+import { getThumbnailUrl } from "../utils/mediaUtils";
 import {
   getCivicDirectory,
   getCachedCivicDirectory,
@@ -806,7 +807,7 @@ export default function MobileHomePortal({
               >
                 <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 mb-3">
                   <img
-                    src={place.image}
+                    src={getThumbnailUrl(place.image, 400)}
                     alt={place.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     loading="lazy"

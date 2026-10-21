@@ -4,6 +4,7 @@ import API from "../api";
 import seedPlaces from "../data/places.json";
 import { openGoogleMapsDirections } from "../utils/directions";
 import { usePageSEO } from "../utils/seo";
+import { getThumbnailUrl } from "../utils/mediaUtils";
 const CommunityPlaceModal = lazy(() => import("../components/CommunityPlaceModal"));
 const AdminPlaceEditModal = lazy(() => import("../components/AdminPlaceEditModal"));
 const DirectoryMap = lazy(() => import("../components/DirectoryMap"));
@@ -1050,9 +1051,10 @@ export default function Directory({ user }) {
                   {/* Left: Thumbnail Image with fallback */}
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden shrink-0 bg-slate-100 border border-slate-200/60 relative">
                     <img
-                      src={place.imageUrl || getCategoryFallbackImage(place.category)}
+                      src={getThumbnailUrl(place.imageUrl, 200) || getCategoryFallbackImage(place.category)}
                       alt={place.name}
                       loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = getCategoryFallbackImage(place.category);

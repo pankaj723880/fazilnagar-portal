@@ -1,10 +1,13 @@
 import { Link } from "react-router-dom";
+import { getThumbnailUrl } from "../utils/mediaUtils";
 
 export default function NewsCard({ news }) {
+  const imgSrc = getThumbnailUrl(news?.image || news?.mediaUrl, 400);
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <img
-        src={news.image || news.mediaUrl || "https://images.unsplash.com/photo-1548013146-72479768bada"}
+        src={imgSrc || "https://images.unsplash.com/photo-1548013146-72479768bada"}
         alt={news.title}
         className="w-full h-40 object-cover"
         loading="lazy"

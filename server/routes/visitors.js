@@ -7,8 +7,8 @@ import { invalidateServerSettingsCache } from "./settings.js";
 
 const router = express.Router();
 
-// Active visitor session window (45 seconds). Inactive sessions older than this are expired.
-const VISITOR_TIMEOUT_MS = 45 * 1000;
+// Active visitor session window (90 seconds). Inactive sessions older than this are expired.
+const VISITOR_TIMEOUT_MS = 90 * 1000;
 
 // Shared in-memory active presence map for fast concurrent lookups: visitorId -> lastSeenTimestamp
 const inMemoryActiveVisitors = new Map();

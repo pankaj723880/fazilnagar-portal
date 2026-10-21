@@ -8,6 +8,7 @@ import SiteSettings, {
 } from "../models/SiteSettings.js";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
 import { logAdminAction } from "../models/AuditLog.js";
+import { matchesEtag } from "./googleDrive.js";
 
 const router = express.Router();
 
@@ -220,7 +221,7 @@ router.get("/", async (req, res) => {
     res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
     res.setHeader("ETag", etag);
 
-    if (req.headers["if-none-match"] === etag) {
+    if (matchesEtag(req.headers["if-none-match"], etag)) {
       return res.status(304).end();
     }
 

@@ -324,3 +324,49 @@ test("Backend URL Resolution: Normalizes old suspended Render backend to live ba
     );
   });
 });
+
+test("Bandwidth Optimization: getThumbnailUrl and responsive media formatting", async (t) => {
+  function getThumbnailUrl(url, width = 400) {
+    if (!url || typeof url !== "string") return url;
+    if (url.includes("/api/google-drive/media/")) {
+      const separator = url.includes("?") ? "&" : "?";
+      if (!url.includes("w=") && !url.includes("thumb=")) {
+        return `${url}${separator}w=${width}`;
+      }
+    }
+    return url;
+  }
+
+  await t.test("Appends ?w=400 to Google Drive media URLs for card thumbnails", () => {
+    const original = "https://fazilnagar-portal-l95o.onrender.com/api/google-drive/media/64f0ab1234567890abcdef12";
+    const thumb = getThumbnailUrl(original, 400);
+    assert.equal(thumb, `${original}?w=400`, "Thumbnail width param should be appended");
+  });
+
+  await t.test("Preserves existing query parameters when adding width param", () => {
+    const original = "https://fazilnagar-portal-l95o.onrender.com/api/google-drive/media/64f0ab1234567890abcdef12?token=xyz";
+    const thumb = getThumbnailUrl(original, 400);
+    assert.equal(thumb, `${original}&w=400`, "Ampersand should be used when query string exists");
+  });
+
+  await t.test("Leaves external Unsplash or local relative images untouched", () => {
+    const unsplash = "https://images.unsplash.com/photo-1548013146-72479768bada?w=600";
+    assert.equal(getThumbnailUrl(unsplash, 400), unsplash);
+    const local = "/images/fazilnagar_pawanagar.webp";
+    assert.equal(getThumbnailUrl(local, 400), local);
+  });
+});
+
+test("Bandwidth Optimization: Places and Civic Directory ETag & conditional validation", async (t) => {
+  const { matchesEtag } = await import("../routes/googleDrive.js");
+
+  await t.test("Validates weak and strong ETag matching across entity routes", () => {
+    const etag = '"places_1700000000000_19"';
+    assert.ok(matchesEtag(etag, etag), "Exact match must be true");
+    assert.ok(matchesEtag(`W/${etag}`, etag), "Weak If-None-Match must match strong ETag");
+    assert.ok(matchesEtag(`"other", ${etag}`, etag), "Comma-separated list must match");
+    assert.ok(matchesEtag("*", etag), "Wildcard * must match any ETag");
+    assert.ok(!matchesEtag('"different_etag"', etag), "Different ETag must not match");
+  });
+});
+

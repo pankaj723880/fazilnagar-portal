@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import CivicDirectoryItem from "../models/CivicDirectoryItem.js";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
 import { logAdminAction } from "../models/AuditLog.js";
+import { matchesEtag } from "./googleDrive.js";
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -86,6 +87,18 @@ router.get("/", async (req, res) => {
     if (!isDbHealthy) {
       const fallbackList = readJsonDirectory();
       items = showAll ? fallbackList : fallbackList.filter((i) => i.isActive !== false);
+    }
+
+    if (!showAll) {
+      const maxTime = items.reduce((max, item) => {
+        const t = new Date(item.updatedAt || item.createdAt || 0).getTime();
+        return t > max ? t : max;
+      }, 0);
+      const etag = `"civic_dir_${maxTime}_${items.length}"`;
+      res.setHeader("ETag", etag);
+      if (matchesEtag(req.headers["if-none-match"], etag)) {
+        return res.status(304).end();
+      }
     }
 
     return res.status(200).json({

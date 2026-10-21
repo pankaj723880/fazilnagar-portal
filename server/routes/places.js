@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
 import { buildMapsUrl, normalizeCoordinates } from "../utils/coordinates.js";
 import { emitPlacesUpdated } from "../socket.js";
+import { matchesEtag } from "./googleDrive.js";
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -37,6 +38,11 @@ router.get("/map-entities", async (req, res) => {
   try {
     res.setHeader("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
     if (cachedMapEntities && Date.now() - cachedMapEntitiesTime < PLACES_CACHE_TTL_MS) {
+      const etag = `"map_entities_${cachedMapEntitiesTime}_${cachedMapEntities.data?.length || cachedMapEntities.length || 0}"`;
+      res.setHeader("ETag", etag);
+      if (matchesEtag(req.headers["if-none-match"], etag)) {
+        return res.status(304).end();
+      }
       return res.status(200).json(cachedMapEntities);
     }
 
@@ -58,9 +64,15 @@ router.get("/map-entities", async (req, res) => {
         type: e.entityType || e.category || "village",
         mapsUrl: e.mapsUrl || buildMapsUrl(e.latitude, e.longitude),
       }));
-      cachedMapEntities = mapped;
+      const payload = { success: true, count: mapped.length, data: mapped };
+      cachedMapEntities = payload;
       cachedMapEntitiesTime = Date.now();
-      return res.status(200).json({ success: true, count: mapped.length, data: mapped });
+      const etag = `"map_entities_${cachedMapEntitiesTime}_${mapped.length}"`;
+      res.setHeader("ETag", etag);
+      if (matchesEtag(req.headers["if-none-match"], etag)) {
+        return res.status(304).end();
+      }
+      return res.status(200).json(payload);
     }
 
     // Fallback to static dataset if database is empty or still initializing
@@ -115,6 +127,11 @@ router.get("/", async (req, res) => {
     if (isDefaultQuery) {
       res.setHeader("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
       if (cachedPublicPlaces && Date.now() - cachedPublicPlacesTime < PLACES_CACHE_TTL_MS) {
+        const etag = `"places_${cachedPublicPlacesTime}_${cachedPublicPlaces.length}"`;
+        res.setHeader("ETag", etag);
+        if (matchesEtag(req.headers["if-none-match"], etag)) {
+          return res.status(304).end();
+        }
         return res.status(200).json(cachedPublicPlaces);
       }
     }
@@ -166,6 +183,11 @@ router.get("/", async (req, res) => {
     if (isDefaultQuery) {
       cachedPublicPlaces = places;
       cachedPublicPlacesTime = Date.now();
+      const etag = `"places_${cachedPublicPlacesTime}_${places.length}"`;
+      res.setHeader("ETag", etag);
+      if (matchesEtag(req.headers["if-none-match"], etag)) {
+        return res.status(304).end();
+      }
     }
 
     res.status(200).json(places);

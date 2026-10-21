@@ -137,6 +137,10 @@
   "trailingSlash": false,
   "rewrites": [
     {
+      "source": "/api/google-drive/media/:id*",
+      "destination": "https://fazilnagar-portal-l95o.onrender.com/api/google-drive/media/:id*"
+    },
+    {
       "source": "/google4f0808f0811c4245.html",
       "destination": "/google4f0808f0811c4245.html"
     },

@@ -56,6 +56,18 @@ export function resolveMediaUrl(url) {
     return trimmed;
   }
 
+  // Local frontend static assets (served by Vercel Edge CDN, never route through Render)
+  if (
+    trimmed.startsWith("/images/") ||
+    trimmed.startsWith("/icons/") ||
+    trimmed.startsWith("/assets/") ||
+    trimmed.startsWith("/hero/") ||
+    trimmed === "/favicon.ico" ||
+    trimmed.startsWith("/logo")
+  ) {
+    return trimmed;
+  }
+
   const isLocalClient =
     typeof window !== "undefined" &&
     (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
@@ -223,4 +235,18 @@ export function resolveStoryMedia(story) {
     fileName,
     fileSize,
   };
+}
+
+/**
+ * Transforms an image URL to request a lightweight thumbnail (e.g. ?w=400)
+ * when backed by the Google Drive media proxy, avoiding full 5MB original downloads for small cards.
+ */
+export function getThumbnailUrl(url, width = 400) {
+  if (!url || typeof url !== "string") return "";
+  const resolved = resolveMediaUrl(url);
+  if (resolved.includes("/api/google-drive/media/")) {
+    const separator = resolved.includes("?") ? "&" : "?";
+    return `${resolved}${separator}w=${width}`;
+  }
+  return resolved;
 }
