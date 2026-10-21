@@ -41,31 +41,62 @@ export async function getRealActiveVisitorCount() {
 }
 
 /**
+ * Checks if the given date falls into nighttime (11:30 PM to 6:59:59 AM local time).
+ * Correctly handles midnight crossover.
+ */
+export function isNightTime(date = new Date()) {
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const totalMinutes = hours * 60 + minutes;
+  return totalMinutes >= 1410 || totalMinutes < 420;
+}
+
+/**
+ * Clamps simulated night count to strictly between 1 and 9 (never 10+).
+ */
+export function clampNightCount(count) {
+  const num = parseInt(count, 10);
+  if (isNaN(num) || num < 1) return 1;
+  if (num >= 1 && num <= 9) return num;
+  return ((num - 1) % 9) + 1;
+}
+
+/**
  * Deterministically computes shared public simulated visitor count based on admin configuration.
  * When randomVariance is true, uses a synchronized 30-second epoch window so ALL visitors see the
  * EXACT same simulated figure at any moment in time.
  * Enforces 0–1500 bounds strictly.
+ * When options.isNight is true (or options.checkNight with date), clamps between 1 and 9.
  */
-export function calculateSimulatedCount(config = {}) {
+export function calculateSimulatedCount(config = {}, options = {}) {
   let base = Math.min(1500, Math.max(0, parseInt(config.simulatedCount, 10) || 0));
-  if (!config.randomVariance) {
-    return base;
+  let count = base;
+
+  if (config.randomVariance) {
+    let min = Math.min(1500, Math.max(0, parseInt(config.varianceMin, 10) || 0));
+    let max = Math.min(1500, Math.max(0, parseInt(config.varianceMax, 10) || 1500));
+    if (min > max) {
+      const temp = min;
+      min = max;
+      max = temp;
+    }
+    if (min === max) {
+      count = min;
+    } else {
+      // Synchronized 30-second epoch ensures identical pseudo-random number for all visitors
+      const timeSlice = Math.floor(Date.now() / 30000);
+      const hash = Math.abs(Math.sin(timeSlice * 7919 + 1013)) * 10000 % 1;
+      count = Math.round(min + hash * (max - min));
+    }
   }
 
-  let min = Math.min(1500, Math.max(0, parseInt(config.varianceMin, 10) || 0));
-  let max = Math.min(1500, Math.max(0, parseInt(config.varianceMax, 10) || 1500));
-  if (min > max) {
-    const temp = min;
-    min = max;
-    max = temp;
-  }
-  if (min === max) return min;
+  const bounded = Math.min(1500, Math.max(0, count));
 
-  // Synchronized 30-second epoch ensures identical pseudo-random number for all visitors
-  const timeSlice = Math.floor(Date.now() / 30000);
-  const hash = Math.abs(Math.sin(timeSlice * 7919 + 1013)) * 10000 % 1;
-  const count = Math.round(min + hash * (max - min));
-  return Math.min(1500, Math.max(0, count));
+  if (options.isNight || (options.checkNight && isNightTime(options.now || new Date()))) {
+    return clampNightCount(bounded);
+  }
+
+  return bounded;
 }
 
 /**

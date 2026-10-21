@@ -799,6 +799,7 @@ export default function Directory({ user }) {
                 <button
                   key={cat.id}
                   type="button"
+                  aria-pressed={isSelected}
                   onClick={() => handleCategorySelect(cat.id)}
                   className={`px-3 py-1.5 rounded-full whitespace-nowrap transition flex items-center gap-1.5 text-xs font-semibold shrink-0 cursor-pointer ${
                     isSelected
@@ -816,6 +817,7 @@ export default function Directory({ user }) {
             <div className="relative shrink-0" ref={moreMenuRef}>
               <button
                 type="button"
+                aria-pressed={isMoreCategorySelected}
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowMoreMenu((prev) => !prev);
@@ -838,10 +840,12 @@ export default function Directory({ user }) {
                     <button
                       key={item.id}
                       type="button"
+                      role="option"
+                      aria-selected={selectedCategory === item.id}
                       onClick={() => handleCategorySelect(item.id)}
                       className={`w-full px-3 py-2 text-left font-medium flex items-center justify-between cursor-pointer transition ${
                         selectedCategory === item.id
-                          ? "bg-red-50 text-[#C92F3D] font-bold"
+                          ? "bg-red-50 text-[#C92F3D] font-bold dropdown-option-selected"
                           : "text-[#182338] hover:bg-[#F5F8FA]"
                       }`}
                     >

@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getAuthToken, getAuthUser, clearAuthSession } from "../utils/authStorage";
 import { performLogout } from "../api";
+import { resolveMediaUrl } from "../utils/mediaUtils";
 
 export default function Navbar() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -31,15 +32,12 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Brand Logo */}
         <Link to="/" className="flex items-center space-x-2">
-          <span className="bg-red-700 text-white font-extrabold text-xl px-2.5 py-1 rounded-xl">
+          <span className="bg-red-700 text-white font-extrabold text-xl px-2.5 py-1 rounded-xl shadow-xs">
             फ
           </span>
           <div>
             <span className="text-lg font-bold tracking-tight block leading-none">
               Fazilnagar Portal
-            </span>
-            <span className="text-[10px] text-slate-400 uppercase tracking-widest">
-              पावा नगर • Kushinagar
             </span>
           </div>
         </Link>
@@ -87,9 +85,42 @@ export default function Navbar() {
           >
             Fazilnagar ✨
           </Link>
+          <a
+            href="https://after-hours-five-beryl.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-purple-400 hover:text-purple-300 transition-colors"
+            aria-label="Entertainment"
+            title="Entertainment / संगीत एवं मनोरंजन"
+          >
+            Entertainment
+          </a>
 
           {isLoggedIn ? (
             <>
+              <div
+                className="w-8 h-8 rounded-full border-2 border-red-600 bg-slate-800 overflow-hidden flex items-center justify-center text-white font-bold text-xs shrink-0"
+                title={currentUser.name || currentUser.email}
+              >
+                {(currentUser.avatar || currentUser.profileImage) ? (
+                  <img
+                    src={resolveMediaUrl(currentUser.avatar || currentUser.profileImage)}
+                    alt={currentUser.name || "User"}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      const fallback = e.currentTarget.nextElementSibling;
+                      if (fallback) fallback.style.display = "flex";
+                    }}
+                  />
+                ) : null}
+                <span
+                  style={{ display: (currentUser.avatar || currentUser.profileImage) ? "none" : "flex" }}
+                  className="w-full h-full items-center justify-center font-bold text-xs"
+                >
+                  {(currentUser.name?.[0] || currentUser.email?.[0] || "U").toUpperCase()}
+                </span>
+              </div>
               <Link
                 to="/upload"
                 className="bg-red-700 hover:bg-red-800 text-white px-3.5 py-1.5 rounded-xl transition-colors"
@@ -98,7 +129,7 @@ export default function Navbar() {
               </Link>
               <button
                 onClick={handleLogout}
-                className="text-slate-400 hover:text-white transition-colors"
+                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
               >
                 Logout
               </button>
@@ -138,6 +169,17 @@ export default function Navbar() {
           >
             Fazilnagar ✨
           </Link>
+          <a
+            href="https://after-hours-five-beryl.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMenuOpen(false)}
+            className="block text-purple-400 hover:text-purple-300 transition-colors"
+            aria-label="Entertainment"
+            title="Entertainment"
+          >
+            Entertainment
+          </a>
 
           {isLoggedIn ? (
             <>

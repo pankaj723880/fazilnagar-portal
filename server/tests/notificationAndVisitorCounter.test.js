@@ -11,6 +11,8 @@ import notificationRoutes from "../routes/notifications.js";
 import visitorsRoutes, {
   calculateSimulatedCount,
   getRealActiveVisitorCount,
+  isNightTime,
+  clampNightCount,
 } from "../routes/visitors.js";
 
 dotenv.config();
@@ -410,5 +412,39 @@ test("Focused Regression: Notifications & Live Visitor Counter Suite", async (t)
     assert.equal(calculateSimulatedCount({ simulatedCount: 1500, randomVariance: false }), 1500);
     assert.equal(calculateSimulatedCount({ simulatedCount: 9999, randomVariance: false }), 1500);
     assert.equal(calculateSimulatedCount({ simulatedCount: -100, randomVariance: false }), 0);
+  });
+
+  await t.test("3.4 Nighttime simulated live count logic (11:30 PM - 6:59 AM strictly 1-9, day preserved)", () => {
+    // 1. Verify local time nighttime window and midnight crossover
+    const createDate = (hours, minutes) => {
+      const d = new Date(2026, 9, 21, hours, minutes, 0, 0);
+      return d;
+    };
+
+    // Daytime: 7:00 AM through 11:29 PM
+    assert.equal(isNightTime(createDate(7, 0)), false, "7:00 AM should be day");
+    assert.equal(isNightTime(createDate(12, 0)), false, "12:00 PM should be day");
+    assert.equal(isNightTime(createDate(23, 29)), false, "11:29 PM should be day");
+
+    // Nighttime: 11:30 PM through 6:59 AM (handles midnight crossover)
+    assert.equal(isNightTime(createDate(23, 30)), true, "11:30 PM should be night");
+    assert.equal(isNightTime(createDate(23, 59)), true, "11:59 PM should be night");
+    assert.equal(isNightTime(createDate(0, 0)), true, "12:00 AM midnight should be night");
+    assert.equal(isNightTime(createDate(3, 30)), true, "3:30 AM should be night");
+    assert.equal(isNightTime(createDate(6, 59)), true, "6:59 AM should be night");
+
+    // 2. Verify nighttime count clamping strictly between 1 and 9 (never 10 or higher)
+    for (let c = 0; c <= 1500; c++) {
+      const clamped = clampNightCount(c);
+      assert.ok(clamped >= 1 && clamped <= 9, `Count ${c} clamped to ${clamped} must be between 1 and 9`);
+    }
+
+    // 3. Verify calculateSimulatedCount preserves daytime count and enforces night count
+    const config = { simulatedCount: 120, randomVariance: false };
+    const dayCount = calculateSimulatedCount(config);
+    assert.equal(dayCount, 120, "Daytime simulated count must preserve original count");
+
+    const nightCount = calculateSimulatedCount(config, { isNight: true });
+    assert.ok(nightCount >= 1 && nightCount <= 9, "Nighttime count must be between 1 and 9");
   });
 });

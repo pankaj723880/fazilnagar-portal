@@ -22,6 +22,39 @@ export function getOrCreateVisitorId() {
   }
 }
 
+/**
+ * Checks if the given date falls into nighttime (11:30 PM to 6:59:59 AM local time).
+ * Correctly handles midnight crossover.
+ */
+export function isNightTime(date = new Date()) {
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const totalMinutes = hours * 60 + minutes;
+  // 11:30 PM is 23:30 (1410 min). 7:00 AM is 07:00 (420 min).
+  // 11:30 PM through 6:59:59 AM falls in [1410, 1440) or [0, 420).
+  return totalMinutes >= 1410 || totalMinutes < 420;
+}
+
+/**
+ * Returns the effective displayed visitor count.
+ * From 11:30 PM through 6:59 AM local time, simulated count is strictly between 1 and 9 (never 10+).
+ * From 7:00 AM through 11:29 PM, preserves existing count.
+ * Real analytics / mode are never altered.
+ */
+export function getDisplayedVisitorCount(count, mode, date = new Date()) {
+  if (count === null || count === undefined) return null;
+  const num = parseInt(count, 10);
+  if (isNaN(num)) return count;
+
+  if (mode === "simulated" && isNightTime(date)) {
+    if (num >= 1 && num <= 9) return num;
+    const safeBase = Math.max(1, num);
+    return ((safeBase - 1) % 9) + 1;
+  }
+
+  return num;
+}
+
 export default function LiveVisitorCounter({ compact = false, className = "" }) {
   const [visitorCount, setVisitorCount] = useState(null);
   const [mode, setMode] = useState("real");
@@ -90,18 +123,20 @@ export default function LiveVisitorCounter({ compact = false, className = "" }) 
     return null; // Don't render until first active presence ping completes
   }
 
+  const displayedCount = getDisplayedVisitorCount(visitorCount, mode);
+
   if (compact) {
     return (
       <div
         className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-2xs select-none transition-all ${className}`}
         title={`Live Website Visitors (${mode === "simulated" ? "Simulated Mode" : "Real Active"})`}
-        aria-label={`${visitorCount} live website visitors`}
+        aria-label={`${displayedCount} live website visitors`}
       >
         <span className="relative flex h-2 w-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
           <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
         </span>
-        <span className="font-mono font-bold">{visitorCount}</span>
+        <span className="font-mono font-bold">{displayedCount}</span>
         <span className="text-[10px] text-emerald-700 dark:text-emerald-300">live</span>
       </div>
     );
@@ -111,14 +146,14 @@ export default function LiveVisitorCounter({ compact = false, className = "" }) 
     <div
       className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 shadow-2xs select-none transition-all ${className}`}
       title={`Current Active Website Visitors (${mode === "simulated" ? "Simulated Mode" : "Real Live Count"})`}
-      aria-label={`${visitorCount} active visitors on portal`}
+      aria-label={`${displayedCount} active visitors on portal`}
     >
       <span className="relative flex h-2 w-2 shrink-0">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
       </span>
       <Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-      <span className="font-mono font-bold tracking-tight">{visitorCount}</span>
+      <span className="font-mono font-bold tracking-tight">{displayedCount}</span>
       <span className="text-[11px] font-medium text-emerald-800 dark:text-emerald-200">Online Now</span>
     </div>
   );

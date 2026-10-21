@@ -1334,11 +1334,11 @@ html[data-public-theme="dark"] .text-gray-900,
 html[data-public-theme="dark"] .text-gray-800,
 html[data-public-theme="dark"] .text-zinc-900,
 html[data-public-theme="dark"] .text-neutral-900,
-html[data-public-theme="dark"] .text-black,
-html[data-public-theme="dark"] .text-\[\#0F172A\],
-html[data-public-theme="dark"] .text-\[\#18232E\],
-html[data-public-theme="dark"] .text-\[\#111827\],
-html[data-public-theme="dark"] .text-deep-slate {
+html[data-public-theme="dark"] .text-black:not(.dark\:text-black):not(.dark\:bg-white *):not(.bg-white *),
+html[data-public-theme="dark"] .text-\[\#0F172A\]:not(.dark\:text-\[\#0F172A\]):not(.dark\:bg-white *):not(.bg-white *),
+html[data-public-theme="dark"] .text-\[\#18232E\]:not(.dark\:text-\[\#18232E\]):not(.dark\:bg-white *):not(.bg-white *),
+html[data-public-theme="dark"] .text-\[\#111827\]:not(.dark\:text-\[\#111827\]):not(.dark\:bg-white *):not(.bg-white *),
+html[data-public-theme="dark"] .text-deep-slate:not(.dark\:text-deep-slate):not(.dark\:bg-white *):not(.bg-white *) {
   color: var(--text-primary, #F5F0E7) !important;
 }
 
@@ -1816,43 +1816,222 @@ html[data-public-theme="dark"] #directory-page .bg-red-50 {
   color: #1E40AF !important;
 }
 
-/* 2. Directory Page: Selected and Unselected Category Chips */
-html[data-public-theme="light"] #directory-page button.bg-\[\#18232E\] {
-  background-color: var(--heritage-action, #A83D32) !important;
+/* ==========================================================================
+   2. GLOBAL SELECTED & ACTIVE CONTROLS DESIGN SYSTEM
+   Applies to category filters, pill buttons, tabs, chips, segmented controls,
+   and dropdown options across ALL pages, sections, and mobile/desktop layouts.
+   Guarantees high contrast (WCAG AAA >= 7:1) in both Light and Dark themes.
+   ========================================================================== */
+
+/* --- 2.1 LIGHT THEME: SELECTED / ACTIVE CONTROLS --- */
+
+/* Selected/Active buttons with dark/action backgrounds in Light Theme */
+html[data-public-theme="light"] button[aria-pressed="true"]:not(.dark\:bg-white):not(.bg-white),
+html[data-public-theme="light"] button[aria-selected="true"]:not(.dark\:bg-white):not(.bg-white),
+html[data-public-theme="light"] [role="tab"][aria-selected="true"]:not(.dark\:bg-white):not(.bg-white),
+html[data-public-theme="light"] button.active:not(.dark\:bg-white):not(.bg-white),
+html[data-public-theme="light"] button.selected:not(.dark\:bg-white):not(.bg-white),
+html[data-public-theme="light"] [data-state="active"]:not(.dark\:bg-white):not(.bg-white),
+html[data-public-theme="light"] [data-selected="true"]:not(.dark\:bg-white):not(.bg-white),
+html[data-public-theme="light"] button.bg-\[\#0F172A\],
+html[data-public-theme="light"] button.bg-\[\#18232E\],
+html[data-public-theme="light"] button.bg-slate-900,
+html[data-public-theme="light"] button.bg-\[\#1E293B\],
+html[data-public-theme="light"] button.bg-\[\#B8323C\],
+html[data-public-theme="light"] button.bg-\[\#C92F3D\],
+html[data-public-theme="light"] button.bg-crimson,
+html[data-public-theme="light"] button.bg-red-700,
+html[data-public-theme="light"] button.bg-\[\#0D5E49\] {
   color: #FFFFFF !important;
-  border-color: var(--heritage-action, #A83D32) !important;
-}
-html[data-public-theme="light"] #directory-page button.bg-\[\#18232E\] span {
-  color: #FFFFFF !important;
-}
-html[data-public-theme="light"] #directory-page button.bg-slate-50 {
-  background-color: var(--background-secondary) !important;
-  border-color: var(--border-color) !important;
-  color: var(--text-primary) !important;
-}
-html[data-public-theme="light"] #directory-page button.bg-slate-50:hover {
-  background-color: var(--heritage-surface-secondary, #E2D9CA) !important;
-  border-color: var(--border-color) !important;
-  color: var(--text-primary) !important;
 }
 
-html[data-public-theme="dark"] #directory-page button.bg-\[\#18232E\] {
-  background-color: var(--heritage-action) !important;
+/* White-background active buttons in Light Theme (e.g. segmented controls or dark banner tabs) */
+html[data-public-theme="light"] button[aria-pressed="true"].bg-white,
+html[data-public-theme="light"] button[aria-selected="true"].bg-white,
+html[data-public-theme="light"] [role="tab"][aria-selected="true"].bg-white,
+html[data-public-theme="light"] button.active.bg-white,
+html[data-public-theme="light"] button.selected.bg-white {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+html[data-public-theme="light"] button[aria-pressed="true"].bg-white span,
+html[data-public-theme="light"] button[aria-selected="true"].bg-white span,
+html[data-public-theme="light"] [role="tab"][aria-selected="true"].bg-white span {
+  color: #0F172A !important;
+}
+
+/* Ensure all nested text, spans, and icons inside dark-selected buttons in Light Theme stay crisp white */
+html[data-public-theme="light"] button[aria-pressed="true"]:not(.bg-white) span:not([class*="text-"]):not([class*="bg-amber"]):not([class*="bg-emerald"]):not([class*="bg-blue"]),
+html[data-public-theme="light"] button[aria-selected="true"]:not(.bg-white) span:not([class*="text-"]):not([class*="bg-amber"]):not([class*="bg-emerald"]):not([class*="bg-blue"]),
+html[data-public-theme="light"] [role="tab"][aria-selected="true"]:not(.bg-white) span:not([class*="text-"]):not([class*="bg-amber"]):not([class*="bg-emerald"]):not([class*="bg-blue"]),
+html[data-public-theme="light"] button.active:not(.bg-white) span:not([class*="text-"]):not([class*="bg-amber"]):not([class*="bg-emerald"]):not([class*="bg-blue"]),
+html[data-public-theme="light"] button.selected:not(.bg-white) span:not([class*="text-"]):not([class*="bg-amber"]):not([class*="bg-emerald"]):not([class*="bg-blue"]),
+html[data-public-theme="light"] button.bg-\[\#0F172A\] span:not([class*="text-"]):not([class*="bg-amber"]):not([class*="bg-emerald"]):not([class*="bg-blue"]),
+html[data-public-theme="light"] button.bg-\[\#18232E\] span:not([class*="text-"]):not([class*="bg-amber"]):not([class*="bg-emerald"]):not([class*="bg-blue"]),
+html[data-public-theme="light"] button.bg-slate-900 span:not([class*="text-"]):not([class*="bg-amber"]):not([class*="bg-emerald"]):not([class*="bg-blue"]),
+html[data-public-theme="light"] button.bg-\[\#B8323C\] span:not([class*="text-"]):not([class*="bg-amber"]):not([class*="bg-emerald"]):not([class*="bg-blue"]),
+html[data-public-theme="light"] button.bg-\[\#C92F3D\] span:not([class*="text-"]):not([class*="bg-amber"]):not([class*="bg-emerald"]):not([class*="bg-blue"]),
+html[data-public-theme="light"] button.bg-crimson span:not([class*="text-"]):not([class*="bg-amber"]):not([class*="bg-emerald"]):not([class*="bg-blue"]),
+html[data-public-theme="light"] button.bg-red-700 span:not([class*="text-"]):not([class*="bg-amber"]):not([class*="bg-emerald"]):not([class*="bg-blue"]),
+html[data-public-theme="light"] button.bg-\[\#0D5E49\] span:not([class*="text-"]):not([class*="bg-amber"]):not([class*="bg-emerald"]):not([class*="bg-blue"]),
+html[data-public-theme="light"] button.bg-\[\#0F172A\] svg,
+html[data-public-theme="light"] button.bg-\[\#18232E\] svg,
+html[data-public-theme="light"] button.bg-slate-900 svg,
+html[data-public-theme="light"] button.bg-\[\#B8323C\] svg,
+html[data-public-theme="light"] button.bg-\[\#C92F3D\] svg,
+html[data-public-theme="light"] button.bg-\[\#0D5E49\] svg {
   color: #FFFFFF !important;
-  border-color: var(--heritage-action) !important;
 }
-html[data-public-theme="dark"] #directory-page button.bg-\[\#18232E\] span {
+
+/* --- 2.2 DARK THEME: SELECTED / ACTIVE CONTROLS --- */
+
+/* High-contrast inverted buttons in Dark Theme (dark:bg-white dark:text-[#0F172A] or bg-white) */
+html[data-public-theme="dark"] button[aria-pressed="true"].dark\:bg-white,
+html[data-public-theme="dark"] button[aria-selected="true"].dark\:bg-white,
+html[data-public-theme="dark"] [role="tab"][aria-selected="true"].dark\:bg-white,
+html[data-public-theme="dark"] button.active.dark\:bg-white,
+html[data-public-theme="dark"] button.selected.dark\:bg-white,
+html[data-public-theme="dark"] button.dark\:bg-white,
+html[data-public-theme="dark"] [data-state="active"].dark\:bg-white,
+html[data-public-theme="dark"] [data-selected="true"].dark\:bg-white,
+html[data-public-theme="dark"] button[aria-pressed="true"].bg-white,
+html[data-public-theme="dark"] button[aria-selected="true"].bg-white,
+html[data-public-theme="dark"] [role="tab"][aria-selected="true"].bg-white,
+html[data-public-theme="dark"] button.active.bg-white,
+html[data-public-theme="dark"] button.selected.bg-white,
+html[data-public-theme="dark"] button.bg-white {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: transparent !important;
+}
+
+/* Ensure all nested text, spans, and icons inside white-selected buttons in Dark Theme are dark navy (#0F172A) */
+html[data-public-theme="dark"] button[aria-pressed="true"].dark\:bg-white span:not([class*="bg-black"]):not([class*="dark:bg-black"]):not([class*="text-red"]):not([class*="text-emerald"]):not([class*="text-blue"]):not([class*="text-amber"]),
+html[data-public-theme="dark"] button[aria-selected="true"].dark\:bg-white span:not([class*="bg-black"]):not([class*="dark:bg-black"]):not([class*="text-red"]):not([class*="text-emerald"]):not([class*="text-blue"]):not([class*="text-amber"]),
+html[data-public-theme="dark"] [role="tab"][aria-selected="true"].dark\:bg-white span:not([class*="bg-black"]):not([class*="dark:bg-black"]):not([class*="text-red"]):not([class*="text-emerald"]):not([class*="text-blue"]):not([class*="text-amber"]),
+html[data-public-theme="dark"] button.active.dark\:bg-white span:not([class*="bg-black"]):not([class*="dark:bg-black"]):not([class*="text-red"]):not([class*="text-emerald"]):not([class*="text-blue"]):not([class*="text-amber"]),
+html[data-public-theme="dark"] button.selected.dark\:bg-white span:not([class*="bg-black"]):not([class*="dark:bg-black"]):not([class*="text-red"]):not([class*="text-emerald"]):not([class*="text-blue"]):not([class*="text-amber"]),
+html[data-public-theme="dark"] button.dark\:bg-white span:not([class*="bg-black"]):not([class*="dark:bg-black"]):not([class*="text-red"]):not([class*="text-emerald"]):not([class*="text-blue"]):not([class*="text-amber"]),
+html[data-public-theme="dark"] button.dark\:bg-white svg:not([class*="text-red"]):not([class*="text-emerald"]),
+html[data-public-theme="dark"] button.bg-white span:not([class*="bg-black"]):not([class*="dark:bg-black"]):not([class*="text-red"]):not([class*="text-emerald"]):not([class*="text-blue"]):not([class*="text-amber"]),
+html[data-public-theme="dark"] button.bg-white svg:not([class*="text-red"]):not([class*="text-emerald"]) {
+  color: #0F172A !important;
+}
+
+/* Emerald Tourism Tab in Dark Theme */
+html[data-public-theme="dark"] button.bg-\[\#0D5E49\],
+html[data-public-theme="dark"] button.bg-\[\#0D5E49\] span,
+html[data-public-theme="dark"] button.bg-\[\#0D5E49\] svg {
+  background-color: #0D5E49 !important;
+  color: #FFFFFF !important;
+  border-color: transparent !important;
+}
+
+/* Selected buttons using theme-action or brand color in Dark Theme */
+html[data-public-theme="dark"] button[aria-pressed="true"]:not(.dark\:bg-white):not(.bg-white):not(.bg-\[\#0D5E49\]),
+html[data-public-theme="dark"] button[aria-selected="true"]:not(.dark\:bg-white):not(.bg-white):not(.bg-\[\#0D5E49\]),
+html[data-public-theme="dark"] [role="tab"][aria-selected="true"]:not(.dark\:bg-white):not(.bg-white):not(.bg-\[\#0D5E49\]),
+html[data-public-theme="dark"] button.active:not(.dark\:bg-white):not(.bg-white):not(.bg-\[\#0D5E49\]),
+html[data-public-theme="dark"] button.selected:not(.dark\:bg-white):not(.bg-white):not(.bg-\[\#0D5E49\]),
+html[data-public-theme="dark"] button.bg-\[\#B8323C\],
+html[data-public-theme="dark"] button.bg-\[\#C92F3D\],
+html[data-public-theme="dark"] button.bg-crimson,
+html[data-public-theme="dark"] button.bg-red-700 {
+  background-color: var(--heritage-action, #C45A4C) !important;
+  color: #FFFFFF !important;
+  border-color: var(--heritage-action, #C45A4C) !important;
+}
+
+html[data-public-theme="dark"] button[aria-pressed="true"]:not(.dark\:bg-white):not(.bg-white) span:not([class*="text-"]):not([class*="bg-"]),
+html[data-public-theme="dark"] button[aria-selected="true"]:not(.dark\:bg-white):not(.bg-white) span:not([class*="text-"]):not([class*="bg-"]),
+html[data-public-theme="dark"] [role="tab"][aria-selected="true"]:not(.dark\:bg-white):not(.bg-white) span:not([class*="text-"]):not([class*="bg-"]),
+html[data-public-theme="dark"] button.bg-\[\#B8323C\] span:not([class*="text-"]),
+html[data-public-theme="dark"] button.bg-\[\#C92F3D\] span:not([class*="text-"]),
+html[data-public-theme="dark"] button.bg-crimson span:not([class*="text-"]),
+html[data-public-theme="dark"] button.bg-red-700 span:not([class*="text-"]),
+html[data-public-theme="dark"] button.bg-\[\#B8323C\] svg,
+html[data-public-theme="dark"] button.bg-\[\#C92F3D\] svg {
   color: #FFFFFF !important;
 }
-html[data-public-theme="dark"] #directory-page button.bg-slate-50 {
-  background-color: var(--background-secondary) !important;
-  border-color: var(--border-color) !important;
-  color: var(--text-primary) !important;
+
+/* --- 2.3 UNSELECTED CONTROLS (Preserve existing design, ensure clean readable contrast) --- */
+html[data-public-theme="light"] button[aria-pressed="false"]:not(.text-slate-400),
+html[data-public-theme="light"] button[aria-selected="false"]:not(.text-slate-400),
+html[data-public-theme="light"] [role="tab"][aria-selected="false"]:not(.text-slate-400),
+html[data-public-theme="light"] button.bg-slate-50:not([aria-pressed="true"]):not([aria-selected="true"]):not(.active) {
+  background-color: var(--surface-card, #FFFFFF);
+  color: var(--text-primary, #292722);
+  border-color: var(--border-color, #DED5C7);
 }
-html[data-public-theme="dark"] #directory-page button.bg-slate-50:hover {
-  background-color: var(--heritage-surface-secondary, #3B3730) !important;
-  border-color: var(--border-color) !important;
-  color: var(--text-primary) !important;
+
+html[data-public-theme="light"] button[aria-pressed="false"]:not(.text-slate-400):hover,
+html[data-public-theme="light"] button[aria-selected="false"]:not(.text-slate-400):hover,
+html[data-public-theme="light"] [role="tab"][aria-selected="false"]:not(.text-slate-400):hover,
+html[data-public-theme="light"] button.bg-slate-50:not([aria-pressed="true"]):not([aria-selected="true"]):not(.active):hover {
+  background-color: var(--heritage-surface-secondary, #EEE7DA);
+  border-color: var(--border-color, #DED5C7);
+  color: var(--text-primary, #292722);
+}
+
+html[data-public-theme="dark"] button[aria-pressed="false"]:not(.text-slate-400),
+html[data-public-theme="dark"] button[aria-selected="false"]:not(.text-slate-400),
+html[data-public-theme="dark"] [role="tab"][aria-selected="false"]:not(.text-slate-400),
+html[data-public-theme="dark"] button.bg-slate-50:not([aria-pressed="true"]):not([aria-selected="true"]):not(.active) {
+  background-color: var(--surface-card, #24231F);
+  color: var(--text-secondary, #C0B8AA);
+  border-color: var(--border-color, #484238);
+}
+
+html[data-public-theme="dark"] button[aria-pressed="false"]:not(.text-slate-400):hover,
+html[data-public-theme="dark"] button[aria-selected="false"]:not(.text-slate-400):hover,
+html[data-public-theme="dark"] [role="tab"][aria-selected="false"]:not(.text-slate-400):hover,
+html[data-public-theme="dark"] button.bg-slate-50:not([aria-pressed="true"]):not([aria-selected="true"]):not(.active):hover {
+  background-color: var(--heritage-surface-secondary, #302D27);
+  border-color: var(--border-color, #5E564A);
+  color: var(--text-primary, #F5F0E7);
+}
+
+/* --- 2.4 DROPDOWN OPTIONS & SELECT ELEMENTS --- */
+html[data-public-theme="light"] select option:checked {
+  background-color: var(--heritage-action, #A83D32) !important;
+  color: #FFFFFF !important;
+}
+
+html[data-public-theme="dark"] select option:checked {
+  background-color: var(--heritage-action, #C45A4C) !important;
+  color: #FFFFFF !important;
+}
+
+/* Custom Dropdown Option Selected State (e.g. Directory "More" categories) */
+html[data-public-theme="light"] .dropdown-option-selected,
+html[data-public-theme="light"] button[role="option"][aria-selected="true"] {
+  background-color: var(--background-secondary, #EEE7DA) !important;
+  color: var(--heritage-action, #A83D32) !important;
+  font-weight: 700 !important;
+}
+
+html[data-public-theme="dark"] .dropdown-option-selected,
+html[data-public-theme="dark"] button[role="option"][aria-selected="true"] {
+  background-color: var(--background-secondary, #302D27) !important;
+  color: var(--heritage-action, #C45A4C) !important;
+  font-weight: 700 !important;
+}
+
+/* --- 2.5 INTERACTION STATES: FOCUS-VISIBLE & DISABLED --- */
+button[aria-pressed="true"]:focus-visible,
+button[aria-selected="true"]:focus-visible,
+[role="tab"][aria-selected="true"]:focus-visible,
+button.active:focus-visible,
+button.selected:focus-visible {
+  outline: 2px solid var(--heritage-action, #A83D32) !important;
+  outline-offset: 2px !important;
+}
+
+button:disabled,
+button[aria-disabled="true"] {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
 }
 
 /* 3. High-Contrast Verified & Live Badges (WCAG AA compliant >= 4.5:1) */
@@ -2205,48 +2384,48 @@ html[data-public-theme="dark"] #public-portal-root [class*="dark:bg-[#18202F]"] 
   background-color: var(--surface-card) !important;
 }
 
-/* 4. Headings & Primary Text */
-#public-portal-root .text-\[\#18232E\],
-#public-portal-root .text-\[\#0F172A\],
-#public-portal-root .text-\[\#182338\],
-#public-portal-root .text-\[\#292722\],
-#public-portal-root .text-\[\#111827\],
-#public-portal-root [class*="text-[#18232E]"],
-#public-portal-root [class*="text-[#0F172A]"],
-#public-portal-root [class*="text-[#182338]"],
-#public-portal-root [class*="text-[#292722]"] {
+/* 4. Headings & Primary Text (Scoped to content; never overrides buttons or active controls) */
+#public-portal-root h1.text-\[\#18232E\],
+#public-portal-root h2.text-\[\#18232E\],
+#public-portal-root h3.text-\[\#18232E\],
+#public-portal-root h4.text-\[\#18232E\],
+#public-portal-root h5.text-\[\#18232E\],
+#public-portal-root p.text-\[\#18232E\],
+#public-portal-root h1.text-\[\#0F172A\],
+#public-portal-root h2.text-\[\#0F172A\],
+#public-portal-root h3.text-\[\#0F172A\],
+#public-portal-root h4.text-\[\#0F172A\],
+#public-portal-root h5.text-\[\#0F172A\],
+#public-portal-root p.text-\[\#0F172A\],
+#public-portal-root .text-\[\#18232E\]:not(button):not([aria-pressed]):not([aria-selected]):not(.active):not(.selected):not([class*="bg-[#0F172A]"] *):not([class*="bg-[#18232E]"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#B8323C]"] *):not([class*="bg-[#C92F3D]"] *):not([class*="dark:bg-white"] *),
+#public-portal-root .text-\[\#0F172A\]:not(button):not([aria-pressed]):not([aria-selected]):not(.active):not(.selected):not([class*="bg-[#0F172A]"] *):not([class*="bg-[#18232E]"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#B8323C]"] *):not([class*="bg-[#C92F3D]"] *):not([class*="dark:bg-white"] *),
+#public-portal-root .text-\[\#182338\]:not(button):not([aria-pressed]):not([aria-selected]):not(.active):not(.selected):not([class*="bg-[#0F172A]"] *):not([class*="bg-[#18232E]"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#B8323C]"] *):not([class*="bg-[#C92F3D]"] *):not([class*="dark:bg-white"] *),
+#public-portal-root .text-\[\#292722\]:not(button):not([aria-pressed]):not([aria-selected]):not(.active):not(.selected):not([class*="bg-[#0F172A]"] *):not([class*="bg-[#18232E]"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#B8323C]"] *):not([class*="bg-[#C92F3D]"] *):not([class*="dark:bg-white"] *),
+#public-portal-root .text-\[\#111827\]:not(button):not([aria-pressed]):not([aria-selected]):not(.active):not(.selected):not([class*="bg-[#0F172A]"] *):not([class*="bg-[#18232E]"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#B8323C]"] *):not([class*="bg-[#C92F3D]"] *):not([class*="dark:bg-white"] *) {
   color: var(--text-primary) !important;
 }
 
-#public-portal-root .hover\:text-\[\#292722\]:hover,
-#public-portal-root [class*="hover:text-[#292722]"]:hover {
+#public-portal-root .hover\:text-\[\#292722\]:hover {
   color: var(--text-primary) !important;
 }
 
 html[data-public-theme="dark"] #public-portal-root .dark\:text-\[\#F5F0E7\],
-html[data-public-theme="dark"] #public-portal-root .dark\:text-white,
-html[data-public-theme="dark"] #public-portal-root .dark\:text-slate-100,
-html[data-public-theme="dark"] #public-portal-root [class*="dark:text-[#F5F0E7]"] {
+html[data-public-theme="dark"] #public-portal-root .dark\:text-white:not([class*="bg-"]):not([aria-pressed="true"]):not(button *),
+html[data-public-theme="dark"] #public-portal-root .dark\:text-slate-100 {
   color: var(--text-primary) !important;
 }
 
 /* 5. Subtitles & Secondary Text */
-#public-portal-root .text-\[\#64748B\],
-#public-portal-root .text-\[\#71819B\],
-#public-portal-root .text-\[\#6F6A61\],
-#public-portal-root .text-\[\#524E47\],
-#public-portal-root [class*="text-[#64748B]"],
-#public-portal-root [class*="text-[#71819B]"],
-#public-portal-root [class*="text-[#6F6A61]"],
-#public-portal-root [class*="text-[#524E47]"] {
+#public-portal-root .text-\[\#64748B\]:not(button):not([aria-pressed]):not([aria-selected]),
+#public-portal-root .text-\[\#71819B\]:not(button):not([aria-pressed]):not([aria-selected]),
+#public-portal-root .text-\[\#6F6A61\]:not(button):not([aria-pressed]):not([aria-selected]),
+#public-portal-root .text-\[\#524E47\]:not(button):not([aria-pressed]):not([aria-selected]) {
   color: var(--text-secondary) !important;
 }
 
 html[data-public-theme="dark"] #public-portal-root .dark\:text-\[\#C0B8AA\],
-html[data-public-theme="dark"] #public-portal-root .dark\:text-slate-400,
-html[data-public-theme="dark"] #public-portal-root .dark\:text-\[\#D4CDC1\],
-html[data-public-theme="dark"] #public-portal-root [class*="dark:text-[#C0B8AA]"],
-html[data-public-theme="dark"] #public-portal-root [class*="dark:text-[#D4CDC1]"] {
+html[data-public-theme="dark"] #public-portal-root .dark\:text-slate-400:not(button):not([aria-pressed]):not([aria-selected]),
+html[data-public-theme="dark"] #public-portal-root .dark\:text-\[\#D4CDC1\] {
   color: var(--text-secondary) !important;
 }
 

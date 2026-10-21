@@ -142,6 +142,9 @@ export default function About() {
         <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center justify-center gap-2 p-1.5 bg-[#F8FAFC] dark:bg-[#131823] rounded-2xl border border-slate-200/60 dark:border-white/8 max-w-xl mx-auto shadow-xs">
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "fazilnagar"}
+            aria-pressed={activeTab === "fazilnagar"}
             onClick={() => setActiveTab("fazilnagar")}
             className={`w-full sm:w-auto sm:flex-1 min-h-[44px] py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "fazilnagar"
@@ -153,6 +156,9 @@ export default function About() {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "kushinagar"}
+            aria-pressed={activeTab === "kushinagar"}
             onClick={() => setActiveTab("kushinagar")}
             className={`w-full sm:w-auto sm:flex-1 min-h-[44px] py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "kushinagar"
@@ -164,6 +170,9 @@ export default function About() {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "connection"}
+            aria-pressed={activeTab === "connection"}
             onClick={() => setActiveTab("connection")}
             className={`w-full sm:w-auto sm:flex-1 min-h-[44px] py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "connection"

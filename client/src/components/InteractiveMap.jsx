@@ -354,8 +354,10 @@ export default function InteractiveMap() {
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
+              type="button"
+              aria-pressed={activeCategory === cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                 activeCategory === cat.id
                   ? "bg-red-700 text-white shadow-md scale-105"
                   : "bg-slate-100 text-slate-700 hover:bg-slate-200"

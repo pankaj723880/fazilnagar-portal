@@ -48,8 +48,9 @@ const NotificationCenter = lazy(() => import("./components/NotificationCenter"))
 const GlobalFloatingAndStickyAds = lazy(() =>
   import("./components/AdvertisementSlot").then((m) => ({ default: m.GlobalFloatingAndStickyAds }))
 );
-import { Home, Compass, PhoneCall, Newspaper, Menu, X, ShieldAlert, MessageSquare } from "lucide-react";
+import { Home, Compass, PhoneCall, Newspaper, Menu, X, ShieldAlert, MessageSquare, Music } from "lucide-react";
 import { prefetchRoute } from "./utils/routePrefetch";
+import { resolveMediaUrl } from "./utils/mediaUtils";
 
 const VERIFIED_DIRECTORY_COUNT = "37";
 
@@ -347,7 +348,9 @@ export default function App() {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
               <div className="w-9 h-9 rounded-xl bg-[#A83D32] dark:bg-[#C45A4C] flex items-center justify-center text-white font-extrabold text-base border border-[#873027] dark:border-[#D36B5D] shadow-xs group-hover:scale-105 transition-transform">
-                {(siteSettings?.navigation?.brandFirst?.[0] || "F").toUpperCase()}
+                <span className="text-white font-black leading-none select-none drop-shadow-xs">
+                  {(siteSettings?.navigation?.brandFirst?.[0] || "F").toUpperCase()}
+                </span>
               </div>
               <div>
                 <span className="text-base font-extrabold tracking-tight text-[#292722] dark:text-[#F5F0E7] leading-none block font-heading">
@@ -415,6 +418,18 @@ export default function App() {
               {/* Universal Light/Dark Theme Switcher */}
               <ThemeToggle />
 
+              {/* Entertainment Music Site */}
+              <a
+                href="https://after-hours-five-beryl.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl border flex items-center justify-center transition shadow-xs focus:outline-none focus:ring-2 focus:ring-purple-500/30 cursor-pointer bg-[#EEE7DA] hover:bg-[#E2D9CA] text-[#292722] border-[#DED5C7] dark:bg-[#302D27] dark:hover:bg-[#3D3932] dark:text-[#F5F0E7] dark:border-[#484238]"
+                aria-label="Entertainment"
+                title="Entertainment / संगीत एवं मनोरंजन"
+              >
+                <Music className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </a>
+
               {/* Messages / नगर संवाद */}
               <Link
                 to="/messages"
@@ -464,10 +479,28 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setIsProfileModalOpen(true)}
-                    className="text-xs font-bold text-[#26734D] hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg transition cursor-pointer flex items-center gap-1 shadow-2xs"
-                    title={user.role === "admin" ? "Admin Profile & Settings" : "Edit Profile"}
+                    className="min-w-[40px] min-h-[40px] w-10 h-10 rounded-full border-2 border-[#A83D32] dark:border-[#C45A4C] overflow-hidden flex items-center justify-center bg-[#EEE7DA] dark:bg-[#302D27] text-[#292722] dark:text-[#F5F0E7] font-black text-sm shadow-xs hover:scale-105 active:scale-95 transition cursor-pointer shrink-0"
+                    title={user.role === "admin" ? "Admin Profile & Settings" : `${user.name || user.email} (Edit Profile)`}
+                    aria-label={user.role === "admin" ? "Admin Profile" : "User Profile"}
                   >
-                    <span>{user.role === "admin" ? "Admin 🛡️" : (user.name || user.email)}</span>
+                    {(user.avatar || user.profileImage) ? (
+                      <img
+                        src={resolveMediaUrl(user.avatar || user.profileImage)}
+                        alt={user.name || "User"}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                          const fallback = e.currentTarget.nextElementSibling;
+                          if (fallback) fallback.style.display = "flex";
+                        }}
+                      />
+                    ) : null}
+                    <span
+                      style={{ display: (user.avatar || user.profileImage) ? "none" : "flex" }}
+                      className="w-full h-full items-center justify-center font-bold text-xs"
+                    >
+                      {(user.name?.[0] || user.email?.[0] || "U").toUpperCase()}
+                    </span>
                   </button>
                   <button
                     onClick={handleLogout}
@@ -494,13 +527,25 @@ export default function App() {
               )}
             </div>
 
-            {/* Mobile Actions: Theme Toggle + Notification Bell + Messages + Add Story + User/Profile */}
+            {/* Mobile Actions: Theme Toggle + Notification Bell + Entertainment + Messages + Add Story + User/Profile */}
             <div className="flex sm:hidden items-center gap-1.5">
               <ThemeToggle compact={true} />
 
               <Suspense fallback={<div className="w-9 h-9 shrink-0" />}>
                 <NotificationCenter />
               </Suspense>
+
+              {/* Entertainment Music Site */}
+              <a
+                href="https://after-hours-five-beryl.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-w-[38px] min-h-[38px] w-9 h-9 rounded-xl border flex items-center justify-center transition shadow-2xs bg-[#EEE7DA] hover:bg-[#E2D9CA] text-[#292722] border-[#DED5C7] dark:bg-[#302D27] dark:text-[#F5F0E7] dark:border-[#484238] touch-manipulation"
+                aria-label="Entertainment"
+                title="Entertainment"
+              >
+                <Music className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              </a>
 
               {/* Messages / संवाद */}
               <Link
@@ -548,13 +593,28 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsProfileModalOpen(true)}
-                  className="w-9 h-9 rounded-xl bg-[#EEE7DA] hover:bg-[#E2D9CA] border border-[#DED5C7] dark:bg-[#302D27] dark:border-[#484238] transition flex items-center justify-center text-[#292722] dark:text-[#F5F0E7] cursor-pointer shadow-2xs touch-manipulation"
+                  className="w-9 h-9 rounded-full border-2 border-[#A83D32] dark:border-[#C45A4C] overflow-hidden flex items-center justify-center bg-[#EEE7DA] dark:bg-[#302D27] text-[#292722] dark:text-[#F5F0E7] font-bold text-xs shadow-2xs hover:scale-105 active:scale-95 transition cursor-pointer touch-manipulation shrink-0"
                   title={user.role === "admin" ? "Admin Profile" : (user.name || user.email)}
                   aria-label="User Profile"
                 >
-                  <div className="w-6 h-6 rounded-full bg-[#C92F3D] text-white text-[10px] font-black flex items-center justify-center shrink-0">
-                    {user.role === "admin" ? "A" : (user.name?.[0] || "U").toUpperCase()}
-                  </div>
+                  {(user.avatar || user.profileImage) ? (
+                    <img
+                      src={resolveMediaUrl(user.avatar || user.profileImage)}
+                      alt={user.name || "User"}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        const fallback = e.currentTarget.nextElementSibling;
+                        if (fallback) fallback.style.display = "flex";
+                      }}
+                    />
+                  ) : null}
+                  <span
+                    style={{ display: (user.avatar || user.profileImage) ? "none" : "flex" }}
+                    className="w-full h-full items-center justify-center font-bold text-xs"
+                  >
+                    {(user.name?.[0] || user.email?.[0] || "U").toUpperCase()}
+                  </span>
                 </button>
               ) : (
                 <Link
@@ -942,8 +1002,8 @@ export default function App() {
             {/* Drawer Header: 4.1 */}
             <div className="p-3.5 px-4 border-b border-slate-100 flex items-center justify-between bg-white/90">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-slate-900 text-white font-black text-sm flex items-center justify-center shadow-xs">
-                  F
+                <div className="w-8 h-8 rounded-xl bg-[#A83D32] dark:bg-[#C45A4C] text-white font-black text-sm flex items-center justify-center shadow-xs border border-[#873027] dark:border-[#D36B5D]">
+                  <span className="text-white font-black leading-none select-none drop-shadow-xs">F</span>
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 font-heading leading-tight">
@@ -1023,6 +1083,18 @@ export default function App() {
                     <span>📰</span>
                     <span>Updates</span>
                   </Link>
+                  <a
+                    href="https://after-hours-five-beryl.vercel.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-purple-50/80 text-purple-950 hover:bg-purple-100 border border-purple-200/70 active:scale-95 transition"
+                    aria-label="Entertainment"
+                    title="Entertainment / संगीत एवं मनोरंजन"
+                  >
+                    <span>🎵</span>
+                    <span>Entertainment</span>
+                  </a>
                   <Link
                     to="/about"
                     onClick={() => setMobileMenuOpen(false)}

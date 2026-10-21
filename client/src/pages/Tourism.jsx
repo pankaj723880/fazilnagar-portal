@@ -120,6 +120,10 @@ export default function Tourism() {
       {/* Tabs */}
       <div className="flex items-center gap-1.5 bg-slate-200/70 dark:bg-slate-800/60 p-1.5 rounded-2xl w-full max-w-md overflow-x-auto scrollbar-none border border-slate-200/60 dark:border-white/8 shadow-xs">
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "places"}
+          aria-pressed={activeTab === "places"}
           onClick={() => setActiveTab("places")}
           className={`flex-1 min-w-[100px] py-2 px-2.5 text-xs font-bold rounded-xl transition cursor-pointer min-h-[44px] flex items-center justify-center text-center whitespace-nowrap ${
             activeTab === "places"
@@ -130,6 +134,10 @@ export default function Tourism() {
           🏰 Sites ({heritageSites.length})
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "itinerary"}
+          aria-pressed={activeTab === "itinerary"}
           onClick={() => setActiveTab("itinerary")}
           className={`flex-1 min-w-[100px] py-2 px-2.5 text-xs font-bold rounded-xl transition cursor-pointer min-h-[44px] flex items-center justify-center text-center whitespace-nowrap ${
             activeTab === "itinerary"
@@ -140,6 +148,10 @@ export default function Tourism() {
           🧭 1-Day Circuit
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "stays"}
+          aria-pressed={activeTab === "stays"}
           onClick={() => setActiveTab("stays")}
           className={`flex-1 min-w-[100px] py-2 px-2.5 text-xs font-bold rounded-xl transition cursor-pointer min-h-[44px] flex items-center justify-center text-center whitespace-nowrap ${
             activeTab === "stays"

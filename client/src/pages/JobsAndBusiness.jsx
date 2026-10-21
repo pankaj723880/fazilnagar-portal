@@ -70,20 +70,28 @@ export default function JobsAndBusiness() {
 
         <div className="flex bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700/80 shadow-xs">
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "jobs"}
+            aria-pressed={activeTab === "jobs"}
             onClick={() => setActiveTab("jobs")}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === "jobs"
-                ? "bg-white text-slate-900 shadow-xs"
+                ? "bg-white text-slate-900 shadow-xs font-black"
                 : "text-slate-400 hover:text-white"
             }`}
           >
             👔 Local Jobs
           </button>
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "directory"}
+            aria-pressed={activeTab === "directory"}
             onClick={() => setActiveTab("directory")}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === "directory"
-                ? "bg-white text-slate-900 shadow-xs"
+                ? "bg-white text-slate-900 shadow-xs font-black"
                 : "text-slate-400 hover:text-white"
             }`}
           >

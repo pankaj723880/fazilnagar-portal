@@ -926,6 +926,7 @@ export default function RegionalConnectivityMap() {
           <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
             <button
               type="button"
+              aria-pressed={activeFilter === "all"}
               onClick={() => setActiveFilter("all")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 activeFilter === "all"
@@ -941,6 +942,7 @@ export default function RegionalConnectivityMap() {
 
             <button
               type="button"
+              aria-pressed={activeFilter === "village"}
               onClick={() => setActiveFilter("village")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 activeFilter === "village"
@@ -956,6 +958,7 @@ export default function RegionalConnectivityMap() {
 
             <button
               type="button"
+              aria-pressed={activeFilter === "town"}
               onClick={() => setActiveFilter("town")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 activeFilter === "town"
@@ -971,6 +974,7 @@ export default function RegionalConnectivityMap() {
 
             <button
               type="button"
+              aria-pressed={activeFilter === "city"}
               onClick={() => setActiveFilter("city")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 activeFilter === "city"

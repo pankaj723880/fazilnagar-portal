@@ -32,6 +32,7 @@ import {
   Building2,
   CheckCircle2,
   Sparkles,
+  Music,
 } from "lucide-react";
 import NotificationCenter from "./NotificationCenter";
 import ThemeToggle from "./ThemeToggle";
@@ -40,7 +41,7 @@ import MobileHeroCarousel from "./MobileHeroCarousel";
 import ScrollReveal from "./ScrollReveal";
 import { openGoogleMapsDirections } from "../utils/directions";
 import { getAuthUser, isUserAdmin } from "../utils/authStorage";
-import { getThumbnailUrl } from "../utils/mediaUtils";
+import { getThumbnailUrl, resolveMediaUrl } from "../utils/mediaUtils";
 import {
   getCivicDirectory,
   getCachedCivicDirectory,
@@ -501,22 +502,30 @@ export default function MobileHomePortal({
         }}
       >
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-xl bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] font-black text-sm flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
-            F
+          <div className="w-8 h-8 rounded-xl bg-[#A83D32] dark:bg-[#C45A4C] text-white font-black text-sm flex items-center justify-center shadow-xs border border-[#873027] dark:border-[#D36B5D] group-hover:scale-105 transition-transform">
+            <span className="text-white font-black leading-none select-none drop-shadow-xs">F</span>
           </div>
           <div>
             <h1 className="font-extrabold tracking-tight text-[#0F172A] dark:text-white text-sm leading-none font-heading">
               FAZILNAGAR
             </h1>
-            <p className="text-[9px] text-[#64748B] dark:text-slate-400 font-medium tracking-wide mt-0.5">
-              PIN 274401 • Kushinagar, UP
-            </p>
           </div>
         </Link>
         <div className="flex items-center gap-1.5">
           <LiveVisitorCounter compact={true} />
           <ThemeToggle compact={true} />
           <NotificationCenter lightMode={true} subtleDot={true} />
+          {/* Entertainment Music Site */}
+          <a
+            href="https://after-hours-five-beryl.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-purple-600 dark:text-purple-400 flex items-center justify-center transition border border-slate-200/60 dark:border-white/8 shadow-2xs"
+            aria-label="Entertainment"
+            title="Entertainment / संगीत एवं मनोरंजन"
+          >
+            <Music className="w-4 h-4" />
+          </a>
           {authUser ? (
             <button
               type="button"
@@ -527,15 +536,27 @@ export default function MobileHomePortal({
                   window.dispatchEvent(new CustomEvent("open-edit-profile"));
                 }
               }}
-              className="flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/60 dark:border-white/8 transition text-slate-800 dark:text-slate-200 cursor-pointer shadow-xs"
+              className="w-8 h-8 rounded-full border-2 border-[#A83D32] dark:border-[#C45A4C] bg-[#EEE7DA] dark:bg-[#302D27] overflow-hidden flex items-center justify-center text-[#292722] dark:text-[#F5F0E7] font-bold text-xs shadow-xs hover:scale-105 active:scale-95 transition cursor-pointer shrink-0"
               title={isAdmin ? "Admin Profile & Settings" : (authUser.name || authUser.email)}
               aria-label={isAdmin ? "Admin Profile" : "User Profile"}
             >
-              <div className="w-6 h-6 rounded-full bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] text-[10px] font-black flex items-center justify-center shrink-0">
-                {isAdmin ? "A" : (authUser.name?.[0] || "U").toUpperCase()}
-              </div>
-              <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 max-w-[60px] truncate">
-                {isAdmin ? "Admin" : (authUser.name?.split(" ")[0] || "Citizen")}
+              {(authUser.avatar || authUser.profileImage) ? (
+                <img
+                  src={resolveMediaUrl(authUser.avatar || authUser.profileImage)}
+                  alt={authUser.name || "User"}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    const fallback = e.currentTarget.nextElementSibling;
+                    if (fallback) fallback.style.display = "flex";
+                  }}
+                />
+              ) : null}
+              <span
+                style={{ display: (authUser.avatar || authUser.profileImage) ? "none" : "flex" }}
+                className="w-full h-full items-center justify-center text-[10px] font-bold"
+              >
+                {isAdmin ? "A" : (authUser.name?.[0] || authUser.email?.[0] || "U").toUpperCase()}
               </span>
             </button>
           ) : (
@@ -745,6 +766,7 @@ export default function MobileHomePortal({
                 <button
                   key={cat.id}
                   type="button"
+                  aria-pressed={isActive}
                   onClick={() => setSelectedCategory(cat.id)}
                   className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 cursor-pointer border ${
                     isActive
@@ -1228,6 +1250,7 @@ export default function MobileHomePortal({
               <button
                 key={tab}
                 type="button"
+                aria-pressed={isActive}
                 onClick={() => setSelectedEventTab(tab)}
                 className={`shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all duration-200 active:scale-95 cursor-pointer border ${
                   isActive
