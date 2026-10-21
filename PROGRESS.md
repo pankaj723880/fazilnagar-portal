@@ -42,9 +42,16 @@
     - `client/src/pages/PublicContributionForm.jsx`
     - `server/tests/googleMapsUrlHandling.test.js`
   - **4. Verification & Test Results**:
-    - Dedicated test suite `server/tests/googleMapsUrlHandling.test.js` passed 32/32 tests (100% pass) covering 19 Google Maps + 13 Apple Maps test scenarios.
-    - Existing test suite `server/tests/dynamicFormBuilderAndApproval.test.js` passed 17/17 tests (100% pass).
-    - Client production build `npm run build` completed with code 0 and all 17 static route HTML pages generated.
+    - Dedicated test suite `server/tests/googleMapsUrlHandling.test.js` passed **38/38 tests (100% pass)** covering:
+      - Unit Tests (Google Maps formats: `@lat,lng`, `?q=lat,lng`, `!3dLAT!4dLNG`, reverse protobuf, directions, bounds, zoom-level rejection, provider whitelisting).
+      - Unit Tests (Apple Maps formats: `?ll=lat,lng`, `?sll=lat,lng`, `?daddr=lat,lng`, text place-name rejection for `daddr`/`q`/`near`, bounds, URL-encoded spaces/parentheses labels).
+      - Short links & SSRF: Safe HTTPS protocol upgrades, `apple.co` and `maps.app.goo.gl` handling, loopback/private IP blocking.
+      - Dynamic Form Submission → MongoDB storage → Admin Review API → Place approval.
+      - Safe preservation: Existing valid coordinates on Place records are never overwritten with null when approving updates lacking new coordinates.
+      - Targeted backfill endpoint (`POST /api/contributions/backfill-coordinates`) and dynamic on-read reparsing (`ensureSubmissionLocationParsed`).
+      - Admin review table status evaluation: `Verified Pin` (when valid coordinates exist), `Coordinates unavailable` (when link exists without coordinates), and `Non-location` (when submission has neither).
+    - Existing test suite `server/tests/dynamicFormBuilderAndApproval.test.js` passed **17/17 tests (100% pass)**.
+    - Client production build (`npm run build`) succeeded with exit code 0 and generated all 17 static route HTML pages.
 
 - **NOTIFICATION BADGE & LIVE VISITOR COUNTER IMPLEMENTATION (COMPLETED & VERIFIED)**
   - **1. Notification Badge Root Cause & Resolution**:

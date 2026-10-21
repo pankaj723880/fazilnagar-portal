@@ -165,6 +165,9 @@ describe("Google Maps URL Handling, Extraction & Form Submission Verification", 
     if (server) {
       await new Promise((resolve) => server.close(resolve));
     }
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
+    }
   });
 
   // -------------------------------------------------------------
@@ -734,8 +737,9 @@ describe("Google Maps URL Handling, Extraction & Form Submission Verification", 
 
     it("37. Preserves previously saved valid coordinates when an approval or update occurs without new coordinates", async () => {
       // Existing place has verified coordinates
-      const initialLat = testPlace.latitude;
-      const initialLng = testPlace.longitude;
+      const currentPlace = await Place.findById(testPlace._id);
+      const initialLat = currentPlace.latitude;
+      const initialLng = currentPlace.longitude;
 
       // Submission proposes name change with a text-only search link (no coordinates)
       const submitRes = await makeRequest({

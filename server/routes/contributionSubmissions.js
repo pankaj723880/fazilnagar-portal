@@ -329,7 +329,7 @@ router.post("/backfill-coordinates", verifyToken, requireAdmin, async (req, res)
       if (!mapUrl) continue;
 
       let coords = extractCoordinatesFromMapsUrl(mapUrl);
-      if (!coords) {
+      if (!coords && (mapUrl.includes("goo.gl") || mapUrl.includes("apple.co"))) {
         coords = await extractCoordinatesAsync(mapUrl);
       }
 
@@ -358,6 +358,7 @@ router.post("/backfill-coordinates", verifyToken, requireAdmin, async (req, res)
       }
 
       if (modified) {
+        sub.markModified("proposedValues");
         await sub.save();
       }
     }
