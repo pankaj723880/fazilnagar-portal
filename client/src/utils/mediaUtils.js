@@ -79,6 +79,10 @@ export function resolveMediaUrl(url) {
     if (driveIdx !== -1) {
       return `${backendBase}${trimmed.substring(driveIdx)}`;
     }
+    const shortDriveIdx = trimmed.indexOf("/google-drive/");
+    if (shortDriveIdx !== -1) {
+      return `${backendBase}/api${trimmed.substring(shortDriveIdx)}`;
+    }
     const uploadsIdx = trimmed.indexOf("/uploads/");
     if (uploadsIdx !== -1) {
       return `${backendBase}${trimmed.substring(uploadsIdx)}`;
@@ -105,6 +109,12 @@ export function resolveMediaUrl(url) {
   }
 
   // Relative path - prefix with backendBase
+  // If relative path starts with /google-drive/ without /api, ensure /api is prepended
+  if (trimmed.startsWith("/google-drive/") || trimmed.startsWith("google-drive/")) {
+    const clean = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+    return `${backendBase}/api${clean}`;
+  }
+
   const normalized = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
   return `${backendBase}${normalized}`;
 }

@@ -149,14 +149,73 @@ async function getOrCreateSettings(bypassCache = false) {
   return settings;
 }
 
+/**
+ * Normalizes legacy or suspended backend URLs in media paths to the active target backend,
+ * strictly preserving the /api/google-drive/media/:id or /uploads/ paths.
+ */
+export function normalizeMediaUrl(url, targetBackend = (process.env.BACKEND_URL || "https://fazilnagar-portal-l95o.onrender.com").replace(/\/+$/, "")) {
+  if (typeof url !== "string" || !url) return url;
+  const trimmed = url.trim();
+  if (!trimmed) return trimmed;
+
+  if (trimmed.includes("fazilnagar-portal.onrender.com")) {
+    const driveIdx = trimmed.indexOf("/api/google-drive/");
+    if (driveIdx !== -1) {
+      return `${targetBackend}${trimmed.substring(driveIdx)}`;
+    }
+    const shortDriveIdx = trimmed.indexOf("/google-drive/");
+    if (shortDriveIdx !== -1) {
+      return `${targetBackend}/api${trimmed.substring(shortDriveIdx)}`;
+    }
+    const uploadsIdx = trimmed.indexOf("/uploads/");
+    if (uploadsIdx !== -1) {
+      return `${targetBackend}${trimmed.substring(uploadsIdx)}`;
+    }
+    return trimmed
+      .replace("https://fazilnagar-portal.onrender.com", targetBackend)
+      .replace("http://fazilnagar-portal.onrender.com", targetBackend);
+  }
+  return trimmed;
+}
+
+/**
+ * In-memory sanitization of settings payload to ensure clients never receive stale suspended Render URLs.
+ * Does NOT alter or bulk-update database records.
+ */
+export function sanitizeSettingsForClient(settings, targetBackend = (process.env.BACKEND_URL || "https://fazilnagar-portal-l95o.onrender.com").replace(/\/+$/, "")) {
+  if (!settings) return settings;
+  const sanitized = settings.toObject ? settings.toObject() : JSON.parse(JSON.stringify(settings));
+
+  if (sanitized.heroSettings?.slides && Array.isArray(sanitized.heroSettings.slides)) {
+    sanitized.heroSettings.slides = sanitized.heroSettings.slides.map((s) => {
+      if (!s) return s;
+      const slide = { ...s };
+      if (slide.imageUrl) slide.imageUrl = normalizeMediaUrl(slide.imageUrl, targetBackend);
+      if (slide.src) slide.src = normalizeMediaUrl(slide.src, targetBackend);
+      return slide;
+    });
+  }
+
+  if (sanitized.logoUrl) {
+    sanitized.logoUrl = normalizeMediaUrl(sanitized.logoUrl, targetBackend);
+  }
+  if (sanitized.seoSettings?.ogImage) {
+    sanitized.seoSettings.ogImage = normalizeMediaUrl(sanitized.seoSettings.ogImage, targetBackend);
+  }
+
+  return sanitized;
+}
+
 // @route   GET /api/settings
 // @desc    Retrieve public website settings and layout configuration
 // @access  Public
 router.get("/", async (req, res) => {
   try {
+    const targetBackend = (process.env.BACKEND_URL || "https://fazilnagar-portal-l95o.onrender.com").replace(/\/+$/, "");
     const settings = await getOrCreateSettings();
     const updatedAtTime = settings.updatedAt ? new Date(settings.updatedAt).getTime() : 0;
-    const etag = `"settings_${updatedAtTime}"`;
+    const targetHash = Buffer.from(targetBackend).toString("base64url").slice(0, 10);
+    const etag = `"settings_${updatedAtTime}_${targetHash}"`;
 
     res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
     res.setHeader("ETag", etag);
@@ -165,20 +224,7 @@ router.get("/", async (req, res) => {
       return res.status(304).end();
     }
 
-    const targetBackend = (process.env.BACKEND_URL || "https://fazilnagar-portal-l95o.onrender.com").replace(/\/+$/, "");
-    let sanitizedSettings = settings?.toObject ? settings.toObject() : { ...settings };
-    if (sanitizedSettings?.heroSettings?.slides && Array.isArray(sanitizedSettings.heroSettings.slides)) {
-      sanitizedSettings.heroSettings.slides = sanitizedSettings.heroSettings.slides.map((s) => {
-        if (!s) return s;
-        const slide = { ...s };
-        if (typeof slide.imageUrl === "string" && slide.imageUrl.includes("fazilnagar-portal.onrender.com")) {
-          slide.imageUrl = slide.imageUrl
-            .replace("https://fazilnagar-portal.onrender.com", targetBackend)
-            .replace("http://fazilnagar-portal.onrender.com", targetBackend);
-        }
-        return slide;
-      });
-    }
+    const sanitizedSettings = sanitizeSettingsForClient(settings, targetBackend);
 
     res.status(200).json({
       success: true,
@@ -459,10 +505,13 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
       ipAddress: req.ip,
     });
 
+    const targetBackend = (process.env.BACKEND_URL || "https://fazilnagar-portal-l95o.onrender.com").replace(/\/+$/, "");
+    const sanitizedSettings = sanitizeSettingsForClient(settings, targetBackend);
+
     res.status(200).json({
       success: true,
       message: "Website settings saved successfully.",
-      settings,
+      settings: sanitizedSettings,
     });
   } catch (err) {
     console.error("[Settings] Update error:", err);
@@ -525,11 +574,14 @@ router.put("/theme", verifyToken, requireAdmin, async (req, res) => {
       ipAddress: req.ip,
     });
 
+    const targetBackend = (process.env.BACKEND_URL || "https://fazilnagar-portal-l95o.onrender.com").replace(/\/+$/, "");
+    const sanitizedSettings = sanitizeSettingsForClient(settings, targetBackend);
+
     res.status(200).json({
       success: true,
       message: `Global website theme set to ${themeId} (${mode} mode) successfully.`,
       themeConfig: settings.themeConfig,
-      settings,
+      settings: sanitizedSettings,
     });
   } catch (err) {
     console.error("[Settings] Theme update error:", err);
@@ -547,7 +599,8 @@ router.post("/hero-slides", verifyToken, requireAdmin, async (req, res) => {
       return res.status(400).json({ success: false, message: "Image URL is required for hero slide." });
     }
 
-    const cleanUrl = imageUrl.trim();
+    const targetBackend = (process.env.BACKEND_URL || "https://fazilnagar-portal-l95o.onrender.com").replace(/\/+$/, "");
+    const cleanUrl = normalizeMediaUrl(imageUrl.trim(), targetBackend);
     if (cleanUrl.startsWith("blob:") || cleanUrl.startsWith("data:")) {
       return res.status(400).json({
         success: false,
@@ -582,10 +635,11 @@ router.post("/hero-slides", verifyToken, requireAdmin, async (req, res) => {
       ipAddress: req.ip,
     });
 
+    const sanitizedSlides = sanitizeSettingsForClient({ heroSettings: { slides: settings.heroSettings.slides } }, targetBackend).heroSettings.slides;
     res.status(201).json({
       success: true,
       message: "Hero slide added successfully.",
-      slides: settings.heroSettings.slides,
+      slides: sanitizedSlides,
     });
   } catch (err) {
     console.error("[Settings] Add slide error:", err);
@@ -625,10 +679,12 @@ router.put("/hero-slides/reorder", verifyToken, requireAdmin, async (req, res) =
     await settings.save();
     invalidateServerSettingsCache();
 
+    const targetBackend = (process.env.BACKEND_URL || "https://fazilnagar-portal-l95o.onrender.com").replace(/\/+$/, "");
+    const sanitizedSlides = sanitizeSettingsForClient({ heroSettings: { slides: settings.heroSettings.slides } }, targetBackend).heroSettings.slides;
     res.status(200).json({
       success: true,
       message: "Hero slides reordered successfully.",
-      slides: settings.heroSettings.slides,
+      slides: sanitizedSlides,
     });
   } catch (err) {
     console.error("[Settings] Reorder slides error:", err);
@@ -647,12 +703,13 @@ router.put("/hero-slides/:id", verifyToken, requireAdmin, async (req, res) => {
       return res.status(404).json({ success: false, message: "Hero slide not found." });
     }
 
+    const targetBackend = (process.env.BACKEND_URL || "https://fazilnagar-portal-l95o.onrender.com").replace(/\/+$/, "");
     const { title, subtitle, caption, imageUrl, linkUrl, buttonText, isActive, displayOrder } = req.body;
     if (title !== undefined) slide.title = title;
     if (subtitle !== undefined) slide.subtitle = subtitle;
     if (caption !== undefined) slide.caption = caption;
     if (imageUrl) {
-      const cleanUrl = imageUrl.trim();
+      const cleanUrl = normalizeMediaUrl(imageUrl.trim(), targetBackend);
       if (cleanUrl.startsWith("blob:") || cleanUrl.startsWith("data:")) {
         return res.status(400).json({
           success: false,
@@ -680,10 +737,11 @@ router.put("/hero-slides/:id", verifyToken, requireAdmin, async (req, res) => {
       ipAddress: req.ip,
     });
 
+    const sanitizedSlides = sanitizeSettingsForClient({ heroSettings: { slides: settings.heroSettings.slides } }, targetBackend).heroSettings.slides;
     res.status(200).json({
       success: true,
       message: "Hero slide updated successfully.",
-      slides: settings.heroSettings.slides,
+      slides: sanitizedSlides,
     });
   } catch (err) {
     console.error("[Settings] Update slide error:", err);
@@ -714,10 +772,12 @@ router.delete("/hero-slides/:id", verifyToken, requireAdmin, async (req, res) =>
       ipAddress: req.ip,
     });
 
+    const targetBackend = (process.env.BACKEND_URL || "https://fazilnagar-portal-l95o.onrender.com").replace(/\/+$/, "");
+    const sanitizedSlides = sanitizeSettingsForClient({ heroSettings: { slides: settings.heroSettings.slides } }, targetBackend).heroSettings.slides;
     res.status(200).json({
       success: true,
       message: "Hero slide removed successfully.",
-      slides: settings.heroSettings.slides,
+      slides: sanitizedSlides,
     });
   } catch (err) {
     console.error("[Settings] Delete slide error:", err);

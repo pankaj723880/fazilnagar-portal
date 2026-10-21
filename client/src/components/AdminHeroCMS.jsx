@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import API from "../api";
 import { getAuthToken } from "../utils/authStorage";
 import { clearCMSCache } from "../services/cmsService";
+import { resolveMediaUrl } from "../utils/mediaUtils";
 import PageHeader from "./admin/PageHeader";
 import FormSection from "./admin/FormSection";
 import ImageUploader from "./admin/ImageUploader";
@@ -81,7 +82,13 @@ export default function AdminHeroCMS() {
           animationDirection: hs.animationDirection || "left",
           enableAutoplay: hs.enableAutoplay !== false,
         });
-        setSlides(hs.slides || []);
+        const rawSlides = hs.slides || [];
+        setSlides(
+          rawSlides.map((s) => ({
+            ...s,
+            imageUrl: resolveMediaUrl(s.imageUrl || s.src),
+          }))
+        );
       }
     } catch (err) {
       console.warn("Failed to fetch hero settings:", err);
@@ -143,12 +150,13 @@ export default function AdminHeroCMS() {
     setFormTitle(slide.title || "");
     setFormSubtitle(slide.subtitle || "");
     setFormCaption(slide.caption || "");
-    setFormImageUrl(slide.imageUrl || "");
-    setPreviewUrl(slide.imageUrl || "");
+    const resolvedUrl = resolveMediaUrl(slide.imageUrl || "");
+    setFormImageUrl(resolvedUrl);
+    setPreviewUrl(resolvedUrl);
     setFormLinkUrl(slide.linkUrl || "/directory");
     setFormButtonText(slide.buttonText || "Explore Now");
     setFormIsActive(slide.isActive !== false);
-    setUploadStatus(slide.imageUrl ? "success" : "idle");
+    setUploadStatus(resolvedUrl ? "success" : "idle");
     setUploadProgress(0);
     setUploadError("");
     setSelectedFile(null);
@@ -239,6 +247,8 @@ export default function AdminHeroCMS() {
 
     setFormSubmitting(true);
     const token = getAuthToken();
+    const normalizedImageUrl = resolveMediaUrl(formImageUrl.trim());
+    const mapSlides = (arr) => (arr || []).map((s) => ({ ...s, imageUrl: resolveMediaUrl(s.imageUrl || s.src) }));
     try {
       if (editingSlide && editingSlide._id) {
         const res = await API.put(
@@ -247,14 +257,14 @@ export default function AdminHeroCMS() {
             title: formTitle,
             subtitle: formSubtitle,
             caption: formCaption,
-            imageUrl: formImageUrl,
+            imageUrl: normalizedImageUrl,
             linkUrl: formLinkUrl,
             buttonText: formButtonText,
             isActive: formIsActive,
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        if (res.data?.slides) setSlides(res.data.slides);
+        if (res.data?.slides) setSlides(mapSlides(res.data.slides));
         clearCMSCache("settings");
         clearCMSCache();
         showToast("Hero slide updated successfully!");
@@ -265,14 +275,14 @@ export default function AdminHeroCMS() {
             title: formTitle,
             subtitle: formSubtitle,
             caption: formCaption,
-            imageUrl: formImageUrl,
+            imageUrl: normalizedImageUrl,
             linkUrl: formLinkUrl,
             buttonText: formButtonText,
             isActive: formIsActive,
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        if (res.data?.slides) setSlides(res.data.slides);
+        if (res.data?.slides) setSlides(mapSlides(res.data.slides));
         clearCMSCache("settings");
         clearCMSCache();
         showToast("New hero slide added to carousel!");
@@ -289,11 +299,12 @@ export default function AdminHeroCMS() {
   const handleDeleteSlide = async () => {
     if (!deleteSlideId) return;
     const token = getAuthToken();
+    const mapSlides = (arr) => (arr || []).map((s) => ({ ...s, imageUrl: resolveMediaUrl(s.imageUrl || s.src) }));
     try {
       const res = await API.delete(`/settings/hero-slides/${deleteSlideId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.data?.slides) setSlides(res.data.slides);
+      if (res.data?.slides) setSlides(mapSlides(res.data.slides));
       clearCMSCache();
       showToast("Hero slide deleted.");
       setDeleteSlideId(null);
@@ -304,6 +315,7 @@ export default function AdminHeroCMS() {
 
   const handleToggleActive = async (slide) => {
     const token = getAuthToken();
+    const mapSlides = (arr) => (arr || []).map((s) => ({ ...s, imageUrl: resolveMediaUrl(s.imageUrl || s.src) }));
     try {
       const nextActive = !slide.isActive;
       const res = await API.put(
@@ -311,7 +323,7 @@ export default function AdminHeroCMS() {
         { ...slide, isActive: nextActive },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (res.data?.slides) setSlides(res.data.slides);
+      if (res.data?.slides) setSlides(mapSlides(res.data.slides));
       clearCMSCache();
       showToast(`Slide ${nextActive ? "activated" : "deactivated"}.`);
     } catch (err) {
@@ -507,7 +519,7 @@ export default function AdminHeroCMS() {
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="relative w-16 h-10 rounded-lg overflow-hidden bg-slate-900 border border-slate-200 shrink-0 aspect-video">
                       <img
-                        src={slide.imageUrl}
+                        src={resolveMediaUrl(slide.imageUrl)}
                         alt={slide.title || "Slide"}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -680,9 +692,10 @@ export default function AdminHeroCMS() {
                 onRetry={() => selectedFile && uploadImageFile(selectedFile)}
                 onClear={handleClearImage}
                 onChange={(url) => {
-                  setFormImageUrl(url);
-                  setPreviewUrl(url);
-                  setUploadStatus(url ? "success" : "idle");
+                  const resolved = resolveMediaUrl(url);
+                  setFormImageUrl(resolved);
+                  setPreviewUrl(resolved);
+                  setUploadStatus(resolved ? "success" : "idle");
                   setUploadError("");
                 }}
                 onOpenMediaPicker={() => setMediaPickerOpen(true)}
@@ -770,8 +783,9 @@ export default function AdminHeroCMS() {
         isOpen={mediaPickerOpen}
         onClose={() => setMediaPickerOpen(false)}
         onSelect={(url) => {
-          setFormImageUrl(url);
-          setPreviewUrl(url);
+          const resolved = resolveMediaUrl(url);
+          setFormImageUrl(resolved);
+          setPreviewUrl(resolved);
           setUploadStatus("success");
           setUploadError("");
           setSelectedFile(null);

@@ -74,13 +74,34 @@ router.get("/", verifyToken, requireAdmin, async (req, res) => {
       .skip(skip)
       .limit(limit);
 
+    const backendBase = (process.env.BACKEND_URL || "https://fazilnagar-portal-l95o.onrender.com").replace(/\/+$/, "");
+    const sanitizedItems = items.map((doc) => {
+      const item = doc.toObject ? doc.toObject() : { ...doc };
+      if (item.url && typeof item.url === "string" && item.url.includes("fazilnagar-portal.onrender.com")) {
+        const driveIdx = item.url.indexOf("/api/google-drive/");
+        if (driveIdx !== -1) {
+          item.url = `${backendBase}${item.url.substring(driveIdx)}`;
+        } else {
+          const uploadsIdx = item.url.indexOf("/uploads/");
+          if (uploadsIdx !== -1) {
+            item.url = `${backendBase}${item.url.substring(uploadsIdx)}`;
+          } else {
+            item.url = item.url
+              .replace("https://fazilnagar-portal.onrender.com", backendBase)
+              .replace("http://fazilnagar-portal.onrender.com", backendBase);
+          }
+        }
+      }
+      return item;
+    });
+
     res.status(200).json({
       success: true,
       total,
       page,
       pages: Math.ceil(total / limit),
-      items,
-      media: items, // Alias for frontend compatibility
+      items: sanitizedItems,
+      media: sanitizedItems, // Alias for frontend compatibility
     });
   } catch (err) {
     console.error("[Media] Fetch error:", err);

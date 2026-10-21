@@ -4,6 +4,7 @@
  */
 import API from "../api";
 import seedPlaces from "../data/places.json";
+import { resolveMediaUrl } from "../utils/mediaUtils";
 
 const CACHE_TTL_MS = 60 * 1000; // 60 seconds in-memory cache to eliminate duplicate network calls on refreshes while supporting instant live updates
 
@@ -47,8 +48,41 @@ function setPersistentCache(key, data) {
   } catch (_) {}
 }
 
+/**
+ * In-memory normalizer to ensure carousel slides and media assets always resolve to the active backend.
+ */
+export function normalizeSettingsMedia(settings) {
+  if (!settings || typeof settings !== "object") return settings;
+  const clone = { ...settings };
+  if (clone.heroSettings?.slides && Array.isArray(clone.heroSettings.slides)) {
+    clone.heroSettings = {
+      ...clone.heroSettings,
+      slides: clone.heroSettings.slides.map((s) => {
+        if (!s) return s;
+        const normalizedSrc = resolveMediaUrl(s.imageUrl || s.src);
+        return {
+          ...s,
+          imageUrl: normalizedSrc,
+          src: normalizedSrc,
+        };
+      }),
+    };
+  }
+  if (clone.logoUrl) {
+    clone.logoUrl = resolveMediaUrl(clone.logoUrl);
+  }
+  if (clone.seoSettings?.ogImage) {
+    clone.seoSettings = {
+      ...clone.seoSettings,
+      ogImage: resolveMediaUrl(clone.seoSettings.ogImage),
+    };
+  }
+  return clone;
+}
+
 export function getCachedSettings() {
-  return getPersistentCache("settings") || memoryCache.settings.data;
+  const cached = getPersistentCache("settings") || memoryCache.settings.data;
+  return normalizeSettingsMedia(cached);
 }
 
 export function getCachedHeritage() {
@@ -328,15 +362,17 @@ export async function getSiteSettings(forceFresh = false) {
       });
       if (res.data?.success && res.data?.settings) {
         const merged = deepMerge(DEFAULT_SITE_SETTINGS, res.data.settings);
-        setPersistentCache("settings", merged);
-        memoryCache.settings = { data: merged, timestamp: Date.now() };
-        return merged;
+        const normalized = normalizeSettingsMedia(merged);
+        setPersistentCache("settings", normalized);
+        memoryCache.settings = { data: normalized, timestamp: Date.now() };
+        return normalized;
       }
     } catch (err) {
       console.warn("[CMSService] Settings fetch fallback:", err.message);
     }
 
-    return memoryCache.settings.data || getPersistentCache("settings") || DEFAULT_SITE_SETTINGS;
+    const fallback = memoryCache.settings.data || getPersistentCache("settings") || DEFAULT_SITE_SETTINGS;
+    return normalizeSettingsMedia(fallback);
   });
 }
 

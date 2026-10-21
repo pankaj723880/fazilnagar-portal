@@ -406,6 +406,27 @@ router.get("/inspect", async (req, res) => {
   try {
     const isDbReady = mongoose.connection && mongoose.connection.readyState === 1;
     const mongoMediaCount = isDbReady ? await GoogleDriveMedia.countDocuments().catch(() => 0) : 0;
+    const targetBackend = (
+      process.env.BACKEND_URL ||
+      (process.env.NODE_ENV === "production"
+        ? "https://fazilnagar-portal-l95o.onrender.com"
+        : `http://localhost:${process.env.PORT || 5000}`)
+    ).replace(/\/+$/, "");
+
+    const normalizeDriveDeliveryUrl = (url) => {
+      if (typeof url !== "string" || !url) return url;
+      if (url.includes("fazilnagar-portal.onrender.com")) {
+        const driveIdx = url.indexOf("/api/google-drive/");
+        if (driveIdx !== -1) {
+          return `${targetBackend}${url.substring(driveIdx)}`;
+        }
+        return url
+          .replace("https://fazilnagar-portal.onrender.com", targetBackend)
+          .replace("http://fazilnagar-portal.onrender.com", targetBackend);
+      }
+      return url;
+    };
+
     const mongoMedia = isDbReady ? await GoogleDriveMedia.find().sort({ createdAt: -1 }).limit(10).lean().catch(() => []) : [];
     const mappedMongoMedia = mongoMedia.map((m) => ({
       id: m._id,
@@ -416,7 +437,7 @@ router.get("/inspect", async (req, res) => {
       owner: m.owner,
       folderId: m.folderId,
       isTest: m.isTest,
-      deliveryUrl: m.deliveryUrl,
+      deliveryUrl: normalizeDriveDeliveryUrl(m.deliveryUrl),
       createdAt: m.createdAt,
     }));
 

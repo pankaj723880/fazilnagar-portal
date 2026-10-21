@@ -349,7 +349,7 @@ export default function TownPortal() {
 
   // Compute dynamic hero slides: strictly show admin-uploaded slides if configured
   const adminUploadedSlides = (siteSettings?.heroSettings?.slides || []).filter(
-    (s) => s && s.isActive !== false && s.imageUrl && !s.imageUrl.startsWith("blob:")
+    (s) => s && s.isActive !== false && (s.imageUrl || s.src) && !(s.imageUrl || s.src).startsWith("blob:")
   );
 
   const slidesToUse = adminUploadedSlides.length > 0 ? adminUploadedSlides : DEFAULT_HERO_SLIDES;
@@ -665,6 +665,10 @@ export default function TownPortal() {
                       width="1200"
                       height="600"
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "/images/fazilnagar_pawanagar.webp";
+                      }}
                       className="w-full h-full object-cover object-center animate-ken-burns scale-105 transition-transform duration-1000 ease-out"
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/35 to-black/75 z-20"></div>

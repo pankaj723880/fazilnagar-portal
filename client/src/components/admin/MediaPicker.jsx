@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import API from "../../api";
 import { getAuthToken } from "../../utils/authStorage";
+import { resolveMediaUrl } from "../../utils/mediaUtils";
 import {
   Image as ImageIcon,
   Search,
@@ -172,14 +173,18 @@ export default function MediaPicker({
                 <div
                   key={item._id || item.url}
                   onClick={() => {
-                    onSelect(item.url);
+                    onSelect(resolveMediaUrl(item.url));
                     onClose();
                   }}
                   className="group relative rounded-xl overflow-hidden border border-slate-200 bg-slate-900 aspect-video cursor-pointer hover:border-blue-500 hover:shadow-md transition"
                 >
                   <img
-                    src={item.url}
+                    src={resolveMediaUrl(item.url)}
                     alt={item.altText || item.title}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/images/fazilnagar_pawanagar.webp";
+                    }}
                     className="w-full h-full object-cover group-hover:scale-105 transition duration-200"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-2 flex flex-col justify-end text-white">

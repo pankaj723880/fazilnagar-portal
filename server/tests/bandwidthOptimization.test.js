@@ -168,55 +168,129 @@ test("Bandwidth Optimization: Google Drive Media ETag & 304 Not Modified", async
   });
 });
 
+import { normalizeMediaUrl, sanitizeSettingsForClient } from "../routes/settings.js";
+
 test("Backend URL Resolution: Normalizes old suspended Render backend to live backend", async (t) => {
   const OLD_BACKEND = "https://fazilnagar-portal.onrender.com";
   const LIVE_BACKEND = "https://fazilnagar-portal-l95o.onrender.com";
 
-  await t.test("Rewrites old suspended Drive media URLs to live backend", () => {
+  await t.test("Rewrites old suspended Drive media URLs to live backend preserving /api/google-drive/media/:id", () => {
     const oldMediaUrl = `${OLD_BACKEND}/api/google-drive/media/67b9318a24c5689012345678`;
-    
-    // Test logic mirroring normalizeMediaUrl & resolveMediaUrl
-    const driveIdx = oldMediaUrl.indexOf("/api/google-drive/");
-    const resolvedUrl = driveIdx !== -1 ? `${LIVE_BACKEND}${oldMediaUrl.substring(driveIdx)}` : oldMediaUrl;
+    const resolvedUrl = normalizeMediaUrl(oldMediaUrl, LIVE_BACKEND);
 
     assert.equal(
       resolvedUrl,
       `${LIVE_BACKEND}/api/google-drive/media/67b9318a24c5689012345678`,
-      "Drive media URL must point to active live backend"
+      "Drive media URL must point to active live backend and preserve exact media path"
     );
   });
 
-  await t.test("Rewrites carousel slides imageUrl stored with old Render backend", () => {
-    const storedSlides = [
-      {
-        id: "slide_1",
-        title: "Pawanagar Dham",
-        imageUrl: `${OLD_BACKEND}/api/google-drive/media/hero_pawanagar_1`,
-      },
-      {
-        id: "slide_2",
-        title: "Kushinagar Corridor",
-        imageUrl: "/images/fazilnagar_pawanagar.webp",
-      },
-    ];
-
-    const normalizedSlides = storedSlides.map((slide) => {
-      const copy = { ...slide };
-      if (typeof copy.imageUrl === "string" && copy.imageUrl.includes("fazilnagar-portal.onrender.com")) {
-        copy.imageUrl = copy.imageUrl.replace(OLD_BACKEND, LIVE_BACKEND);
-      }
-      return copy;
-    });
+  await t.test("Handles http:// protocol and short /google-drive/ path safely", () => {
+    const oldHttpUrl = `http://fazilnagar-portal.onrender.com/google-drive/media/file_xyz`;
+    const resolvedUrl = normalizeMediaUrl(oldHttpUrl, LIVE_BACKEND);
 
     assert.equal(
-      normalizedSlides[0].imageUrl,
-      `${LIVE_BACKEND}/api/google-drive/media/hero_pawanagar_1`,
-      "Hero carousel slide with old backend URL must resolve to live backend"
+      resolvedUrl,
+      `${LIVE_BACKEND}/api/google-drive/media/file_xyz`,
+      "Must upgrade to live backend and ensure /api/ prefix exists"
+    );
+  });
+
+  await t.test("Rewrites legacy backend upload URLs to live backend", () => {
+    const oldUploadUrl = `${OLD_BACKEND}/uploads/media/banner-123.jpg`;
+    const resolvedUrl = normalizeMediaUrl(oldUploadUrl, LIVE_BACKEND);
+
+    assert.equal(
+      resolvedUrl,
+      `${LIVE_BACKEND}/uploads/media/banner-123.jpg`,
+      "Uploads URL must point to active live backend"
+    );
+  });
+
+  await t.test("Preserves relative local assets and external third-party URLs without alteration", () => {
+    assert.equal(
+      normalizeMediaUrl("/images/fazilnagar_pawanagar.webp", LIVE_BACKEND),
+      "/images/fazilnagar_pawanagar.webp",
+      "Relative paths must be preserved"
     );
     assert.equal(
-      normalizedSlides[1].imageUrl,
+      normalizeMediaUrl("https://images.unsplash.com/photo-1548013146-72479768bada", LIVE_BACKEND),
+      "https://images.unsplash.com/photo-1548013146-72479768bada",
+      "External third-party URLs must be preserved"
+    );
+    assert.equal(normalizeMediaUrl("", LIVE_BACKEND), "");
+    assert.equal(normalizeMediaUrl(null, LIVE_BACKEND), null);
+  });
+
+  await t.test("sanitizeSettingsForClient normalizes carousel slides, logo, and seoImage in-memory without mutating source", () => {
+    const originalSettings = {
+      siteName: "Fazilnagar Portal",
+      logoUrl: `${OLD_BACKEND}/api/google-drive/media/logo_123`,
+      seoSettings: {
+        ogImage: `${OLD_BACKEND}/api/google-drive/media/og_123`,
+      },
+      heroSettings: {
+        animationSpeed: 5000,
+        enableAutoplay: true,
+        slides: [
+          {
+            _id: "slide_1",
+            title: "Pawanagar Dham",
+            subtitle: "Historic Holy Land",
+            caption: "Explore Nirvana trail",
+            imageUrl: `${OLD_BACKEND}/api/google-drive/media/hero_pawanagar_1`,
+            linkUrl: "/directory",
+            buttonText: "Explore Now",
+            isActive: true,
+          },
+          {
+            _id: "slide_2",
+            title: "Kushinagar Corridor",
+            subtitle: "Sacred Convergence",
+            caption: "Twin heritage",
+            imageUrl: "/images/fazilnagar_pawanagar.webp",
+            linkUrl: "/tourism",
+            buttonText: "Learn More",
+            isActive: true,
+          },
+        ],
+      },
+    };
+
+    const sanitized = sanitizeSettingsForClient(originalSettings, LIVE_BACKEND);
+
+    // Assert normalized fields
+    assert.equal(
+      sanitized.heroSettings.slides[0].imageUrl,
+      `${LIVE_BACKEND}/api/google-drive/media/hero_pawanagar_1`,
+      "Hero carousel slide 0 must resolve to live backend"
+    );
+    assert.equal(
+      sanitized.heroSettings.slides[0].title,
+      "Pawanagar Dham",
+      "Slide title and metadata must be preserved"
+    );
+    assert.equal(
+      sanitized.heroSettings.slides[1].imageUrl,
       "/images/fazilnagar_pawanagar.webp",
-      "Relative local images must remain untouched"
+      "Local relative slide must be preserved"
+    );
+    assert.equal(
+      sanitized.logoUrl,
+      `${LIVE_BACKEND}/api/google-drive/media/logo_123`,
+      "Logo URL must resolve to live backend"
+    );
+    assert.equal(
+      sanitized.seoSettings.ogImage,
+      `${LIVE_BACKEND}/api/google-drive/media/og_123`,
+      "OG Image URL must resolve to live backend"
+    );
+
+    // Verify immutability of original settings object
+    assert.equal(
+      originalSettings.heroSettings.slides[0].imageUrl,
+      `${OLD_BACKEND}/api/google-drive/media/hero_pawanagar_1`,
+      "Original settings object must remain unaltered (no DB mutation)"
     );
   });
 });
