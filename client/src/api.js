@@ -24,11 +24,21 @@ const RENDER_PROD_API = "https://fazilnagar-portal.onrender.com/api";
 const isLocalhost =
   typeof window !== "undefined" &&
   (window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1");
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname.startsWith("192.168.") ||
+    window.location.hostname.startsWith("10.") ||
+    window.location.hostname.endsWith(".local"));
 
-let rawUrl = isLocalhost
-  ? (import.meta.env.VITE_API_URL || RENDER_PROD_API).trim().replace(/\/+$/, "")
-  : RENDER_PROD_API;
+const envApiUrl = import.meta.env.VITE_API_URL?.trim();
+
+let rawUrl;
+if (envApiUrl) {
+  rawUrl = envApiUrl.replace(/\/+$/, "");
+} else if (isLocalhost) {
+  rawUrl = "http://localhost:5000/api";
+} else {
+  rawUrl = RENDER_PROD_API;
+}
 
 const baseURL = rawUrl.endsWith("/api") ? rawUrl : `${rawUrl}/api`;
 
