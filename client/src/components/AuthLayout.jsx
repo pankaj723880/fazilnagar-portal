@@ -26,7 +26,7 @@ export default function AuthLayout({
     <div
       className="min-h-[calc(100dvh-64px)] sm:min-h-[calc(100dvh-96px)] w-full flex-1 flex flex-col items-center justify-center py-4 sm:py-6 px-3.5 sm:px-6 relative overflow-hidden bg-cover bg-center bg-no-repeat"
       style={{
-        backgroundImage: "url('/images/fzn.png')",
+        backgroundImage: "url('/fzn.png'), url('/images/fzn.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -34,28 +34,28 @@ export default function AuthLayout({
     >
       {/* Background Image: fzn.png with eager load and fallback */}
       <img
-        src="/images/fzn.png"
+        src="/fzn.png"
         alt="Fazilnagar Town Background"
         fetchPriority="high"
         loading="eager"
         decoding="sync"
         onError={(e) => {
-          if (e.currentTarget.src !== window.location.origin + "/fzn.png") {
-            e.currentTarget.src = "/fzn.png";
+          if (e.currentTarget.src !== window.location.origin + "/images/fzn.png") {
+            e.currentTarget.src = "/images/fzn.png";
           }
         }}
         className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none z-0"
       />
 
-      {/* Subtle translucent warm ivory overlay in light mode, deep heritage dark overlay in dark mode */}
+      {/* Balanced translucent overlay so fzn.png background image remains clearly visible */}
       <div
-        className="absolute inset-0 bg-[#F7F3EB]/55 dark:bg-[#191916]/65 backdrop-blur-[0.5px] transition-colors z-0"
+        className="absolute inset-0 bg-slate-900/35 dark:bg-black/60 backdrop-blur-[0.5px] transition-colors z-0"
         aria-hidden="true"
       />
 
       {/* Ambient warm glow emphasizing the sandstone palette */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[320px] bg-[#B3945B]/[0.08] dark:bg-[#C5A66A]/[0.06] rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[320px] bg-[#B3945B]/[0.10] dark:bg-[#C5A66A]/[0.08] rounded-full blur-3xl" />
       </div>
 
       <ScrollReveal
