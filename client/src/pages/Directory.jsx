@@ -904,14 +904,14 @@ export default function Directory({ user }) {
       {/* ========================================================
           3. WARD/AREA AND SORTING CONTROLS CARD
           ======================================================== */}
-      <section aria-label="Area and sorting filters" className="bg-white rounded-xl border border-[#E3EAF1] shadow-xs p-2 sm:p-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+      <section aria-label="Area and sorting filters" className="bg-white rounded-xl border border-[#E3EAF1] shadow-xs p-2 sm:p-2.5 grid grid-cols-2 gap-2 sm:gap-3">
         {/* Left: Ward / Area Selector */}
-        <div className="relative flex items-center bg-[#F5F7FA] rounded-xl px-3 py-2 border border-[#E3EAF1] hover:border-slate-300 transition">
-          <Filter className="w-3.5 h-3.5 text-[#71819B] shrink-0 mr-2" />
+        <div className="relative flex items-center bg-[#F5F7FA] rounded-xl px-2 sm:px-3 border border-[#E3EAF1] hover:border-slate-300 transition min-w-0 h-9 sm:h-10">
+          <Filter className="w-3.5 h-3.5 text-[#71819B] shrink-0 mr-1.5 sm:mr-2" />
           <select
             value={selectedLocality}
             onChange={(e) => setSelectedLocality(e.target.value)}
-            className="w-full bg-transparent text-xs font-semibold text-[#182338] outline-none cursor-pointer appearance-none pr-6"
+            className="w-full bg-transparent text-[11px] sm:text-xs font-semibold text-[#182338] outline-none cursor-pointer appearance-none pr-5 sm:pr-6 truncate"
             aria-label="Filter by Ward or Area"
           >
             <option value="all">All Wards / Areas</option>
@@ -921,23 +921,23 @@ export default function Directory({ user }) {
               </option>
             ))}
           </select>
-          <ChevronDown className="w-4 h-4 text-[#71819B] absolute right-2.5 pointer-events-none" />
+          <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#71819B] absolute right-1.5 sm:right-2.5 pointer-events-none shrink-0" />
         </div>
 
         {/* Right: Sort Selector */}
-        <div className="relative flex items-center bg-[#F5F7FA] rounded-xl px-3 py-2 border border-[#E3EAF1] hover:border-slate-300 transition">
-          <ArrowUpDown className="w-3.5 h-3.5 text-[#71819B] shrink-0 mr-2" />
+        <div className="relative flex items-center bg-[#F5F7FA] rounded-xl px-2 sm:px-3 border border-[#E3EAF1] hover:border-slate-300 transition min-w-0 h-9 sm:h-10">
+          <ArrowUpDown className="w-3.5 h-3.5 text-[#71819B] shrink-0 mr-1.5 sm:mr-2" />
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="w-full bg-transparent text-xs font-semibold text-[#182338] outline-none cursor-pointer appearance-none pr-6"
+            className="w-full bg-transparent text-[11px] sm:text-xs font-semibold text-[#182338] outline-none cursor-pointer appearance-none pr-5 sm:pr-6 truncate"
             aria-label="Sort directory results"
           >
             <option value="name">Sort: A to Z</option>
             <option value="name_desc">Sort: Z to A</option>
             <option value="category">Sort: Category</option>
           </select>
-          <ChevronDown className="w-4 h-4 text-[#71819B] absolute right-2.5 pointer-events-none" />
+          <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#71819B] absolute right-1.5 sm:right-2.5 pointer-events-none shrink-0" />
         </div>
       </section>
 
