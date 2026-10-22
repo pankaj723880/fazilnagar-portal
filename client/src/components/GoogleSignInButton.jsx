@@ -230,7 +230,7 @@ export default function GoogleSignInButton({ setUser, redirectPath = "/", onErro
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
             />
           </svg>
-          <span>Continue with Google / गूगल से जारी रखें</span>
+          <span>Continue with Google</span>
         </button>
       )}
 
@@ -241,7 +241,7 @@ export default function GoogleSignInButton({ setUser, redirectPath = "/", onErro
             <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <div className="flex-1 text-xs">
               <p className="font-bold text-amber-900 dark:text-amber-200">
-                Pop-up Blocked by Browser / पॉपअप विंडो ब्लॉक हो गई है
+                Pop-up Blocked by Browser
               </p>
               <p className="mt-1 text-amber-800 dark:text-amber-300/90 leading-relaxed text-[11.5px]">
                 Your browser or an ad-blocker prevented the Google login window from opening.
@@ -258,7 +258,7 @@ export default function GoogleSignInButton({ setUser, redirectPath = "/", onErro
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-medium rounded-lg text-xs transition shadow-2xs cursor-pointer"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Try Again / पुनः प्रयास</span>
+                  <span>Try Again</span>
                 </button>
               </div>
             </div>
@@ -274,7 +274,7 @@ export default function GoogleSignInButton({ setUser, redirectPath = "/", onErro
           className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition underline underline-offset-2 cursor-pointer"
         >
           <HelpCircle className="w-3 h-3" />
-          <span>Trouble signing in with Google? / सहायता</span>
+          <span>Trouble signing in with Google?</span>
           {showHelp ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
         </button>
 

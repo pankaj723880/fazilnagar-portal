@@ -8,7 +8,6 @@ import {
   Loader2,
   ArrowRight,
   UserCheck,
-  Shield,
 } from "lucide-react";
 import API from "../api";
 import { setAuthSession } from "../utils/authStorage";
@@ -61,10 +60,12 @@ export default function Login({ setUser }) {
 
   return (
     <AuthLayout
-      title="Citizen Sign In / नागरिक लॉगिन"
+      title="Citizen Sign In"
       subtitle="Access your Fazilnagar Town Portal account to post verified local news, participate in town discussions, and access civic directory services."
+      badgeText="Fazilnagar Citizen Portal • PIN 274401"
+      showSecurityBadge={false}
       error={error}
-      maxWidth="max-w-[420px]"
+      maxWidth="max-w-[410px]"
       illustration={
         <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-linear-to-br from-red-600/10 via-amber-500/15 to-red-700/15 border border-red-200/80 dark:border-red-900/50 flex items-center justify-center text-red-700 dark:text-red-400 shadow-2xs">
           <UserCheck className="w-5 h-5" />
@@ -72,7 +73,7 @@ export default function Login({ setUser }) {
       }
     >
       {/* Google Login Section */}
-      <div className="mb-2 sm:mb-2.5">
+      <div className="mb-2">
         <GoogleSignInButton
           setUser={setUser}
           redirectPath={redirectPath}
@@ -87,7 +88,7 @@ export default function Login({ setUser }) {
         </div>
         <div className="relative flex justify-center text-xs">
           <span className="bg-white/90 dark:bg-[#151F2E]/90 px-2.5 text-slate-400 dark:text-slate-500 font-medium text-[10.5px]">
-            Or sign in with email / या ईमेल द्वारा
+            Or sign in with email
           </span>
         </div>
       </div>
@@ -96,7 +97,7 @@ export default function Login({ setUser }) {
         {/* Email Field */}
         <div>
           <label className="block text-[11.5px] sm:text-xs font-semibold text-slate-700 dark:text-slate-300 mb-0.5">
-            Email Address / ईमेल पता
+            Email Address
           </label>
           <div className="relative">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
@@ -118,13 +119,13 @@ export default function Login({ setUser }) {
         <div>
           <div className="flex items-center justify-between mb-0.5">
             <label className="block text-[11.5px] sm:text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Password / पासवर्ड
+              Password
             </label>
             <Link
               to="/forgot-password"
               className="text-[11px] text-red-700 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 hover:underline font-semibold transition-colors"
             >
-              Forgot Password? / भूल गए?
+              Forgot Password?
             </Link>
           </div>
           <div className="relative">
@@ -160,11 +161,11 @@ export default function Login({ setUser }) {
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Signing in... / सत्यापन हो रहा है...</span>
+              <span>Signing in...</span>
             </>
           ) : (
             <>
-              <span>Sign In / लॉगिन करें</span>
+              <span>Sign In</span>
               <ArrowRight className="w-4 h-4" />
             </>
           )}
@@ -173,20 +174,14 @@ export default function Login({ setUser }) {
 
       {/* Switch to Registration Link */}
       <div className="text-center text-xs text-slate-500 dark:text-slate-400 mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
-        <span>Don't have a citizen account? / खाता नहीं है? </span>
+        <span>Don't have a citizen account? </span>
         <Link
           to="/register"
           state={{ from: redirectPath }}
           className="text-red-700 dark:text-red-400 font-bold hover:underline inline-flex items-center gap-1 transition-colors"
         >
-          Register here / नया खाता बनाएं
+          Register here
         </Link>
-      </div>
-
-      {/* Small Security / Shield Illustration near bottom */}
-      <div className="mt-2.5 pt-1 flex items-center justify-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500">
-        <Shield className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-        <span>Protected by Fazilnagar Municipal Security Protocol</span>
       </div>
     </AuthLayout>
   );

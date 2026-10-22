@@ -20,6 +20,7 @@ export default function AuthLayout({
   info,
   children,
   maxWidth = "max-w-[430px]",
+  showSecurityBadge = true,
 }) {
   return (
     <div
@@ -129,14 +130,16 @@ export default function AuthLayout({
       </ScrollReveal>
 
       {/* Trust & Security Verification Footer */}
-      <ScrollReveal
-        variant="fade-up"
-        delay={75}
-        className="mt-2.5 sm:mt-3 flex items-center justify-center gap-1.5 text-[10px] sm:text-[10.5px] font-medium text-slate-700 dark:text-slate-300 bg-white/85 dark:bg-[#151F2E]/85 backdrop-blur-md px-3 py-0.5 rounded-full border border-slate-200/80 dark:border-slate-800/80 shadow-2xs relative z-10"
-      >
-        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-        <span>Official Civic Portal • 256-Bit SSL Encrypted Verification</span>
-      </ScrollReveal>
+      {showSecurityBadge && (
+        <ScrollReveal
+          variant="fade-up"
+          delay={75}
+          className="mt-2.5 sm:mt-3 flex items-center justify-center gap-1.5 text-[10px] sm:text-[10.5px] font-medium text-slate-700 dark:text-slate-300 bg-white/85 dark:bg-[#151F2E]/85 backdrop-blur-md px-3 py-0.5 rounded-full border border-slate-200/80 dark:border-slate-800/80 shadow-2xs relative z-10"
+        >
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <span>Official Civic Portal • 256-Bit SSL Encrypted Verification</span>
+        </ScrollReveal>
+      )}
     </div>
   );
 }
