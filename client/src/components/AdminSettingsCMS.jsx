@@ -9,6 +9,7 @@ import StatusBadge from "./admin/StatusBadge";
 import ConfirmDialog from "./admin/ConfirmDialog";
 import ToastNotification from "./admin/ToastNotification";
 import AdminThemeGallery from "./admin/AdminThemeGallery";
+import AdminMaintenanceCMS from "./admin/AdminMaintenanceCMS";
 import {
   Sliders,
   Save,
@@ -30,6 +31,7 @@ import {
   Palette,
   ExternalLink,
   Users,
+  Wrench,
 } from "lucide-react";
 
 export default function AdminSettingsCMS({ onSaveSuccess }) {
@@ -152,6 +154,7 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
 
   const tabs = [
     { id: "general", label: "General Identity", icon: Globe },
+    { id: "maintenance", label: "Maintenance Mode", icon: Wrench },
     { id: "visitor-counter", label: "Live Visitor Counter", icon: Users },
     { id: "themes", label: "Theme Gallery", icon: Palette },
     { id: "announcement", label: "Announcement Ticker", icon: Megaphone },
@@ -170,11 +173,13 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
             <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight truncate font-heading">
               {activeTab === "themes"
                 ? "Theme Gallery & Visual Identity"
+                : activeTab === "maintenance"
+                ? "Global Maintenance Mode & Emergency Controls"
                 : activeTab === "visitor-counter"
                 ? "Live Visitor Counter Settings"
                 : "Site Settings & Controls"}
             </h1>
-            {activeTab !== "themes" && (
+            {activeTab !== "themes" && activeTab !== "maintenance" && (
               isDirty ? (
                 <span className="bg-amber-100 text-amber-900 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-300 shrink-0">
                   ● Unsaved
@@ -189,13 +194,15 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
           <p className="text-[11px] text-slate-500 truncate hidden sm:block">
             {activeTab === "themes"
               ? "12 themes with Light/Dark appearance mode. Saved to database and applied across public portal."
+              : activeTab === "maintenance"
+              ? "Central control for portal scheduled maintenance, public 503 protection, countdowns, and recovery."
               : activeTab === "visitor-counter"
               ? "Mode A: Real Active Presence vs Mode B: Simulated Counter (0–1500) with clear admin labeling"
               : "Brand identity, announcement ticker, official helplines, and homepage visibility"}
           </p>
         </div>
 
-        {activeTab !== "themes" && (
+        {activeTab !== "themes" && activeTab !== "maintenance" && (
           <div className="flex items-center gap-2 shrink-0">
             {isDirty && (
               <button
@@ -248,9 +255,11 @@ export default function AdminSettingsCMS({ onSaveSuccess }) {
         })}
       </div>
 
-      {/* Form Container or Theme Gallery */}
+      {/* Form Container or Theme Gallery or Maintenance Mode */}
       {activeTab === "themes" ? (
         <AdminThemeGallery onSaveSuccess={() => showToast("Website theme updated successfully!", "success")} />
+      ) : activeTab === "maintenance" ? (
+        <AdminMaintenanceCMS />
       ) : (
         <form onSubmit={handleSave} className="space-y-4">
           {/* SUBTAB 1: GENERAL IDENTITY (Single-Column Form Card) */}

@@ -197,6 +197,15 @@ export const DEFAULT_SITE_SETTINGS = {
     publicServices: true,
     advertisements: true,
   },
+  maintenance: {
+    enabled: false,
+    isActive: false,
+    message: "We are temporarily unavailable due to scheduled maintenance. Please check back soon.",
+    reopeningText: "Coming back soon",
+    expectedReopeningTime: null,
+    scheduledStartTime: null,
+    scheduledEndTime: null,
+  },
   contributionFormSettings: {
     hideNavbarAndFooter: false,
     hideContactAndVerification: false,

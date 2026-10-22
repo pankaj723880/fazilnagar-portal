@@ -25,6 +25,7 @@ import {
   FileText,
   CheckSquare,
   Palette,
+  Wrench,
 } from "lucide-react";
 
 export default function AdminSidebar({
@@ -187,6 +188,13 @@ export default function AdminSidebar({
           id: "cms-audit",
           label: "Audit Logs",
           icon: ShieldAlert,
+        },
+        {
+          id: "maintenance",
+          label: "Maintenance Mode",
+          icon: Wrench,
+          badge: "Live Control",
+          badgeColor: "bg-rose-950 text-rose-300 border border-rose-800/80 font-bold",
         },
       ],
     },

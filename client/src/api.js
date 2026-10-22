@@ -96,6 +96,15 @@ API.interceptors.response.use(
       clearAuthSession();
     }
 
+    // On 503 Service Unavailable with maintenance indicator, notify app
+    if (error.response?.status === 503 && error.response?.data?.maintenance) {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("portal-maintenance-active", { detail: error.response.data })
+        );
+      }
+    }
+
     return Promise.reject(error);
   }
 );

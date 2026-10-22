@@ -37,6 +37,7 @@ import AdminRoute from "./components/AdminRoute";
 import RequireMessagingAuth from "./components/RequireMessagingAuth";
 import InstallButton from "./components/InstallButton";
 import ThemeToggle from "./components/ThemeToggle";
+import MaintenancePage from "./components/MaintenancePage";
 import { useTheme } from "./context/ThemeContext";
 import BackgroundAnimations from "./components/BackgroundAnimations";
 import EditProfileModal from "./components/EditProfileModal";
@@ -263,8 +264,28 @@ export default function App() {
       });
     });
 
+    // Listen for reactive 503 maintenance mode event from API interceptor
+    const handleMaintenanceEvent = (e) => {
+      if (e.detail?.maintenance) {
+        setSiteSettings((prev) => ({
+          ...prev,
+          maintenance: {
+            ...prev?.maintenance,
+            ...e.detail.maintenance,
+            isActive: true,
+          },
+        }));
+      } else {
+        getSiteSettings().then((s) => {
+          if (s) setSiteSettings(s);
+        });
+      }
+    };
+    window.addEventListener("portal-maintenance-active", handleMaintenanceEvent);
+
     return () => {
       unsubscribe();
+      window.removeEventListener("portal-maintenance-active", handleMaintenanceEvent);
     };
   }, []);
 
@@ -300,6 +321,27 @@ export default function App() {
     setUser(null);
   };
 
+  const isMaintenanceActive = Boolean(siteSettings?.maintenance?.isActive);
+  const isAllowedAuthOrAdminRoute =
+    location.pathname === "/login" ||
+    location.pathname === "/register" ||
+    location.pathname === "/forgot-password" ||
+    location.pathname.startsWith("/admin");
+  const showCitizenMaintenance = isMaintenanceActive && !isAdmin && !isAllowedAuthOrAdminRoute;
+
+  if (showCitizenMaintenance) {
+    return (
+      <div
+        id="public-portal-root"
+        data-theme-id={themeId}
+        data-public-theme={isDark ? "dark" : "light"}
+        className="min-h-screen w-full flex flex-col font-sans transition-colors duration-200"
+      >
+        <MaintenancePage maintenance={siteSettings?.maintenance} siteSettings={siteSettings} />
+      </div>
+    );
+  }
+
   return (
     <div
       id="public-portal-root"
@@ -311,6 +353,25 @@ export default function App() {
         color: "var(--text-primary)",
       }}
     >
+      {/* High-Visibility Admin Maintenance Mode Banner */}
+      {isAdmin && isMaintenanceActive && (
+        <aside
+          aria-label="Maintenance Mode Notice"
+          className="bg-rose-600 text-white px-4 py-2 text-xs sm:text-sm font-bold flex items-center justify-between sticky top-0 z-[1100] shadow-md border-b border-rose-700"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-base animate-pulse">⚠️</span>
+            <span>MAINTENANCE MODE IS ACTIVE — Citizens cannot access public pages.</span>
+          </div>
+          <Link
+            to="/admin/review?tab=maintenance"
+            className="bg-white text-rose-800 px-3 py-1 rounded-lg text-xs font-black hover:bg-rose-50 transition shrink-0 ml-2 shadow-2xs"
+          >
+            Manage / Turn Off →
+          </Link>
+        </aside>
+      )}
+
       {/* Ambient Background & Motion Architecture Canvas */}
       <BackgroundAnimations />
 

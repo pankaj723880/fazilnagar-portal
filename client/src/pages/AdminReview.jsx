@@ -29,6 +29,7 @@ const AdminModerationCMS = lazy(() => import("../components/admin/AdminModeratio
 const AdminFormBuilder = lazy(() => import("../components/admin/AdminFormBuilder")); // Dynamic Form Builder
 const AdminContributionReview = lazy(() => import("../components/admin/AdminContributionReview")); // Public Contributions Review Desk
 const AdminThemeGallery = lazy(() => import("../components/admin/AdminThemeGallery")); // Module 14: Theme Gallery & Visual Identity
+const AdminMaintenanceCMS = lazy(() => import("../components/admin/AdminMaintenanceCMS")); // Module 15: Global Maintenance Mode Control
 
 function AdminTabSkeleton() {
   return (
@@ -352,6 +353,10 @@ export default function AdminReview({ user: propUser }) {
       case "cms-audit":
       case "audit":
         return <AdminAuditLogs />;
+
+      case "maintenance":
+      case "cms-maintenance":
+        return <AdminMaintenanceCMS />;
 
       // E. Dynamic Public Contribution Form Builder & Review Desk
       case "form-builder":

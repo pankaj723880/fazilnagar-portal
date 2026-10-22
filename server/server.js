@@ -303,6 +303,7 @@ import contributionSubmissionsRoutes from "./routes/contributionSubmissions.js";
 import visitorsRoutes from "./routes/visitors.js";
 import { authLimiter, writeLimiter, searchLimiter } from "./middleware/rateLimiter.js";
 import seedMapEntities from "./config/seedMapEntities.js";
+import maintenanceMiddleware from "./middleware/maintenance.js";
 
 // Connect DB & Routes
 connectDB().then(() => {
@@ -310,6 +311,9 @@ connectDB().then(() => {
   seedMapEntities();
   seedAdminUser();
 });
+
+// Centralized Global Maintenance Middleware Enforcement
+app.use(maintenanceMiddleware);
 
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/news", newsRoutes);

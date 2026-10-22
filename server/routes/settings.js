@@ -5,9 +5,11 @@ import SiteSettings, {
   DEFAULT_TRUST_BADGES,
   DEFAULT_ACTION_BUTTONS,
   DEFAULT_SERVICE_CARDS,
+  DEFAULT_MAINTENANCE,
+  isMaintenanceActive,
 } from "../models/SiteSettings.js";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
-import { logAdminAction } from "../models/AuditLog.js";
+import AuditLog, { logAdminAction } from "../models/AuditLog.js";
 import { matchesEtag } from "./googleDrive.js";
 
 const router = express.Router();
@@ -33,7 +35,7 @@ export function invalidateServerSettingsCache() {
 /**
  * Ensures initial default settings exist in DB and returns them.
  */
-async function getOrCreateSettings(bypassCache = false) {
+export async function getOrCreateSettings(bypassCache = false) {
   if (!bypassCache && cachedSettings && Date.now() - cachedSettingsTime < SETTINGS_CACHE_TTL_MS) {
     return cachedSettings;
   }
@@ -57,9 +59,14 @@ async function getOrCreateSettings(bypassCache = false) {
         themeId: "heritage-terracotta",
         mode: "light",
       },
+      maintenance: { ...DEFAULT_MAINTENANCE },
     });
   } else {
     let changed = false;
+    if (!settings.maintenance) {
+      settings.maintenance = { ...DEFAULT_MAINTENANCE };
+      changed = true;
+    }
     if (!settings.themeConfig || !settings.themeConfig.themeId) {
       settings.themeConfig = {
         themeId: "heritage-terracotta",
@@ -202,8 +209,16 @@ export function sanitizeSettingsForClient(settings, targetBackend = (process.env
   if (sanitized.logoUrl) {
     sanitized.logoUrl = normalizeMediaUrl(sanitized.logoUrl, targetBackend);
   }
-  if (sanitized.seoSettings?.ogImage) {
-    sanitized.seoSettings.ogImage = normalizeMediaUrl(sanitized.seoSettings.ogImage, targetBackend);
+  if (sanitized.maintenance) {
+    sanitized.maintenance = {
+      ...sanitized.maintenance,
+      isActive: isMaintenanceActive(settings),
+    };
+  } else {
+    sanitized.maintenance = {
+      ...DEFAULT_MAINTENANCE,
+      isActive: false,
+    };
   }
 
   return sanitized;
@@ -500,6 +515,68 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
       settings.markModified("liveVisitorCounter");
     }
 
+    if (updateData.maintenance && typeof updateData.maintenance === "object") {
+      const existingM = safeObj(settings.maintenance);
+      const m = updateData.maintenance;
+
+      const enabled = m.enabled !== undefined ? Boolean(m.enabled) : existingM.enabled;
+      const message = m.message !== undefined ? String(m.message).trim().slice(0, 1000) : existingM.message;
+      const reopeningText = m.reopeningText !== undefined ? String(m.reopeningText).trim().slice(0, 200) : existingM.reopeningText;
+
+      let expectedReopeningTime = m.expectedReopeningTime !== undefined
+        ? (m.expectedReopeningTime ? new Date(m.expectedReopeningTime) : null)
+        : existingM.expectedReopeningTime;
+      if (expectedReopeningTime && isNaN(expectedReopeningTime.getTime())) {
+        expectedReopeningTime = null;
+      }
+
+      let scheduledStartTime = m.scheduledStartTime !== undefined
+        ? (m.scheduledStartTime ? new Date(m.scheduledStartTime) : null)
+        : existingM.scheduledStartTime;
+      if (scheduledStartTime && isNaN(scheduledStartTime.getTime())) {
+        scheduledStartTime = null;
+      }
+
+      let scheduledEndTime = m.scheduledEndTime !== undefined
+        ? (m.scheduledEndTime ? new Date(m.scheduledEndTime) : null)
+        : existingM.scheduledEndTime;
+      if (scheduledEndTime && isNaN(scheduledEndTime.getTime())) {
+        scheduledEndTime = null;
+      }
+
+      if (scheduledStartTime && scheduledEndTime && scheduledEndTime <= scheduledStartTime) {
+        return res.status(400).json({
+          success: false,
+          message: "Scheduled end time must be after scheduled start time.",
+        });
+      }
+
+      settings.maintenance = {
+        enabled,
+        message: message || "We are temporarily unavailable due to scheduled maintenance. Please check back soon.",
+        reopeningText: reopeningText || "Coming back soon",
+        expectedReopeningTime,
+        scheduledStartTime,
+        scheduledEndTime,
+        lastUpdatedBy: req.user.email || req.user.name || "Admin",
+        lastUpdatedAt: new Date(),
+      };
+      settings.markModified("maintenance");
+
+      await logAdminAction({
+        adminUser: req.user.id,
+        adminEmail: req.user.email,
+        action: "SETTINGS_UPDATE",
+        entityType: "SiteSettings",
+        entityId: settings._id,
+        entityTitle: "Maintenance Mode",
+        changesSummary: enabled
+          ? `Enabled Maintenance Mode: "${(message || "").slice(0, 50)}..."`
+          : "Disabled Maintenance Mode",
+        ipAddress: req.ip,
+      });
+    }
+
     await settings.save();
     invalidateServerSettingsCache();
 
@@ -525,6 +602,161 @@ router.put("/", verifyToken, requireAdmin, async (req, res) => {
   } catch (err) {
     console.error("[Settings] Update error:", err);
     res.status(500).json({ message: "Failed to update website settings." });
+  }
+});
+
+// @route   GET /api/settings/maintenance
+// @desc    Retrieve current maintenance mode status, message, and schedule
+// @access  Public
+router.get("/maintenance", async (req, res) => {
+  try {
+    const settings = await getOrCreateSettings();
+    const m = settings.maintenance || DEFAULT_MAINTENANCE;
+    const active = isMaintenanceActive(settings);
+
+    res.status(200).json({
+      success: true,
+      isActive: active,
+      maintenance: {
+        isActive: active,
+        enabled: m.enabled,
+        message: m.message,
+        reopeningText: m.reopeningText,
+        expectedReopeningTime: m.expectedReopeningTime,
+        scheduledStartTime: m.scheduledStartTime,
+        scheduledEndTime: m.scheduledEndTime,
+        lastUpdatedBy: m.lastUpdatedBy,
+        lastUpdatedAt: m.lastUpdatedAt,
+      },
+      serverTime: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error("[Settings] Maintenance fetch error:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch maintenance status." });
+  }
+});
+
+// @route   PUT /api/settings/maintenance
+// @desc    Update maintenance mode settings, toggle state, message, or schedule
+// @access  Private (Admin)
+router.put("/maintenance", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const {
+      enabled,
+      message,
+      reopeningText,
+      expectedReopeningTime,
+      scheduledStartTime,
+      scheduledEndTime,
+    } = req.body;
+
+    const settings = await getOrCreateSettings();
+    const existingM = settings.maintenance
+      ? (settings.maintenance.toObject ? settings.maintenance.toObject() : settings.maintenance)
+      : DEFAULT_MAINTENANCE;
+
+    const isEnabled = enabled !== undefined ? Boolean(enabled) : existingM.enabled;
+    const finalMessage = message !== undefined ? String(message).trim().slice(0, 1000) : existingM.message;
+    const finalReopeningText = reopeningText !== undefined ? String(reopeningText).trim().slice(0, 200) : existingM.reopeningText;
+
+    let parsedExpectedReopening = expectedReopeningTime !== undefined
+      ? (expectedReopeningTime ? new Date(expectedReopeningTime) : null)
+      : existingM.expectedReopeningTime;
+    if (parsedExpectedReopening && isNaN(parsedExpectedReopening.getTime())) {
+      parsedExpectedReopening = null;
+    }
+
+    let parsedScheduledStart = scheduledStartTime !== undefined
+      ? (scheduledStartTime ? new Date(scheduledStartTime) : null)
+      : existingM.scheduledStartTime;
+    if (parsedScheduledStart && isNaN(parsedScheduledStart.getTime())) {
+      parsedScheduledStart = null;
+    }
+
+    let parsedScheduledEnd = scheduledEndTime !== undefined
+      ? (scheduledEndTime ? new Date(scheduledEndTime) : null)
+      : existingM.scheduledEndTime;
+    if (parsedScheduledEnd && isNaN(parsedScheduledEnd.getTime())) {
+      parsedScheduledEnd = null;
+    }
+
+    if (parsedScheduledStart && parsedScheduledEnd && parsedScheduledEnd <= parsedScheduledStart) {
+      return res.status(400).json({
+        success: false,
+        message: "Scheduled end time must be after scheduled start time.",
+      });
+    }
+
+    settings.maintenance = {
+      enabled: isEnabled,
+      message: finalMessage || "We are temporarily unavailable due to scheduled maintenance. Please check back soon.",
+      reopeningText: finalReopeningText || "Coming back soon",
+      expectedReopeningTime: parsedExpectedReopening,
+      scheduledStartTime: parsedScheduledStart,
+      scheduledEndTime: parsedScheduledEnd,
+      lastUpdatedBy: req.user.email || req.user.name || "Admin",
+      lastUpdatedAt: new Date(),
+    };
+    settings.markModified("maintenance");
+
+    await settings.save();
+    invalidateServerSettingsCache();
+
+    await logAdminAction({
+      adminUser: req.user.id,
+      adminEmail: req.user.email,
+      action: "SETTINGS_UPDATE",
+      entityType: "SiteSettings",
+      entityId: settings._id,
+      entityTitle: "Maintenance Mode",
+      changesSummary: isEnabled
+        ? `Enabled Maintenance Mode: "${(finalMessage || "").slice(0, 50)}..."`
+        : "Disabled Maintenance Mode",
+      ipAddress: req.ip,
+    });
+
+    const active = isMaintenanceActive(settings);
+
+    const maintObj = {
+      isActive: active,
+      ...(settings.maintenance?.toObject ? settings.maintenance.toObject() : settings.maintenance),
+    };
+
+    res.status(200).json({
+      success: true,
+      message: isEnabled ? "Maintenance mode enabled successfully." : "Maintenance mode disabled successfully.",
+      maintenance: maintObj,
+      settings: {
+        maintenance: maintObj,
+      },
+      serverTime: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error("[Settings] Maintenance update error:", err);
+    res.status(500).json({ success: false, message: "Failed to update maintenance settings." });
+  }
+});
+
+// @route   GET /api/settings/maintenance/audit-logs
+// @desc    Retrieve audit logs for maintenance mode operations
+// @access  Private (Admin)
+router.get("/maintenance/audit-logs", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const logs = await AuditLog.find({
+      entityType: "SiteSettings",
+      entityTitle: "Maintenance Mode",
+    })
+      .sort({ createdAt: -1 })
+      .limit(30)
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      auditLogs: logs || [],
+    });
+  } catch (err) {
+    console.error("[Settings] Maintenance audit logs fetch error:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch maintenance audit logs." });
   }
 });
 

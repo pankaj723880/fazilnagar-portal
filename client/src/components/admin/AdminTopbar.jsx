@@ -24,6 +24,7 @@ import {
   LayoutDashboard,
   Users,
   HardDrive,
+  Wrench,
 } from "lucide-react";
 
 export default function AdminTopbar({
@@ -120,6 +121,9 @@ export default function AdminTopbar({
         return { group: "Directory Management", label: "Google Drive Storage" };
       case "cms-audit":
         return { group: "Security & Administration", label: "Audit Logs" };
+      case "maintenance":
+      case "cms-maintenance":
+        return { group: "Security & Administration", label: "Maintenance Mode" };
       default:
         return { group: "Administration", label: activeTab };
     }
@@ -135,6 +139,7 @@ export default function AdminTopbar({
   const quickJumpModules = [
     { label: "Dashboard", tab: "dashboard", group: "Overview", icon: LayoutDashboard },
     { label: "Site Settings", tab: "cms-settings", group: "Website & Content", icon: Settings },
+    { label: "Maintenance Mode", tab: "maintenance", group: "Security & Administration", icon: Wrench },
     { label: "Hero Carousel", tab: "cms-hero", group: "Website & Content", icon: Layers },
     { label: "Public Services", tab: "cms-services", group: "Website & Content", icon: Compass },
     { label: "Ad Registry", tab: "ads", group: "Directory Management", icon: Megaphone },

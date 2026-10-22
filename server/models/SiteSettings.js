@@ -260,8 +260,96 @@ export const DEFAULT_SERVICE_CARDS = [
   },
 ];
 
+export const maintenanceSchema = new mongoose.Schema(
+  {
+    enabled: { type: Boolean, default: false },
+    message: {
+      type: String,
+      default: "We are temporarily unavailable due to scheduled maintenance. Please check back soon.",
+      trim: true,
+      maxlength: 1000,
+    },
+    reopeningText: {
+      type: String,
+      default: "Coming back soon",
+      trim: true,
+      maxlength: 200,
+    },
+    expectedReopeningTime: {
+      type: Date,
+      default: null,
+    },
+    scheduledStartTime: {
+      type: Date,
+      default: null,
+    },
+    scheduledEndTime: {
+      type: Date,
+      default: null,
+    },
+    lastUpdatedBy: {
+      type: String,
+      default: "",
+    },
+    lastUpdatedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { _id: false }
+);
+
+export const DEFAULT_MAINTENANCE = {
+  enabled: false,
+  message: "We are temporarily unavailable due to scheduled maintenance. Please check back soon.",
+  reopeningText: "Coming back soon",
+  expectedReopeningTime: null,
+  scheduledStartTime: null,
+  scheduledEndTime: null,
+  lastUpdatedBy: "",
+  lastUpdatedAt: null,
+};
+
+export function isMaintenanceActive(settings) {
+  if (!settings || !settings.maintenance) return false;
+  const m = settings.maintenance;
+  const now = Date.now();
+
+  // If manually enabled
+  if (m.enabled) {
+    if (m.scheduledEndTime) {
+      const end = new Date(m.scheduledEndTime).getTime();
+      if (!isNaN(end) && now >= end) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // If not manually enabled, check if scheduled time window is currently active
+  if (m.scheduledStartTime) {
+    const start = new Date(m.scheduledStartTime).getTime();
+    if (!isNaN(start) && now >= start) {
+      if (m.scheduledEndTime) {
+        const end = new Date(m.scheduledEndTime).getTime();
+        if (!isNaN(end)) {
+          return now < end;
+        }
+      }
+      return true;
+    }
+  }
+
+  return false;
+}
+
 const siteSettingsSchema = new mongoose.Schema(
   {
+    // Global Maintenance Mode
+    maintenance: {
+      type: maintenanceSchema,
+      default: () => ({ ...DEFAULT_MAINTENANCE }),
+    },
     key: {
       type: String,
       default: "primary_settings",
