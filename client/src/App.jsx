@@ -347,9 +347,11 @@ export default function App() {
       id="public-portal-root"
       data-theme-id={themeId}
       data-public-theme={isDark ? "dark" : "light"}
-      className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col font-sans transition-colors duration-200"
+      className={`min-h-screen w-full max-w-full overflow-x-hidden flex flex-col font-sans transition-colors duration-200 ${
+        isAuthPage ? "auth-page-bg" : ""
+      }`}
       style={{
-        backgroundColor: "var(--background-primary)",
+        backgroundColor: isAuthPage ? "transparent" : "var(--background-primary)",
         color: "var(--text-primary)",
       }}
     >
@@ -740,7 +742,7 @@ export default function App() {
             : isMessagesPage
             ? "pt-16 pb-0 p-0 m-0 overflow-hidden h-[100dvh] max-h-[100dvh] box-border flex flex-col"
             : isAuthPage || isPublicFormPage
-            ? "pt-16 pb-0 p-0 m-0 w-full max-w-full flex-1 flex flex-col"
+            ? "pt-16 pb-0 p-0 m-0 w-full max-w-full flex-1 flex flex-col bg-transparent"
             : isPortalPage
             ? (isMobilePreview ? "pt-0 pb-28" : "pt-0 md:pt-16 pb-28 sm:pb-32")
             : hasSubNav

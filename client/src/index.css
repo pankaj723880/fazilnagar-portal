@@ -3401,4 +3401,24 @@ html.fzn-card-glow-active [class*="rounded-3xl"][class*="border"]:hover {
   background-color: var(--surface-card);
   border-color: var(--border-color);
 }
+
+/* ========================================================
+   CITIZEN LOGIN & SIGN-UP VIEWPORT BACKGROUND (fzn.png)
+   ======================================================== */
+.auth-page-bg {
+  background-image: linear-gradient(rgba(245, 248, 252, 0.72), rgba(245, 248, 252, 0.72)), url('/fzn.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+}
+
+:is(.dark, [data-public-theme="dark"]) .auth-page-bg {
+  background-image: linear-gradient(rgba(20, 24, 33, 0.78), rgba(20, 24, 33, 0.78)), url('/fzn.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+}
+
 

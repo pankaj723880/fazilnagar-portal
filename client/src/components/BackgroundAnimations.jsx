@@ -27,6 +27,11 @@ function BackgroundAnimations({ config, isPreview = false, className = "" }) {
 
   if (!isPreview) {
     const isAdminPage = location.pathname.startsWith("/admin");
+    const isAuthPage =
+      location.pathname === "/login" ||
+      location.pathname === "/register" ||
+      location.pathname === "/forgot-password";
+    if (isAuthPage) return null;
     if (scope === "public-only" && isAdminPage) return null;
     if (scope === "admin-only" && !isAdminPage) return null;
   }
