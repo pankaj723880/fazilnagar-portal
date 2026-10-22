@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { AlertTriangle, HelpCircle, RefreshCw, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import API from "../api";
 import { setAuthSession } from "../utils/authStorage";
 
@@ -17,6 +18,8 @@ export default function GoogleSignInButton({ setUser, redirectPath = "/", onErro
   const buttonRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [googleScriptReady, setGoogleScriptReady] = useState(false);
+  const [popupBlocked, setPopupBlocked] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const navigate = useNavigate();
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -29,6 +32,7 @@ export default function GoogleSignInButton({ setUser, redirectPath = "/", onErro
       }
 
       setLoading(true);
+      setPopupBlocked(false);
       if (onError) onError("");
 
       try {
@@ -63,6 +67,51 @@ export default function GoogleSignInButton({ setUser, redirectPath = "/", onErro
       }
     };
   }, [handleCredentialResponse]);
+
+  // Intercept window.open & console to detect browser popup blocker
+  useEffect(() => {
+    const originalOpen = window.open;
+    window.open = function (url, ...args) {
+      const win = originalOpen ? originalOpen.call(this, url, ...args) : null;
+      if (url && typeof url === "string" && url.includes("accounts.google.com")) {
+        if (!win || win.closed || typeof win.closed === "undefined") {
+          setPopupBlocked(true);
+        } else {
+          setPopupBlocked(false);
+        }
+      }
+      return win;
+    };
+
+    const originalWarn = console.warn;
+    const originalError = console.error;
+
+    const checkGsiLog = (...args) => {
+      const message = args.map((a) => (typeof a === "string" ? a : JSON.stringify(a || ""))).join(" ");
+      if (
+        message.includes("[GSI_LOGGER]") &&
+        (message.includes("Failed to open popup window") || message.includes("Maybe blocked by the browser"))
+      ) {
+        setPopupBlocked(true);
+      }
+    };
+
+    console.warn = function (...args) {
+      checkGsiLog(...args);
+      originalWarn.apply(console, args);
+    };
+
+    console.error = function (...args) {
+      checkGsiLog(...args);
+      originalError.apply(console, args);
+    };
+
+    return () => {
+      window.open = originalOpen;
+      console.warn = originalWarn;
+      console.error = originalError;
+    };
+  }, []);
 
   useEffect(() => {
     let checkInterval = null;
@@ -124,18 +173,12 @@ export default function GoogleSignInButton({ setUser, redirectPath = "/", onErro
     };
   }, [googleClientId]);
 
-  const handleFallbackClick = () => {
-    if (!googleClientId) {
-      if (onError) {
-        onError("Google OAuth Client ID is not configured (VITE_GOOGLE_CLIENT_ID).");
-      }
-      return;
-    }
-    if (window.google?.accounts?.id) {
-      window.google.accounts.id.prompt();
-    } else {
-      if (onError) {
-        onError("Google Sign-In script is still loading. Please wait a moment.");
+  const handleRetry = () => {
+    setPopupBlocked(false);
+    if (buttonRef.current) {
+      const btn = buttonRef.current.querySelector('div[role="button"]') || buttonRef.current.querySelector("iframe");
+      if (btn) {
+        btn.focus();
       }
     }
   };
@@ -159,9 +202,15 @@ export default function GoogleSignInButton({ setUser, redirectPath = "/", onErro
       {(!googleScriptReady || !googleClientId) && (
         <button
           type="button"
-          onClick={handleFallbackClick}
+          onClick={() => {
+            if (!googleClientId && onError) {
+              onError("Google OAuth Client ID is not configured (VITE_GOOGLE_CLIENT_ID).");
+            } else {
+              setPopupBlocked(true);
+            }
+          }}
           disabled={loading}
-          className="w-full h-11 flex items-center justify-center gap-3 px-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 transition shadow-sm hover:shadow active:scale-[0.99] cursor-pointer"
+          className="w-full h-11 flex items-center justify-center gap-3 px-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 transition shadow-xs hover:shadow-sm active:scale-[0.99] cursor-pointer"
         >
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
             <path
@@ -184,6 +233,65 @@ export default function GoogleSignInButton({ setUser, redirectPath = "/", onErro
           <span>Continue with Google / गूगल से जारी रखें</span>
         </button>
       )}
+
+      {/* Pop-up Blocked Notification Banner */}
+      {popupBlocked && (
+        <div className="w-full mt-3 p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 rounded-xl text-left shadow-xs transition-all animate-fadeIn">
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <div className="flex-1 text-xs">
+              <p className="font-bold text-amber-900 dark:text-amber-200">
+                Pop-up Blocked by Browser / पॉपअप विंडो ब्लॉक हो गई है
+              </p>
+              <p className="mt-1 text-amber-800 dark:text-amber-300/90 leading-relaxed text-[11.5px]">
+                Your browser or an ad-blocker prevented the Google login window from opening.
+              </p>
+              <ol className="mt-2 space-y-1 list-decimal list-inside text-amber-900/90 dark:text-amber-300/80 text-[11px] font-medium">
+                <li>Look for the <strong>pop-up blocked icon (🚫)</strong> in your address/URL bar.</li>
+                <li>Click it and select <strong>&quot;Always allow pop-ups from fazilnagar.vercel.app&quot;</strong>.</li>
+                <li>If using Brave or uBlock, turn shields off for this domain.</li>
+              </ol>
+              <div className="mt-3 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleRetry}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-medium rounded-lg text-xs transition shadow-2xs cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Try Again / पुनः प्रयास</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Discrete Troubleshooting Helper Toggle */}
+      <div className="w-full mt-2 text-center">
+        <button
+          type="button"
+          onClick={() => setShowHelp((prev) => !prev)}
+          className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition underline underline-offset-2 cursor-pointer"
+        >
+          <HelpCircle className="w-3 h-3" />
+          <span>Trouble signing in with Google? / सहायता</span>
+          {showHelp ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        </button>
+
+        {showHelp && (
+          <div className="mt-2 p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-left text-[11.5px] text-slate-600 dark:text-slate-300 space-y-1.5 animate-fadeIn">
+            <p className="font-semibold text-slate-800 dark:text-slate-200">
+              Tips to resolve Google Sign-In issues:
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400">
+              <li><strong>Allow Popups:</strong> Check the URL bar for a 🚫 or lock 🔒 icon &rarr; Site Settings &rarr; Pop-ups &rarr; Allow.</li>
+              <li><strong>Ad-blockers:</strong> Whitelist <code className="text-[10px] bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded">fazilnagar.vercel.app</code> in Brave Shields, uBlock Origin, or AdGuard.</li>
+              <li><strong>Third-party cookies:</strong> In Chrome/Safari settings, ensure third-party cookies or storage access is allowed for Google Identity.</li>
+              <li><strong>Alternative:</strong> You can always register or sign in directly with your <strong>Email &amp; Password</strong> below.</li>
+            </ul>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
