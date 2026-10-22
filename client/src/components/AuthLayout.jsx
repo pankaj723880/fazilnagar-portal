@@ -10,7 +10,7 @@ import { ScrollReveal } from "./ScrollReveal";
 export default function AuthLayout({
   title,
   subtitle,
-  badgeText = "फाजिलनगर नागरिक पोर्टल • PIN 274401",
+  badgeText = "Fazilnagar Citizen Portal • PIN 274401",
   illustration,
   currentStep,
   totalSteps,
@@ -29,11 +29,12 @@ export default function AuthLayout({
         backgroundImage: "url('/images/fzn.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
       }}
     >
       {/* Subtle translucent warm ivory overlay in light mode, deep heritage dark overlay in dark mode */}
       <div
-        className="absolute inset-0 bg-[#F7F3EB]/90 dark:bg-[#191916]/90 backdrop-blur-[3px] transition-colors"
+        className="absolute inset-0 bg-[#F7F3EB]/70 dark:bg-[#191916]/75 backdrop-blur-[1px] transition-colors"
         aria-hidden="true"
       />
 

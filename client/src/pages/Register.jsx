@@ -160,18 +160,20 @@ export default function Register({ setUser }) {
 
   return (
     <AuthLayout
-      title={step === "form" ? "Create Citizen Account / नया खाता" : "Verify Email / ईमेल सत्यापन"}
+      title={step === "form" ? "Create Citizen Account" : "Verify Email"}
       subtitle={
-        step === "form"
-          ? "Join Fazilnagar Town Portal community as a verified citizen to submit local updates and access civic resources."
-          : `We dispatched a 6-digit security code to verify your account registration.`
+        step === "otp"
+          ? "We dispatched a 6-digit security code to verify your account registration."
+          : null
       }
+      badgeText="Fazilnagar Citizen Portal • PIN 274401"
+      showSecurityBadge={false}
       currentStep={step === "form" ? 1 : 2}
       totalSteps={2}
       stepLabel={step === "form" ? "Citizen Details" : "Email Verification"}
       error={error}
       success={successMsg}
-      maxWidth={step === "form" ? "max-w-[450px]" : "max-w-[400px]"}
+      maxWidth={step === "form" ? "max-w-[430px]" : "max-w-[400px]"}
       illustration={
         step === "form" ? (
           <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-linear-to-br from-red-600/10 via-amber-500/15 to-red-700/15 border border-red-200/80 dark:border-red-900/50 flex items-center justify-center text-red-700 dark:text-red-400 shadow-2xs">
@@ -187,7 +189,7 @@ export default function Register({ setUser }) {
       {step === "form" ? (
         <>
           {/* Google Sign-in */}
-          <div className="mb-2 sm:mb-2.5">
+          <div className="mb-2">
             <GoogleSignInButton
               setUser={setUser}
               redirectPath={redirectPath}
@@ -202,7 +204,7 @@ export default function Register({ setUser }) {
             </div>
             <div className="relative flex justify-center text-xs">
               <span className="bg-white/90 dark:bg-[#151F2E]/90 px-2.5 text-slate-400 dark:text-slate-500 font-medium text-[10.5px]">
-                Or register with email / या ईमेल द्वारा
+                Or register with email
               </span>
             </div>
           </div>
@@ -211,7 +213,7 @@ export default function Register({ setUser }) {
             {/* Full Name */}
             <div>
               <label className="block text-[11.5px] sm:text-xs font-semibold text-slate-700 dark:text-slate-300 mb-0.5">
-                Full Name / पूरा नाम <span className="text-red-600 dark:text-red-400">*</span>
+                Full Name <span className="text-red-600 dark:text-red-400">*</span>
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
@@ -235,7 +237,7 @@ export default function Register({ setUser }) {
               {/* Username */}
               <div>
                 <label className="block text-[11.5px] sm:text-xs font-semibold text-slate-700 dark:text-slate-300 mb-0.5">
-                  Username / यूज़रनेम
+                  Username
                 </label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500 font-mono text-xs">
@@ -259,7 +261,7 @@ export default function Register({ setUser }) {
               {/* Mobile Phone */}
               <div>
                 <label className="block text-[11.5px] sm:text-xs font-semibold text-slate-700 dark:text-slate-300 mb-0.5">
-                  Mobile / मोबाइल नंबर
+                  Mobile
                 </label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500 font-mono text-xs">
@@ -284,7 +286,7 @@ export default function Register({ setUser }) {
             {/* Email Field */}
             <div>
               <label className="block text-[11.5px] sm:text-xs font-semibold text-slate-700 dark:text-slate-300 mb-0.5">
-                Email Address / ईमेल पता <span className="text-red-600 dark:text-red-400">*</span>
+                Email Address <span className="text-red-600 dark:text-red-400">*</span>
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
@@ -305,7 +307,7 @@ export default function Register({ setUser }) {
             {/* Password Field */}
             <div>
               <label className="block text-[11.5px] sm:text-xs font-semibold text-slate-700 dark:text-slate-300 mb-0.5">
-                Password / पासवर्ड <span className="text-red-600 dark:text-red-400">*</span>
+                Password <span className="text-red-600 dark:text-red-400">*</span>
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
@@ -348,7 +350,7 @@ export default function Register({ setUser }) {
                 </>
               ) : (
                 <>
-                  <span>Send Verification Code / कोड भेजें</span>
+                  <span>Send Verification Code</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -363,12 +365,12 @@ export default function Register({ setUser }) {
 
           {/* Switch to Login Link */}
           <div className="text-center text-xs text-slate-500 dark:text-slate-400 mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <span>Already have an account? / पहले से खाता है? </span>
+            <span>Already have an account? </span>
             <Link
               to="/login"
               className="text-red-700 dark:text-red-400 font-bold hover:underline inline-flex items-center gap-1 transition-colors"
             >
-              Login here / लॉगिन करें
+              Login here
             </Link>
           </div>
         </>
@@ -394,7 +396,7 @@ export default function Register({ setUser }) {
               className="inline-flex items-center gap-1 text-[10.5px] text-red-700 dark:text-red-400 font-semibold hover:underline mt-0.5 cursor-pointer transition-colors"
             >
               <Edit2 className="w-3 h-3" />
-              <span>Change Email / ईमेल बदलें</span>
+              <span>Change Email</span>
             </button>
           </div>
 
@@ -402,7 +404,7 @@ export default function Register({ setUser }) {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-[11.5px] sm:text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  6-Digit Security Code / 6-अंकों का कोड
+                  6-Digit Security Code
                 </label>
                 <span className="inline-flex items-center gap-1 text-[10.5px] font-mono font-bold text-slate-500 dark:text-slate-400">
                   <Clock className="w-3 h-3 text-slate-400" />
@@ -441,7 +443,7 @@ export default function Register({ setUser }) {
               ) : (
                 <>
                   <ShieldCheck className="w-4 h-4 text-emerald-300" />
-                  <span>Verify & Activate Account / खाता सक्रिय करें</span>
+                  <span>Verify & Activate Account</span>
                 </>
               )}
             </button>
@@ -458,7 +460,7 @@ export default function Register({ setUser }) {
             >
               <RotateCcw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
               <span>
-                {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend Code / पुनः भेजें"}
+                {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend Code"}
               </span>
             </button>
           </div>

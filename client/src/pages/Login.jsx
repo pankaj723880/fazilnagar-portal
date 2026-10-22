@@ -61,7 +61,6 @@ export default function Login({ setUser }) {
   return (
     <AuthLayout
       title="Citizen Sign In"
-      subtitle="Access your Fazilnagar Town Portal account to post verified local news, participate in town discussions, and access civic directory services."
       badgeText="Fazilnagar Citizen Portal • PIN 274401"
       showSecurityBadge={false}
       error={error}
