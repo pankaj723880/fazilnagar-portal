@@ -917,6 +917,56 @@ export default function TownPortal() {
         )}
       </section>
 
+      {/* ========================================================
+          SECTION 3.5: FAZILNAGAR JOBS & TALENT (Marketplace Spotlight)
+          ======================================================== */}
+      <section className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-10 lg:py-14">
+        <ScrollReveal variant="fade-up" once={true}>
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#18232E] via-[#0F172A] to-[#1E293B] text-white p-8 sm:p-10 lg:p-12 border border-slate-700/60 shadow-xl">
+            {/* Background decorative glows */}
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-72 h-72 bg-[#C92F3D]/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+              <div className="max-w-2xl space-y-3">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold uppercase tracking-wider">
+                  <Briefcase className="w-3.5 h-3.5" />
+                  <span>Fazilnagar Jobs • रोज़गार एवं प्रतिभा</span>
+                </div>
+                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight font-heading leading-tight text-white">
+                  Connecting local talent with local opportunities.
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  Browse verified job vacancies across teaching, retail, computer & IT, logistics, healthcare, and trades in Fazilnagar. Or create your job-seeker profile to let local shops and businesses discover you.
+                </p>
+                <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-300 pt-1">
+                  <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-emerald-400" /> 100% Free Community Service</span>
+                  <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-emerald-400" /> Direct Town Chat with Employers</span>
+                  <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-emerald-400" /> Strictly Zero Upfront Fees</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0 w-full sm:w-auto">
+                <Link
+                  to="/jobs"
+                  className="px-6 py-3.5 rounded-xl bg-[#C92F3D] hover:bg-[#a82531] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition active:scale-95"
+                >
+                  <Briefcase className="w-4 h-4" />
+                  <span>Explore Jobs & Talent</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  to="/jobs/post"
+                  className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-95 backdrop-blur-sm"
+                >
+                  <span>+ Post a Vacancy or Profile</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </ScrollReveal>
+      </section>
+
       {/* Dedicated Homepage Advertisement Slot (Zero footprint when inactive/unpublished) */}
       <Suspense fallback={null}>
         <AdvertisementSlot />

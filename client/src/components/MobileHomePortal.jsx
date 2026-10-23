@@ -33,6 +33,7 @@ import {
   CheckCircle2,
   Sparkles,
   Music,
+  Briefcase,
 } from "lucide-react";
 import NotificationCenter from "./NotificationCenter";
 import ThemeToggle from "./ThemeToggle";
@@ -750,6 +751,34 @@ export default function MobileHomePortal({
               <span>View</span>
               <span className="text-xs">→</span>
             </span>
+          </Link>
+        </section>
+      </ScrollReveal>
+
+      {/* ========================================================
+          FAZILNAGAR JOBS & TALENT (Mobile Quick Access)
+          ======================================================== */}
+      <ScrollReveal variant="fade-up" delay={65} once={true}>
+        <section className="px-4 sm:px-6 py-2" aria-label="Fazilnagar Jobs Portal">
+          <Link
+            to="/jobs"
+            className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-[#18232E] via-[#0F172A] to-[#1E293B] text-white border border-emerald-500/30 shadow-[0_2px_12px_rgba(0,0,0,0.06)] active:scale-[0.98] transition group"
+          >
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 flex items-center justify-center shrink-0">
+                <Briefcase className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold font-heading text-white truncate">Fazilnagar Jobs Portal</span>
+                  <span className="text-[9px] font-black bg-emerald-500 text-slate-950 px-1.5 py-0.2 rounded-full uppercase tracking-wider shrink-0">LIVE</span>
+                </div>
+                <p className="text-[11px] text-slate-300 truncate mt-0.5">
+                  Local vacancies & talent in town • Direct chat
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-emerald-400 shrink-0 group-hover:translate-x-0.5 transition-transform ml-2" />
           </Link>
         </section>
       </ScrollReveal>

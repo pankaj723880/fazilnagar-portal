@@ -11,6 +11,7 @@ import newsRoutes from "./routes/news.js";
 import placesRoutes from "./routes/places.js";
 import profileRoutes from "./routes/profile.js";
 import messagesRoutes from "./routes/messages.js";
+import jobsRoutes from "./routes/jobs.js";
 import mongoSanitize from "./middleware/mongoSanitize.js";
 import { initSocket } from "./socket.js";
 import zlib from "node:zlib";
@@ -303,13 +304,16 @@ import contributionSubmissionsRoutes from "./routes/contributionSubmissions.js";
 import visitorsRoutes from "./routes/visitors.js";
 import { authLimiter, writeLimiter, searchLimiter } from "./middleware/rateLimiter.js";
 import seedMapEntities from "./config/seedMapEntities.js";
+import seedJobMarketplace from "./config/seedJobs.js";
 import maintenanceMiddleware from "./middleware/maintenance.js";
 
 // Connect DB & Routes
 connectDB().then(() => {
   autoSeedPlaces();
   seedMapEntities();
-  seedAdminUser();
+  seedAdminUser().then(() => {
+    seedJobMarketplace();
+  });
 });
 
 // Centralized Global Maintenance Middleware Enforcement
@@ -334,6 +338,7 @@ app.use("/api/audit", auditRoutes);
 app.use("/api/civic-directory", civicDirectoryRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/messages", messagesRoutes);
+app.use("/api/jobs", jobsRoutes);
 app.use("/api/visitors", visitorsRoutes);
 
 // Fallback mounts in case client calls without /api prefix
@@ -356,6 +361,7 @@ app.use("/audit", auditRoutes);
 app.use("/civic-directory", civicDirectoryRoutes);
 app.use("/profile", profileRoutes);
 app.use("/messages", messagesRoutes);
+app.use("/jobs", jobsRoutes);
 app.use("/visitors", visitorsRoutes);
 
 // 404 JSON handler for unmapped API routes

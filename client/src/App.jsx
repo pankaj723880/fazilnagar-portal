@@ -13,6 +13,10 @@ const ReelsNewsFeed = lazy(() => import("./pages/ReelsNewsFeed"));
 const EmergencyHub = lazy(() => import("./pages/EmergencyHub"));
 const HealthcareDirectory = lazy(() => import("./pages/HealthcareDirectory"));
 const EducationHub = lazy(() => import("./pages/EducationHub"));
+const Jobs = lazy(() => import("./pages/Jobs"));
+const JobDetail = lazy(() => import("./pages/JobDetail"));
+const PostJob = lazy(() => import("./pages/PostJob"));
+const MyJobListings = lazy(() => import("./pages/MyJobListings"));
 const JobsAndBusiness = lazy(() => import("./pages/JobsAndBusiness"));
 const Tourism = lazy(() => import("./pages/Tourism"));
 const FoodGuide = lazy(() => import("./pages/FoodGuide"));
@@ -49,7 +53,7 @@ const NotificationCenter = lazy(() => import("./components/NotificationCenter"))
 const GlobalFloatingAndStickyAds = lazy(() =>
   import("./components/AdvertisementSlot").then((m) => ({ default: m.GlobalFloatingAndStickyAds }))
 );
-import { Home, Compass, PhoneCall, Newspaper, Menu, X, ShieldAlert, MessageSquare, Music } from "lucide-react";
+import { Home, Compass, PhoneCall, Newspaper, Menu, X, ShieldAlert, MessageSquare, Music, Briefcase } from "lucide-react";
 import { prefetchRoute } from "./utils/routePrefetch";
 import { resolveMediaUrl } from "./utils/mediaUtils";
 
@@ -59,6 +63,7 @@ const MAIN_NAV_ITEMS = [
   { path: "/", label: "Home" },
   { path: "/#explore-categories", label: "Explore", isHash: true },
   { path: "/directory", label: "Directory", count: VERIFIED_DIRECTORY_COUNT },
+  { path: "/jobs", label: "Jobs", badge: "Live" },
   { path: "/#regional-connectivity-section", label: "Map", isHash: true },
   { path: "/news", label: "Local Updates" },
 ];
@@ -85,7 +90,7 @@ const DIRECTORY_SUB_NAV = [
   { path: "/emergency", label: "24/7 Aid", icon: "🚨", badge: "24/7" },
   { path: "/education", label: "Education", icon: "🎓" },
   { path: "/healthcare", label: "Healthcare", icon: "🏥" },
-  { path: "/jobs", label: "Jobs & Directory", icon: "💼" },
+  { path: "/jobs", label: "Jobs Portal", icon: "💼", badge: "Live" },
   { path: "/tourism", label: "Tourism", icon: "🏨" },
   { path: "/food", label: "Food Guide", icon: "🍛" },
   { path: "/marketplace", label: "Marketplace", icon: "🛍️" },
@@ -427,10 +432,21 @@ export default function App() {
 
             {/* Desktop Navigation Links */}
             <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold text-[#292722] dark:text-[#F5F0E7]">
-              {(siteSettings?.navigation?.navItems && siteSettings.navigation.navItems.length > 0
-                ? siteSettings.navigation.navItems.filter((i) => i.isActive !== false && !isExcludedNavItem(i))
-                : MAIN_NAV_ITEMS.filter((i) => !isExcludedNavItem(i))
-              ).map((item) => {
+              {(() => {
+                let items = (siteSettings?.navigation?.navItems && siteSettings.navigation.navItems.length > 0)
+                  ? siteSettings.navigation.navItems.filter((i) => i.isActive !== false && !isExcludedNavItem(i))
+                  : MAIN_NAV_ITEMS.filter((i) => !isExcludedNavItem(i));
+                if (!items.some((i) => i.path === "/jobs")) {
+                  const dirIdx = items.findIndex((i) => i.path === "/directory");
+                  const jobsItem = { id: "jobs", label: "Jobs", path: "/jobs", badge: "Live" };
+                  if (dirIdx >= 0) {
+                    items = [...items.slice(0, dirIdx + 1), jobsItem, ...items.slice(dirIdx + 1)];
+                  } else {
+                    items = [...items, jobsItem];
+                  }
+                }
+                return items;
+              })().map((item) => {
                 const isHash = item.path.includes("#");
                 const isActiveRoute = location.pathname === item.path || (isHash && location.hash === item.path.substring(item.path.indexOf("#")));
                 if (isHash) {
@@ -610,6 +626,22 @@ export default function App() {
                 <Music className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               </a>
 
+              {/* Jobs Portal Link */}
+              <Link
+                to="/jobs"
+                onMouseEnter={() => prefetchRoute("/jobs")}
+                onTouchStart={() => prefetchRoute("/jobs")}
+                className={`min-w-[38px] min-h-[38px] w-9 h-9 rounded-xl border flex items-center justify-center transition shadow-2xs ${
+                  location.pathname.startsWith("/jobs")
+                    ? "bg-[#26734D] text-white border-[#26734D]"
+                    : "bg-[#EEE7DA] hover:bg-[#E2D9CA] text-[#292722] border-[#DED5C7] dark:bg-[#302D27] dark:text-[#F5F0E7]"
+                }`}
+                aria-label="Fazilnagar Jobs Portal"
+                title="Jobs Portal / रोज़गार"
+              >
+                <Briefcase className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+              </Link>
+
               {/* Messages / संवाद */}
               <Link
                 to="/messages"
@@ -778,7 +810,10 @@ export default function App() {
                 <Route path="/emergency" element={<EmergencyHub />} />
                 <Route path="/healthcare" element={<HealthcareDirectory />} />
                 <Route path="/education" element={<EducationHub />} />
-                <Route path="/jobs" element={<JobsAndBusiness />} />
+                <Route path="/jobs" element={<Jobs />} />
+                <Route path="/jobs/post" element={<PostJob />} />
+                <Route path="/jobs/my" element={<MyJobListings />} />
+                <Route path="/jobs/:id" element={<JobDetail />} />
                 <Route path="/tourism" element={<Tourism />} />
                 <Route path="/food" element={<FoodGuide />} />
                 <Route path="/marketplace" element={<Marketplace />} />
@@ -1008,7 +1043,8 @@ export default function App() {
                 <li><Link to="/directory" className="hover:text-red-300 font-bold text-[#B8323C] flex items-center gap-1.5"><span>📍</span> Town Directory (Map & List)</Link></li>
                 <li><Link to="/news" className="hover:text-white">Town News</Link></li>
                 <li><Link to="/emergency" className="hover:text-white">Emergency Helplines</Link></li>
-                <li><Link to="/healthcare" className="hover:text-white">Hospitals & Clinics</Link></li>
+                <li><Link to="/jobs" className="hover:text-emerald-400 font-semibold text-emerald-300 flex items-center gap-1.5"><span>💼</span> Local Jobs &amp; Hiring</Link></li>
+                <li><Link to="/healthcare" className="hover:text-white">Hospitals &amp; Clinics</Link></li>
                 <li><Link to="/education" className="hover:text-white">Schools & Colleges</Link></li>
                 <li><Link to="/govt" className="hover:text-white">Government Services</Link></li>
               </ul>

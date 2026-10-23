@@ -129,13 +129,32 @@ export default function Messages() {
 
   // Handle URL deep-link (?conv=...)
   useEffect(() => {
-    if (convParam && conversations.length > 0) {
-      const match = conversations.find(
-        (c) => String(c._id || c.id) === String(convParam)
-      );
-      if (match) {
-        handleSelectConversation(match);
+    if (convParam) {
+      if (conversations.length > 0) {
+        const match = conversations.find(
+          (c) => String(c._id || c.id) === String(convParam)
+        );
+        if (match) {
+          handleSelectConversation(match);
+          return;
+        }
       }
+
+      // If not yet found in local state, fetch latest conversations from server (e.g. newly created via Job Apply / Contact)
+      API.get("/messages/conversations")
+        .then((res) => {
+          if (res.data?.conversations) {
+            setConversations(res.data.conversations);
+            setCachedConversations(res.data.conversations);
+            const found = res.data.conversations.find(
+              (c) => String(c._id || c.id) === String(convParam)
+            );
+            if (found) {
+              handleSelectConversation(found);
+            }
+          }
+        })
+        .catch(() => {});
     }
   }, [convParam, conversations.length]);
 

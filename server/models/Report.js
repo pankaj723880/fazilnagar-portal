@@ -25,9 +25,15 @@ const reportSchema = new mongoose.Schema(
       ref: "Conversation",
       default: null,
     },
+    targetJobListing: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "JobListing",
+      default: null,
+      index: true,
+    },
     reason: {
       type: String,
-      enum: ["spam", "harassment", "inappropriate", "fraud", "other"],
+      enum: ["spam", "harassment", "inappropriate", "fraud", "fake_job", "recruitment_fee", "other"],
       required: true,
       index: true,
     },
