@@ -296,6 +296,248 @@ router.get("/my", verifyToken, async (req, res) => {
   }
 });
 
+// =============================================================
+// ADMINISTRATOR MANAGEMENT ENDPOINTS (Strictly Admin Authorized)
+// =============================================================
+
+// GET /api/jobs/admin/stats - Overview metrics for Admin Dashboard
+router.get("/admin/stats", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const [
+      totalListings,
+      vacanciesCount,
+      seekersCount,
+      openCount,
+      filledCount,
+      expiredCount,
+      reportedCount,
+      totalApplications,
+    ] = await Promise.all([
+      JobListing.countDocuments(),
+      JobListing.countDocuments({ type: "job" }),
+      JobListing.countDocuments({ type: "job_seeker" }),
+      JobListing.countDocuments({ status: "open" }),
+      JobListing.countDocuments({ status: "filled" }),
+      JobListing.countDocuments({ status: "expired" }),
+      JobListing.countDocuments({ $or: [{ isReported: true }, { reportsCount: { $gt: 0 } }] }),
+      JobApplication.countDocuments(),
+    ]);
+
+    res.json({
+      success: true,
+      stats: {
+        totalListings,
+        vacanciesCount,
+        seekersCount,
+        openCount,
+        filledCount,
+        expiredCount,
+        reportedCount,
+        totalApplications,
+      },
+    });
+  } catch (err) {
+    console.error("Admin jobs stats error:", err);
+    res.status(500).json({ success: false, message: "Failed to retrieve jobs statistics." });
+  }
+});
+
+// GET /api/jobs/admin/all - Full management list with search, filter, and pagination
+router.get("/admin/all", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const {
+      type = "all",
+      status = "all",
+      search = "",
+      reportedOnly = "false",
+      page = 1,
+      limit = 20,
+    } = req.query;
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+    const skip = (pageNum - 1) * limitNum;
+
+    const query = {};
+    if (type !== "all" && ["job", "job_seeker"].includes(type)) {
+      query.type = type;
+    }
+    if (status !== "all") {
+      query.status = status;
+    }
+    if (reportedOnly === "true") {
+      query.$or = [{ isReported: true }, { reportsCount: { $gt: 0 } }];
+    }
+
+    if (search && search.trim()) {
+      const sanitized = search.trim();
+      const regex = new RegExp(sanitized, "i");
+      query.$or = [
+        { title: regex },
+        { company: regex },
+        { displayName: regex },
+        { desiredRole: regex },
+        { location: regex },
+        { preferredLocation: regex },
+        { category: regex },
+        { skills: regex },
+      ];
+    }
+
+    const [listings, total] = await Promise.all([
+      JobListing.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .populate("owner", "_id name email role phone avatar area")
+        .lean(),
+      JobListing.countDocuments(query),
+    ]);
+
+    res.json({
+      success: true,
+      listings,
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum) || 1,
+    });
+  } catch (err) {
+    console.error("Admin all jobs error:", err);
+    res.status(500).json({ success: false, message: "Failed to load listings for admin." });
+  }
+});
+
+// GET /api/jobs/admin/applications - List recent submitted applications
+router.get("/admin/applications", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const { page = 1, limit = 20, listingId } = req.query;
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+    const skip = (pageNum - 1) * limitNum;
+
+    const query = {};
+    if (listingId && mongoose.Types.ObjectId.isValid(listingId)) {
+      query.listing = listingId;
+    }
+
+    const [applications, total] = await Promise.all([
+      JobApplication.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .populate("listing", "title company category type status salaryText location")
+        .populate("applicant", "_id name email phone username avatar area")
+        .populate("employer", "_id name email phone username avatar")
+        .lean(),
+      JobApplication.countDocuments(query),
+    ]);
+
+    res.json({
+      success: true,
+      applications,
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum) || 1,
+    });
+  } catch (err) {
+    console.error("Admin applications error:", err);
+    res.status(500).json({ success: false, message: "Failed to load applications." });
+  }
+});
+
+// PATCH /api/jobs/admin/:id/status - Admin status update (open, paused, filled, expired, deleted)
+router.patch("/admin/:id/status", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid listing ID." });
+    }
+
+    const allowed = ["open", "paused", "filled", "expired", "deleted"];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid status value." });
+    }
+
+    const listing = await JobListing.findByIdAndUpdate(
+      id,
+      { $set: { status, updatedAt: new Date() } },
+      { new: true }
+    ).populate("owner", "_id name email phone");
+
+    if (!listing) {
+      return res.status(404).json({ success: false, message: "Listing not found." });
+    }
+
+    res.json({
+      success: true,
+      message: `Listing status updated to ${status}.`,
+      listing,
+    });
+  } catch (err) {
+    console.error("Admin update job status error:", err);
+    res.status(500).json({ success: false, message: "Failed to update listing status." });
+  }
+});
+
+// PATCH /api/jobs/admin/:id/verify - Admin toggle verification badge
+router.patch("/admin/:id/verify", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isVerified } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid listing ID." });
+    }
+
+    const listing = await JobListing.findByIdAndUpdate(
+      id,
+      { $set: { isVerified: Boolean(isVerified), updatedAt: new Date() } },
+      { new: true }
+    );
+
+    if (!listing) {
+      return res.status(404).json({ success: false, message: "Listing not found." });
+    }
+
+    res.json({
+      success: true,
+      message: `Listing verification status updated to ${Boolean(isVerified)}.`,
+      listing,
+    });
+  } catch (err) {
+    console.error("Admin verify job error:", err);
+    res.status(500).json({ success: false, message: "Failed to update verification." });
+  }
+});
+
+// DELETE /api/jobs/admin/:id - Admin permanent delete listing
+router.delete("/admin/:id", verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid listing ID." });
+    }
+
+    const listing = await JobListing.findByIdAndDelete(id);
+    if (!listing) {
+      return res.status(404).json({ success: false, message: "Listing not found." });
+    }
+
+    // Cleanup associated applications
+    await JobApplication.deleteMany({ listing: id });
+
+    res.json({
+      success: true,
+      message: "Listing and its application records have been permanently deleted by administrator.",
+    });
+  } catch (err) {
+    console.error("Admin delete job error:", err);
+    res.status(500).json({ success: false, message: "Failed to delete listing." });
+  }
+});
+
 // -------------------------------------------------------------
 // GET /api/jobs/:id - Single listing details
 // -------------------------------------------------------------

@@ -23,7 +23,8 @@
     "test:reactions": "node --test tests/emojiReactionsPhase3.test.js",
     "test:drive": "node --test tests/largeFilesDrivePhase5.test.js",
     "test:phases789": "node --test tests/townMessagingCompletePhases789.test.js",
-    "test:jobs": "node --test tests/jobsPortalComplete.test.js"
+    "test:jobs": "node --test tests/jobsPortalComplete.test.js",
+    "test:theme": "node --test tests/themeSwitcher.test.js tests/personalThemeIndependence.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -26,6 +26,7 @@ import {
   CheckSquare,
   Palette,
   Wrench,
+  Briefcase,
 } from "lucide-react";
 
 export default function AdminSidebar({
@@ -37,6 +38,7 @@ export default function AdminSidebar({
   liveAdsCount = 0,
   newsCount = 0,
   civicCount = 0,
+  jobsCount = 0,
   isMobileOpen = false,
   setIsMobileOpen = () => {},
   isCollapsed = false,
@@ -139,6 +141,13 @@ export default function AdminSidebar({
           icon: Megaphone,
           badge: liveAdsCount > 0 ? `${liveAdsCount} live` : null,
           badgeColor: "bg-blue-950 text-blue-300 border border-blue-800/60",
+        },
+        {
+          id: "jobs-manage",
+          label: "Jobs & Careers",
+          icon: Briefcase,
+          badge: jobsCount > 0 ? `${jobsCount} active` : "Portal",
+          badgeColor: "bg-emerald-950 text-emerald-300 border border-emerald-800/80 font-bold",
         },
         {
           id: "manage-users",

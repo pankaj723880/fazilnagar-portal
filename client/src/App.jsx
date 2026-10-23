@@ -90,7 +90,6 @@ const DIRECTORY_SUB_NAV = [
   { path: "/emergency", label: "24/7 Aid", icon: "🚨", badge: "24/7" },
   { path: "/education", label: "Education", icon: "🎓" },
   { path: "/healthcare", label: "Healthcare", icon: "🏥" },
-  { path: "/jobs", label: "Jobs Portal", icon: "💼", badge: "Live" },
   { path: "/tourism", label: "Tourism", icon: "🏨" },
   { path: "/food", label: "Food Guide", icon: "🍛" },
   { path: "/marketplace", label: "Marketplace", icon: "🛍️" },
@@ -106,7 +105,6 @@ const DIRECTORY_SUB_NAV_PATHS = [
   "/education",
   "/emergency",
   "/healthcare",
-  "/jobs",
   "/tourism",
   "/food",
   "/marketplace",
@@ -448,7 +446,11 @@ export default function App() {
                 return items;
               })().map((item) => {
                 const isHash = item.path.includes("#");
-                const isActiveRoute = location.pathname === item.path || (isHash && location.hash === item.path.substring(item.path.indexOf("#")));
+                const isActiveRoute = item.path === "/"
+                  ? (location.pathname === "/" && !location.hash)
+                  : (isHash
+                      ? location.hash === item.path.substring(item.path.indexOf("#"))
+                      : (location.pathname === item.path || location.pathname.startsWith(item.path + "/")));
                 if (isHash) {
                   return (
                     <a
@@ -625,22 +627,6 @@ export default function App() {
               >
                 <Music className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               </a>
-
-              {/* Jobs Portal Link */}
-              <Link
-                to="/jobs"
-                onMouseEnter={() => prefetchRoute("/jobs")}
-                onTouchStart={() => prefetchRoute("/jobs")}
-                className={`min-w-[38px] min-h-[38px] w-9 h-9 rounded-xl border flex items-center justify-center transition shadow-2xs ${
-                  location.pathname.startsWith("/jobs")
-                    ? "bg-[#26734D] text-white border-[#26734D]"
-                    : "bg-[#EEE7DA] hover:bg-[#E2D9CA] text-[#292722] border-[#DED5C7] dark:bg-[#302D27] dark:text-[#F5F0E7]"
-                }`}
-                aria-label="Fazilnagar Jobs Portal"
-                title="Jobs Portal / रोज़गार"
-              >
-                <Briefcase className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
-              </Link>
 
               {/* Messages / संवाद */}
               <Link

@@ -14,6 +14,7 @@ export default function AdminLayout({
   liveAdsCount = 0,
   newsCount = 0,
   civicCount = 0,
+  jobsCount = 0,
   contributionsCount = 0,
   onRefresh = () => {},
   loading = false,
@@ -33,7 +34,7 @@ export default function AdminLayout({
       : pendingSubmissions.filter((s) => s.status === "pending").length;
 
   return (
-    <div className="admin-workspace min-h-screen bg-[#F8FAFC] flex text-[#111827] font-sans antialiased selection:bg-[#B8323C] selection:text-white">
+    <div className="admin-workspace min-h-screen bg-[#F8FAFC] dark:bg-[#14120E] flex text-[#111827] dark:text-[#EAE6DF] font-sans antialiased selection:bg-[#B8323C] selection:text-white transition-colors duration-150">
       {/* Sidebar Navigation */}
       <AdminSidebar
         activeTab={activeTab}
@@ -44,6 +45,7 @@ export default function AdminLayout({
         liveAdsCount={liveAdsCount}
         newsCount={newsCount}
         civicCount={civicCount}
+        jobsCount={jobsCount}
         isMobileOpen={mobileDrawerOpen}
         setIsMobileOpen={setMobileDrawerOpen}
         isCollapsed={sidebarCollapsed}

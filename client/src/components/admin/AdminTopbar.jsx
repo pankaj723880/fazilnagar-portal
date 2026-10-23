@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import ThemeToggle from "../ThemeToggle";
 import {
   Menu,
   Search,
@@ -165,48 +166,51 @@ export default function AdminTopbar({
   return (
     <div className="sticky top-0 z-30">
       {/* SECTION 1: COMMON ADMIN HEADER (Sticky, 54px h) */}
-      <header className="h-[54px] bg-white/95 backdrop-blur-md border-b border-[#E5E7EB] px-3 sm:px-4 flex items-center justify-between shadow-2xs">
+      <header className="h-[54px] bg-white/95 dark:bg-[#1A1814]/95 backdrop-blur-md border-b border-[#E5E7EB] dark:border-[#38332B] px-3 sm:px-4 flex items-center justify-between shadow-2xs transition-colors duration-150">
         {/* Left: Hamburger Menu trigger (for mobile), Brand mark [F], and Admin ⚙️ badge */}
         <div className="flex items-center gap-2 min-w-0">
           {/* Mobile Explicit Sidebar Drawer Button with Hamburger Icon */}
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="lg:hidden p-1.5 -ml-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#111827] flex items-center justify-center active:scale-95 transition cursor-pointer shrink-0"
+            className="lg:hidden p-1.5 -ml-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[#111827] dark:text-white flex items-center justify-center active:scale-95 transition cursor-pointer shrink-0"
             title="Open Admin Sidebar Navigation"
             aria-label="Open Admin Sidebar Navigation"
           >
-            <Menu className="w-5 h-5 text-[#111827]" />
+            <Menu className="w-5 h-5 text-[#111827] dark:text-white" />
           </button>
 
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="w-8 h-8 rounded-xl bg-[#111827] hover:bg-[#1E293B] text-white font-black text-sm flex items-center justify-center shadow-xs active:scale-95 transition cursor-pointer shrink-0"
+            className="w-8 h-8 rounded-xl bg-[#111827] dark:bg-[#26231E] hover:bg-[#1E293B] dark:hover:bg-[#322E28] text-white font-black text-sm flex items-center justify-center shadow-xs active:scale-95 transition cursor-pointer shrink-0 border border-transparent dark:border-[#38332B]"
             title="Toggle Sidebar"
             aria-label="Toggle Sidebar"
           >
             F
           </button>
           <div className="flex items-center gap-1.5 min-w-0">
-            <span className="font-extrabold text-[14px] text-[#111827] tracking-tight font-heading truncate">
+            <span className="font-extrabold text-[14px] text-[#111827] dark:text-white tracking-tight font-heading truncate">
               FAZIL<span className="text-[#B8323C]">NAGAR</span>
             </span>
-            <span className="text-[10px] font-bold text-[#1E293B] bg-slate-100 border border-[#E5E7EB] px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shrink-0">
+            <span className="text-[10px] font-bold text-[#1E293B] dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-[#E5E7EB] dark:border-slate-700 px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shrink-0">
               Admin ⚙️
             </span>
           </div>
         </div>
 
-        {/* Right: Notification Bell with alert dot and tiny red Logout button */}
+        {/* Right: Personal Theme Toggle, Notifications Bell, and Logout button */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* Administrator's Personal Theme Toggle */}
+          <ThemeToggle compact={true} />
+
           {/* Refresh Action Button */}
           <button
             onClick={() => {
               if (typeof onRefresh === "function") onRefresh();
             }}
             disabled={loading}
-            className="p-1.5 rounded-lg text-[#64748B] hover:text-[#111827] hover:bg-slate-100 transition cursor-pointer"
+            className="p-1.5 rounded-lg text-[#64748B] dark:text-[#A39B8F] hover:text-[#111827] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#26231E] transition cursor-pointer"
             title="Refresh Data"
             aria-label="Refresh Data from Server"
           >
@@ -283,13 +287,13 @@ export default function AdminTopbar({
       </header>
 
       {/* Breadcrumb Area (Immediately below header, 32px h) */}
-      <div className="h-8 bg-[#F8FAFC] border-b border-[#E5E7EB] px-3 sm:px-4 flex items-center justify-between text-xs">
-        <div className="flex items-center gap-1.5 text-[11px] text-[#64748B] truncate">
-          <span className="font-medium text-slate-400 hidden sm:inline">Fazilnagar Portal</span>
-          <span className="text-slate-300 hidden sm:inline">/</span>
-          <span className="font-semibold text-[#1E293B] truncate">{breadcrumb.group || "Website"}</span>
-          <span className="text-slate-300">/</span>
-          <span className="font-extrabold text-[#111827] truncate">{breadcrumb.label}</span>
+      <div className="h-8 bg-[#F8FAFC] dark:bg-[#151310] border-b border-[#E5E7EB] dark:border-[#38332B] px-3 sm:px-4 flex items-center justify-between text-xs transition-colors duration-150">
+        <div className="flex items-center gap-1.5 text-[11px] text-[#64748B] dark:text-[#A39B8F] truncate">
+          <span className="font-medium text-slate-400 dark:text-slate-500 hidden sm:inline">Fazilnagar Portal</span>
+          <span className="text-slate-300 dark:text-slate-600 hidden sm:inline">/</span>
+          <span className="font-semibold text-[#1E293B] dark:text-slate-200 truncate">{breadcrumb.group || "Website"}</span>
+          <span className="text-slate-300 dark:text-slate-600">/</span>
+          <span className="font-extrabold text-[#111827] dark:text-white truncate">{breadcrumb.label}</span>
         </div>
         <a
           href="/"
@@ -304,7 +308,7 @@ export default function AdminTopbar({
       </div>
 
       {/* Mobile Fast-Switch Module Ribbon (lg:hidden) */}
-      <div className="lg:hidden bg-white/95 backdrop-blur-md border-b border-[#E5E7EB] px-2.5 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar shadow-2xs">
+      <div className="lg:hidden bg-white/95 dark:bg-[#1A1814]/95 backdrop-blur-md border-b border-[#E5E7EB] dark:border-[#38332B] px-2.5 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar shadow-2xs">
         <button
           type="button"
           onClick={onToggleSidebar}
@@ -322,7 +326,7 @@ export default function AdminTopbar({
               className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition active:scale-95 cursor-pointer ${
                 isActive
                   ? "bg-[#111827] text-white shadow-xs font-black border-b-2 border-[#B8323C]"
-                  : "bg-slate-100 text-[#1E293B] hover:bg-slate-200 border border-[#E5E7EB]"
+                  : "bg-slate-100 dark:bg-[#26231E] text-[#1E293B] dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-[#322E28] border border-[#E5E7EB] dark:border-[#38332B]"
               }`}
             >
               {item.label}

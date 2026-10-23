@@ -100,6 +100,12 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    // User Personal Appearance Preference (light/dark, never global)
+    themePreference: {
+      type: String,
+      enum: ["light", "dark"],
+      default: null,
+    },
   },
   { timestamps: true }
 );

@@ -30,6 +30,7 @@ const AdminFormBuilder = lazy(() => import("../components/admin/AdminFormBuilder
 const AdminContributionReview = lazy(() => import("../components/admin/AdminContributionReview")); // Public Contributions Review Desk
 const AdminThemeGallery = lazy(() => import("../components/admin/AdminThemeGallery")); // Module 14: Theme Gallery & Visual Identity
 const AdminMaintenanceCMS = lazy(() => import("../components/admin/AdminMaintenanceCMS")); // Module 15: Global Maintenance Mode Control
+const AdminJobsCMS = lazy(() => import("../components/admin/AdminJobsCMS")); // Module 16: Jobs Marketplace Administration
 
 function AdminTabSkeleton() {
   return (
@@ -82,6 +83,7 @@ export default function AdminReview({ user: propUser }) {
   const [civicCount, setCivicCount] = useState(0);
   const [usersCount, setUsersCount] = useState(0);
   const [contributionsCount, setContributionsCount] = useState(0);
+  const [jobsCount, setJobsCount] = useState(0);
 
   // Synchronize Tab with URL
   const setActiveTab = (tabId) => {
@@ -127,7 +129,7 @@ export default function AdminReview({ user: propUser }) {
     const authHeaders = { Authorization: `Bearer ${token}` };
 
     try {
-      const [subRes, placesRes, adsRes, newsRes, usersRes, civicRes, contribRes] = await Promise.allSettled([
+      const [subRes, placesRes, adsRes, newsRes, usersRes, civicRes, contribRes, jobsRes] = await Promise.allSettled([
         API.get("/submissions?status=pending", { headers: authHeaders }),
         API.get("/places/admin?archived=all", { headers: authHeaders }),
         API.get("/advertisements/admin", { headers: authHeaders }),
@@ -135,6 +137,7 @@ export default function AdminReview({ user: propUser }) {
         API.get("/users?limit=1", { headers: authHeaders }),
         API.get("/civic-directory?all=true", { headers: authHeaders }),
         API.get("/contributions?status=pending", { headers: authHeaders }),
+        API.get("/jobs/admin/stats", { headers: authHeaders }),
       ]);
 
       if (subRes.status === "fulfilled" && Array.isArray(subRes.value.data)) {
@@ -179,6 +182,9 @@ export default function AdminReview({ user: propUser }) {
           ? contribRes.value.data
           : [];
         setContributionsCount(cList.length);
+      }
+      if (jobsRes.status === "fulfilled" && jobsRes.value.data?.success) {
+        setJobsCount(jobsRes.value.data.stats?.totalListings || 0);
       }
     } catch (err) {
       console.warn("Failed to load sidebar badge counts:", err);
@@ -333,6 +339,11 @@ export default function AdminReview({ user: propUser }) {
       case "advertisements":
         return <AdminAdvertisementsCMS onStatsChange={fetchBadgeCounts} />;
 
+      case "jobs-manage":
+      case "jobs":
+      case "jobs-portal":
+        return <AdminJobsCMS onStatsChange={fetchBadgeCounts} />;
+
       case "manage-users":
       case "users":
         return <AdminManageUsers token={getAuthToken()} currentAdminUser={currentUser} />;
@@ -399,6 +410,7 @@ export default function AdminReview({ user: propUser }) {
       liveAdsCount={liveAdsCount}
       newsCount={newsCount}
       civicCount={civicCount}
+      jobsCount={jobsCount}
       currentUser={currentUser}
       onLogout={handleLogout}
       onRefresh={fetchBadgeCounts}

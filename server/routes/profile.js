@@ -132,6 +132,7 @@ router.get("/me", verifyToken, async (req, res) => {
         whoCanMessage: user.whoCanMessage || "everyone",
         lastSeenVisible: user.lastSeenVisible ?? true,
         lastSeen: user.lastSeen,
+        themePreference: user.themePreference || null,
         createdAt: user.createdAt,
       },
     });
@@ -224,6 +225,11 @@ router.patch("/me", verifyToken, async (req, res) => {
       user.whoCanMessage = whoCanMessage;
     }
     if (lastSeenVisible !== undefined) user.lastSeenVisible = Boolean(lastSeenVisible);
+    if (req.body.themePreference !== undefined) {
+      if (["light", "dark", null].includes(req.body.themePreference)) {
+        user.themePreference = req.body.themePreference;
+      }
+    }
 
     await user.save();
 
@@ -244,6 +250,7 @@ router.patch("/me", verifyToken, async (req, res) => {
         findByEmail: user.findByEmail,
         whoCanMessage: user.whoCanMessage,
         lastSeenVisible: user.lastSeenVisible,
+        themePreference: user.themePreference || null,
         updatedAt: user.updatedAt,
       },
     });

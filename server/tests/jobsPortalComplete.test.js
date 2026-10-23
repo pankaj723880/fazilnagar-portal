@@ -31,9 +31,11 @@ describe("Fazilnagar Jobs Portal: Complete End-to-End Test Suite", () => {
   let employerUser;
   let jobSeekerUser;
   let otherCitizen;
+  let adminUser;
   let employerToken;
   let seekerToken;
   let otherToken;
+  let adminToken;
 
   let testJobVacancy;
   let testCandidateProfile;
@@ -130,6 +132,16 @@ describe("Fazilnagar Jobs Portal: Complete End-to-End Test Suite", () => {
       isEmailVerified: true,
     });
 
+    adminUser = await User.create({
+      name: "Chief Admin Officer",
+      email: "test_admin_jobs@fazilnagar.com",
+      username: "chiefadmin",
+      password: "HashedPassword123",
+      role: "admin",
+      area: "Administrative Block",
+      isEmailVerified: true,
+    });
+
     employerToken = jwt.sign(
       { id: employerUser._id.toString(), role: "user", email: employerUser.email },
       JWT_SECRET,
@@ -144,6 +156,12 @@ describe("Fazilnagar Jobs Portal: Complete End-to-End Test Suite", () => {
 
     otherToken = jwt.sign(
       { id: otherCitizen._id.toString(), role: "user", email: otherCitizen.email },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    adminToken = jwt.sign(
+      { id: adminUser._id.toString(), role: "admin", email: adminUser.email },
       JWT_SECRET,
       { expiresIn: "1h" }
     );
@@ -564,6 +582,89 @@ describe("Fazilnagar Jobs Portal: Complete End-to-End Test Suite", () => {
       });
       assert.ok(reportDoc, "Report must be saved in database");
       assert.strictEqual(reportDoc.reason, "fake_job");
+    });
+  });
+
+  // -------------------------------------------------------------
+  // Test Suite 7: Administrator Management & Oversight (Requirement 4)
+  // -------------------------------------------------------------
+  describe("7. Administrator Management & Oversight", () => {
+    it("7.1 Rejects non-admin requests to /api/jobs/admin/all with 403", async () => {
+      const res = await makeRequest({
+        path: "/api/jobs/admin/all",
+        token: seekerToken,
+      });
+      assert.strictEqual(res.status, 403);
+    });
+
+    it("7.2 Admin can retrieve marketplace stats (/api/jobs/admin/stats)", async () => {
+      const res = await makeRequest({
+        path: "/api/jobs/admin/stats",
+        token: adminToken,
+      });
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.data.success, true);
+      assert.ok(typeof res.data.stats.totalListings === "number");
+      assert.ok(typeof res.data.stats.openCount === "number");
+      assert.ok(typeof res.data.stats.totalApplications === "number");
+    });
+
+    it("7.3 Admin can list all listings with filters (/api/jobs/admin/all)", async () => {
+      const res = await makeRequest({
+        path: "/api/jobs/admin/all?status=all",
+        token: adminToken,
+      });
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.data.success, true);
+      assert.ok(Array.isArray(res.data.listings));
+      assert.ok(res.data.total >= 1);
+    });
+
+    it("7.4 Admin can toggle listing verification (/api/jobs/admin/:id/verify)", async () => {
+      const res = await makeRequest({
+        path: `/api/jobs/admin/${testCandidateProfile._id}/verify`,
+        method: "PATCH",
+        token: adminToken,
+        body: { isVerified: true },
+      });
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.data.success, true);
+      assert.strictEqual(res.data.listing.isVerified, true);
+    });
+
+    it("7.5 Admin can update listing status (/api/jobs/admin/:id/status)", async () => {
+      const res = await makeRequest({
+        path: `/api/jobs/admin/${testCandidateProfile._id}/status`,
+        method: "PATCH",
+        token: adminToken,
+        body: { status: "paused" },
+      });
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.data.success, true);
+      assert.strictEqual(res.data.listing.status, "paused");
+    });
+
+    it("7.6 Admin can retrieve submitted applications (/api/jobs/admin/applications)", async () => {
+      const res = await makeRequest({
+        path: "/api/jobs/admin/applications",
+        token: adminToken,
+      });
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.data.success, true);
+      assert.ok(Array.isArray(res.data.applications));
+    });
+
+    it("7.7 Admin can delete any listing (/api/jobs/admin/:id)", async () => {
+      const res = await makeRequest({
+        path: `/api/jobs/admin/${testCandidateProfile._id}`,
+        method: "DELETE",
+        token: adminToken,
+      });
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.data.success, true);
+
+      const check = await JobListing.findById(testCandidateProfile._id);
+      assert.strictEqual(check, null);
     });
   });
 });
