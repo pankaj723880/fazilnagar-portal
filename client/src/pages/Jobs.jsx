@@ -337,37 +337,42 @@ export default function Jobs() {
               )}
             </div>
 
-            {/* Location Selector */}
-            <div className="sm:col-span-3 relative">
-              <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <select
-                value={selectedLocation}
-                onChange={(e) => setSelectedLocation(e.target.value)}
-                className="w-full pl-10 pr-8 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#A83D32] appearance-none cursor-pointer"
-              >
-                <option value="All">All Locations in Town</option>
-                {LOCAL_JOB_LOCATIONS.map((loc) => (
-                  <option key={loc} value={loc}>
-                    {loc}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
+            {/* Location & Sort Filters (Side-by-side in one line for BOTH laptop & phone) */}
+            <div className="sm:col-span-6 grid grid-cols-2 gap-2 sm:gap-3">
+              {/* Location Selector */}
+              <div className="relative">
+                <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <select
+                  value={selectedLocation}
+                  onChange={(e) => setSelectedLocation(e.target.value)}
+                  className="w-full pl-8 sm:pl-10 pr-6 sm:pr-8 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#A83D32] appearance-none cursor-pointer truncate"
+                  title="Filter by town location"
+                >
+                  <option value="All">All Locations in Town</option>
+                  {LOCAL_JOB_LOCATIONS.map((loc) => (
+                    <option key={loc} value={loc}>
+                      {loc}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
 
-            {/* Sort Selector */}
-            <div className="sm:col-span-3 relative">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#A83D32] appearance-none cursor-pointer"
-              >
-                <option value="recent">Sort: Most Recent</option>
-                <option value="salary_desc">Salary: High to Low</option>
-                <option value="salary_asc">Salary: Low to High</option>
-                <option value="views">Most Viewed</option>
-              </select>
-              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              {/* Sort Selector */}
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="w-full pl-3 sm:pl-3.5 pr-6 sm:pr-8 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#A83D32] appearance-none cursor-pointer truncate"
+                  title="Sort listings"
+                >
+                  <option value="recent">Sort: Most Recent</option>
+                  <option value="salary_desc">Salary: High to Low</option>
+                  <option value="salary_asc">Salary: Low to High</option>
+                  <option value="views">Most Viewed</option>
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
           </div>
 
