@@ -429,7 +429,7 @@ export default function App() {
             </Link>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold text-[#292722] dark:text-[#F5F0E7]">
+            <nav className="hidden md:flex items-center gap-4 lg:gap-6 text-xs font-semibold text-[#292722] dark:text-[#F5F0E7]">
               {(() => {
                 let items = (siteSettings?.navigation?.navItems && siteSettings.navigation.navItems.length > 0)
                   ? siteSettings.navigation.navItems.filter((i) => i.isActive !== false && !isExcludedNavItem(i))
@@ -489,7 +489,7 @@ export default function App() {
             </nav>
 
             {/* Auth & Post Actions Bar */}
-            <div className="hidden sm:flex items-center gap-2.5 shrink-0">
+            <div className="hidden md:flex items-center gap-2.5 shrink-0">
               <LiveVisitorCounter compact={false} />
 
               <Suspense fallback={<div className="w-11 h-11 shrink-0" />}>
@@ -609,7 +609,7 @@ export default function App() {
             </div>
 
             {/* Mobile Actions: Theme Toggle + Notification Bell + Entertainment + Messages + Add Story + User/Profile */}
-            <div className="flex sm:hidden items-center gap-1.5">
+            <div className="flex md:hidden items-center gap-1.5">
               <ThemeToggle compact={true} />
 
               <Suspense fallback={<div className="w-9 h-9 shrink-0" />}>
@@ -1153,6 +1153,19 @@ export default function App() {
                     <span>Directory ({VERIFIED_DIRECTORY_COUNT})</span>
                   </Link>
                   <Link
+                    to="/jobs"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2.5 rounded-xl text-xs font-bold flex items-center justify-between bg-emerald-50/90 text-emerald-950 hover:bg-emerald-100 border border-emerald-300/80 shadow-2xs active:scale-95 transition"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span>💼</span>
+                      <span>Jobs</span>
+                    </div>
+                    <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded-full bg-emerald-600 text-white">
+                      Live
+                    </span>
+                  </Link>
+                  <Link
                     to="/emergency"
                     onClick={() => setMobileMenuOpen(false)}
                     className="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-50 text-slate-800 hover:bg-slate-100 border border-slate-200/70 active:scale-95 transition"
@@ -1276,7 +1289,7 @@ export default function App() {
                     className="p-2 rounded-lg text-xs font-semibold bg-indigo-50/70 hover:bg-indigo-100 text-indigo-950 flex items-center gap-1.5 border border-indigo-200/60 active:scale-95 transition"
                   >
                     <span>💼</span>
-                    <span className="truncate">Jobs &amp; Directory</span>
+                    <span className="truncate">Jobs Portal</span>
                   </Link>
                   <Link
                     to="/tourism"
@@ -1386,9 +1399,9 @@ export default function App() {
       {!isAdminPage && !isMessagesPage && !hideLayoutOnAreaDetails && (
         <nav
           aria-label="Mobile bottom navigation"
-          className={`fixed bottom-0 left-0 right-0 z-[1050] bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-md border-t border-[#E3EAF1] dark:border-[#334155] shadow-[0_-2px_12px_rgba(17,26,46,0.05)] pb-[max(0.5rem,env(safe-area-inset-bottom))] ${isMobilePreview ? "block" : "sm:hidden"}`}
+          className={`fixed bottom-0 left-0 right-0 z-[1050] bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-md border-t border-[#E3EAF1] dark:border-[#334155] shadow-[0_-2px_12px_rgba(17,26,46,0.05)] pb-[max(0.5rem,env(safe-area-inset-bottom))] ${isMobilePreview ? "block" : "md:hidden"}`}
         >
-          <div className="max-w-[440px] mx-auto w-full px-2 py-1 flex items-center justify-between">
+          <div className="max-w-[440px] mx-auto w-full px-1.5 py-1 flex items-center justify-between">
             {/* 1. Home */}
             <NavLink
               to="/"
@@ -1401,7 +1414,7 @@ export default function App() {
                 }
               }}
               className={({ isActive }) =>
-                `flex-1 flex flex-col items-center justify-center min-h-[48px] py-1 px-1 rounded-xl transition text-[10px] font-semibold touch-manipulation cursor-pointer ${
+                `flex-1 flex flex-col items-center justify-center min-h-[48px] py-1 px-0.5 rounded-xl transition text-[10px] font-semibold touch-manipulation cursor-pointer ${
                   isActive && location.pathname === "/"
                     ? "text-[#C92F3D] font-bold"
                     : "text-[#71819B] hover:text-[#182338] dark:text-slate-400 dark:hover:text-white"
@@ -1409,7 +1422,7 @@ export default function App() {
               }
             >
               <Home className="w-5 h-5 mb-0.5" />
-              <span>Home</span>
+              <span className="truncate max-w-full">Home</span>
             </NavLink>
 
             {/* 2. Directory */}
@@ -1419,7 +1432,7 @@ export default function App() {
               onFocus={() => prefetchRoute("/directory")}
               className={() => {
                 const isDirActive = location.pathname.startsWith("/directory") || location.pathname.startsWith("/local-directory");
-                return `flex-1 flex flex-col items-center justify-center min-h-[48px] py-1 px-1 rounded-xl transition text-[10px] font-semibold relative touch-manipulation cursor-pointer ${
+                return `flex-1 flex flex-col items-center justify-center min-h-[48px] py-1 px-0.5 rounded-xl transition text-[10px] font-semibold relative touch-manipulation cursor-pointer ${
                   isDirActive
                     ? "text-[#C92F3D] font-bold"
                     : "text-[#71819B] hover:text-[#182338] dark:text-slate-400 dark:hover:text-white"
@@ -1427,16 +1440,35 @@ export default function App() {
               }}
             >
               <Compass className="w-5 h-5 mb-0.5" />
-              <span>Directory</span>
+              <span className="truncate max-w-full">Directory</span>
             </NavLink>
 
-            {/* 3. 24/7 Aid */}
+            {/* 3. Jobs - Independent Navbar Page */}
+            <NavLink
+              to="/jobs"
+              onMouseEnter={() => prefetchRoute("/jobs")}
+              onFocus={() => prefetchRoute("/jobs")}
+              onTouchStart={() => prefetchRoute("/jobs")}
+              className={() => {
+                const isJobsActive = location.pathname.startsWith("/jobs");
+                return `flex-1 flex flex-col items-center justify-center min-h-[48px] py-1 px-0.5 rounded-xl transition text-[10px] font-semibold relative touch-manipulation cursor-pointer ${
+                  isJobsActive
+                    ? "text-[#C92F3D] font-bold"
+                    : "text-[#71819B] hover:text-[#182338] dark:text-slate-400 dark:hover:text-white"
+                }`;
+              }}
+            >
+              <Briefcase className="w-5 h-5 mb-0.5" />
+              <span className="truncate max-w-full">Jobs</span>
+            </NavLink>
+
+            {/* 4. 24/7 Aid */}
             <NavLink
               to="/emergency"
               onMouseEnter={() => prefetchRoute("/emergency")}
               onFocus={() => prefetchRoute("/emergency")}
               className={({ isActive }) =>
-                `flex-1 flex flex-col items-center justify-center min-h-[48px] py-1 px-1 rounded-xl transition text-[10px] font-semibold touch-manipulation cursor-pointer ${
+                `flex-1 flex flex-col items-center justify-center min-h-[48px] py-1 px-0.5 rounded-xl transition text-[10px] font-semibold touch-manipulation cursor-pointer ${
                   isActive || location.pathname.startsWith("/emergency")
                     ? "text-[#C92F3D] font-bold"
                     : "text-[#71819B] hover:text-[#182338] dark:text-slate-400 dark:hover:text-white"
@@ -1444,16 +1476,16 @@ export default function App() {
               }
             >
               <PhoneCall className="w-5 h-5 mb-0.5" />
-              <span>24/7 Aid</span>
+              <span className="truncate max-w-full">24/7 Aid</span>
             </NavLink>
 
-            {/* 4. Updates */}
+            {/* 5. Updates */}
             <NavLink
               to="/news"
               onMouseEnter={() => prefetchRoute("/news")}
               onFocus={() => prefetchRoute("/news")}
               className={({ isActive }) =>
-                `flex-1 flex flex-col items-center justify-center min-h-[48px] py-1 px-1 rounded-xl transition text-[10px] font-semibold touch-manipulation cursor-pointer ${
+                `flex-1 flex flex-col items-center justify-center min-h-[48px] py-1 px-0.5 rounded-xl transition text-[10px] font-semibold touch-manipulation cursor-pointer ${
                   isActive || location.pathname.startsWith("/news") || location.pathname.startsWith("/local-updates")
                     ? "text-[#C92F3D] font-bold"
                     : "text-[#71819B] hover:text-[#182338] dark:text-slate-400 dark:hover:text-white"
@@ -1461,14 +1493,14 @@ export default function App() {
               }
             >
               <Newspaper className="w-5 h-5 mb-0.5" />
-              <span>Updates</span>
+              <span className="truncate max-w-full">Updates</span>
             </NavLink>
 
-            {/* 5. Menu */}
+            {/* 6. Menu */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
-              className={`flex-1 flex flex-col items-center justify-center min-h-[48px] py-1 px-1 rounded-xl transition text-[10px] font-semibold cursor-pointer touch-manipulation ${
+              className={`flex-1 flex flex-col items-center justify-center min-h-[48px] py-1 px-0.5 rounded-xl transition text-[10px] font-semibold cursor-pointer touch-manipulation ${
                 mobileMenuOpen
                   ? "text-[#C92F3D] font-bold"
                   : "text-[#71819B] hover:text-[#182338] dark:text-slate-400 dark:hover:text-white"
@@ -1480,7 +1512,7 @@ export default function App() {
               ) : (
                 <Menu className="w-5 h-5 mb-0.5" />
               )}
-              <span>{mobileMenuOpen ? "Close" : "Menu"}</span>
+              <span className="truncate max-w-full">{mobileMenuOpen ? "Close" : "Menu"}</span>
             </button>
           </div>
         </nav>
