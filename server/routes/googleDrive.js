@@ -941,44 +941,6 @@ export function matchesEtag(ifNoneMatch, targetEtag) {
 }
 
 /**
- * Lightweight vector placeholder for failed or missing thumbnails (SVG).
- * ~480 bytes, renders a crisp placeholder in any img, video poster, or canvas,
- * and is cached to eliminate retry loops and prevent full-media downloads.
- */
-export const FALLBACK_THUMBNAIL_SVG = Buffer.from(
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
-  <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a" />
-      <stop offset="100%" stop-color="#1e293b" />
-    </linearGradient>
-  </defs>
-  <rect width="100%" height="100%" fill="url(#g)" />
-  <circle cx="200" cy="130" r="42" fill="#334155" opacity="0.6" />
-  <path d="M185 115 L225 130 L185 145 Z" fill="#94a3b8" />
-  <text x="200" y="210" fill="#cbd5e1" font-family="system-ui,-apple-system,sans-serif" font-size="14" font-weight="600" text-anchor="middle" letter-spacing="1">FAZILNAGAR PORTAL</text>
-  <text x="200" y="230" fill="#64748b" font-family="system-ui,-apple-system,sans-serif" font-size="11" text-anchor="middle">Community Media</text>
-</svg>`,
-  "utf-8"
-);
-
-function setMediaCorsHeaders(req, res) {
-  const origin = req.headers.origin;
-  if (origin) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-  } else {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-  }
-  res.setHeader("Accept-Ranges", "bytes");
-  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
-  res.setHeader(
-    "Access-Control-Expose-Headers",
-    "Content-Range, Content-Length, Accept-Ranges, Content-Type, ETag, Last-Modified"
-  );
-}
-
-/**
  * @route   HEAD /api/google-drive/media/:id
  * @desc    Fast header/metadata inspection for media without downloading stream from Google Drive
  * @access  Public
@@ -1002,17 +964,14 @@ router.head("/media/:id", async (req, res) => {
           fileName: msg.fileName || "media",
           mimeType: msg.mimeType,
           fileSize: msg.fileSize,
-          isPrivate: true,
         };
       }
     }
 
     if (!mediaDoc || !mediaDoc.driveFileId) {
-      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
       return res.status(404).end();
     }
 
-    const isPrivate = Boolean(mediaDoc.isPrivate || req.headers.authorization);
     let resolvedMime = mediaDoc.mimeType;
     const ext = path.extname(mediaDoc.fileName || "").toLowerCase();
     if (!resolvedMime || resolvedMime === "application/octet-stream") {
@@ -1026,56 +985,48 @@ router.head("/media/:id", async (req, res) => {
       (reqWidth > 0 && reqWidth <= 1200)
     );
 
-    const targetSize = reqWidth && reqWidth > 0 ? Math.min(reqWidth, 1200) : 400;
     const etag = isThumbRequested
-      ? `"${mediaDoc.driveFileId}_thumb_${targetSize}"`
+      ? `"${mediaDoc.driveFileId}_thumb_${reqWidth || 400}"`
       : `"${mediaDoc.driveFileId}_${mediaDoc.fileSize || 0}"`;
 
-    const lastModified = (mediaDoc.updatedAt || mediaDoc.createdAt || new Date(0)).toUTCString();
-    const cacheHeader = isPrivate
-      ? "private, no-cache, no-store, must-revalidate"
-      : "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=86400, immutable";
-
-    setMediaCorsHeaders(req, res);
+    const origin = req.headers.origin;
+    if (origin) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+    } else {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+    }
+    res.setHeader("Accept-Ranges", "bytes");
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    res.setHeader("Access-Control-Expose-Headers", "Content-Range, Content-Length, Accept-Ranges, Content-Type");
     res.setHeader("Content-Type", isThumbRequested ? "image/jpeg" : resolvedMime);
     if (!isThumbRequested && mediaDoc.fileSize) {
       res.setHeader("Content-Length", mediaDoc.fileSize);
     }
     res.setHeader("ETag", etag);
-    res.setHeader("Last-Modified", lastModified);
-    res.setHeader("Cache-Control", cacheHeader);
+    res.setHeader("Cache-Control", "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=86400, immutable");
     res.setHeader("Content-Disposition", `inline; filename="${mediaDoc.fileName || "attachment"}"`);
 
     if (matchesEtag(req.headers["if-none-match"], etag)) {
       return res.status(304).end();
     }
 
-    if (req.headers["if-modified-since"]) {
-      const ifMod = new Date(req.headers["if-modified-since"]);
-      const docMod = new Date(lastModified);
-      if (!isNaN(ifMod.getTime()) && docMod <= ifMod && !req.headers["if-none-match"]) {
-        return res.status(304).end();
-      }
-    }
-
     return res.status(200).end();
   } catch (_) {
-    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     return res.status(500).end();
   }
 });
 
 /**
  * @route   GET /api/google-drive/media/:id
- * @desc    Retrieves and streams media from Google Drive with proper caching, conditional 304,
- *          Range/206 video seeking, and safe fallback handling that prevents downloading
- *          multi-megabyte originals for thumbnail requests.
- * @access  Public (Public files) / Private (Protected Messages)
+ * @desc    Retrieves and streams media from Google Drive with proper caching and Content-Type.
+ *          Does NOT expose Drive URLs or OAuth tokens, and maintains private file security.
+ * @access  Public
  */
 router.get("/media/:id", async (req, res) => {
-  let mediaDoc = null;
   try {
     const { id } = req.params;
+    let mediaDoc = null;
 
     if (mongoose.Types.ObjectId.isValid(id)) {
       mediaDoc = await GoogleDriveMedia.findById(id);
@@ -1091,17 +1042,13 @@ router.get("/media/:id", async (req, res) => {
           fileName: msg.fileName || "media",
           mimeType: msg.mimeType,
           fileSize: msg.fileSize,
-          isPrivate: true,
         };
       }
     }
 
     if (!mediaDoc || !mediaDoc.driveFileId) {
-      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
       return res.status(404).json({ message: "Media file not found." });
     }
-
-    const isPrivate = Boolean(mediaDoc.isPrivate || req.headers.authorization);
 
     // Resolve accurate MIME type based on extension if missing or generic
     let resolvedMime = mediaDoc.mimeType;
@@ -1118,155 +1065,74 @@ router.get("/media/:id", async (req, res) => {
       (reqWidth > 0 && reqWidth <= 1200)
     );
 
-    const targetSize = reqWidth && reqWidth > 0 ? Math.min(reqWidth, 1200) : 400;
     const etag = isThumbRequested
-      ? `"${mediaDoc.driveFileId}_thumb_${targetSize}"`
+      ? `"${mediaDoc.driveFileId}_thumb_${reqWidth || 400}"`
       : `"${mediaDoc.driveFileId}_${mediaDoc.fileSize || 0}"`;
 
-    const lastModified = (mediaDoc.updatedAt || mediaDoc.createdAt || new Date(0)).toUTCString();
-    const cacheHeader = isPrivate
-      ? "private, no-cache, no-store, must-revalidate"
-      : "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=86400, immutable";
-
-    // Fast Conditional ETag 304 Not Modified
     if (matchesEtag(req.headers["if-none-match"], etag)) {
-      setMediaCorsHeaders(req, res);
       res.setHeader("ETag", etag);
-      res.setHeader("Last-Modified", lastModified);
-      res.setHeader("Cache-Control", cacheHeader);
+      res.setHeader("Cache-Control", "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=86400, immutable");
       return res.status(304).end();
     }
 
-    // Conditional If-Modified-Since 304 Not Modified
-    if (req.headers["if-modified-since"]) {
-      const ifMod = new Date(req.headers["if-modified-since"]);
-      const docMod = new Date(lastModified);
-      if (!isNaN(ifMod.getTime()) && docMod <= ifMod && !req.headers["if-none-match"]) {
-        setMediaCorsHeaders(req, res);
-        res.setHeader("ETag", etag);
-        res.setHeader("Last-Modified", lastModified);
-        res.setHeader("Cache-Control", cacheHeader);
-        return res.status(304).end();
-      }
-    }
+    const { drive, oauth2Client } = await getAuthenticatedDriveClient();
 
-    const { drive } = await getAuthenticatedDriveClient();
-
-    // =========================================================================
-    // HIGH-EFFICIENCY RESIZED THUMBNAIL FAST-PATH (IMAGES & VIDEOS)
-    // =========================================================================
-    if (isThumbRequested) {
+    // High-Efficiency Resized Thumbnail Fast-Path (Google Cloud-Powered Resizing)
+    if (isThumbRequested && (resolvedMime.startsWith("image/") || ext.match(/\.(jpg|jpeg|png|webp)/i))) {
       try {
         let thumbUrl = mediaDoc.thumbnailLink;
         if (!thumbUrl) {
           const fileMeta = await drive.files.get({
             fileId: mediaDoc.driveFileId,
-            fields: "thumbnailLink, hasThumbnail",
+            fields: "thumbnailLink",
           });
           thumbUrl = fileMeta.data?.thumbnailLink;
-          if (thumbUrl && mediaDoc._id && mongoose.connection.readyState === 1) {
-            GoogleDriveMedia.updateOne(
-              { _id: mediaDoc._id },
-              { $set: { thumbnailLink: thumbUrl } }
-            ).catch(() => {});
+          if (thumbUrl && mongoose.connection.readyState === 1) {
+            GoogleDriveMedia.updateOne({ _id: mediaDoc._id }, { $set: { thumbnailLink: thumbUrl } }).catch(() => {});
           }
         }
 
         if (thumbUrl) {
+          const targetSize = reqWidth && reqWidth > 0 ? Math.min(reqWidth, 1200) : 400;
           const customThumbUrl = thumbUrl.replace(/=s\d+.*$/, `=s${targetSize}`);
 
-          // Fetch the thumbnail URL without Authorization header first, because
-          // Google usercontent CDN (lh3.googleusercontent.com) rejects OAuth Bearer tokens with 403 Forbidden!
-          let thumbFetchRes = await fetch(customThumbUrl, {
-            headers: { Accept: "image/*" },
-            redirect: "follow",
-            signal: AbortSignal.timeout(5000),
-          }).catch(() => null);
+          const thumbStream = await oauth2Client.request({
+            url: customThumbUrl,
+            responseType: "stream",
+          });
 
-          // If 403 Forbidden, the file might not be shared with 'anyone'.
-          // Attempt to grant public read permission once and re-fetch.
-          if (!thumbFetchRes || thumbFetchRes.status === 403) {
-            try {
-              await drive.permissions.create({
-                fileId: mediaDoc.driveFileId,
-                requestBody: { role: "reader", type: "anyone" },
-              });
-              thumbFetchRes = await fetch(customThumbUrl, {
-                headers: { Accept: "image/*" },
-                redirect: "follow",
-                signal: AbortSignal.timeout(5000),
-              }).catch(() => null);
-            } catch (_) {
-              // Permission grant error
-            }
+          const origin = req.headers.origin;
+          if (origin) {
+            res.setHeader("Access-Control-Allow-Origin", origin);
+            res.setHeader("Access-Control-Allow-Credentials", "true");
+          } else {
+            res.setHeader("Access-Control-Allow-Origin", "*");
           }
-
-          if (thumbFetchRes && thumbFetchRes.ok) {
-            const cType = thumbFetchRes.headers.get("content-type") || "image/jpeg";
-            if (cType.startsWith("image/")) {
-              setMediaCorsHeaders(req, res);
-              res.setHeader("Content-Type", cType);
-              res.setHeader("ETag", etag);
-              res.setHeader("Last-Modified", lastModified);
-              res.setHeader("Cache-Control", cacheHeader);
-              res.setHeader(
-                "Content-Disposition",
-                `inline; filename="thumb_${mediaDoc.fileName || "image.jpg"}"`
-              );
-              const cLength = thumbFetchRes.headers.get("content-length");
-              if (cLength) res.setHeader("Content-Length", cLength);
-
-              const readable = Readable.fromWeb(thumbFetchRes.body);
-              return readable.pipe(res);
-            }
-          }
+          res.setHeader("Accept-Ranges", "bytes");
+          res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+          res.setHeader("Content-Type", "image/jpeg");
+          res.setHeader("ETag", etag);
+          res.setHeader("Cache-Control", "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=86400, immutable");
+          res.setHeader("Content-Disposition", `inline; filename="thumb_${mediaDoc.fileName || "image.jpg"}"`);
+          return thumbStream.data.pipe(res);
         }
       } catch (thumbErr) {
-        console.warn(`[GoogleDrive] Thumbnail fetch warning for ${mediaDoc.driveFileId}:`, thumbErr.message);
+        console.warn("[GoogleDrive] Fast thumbnail stream fallback to full media:", thumbErr.message);
       }
-
-      // CRITICAL BANDWIDTH PROTECTION: STOP UNNECESSARY FULL-MEDIA FALLBACKS!
-      // If a thumbnail request fails, DO NOT download and stream the full 3.44MB image or 11MB video!
-      // Return a safe vector SVG placeholder (~480B) with 24-hour Cache-Control to prevent client retry loops.
-      console.warn(
-        `[GoogleDrive] Serving safe vector thumbnail placeholder for ${mediaDoc.driveFileId} (w=${targetSize}) to prevent full-media bandwidth drain.`
-      );
-      setMediaCorsHeaders(req, res);
-      res.setHeader("Content-Type", "image/svg+xml");
-      res.setHeader("ETag", etag);
-      res.setHeader("Last-Modified", lastModified);
-      res.setHeader(
-        "Cache-Control",
-        isPrivate
-          ? "private, no-cache, no-store, must-revalidate"
-          : "public, max-age=86400, stale-while-revalidate=604800"
-      );
-      res.setHeader("Content-Length", FALLBACK_THUMBNAIL_SVG.length);
-      return res.status(200).end(FALLBACK_THUMBNAIL_SVG);
     }
 
-    // =========================================================================
-    // FULL MEDIA STREAMING (ORIGINAL IMAGES / VIDEOS / AUDIO)
-    // =========================================================================
     const rangeHeader = req.headers.range;
     const driveReqHeaders = {};
     if (rangeHeader) {
       driveReqHeaders.Range = rangeHeader;
     }
 
+    res.setHeader("ETag", etag);
+
     const driveStream = await drive.files.get(
       { fileId: mediaDoc.driveFileId, alt: "media" },
       { headers: driveReqHeaders, responseType: "stream" }
     );
-
-    // If Google Drive returned an error status in stream, never cache as success
-    if (driveStream.status >= 400) {
-      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-      return res.status(driveStream.status).json({
-        success: false,
-        message: "Storage provider returned an error while retrieving media.",
-      });
-    }
 
     const totalSize = Number(mediaDoc.fileSize) || 0;
     let start = 0;
@@ -1294,11 +1160,17 @@ router.get("/media/:id", async (req, res) => {
     const isPartial = Boolean(rangeHeader && (driveStream.status === 206 || driveContentRange));
     res.status(isPartial ? 206 : (driveStream.status || 200));
 
-    setMediaCorsHeaders(req, res);
+    const origin = req.headers.origin;
+    if (origin) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+    } else {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+    }
+    res.setHeader("Accept-Ranges", "bytes");
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    res.setHeader("Access-Control-Expose-Headers", "Content-Range, Content-Length, Accept-Ranges, Content-Type");
     res.setHeader("Content-Type", resolvedMime);
-    res.setHeader("ETag", etag);
-    res.setHeader("Last-Modified", lastModified);
-    res.setHeader("Cache-Control", cacheHeader);
 
     if (isPartial) {
       const contentRangeHeader =
@@ -1320,24 +1192,20 @@ router.get("/media/:id", async (req, res) => {
       }
     }
 
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="${mediaDoc.fileName || "attachment"}"`
-    );
+    res.setHeader("Cache-Control", "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=86400, immutable");
+    res.setHeader("Content-Disposition", `inline; filename="${mediaDoc.fileName || "attachment"}"`);
 
     driveStream.data.on("error", (err) => {
-      console.error("[GoogleDrive] Stream transfer error:", err.message);
+      console.error("[GoogleDrive] Stream transfer error:", err);
       if (!res.headersSent) {
-        res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         res.status(500).json({ message: "Error streaming media file." });
       }
     });
 
     driveStream.data.pipe(res);
   } catch (err) {
-    console.error("[GoogleDrive] Media Retrieval Error:", err.message);
+    console.error("[GoogleDrive] Media Retrieval Error:", err);
     if (!res.headersSent) {
-      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
       if (
         mediaDoc?.mimeType?.startsWith("video/") ||
         /\.(mp4|webm|mov|ogg|m4v)($|\?)/i.test(mediaDoc?.fileName || "")
@@ -1348,9 +1216,8 @@ router.get("/media/:id", async (req, res) => {
           error: err.message,
         });
       }
-      // Return safe SVG placeholder directly with no-cache headers rather than full redirect
-      res.setHeader("Content-Type", "image/svg+xml");
-      return res.status(200).end(FALLBACK_THUMBNAIL_SVG);
+      const clientBase = (process.env.CLIENT_URL || "https://fazilnagar.vercel.app").replace(/\/+$/, "");
+      return res.redirect(302, `${clientBase}/images/fazilnagar_pawanagar.webp`);
     }
   }
 });

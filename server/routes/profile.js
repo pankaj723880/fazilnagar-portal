@@ -11,15 +11,6 @@ import GoogleDriveToken from "../models/GoogleDriveToken.js";
 import { getAuthenticatedDriveClient, getOrCreateAppFolder } from "./googleDrive.js";
 
 const router = express.Router();
-
-// Strict security cache headers: Never cache private user profiles in shared caches
-router.use((req, res, next) => {
-  res.setHeader("Cache-Control", "private, no-cache, no-store, must-revalidate");
-  res.setHeader("Pragma", "no-cache");
-  res.setHeader("Expires", "0");
-  res.setHeader("Vary", "Authorization");
-  next();
-});
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 

@@ -63,28 +63,18 @@ export function resolveMediaUrl(url) {
     trimmed.startsWith("/assets/") ||
     trimmed.startsWith("/hero/") ||
     trimmed === "/favicon.ico" ||
-    trimmed.startsWith("/logo") ||
-    trimmed === "/fzn.webp" ||
-    trimmed === "/fzn.png" ||
-    trimmed === "/og-image.jpg" ||
-    trimmed === "/icon-192.svg" ||
-    trimmed === "/icon-512.svg" ||
-    trimmed === "/manifest.json" ||
-    trimmed === "/robots.txt" ||
-    trimmed === "/sitemap.xml" ||
-    trimmed.match(/^\/[^/]+\.(png|jpg|jpeg|webp|svg|ico|gif|mp4|webm)$/i)
+    trimmed.startsWith("/logo")
   ) {
     return trimmed;
   }
 
-  const isWebClient = typeof window !== "undefined";
   const isLocalClient =
-    isWebClient &&
+    typeof window !== "undefined" &&
     (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 
   // Force HTTPS on HTTPS pages (like Vercel production) to prevent Mixed Content blocking
   if (
-    isWebClient &&
+    typeof window !== "undefined" &&
     window.location.protocol === "https:" &&
     trimmed.startsWith("http://") &&
     !trimmed.includes("localhost") &&
@@ -95,40 +85,20 @@ export function resolveMediaUrl(url) {
 
   const backendBase = getBackendBase();
 
-  // On web client in production (e.g. Vercel deployment), route Google Drive media
-  // through the same-origin /api/google-drive/media/ rewrite.
-  // This enables Vercel Edge CDN caching (X-Vercel-Cache: HIT), supports HTTP 206
-  // Range streaming for video/audio seeking, and avoids consuming Render outbound bandwidth.
-  const driveIdx = trimmed.indexOf("/api/google-drive/media/");
-  if (driveIdx !== -1) {
-    const drivePath = trimmed.substring(driveIdx);
-    if (isWebClient && !isLocalClient) {
-      return drivePath;
-    }
-    return `${backendBase}${drivePath}`;
-  }
-  const shortDriveIdx = trimmed.indexOf("/google-drive/media/");
-  if (shortDriveIdx !== -1) {
-    const drivePath = `/api${trimmed.substring(shortDriveIdx)}`;
-    if (isWebClient && !isLocalClient) {
-      return drivePath;
-    }
-    return `${backendBase}${drivePath}`;
-  }
-
-  // On web client in production, route uploaded media (/uploads/...) through same-origin Vercel Edge rewrite.
-  // This enables Vercel Edge CDN caching (30-day s-maxage) and prevents direct outbound traffic hits to Render.
-  const uploadsIdx = trimmed.indexOf("/uploads/");
-  if (uploadsIdx !== -1) {
-    const uploadsPath = trimmed.substring(uploadsIdx);
-    if (isWebClient && !isLocalClient) {
-      return uploadsPath;
-    }
-    return `${backendBase}${uploadsPath}`;
-  }
-
   // Rewrite any legacy or suspended backend URL to the active reachable backendBase
   if (trimmed.includes("fazilnagar-portal.onrender.com")) {
+    const driveIdx = trimmed.indexOf("/api/google-drive/");
+    if (driveIdx !== -1) {
+      return `${backendBase}${trimmed.substring(driveIdx)}`;
+    }
+    const shortDriveIdx = trimmed.indexOf("/google-drive/");
+    if (shortDriveIdx !== -1) {
+      return `${backendBase}/api${trimmed.substring(shortDriveIdx)}`;
+    }
+    const uploadsIdx = trimmed.indexOf("/uploads/");
+    if (uploadsIdx !== -1) {
+      return `${backendBase}${trimmed.substring(uploadsIdx)}`;
+    }
     return trimmed
       .replace("https://fazilnagar-portal.onrender.com", backendBase)
       .replace("http://fazilnagar-portal.onrender.com", backendBase);
@@ -136,10 +106,27 @@ export function resolveMediaUrl(url) {
 
   // If already absolute HTTP(S) URL
   if (/^https?:\/\//i.test(trimmed)) {
+    // If client is in production (NOT localhost) but stored URL has legacy localhost:, rewrite to backendBase
+    if (!isLocalClient && (trimmed.includes("localhost:") || trimmed.includes("127.0.0.1:"))) {
+      const uploadsIdx = trimmed.indexOf("/uploads/");
+      if (uploadsIdx !== -1) {
+        return `${backendBase}${trimmed.substring(uploadsIdx)}`;
+      }
+      const driveIdx = trimmed.indexOf("/api/google-drive/");
+      if (driveIdx !== -1) {
+        return `${backendBase}${trimmed.substring(driveIdx)}`;
+      }
+    }
     return trimmed;
   }
 
   // Relative path - prefix with backendBase
+  // If relative path starts with /google-drive/ without /api, ensure /api is prepended
+  if (trimmed.startsWith("/google-drive/") || trimmed.startsWith("google-drive/")) {
+    const clean = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+    return `${backendBase}/api${clean}`;
+  }
+
   const normalized = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
   return `${backendBase}${normalized}`;
 }
@@ -235,11 +222,6 @@ export function resolveStoryMedia(story) {
     }
   }
 
-  // 5. If story has a video but no explicit poster image, derive lightweight thumbnail as poster
-  if (videoUrl && !imageUrl) {
-    imageUrl = getThumbnailUrl(videoUrl, 400);
-  }
-
   const mimeType = story.mediaMeta?.mimeType || "video/mp4";
   const fileName = story.mediaMeta?.originalName || "";
   const fileSize = story.mediaMeta?.size || 0;
@@ -263,21 +245,8 @@ export function getThumbnailUrl(url, width = 400) {
   if (!url || typeof url !== "string") return "";
   const resolved = resolveMediaUrl(url);
   if (resolved.includes("/api/google-drive/media/")) {
-    if (/[?&]w=\d+/.test(resolved)) {
-      return resolved.replace(/([?&])w=\d+/, `$1w=${width}`);
-    }
     const separator = resolved.includes("?") ? "&" : "?";
     return `${resolved}${separator}w=${width}`;
   }
   return resolved;
 }
-
-/**
- * Returns an avatar URL optimized for size, requesting small thumbnails (?w=96)
- * to avoid downloading full 2MB-10MB original user photos for small avatar circles.
- */
-export function getAvatarUrl(url, size = 96) {
-  if (!url || typeof url !== "string") return "";
-  return getThumbnailUrl(url, size);
-}
-

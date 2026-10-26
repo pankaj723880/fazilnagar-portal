@@ -7,7 +7,6 @@ import mongoose from "mongoose";
 import Advertisement from "../models/Advertisement.js";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
 import { analyticsLimiter } from "../middleware/rateLimiter.js";
-import { matchesEtag } from "./googleDrive.js";
 
 const router = express.Router();
 
@@ -60,17 +59,8 @@ const isValidUrl = (string) => {
 };
 
 // ====================================================================
-// PUBLIC ENDPOINTS WITH HTTP CACHING
+// PUBLIC ENDPOINTS
 // ====================================================================
-
-let cachedActiveAds = null;
-let cachedActiveAdsTime = 0;
-const ADS_CACHE_TTL_MS = 60 * 1000;
-
-export function invalidateAdsCache() {
-  cachedActiveAds = null;
-  cachedActiveAdsTime = 0;
-}
 
 // @route   GET /api/advertisements/active
 // @desc    Get currently active & published advertisement(s) within schedule.
@@ -78,17 +68,6 @@ export function invalidateAdsCache() {
 // @access  Public
 router.get("/active", async (req, res) => {
   try {
-    res.setHeader("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
-
-    if (cachedActiveAds && Date.now() - cachedActiveAdsTime < ADS_CACHE_TTL_MS) {
-      const etag = `"ads_active_${cachedActiveAdsTime}_${cachedActiveAds.ads?.length || 0}"`;
-      res.setHeader("ETag", etag);
-      if (matchesEtag(req.headers["if-none-match"], etag)) {
-        return res.status(304).end();
-      }
-      return res.status(200).json(cachedActiveAds);
-    }
-
     const now = new Date();
 
     // Query for advertisements that are published & active.
@@ -130,20 +109,14 @@ router.get("/active", async (req, res) => {
       .sort({ isPermanent: -1, updatedAt: -1 })
       .lean();
 
-    const payload = (!activeAds || activeAds.length === 0)
-      ? { ad: null, ads: [] }
-      : { ad: activeAds[0], ads: activeAds };
-
-    cachedActiveAds = payload;
-    cachedActiveAdsTime = Date.now();
-    const etag = `"ads_active_${cachedActiveAdsTime}_${payload.ads.length}"`;
-    res.setHeader("ETag", etag);
-
-    if (matchesEtag(req.headers["if-none-match"], etag)) {
-      return res.status(304).end();
+    if (!activeAds || activeAds.length === 0) {
+      return res.status(200).json({ ad: null, ads: [] });
     }
 
-    res.status(200).json(payload);
+    res.status(200).json({
+      ad: activeAds[0],
+      ads: activeAds,
+    });
   } catch (err) {
     console.error("Fetch Active Ad Error:", err);
     res.status(500).json({ message: "Failed to retrieve active advertisements." });
@@ -354,8 +327,6 @@ router.post(
         createdBy: req.user.id,
       });
 
-      invalidateAdsCache();
-
       res.status(201).json({
         message: "Advertisement created successfully.",
         ad,
@@ -477,7 +448,6 @@ router.put(
       }
 
       await ad.save();
-      invalidateAdsCache();
 
       res.status(200).json({
         message: "Advertisement updated successfully.",
@@ -502,7 +472,6 @@ router.patch("/:id/publish", verifyToken, requireAdmin, async (req, res) => {
 
     ad.isPublished = req.body.isPublished !== undefined ? req.body.isPublished : !ad.isPublished;
     await ad.save();
-    invalidateAdsCache();
 
     res.status(200).json({
       message: `Advertisement ${ad.isPublished ? "published" : "unpublished"}.`,
@@ -527,7 +496,6 @@ router.patch("/:id/toggle", verifyToken, requireAdmin, async (req, res) => {
 
     ad.isActive = req.body.isActive !== undefined ? req.body.isActive : !ad.isActive;
     await ad.save();
-    invalidateAdsCache();
 
     res.status(200).json({
       message: `Advertisement ${ad.isActive ? "enabled" : "disabled"}.`,
@@ -549,8 +517,6 @@ router.delete("/:id", verifyToken, requireAdmin, async (req, res) => {
     if (!ad) {
       return res.status(404).json({ message: "Advertisement not found." });
     }
-
-    invalidateAdsCache();
 
     res.status(200).json({ message: "Advertisement deleted successfully." });
   } catch (err) {

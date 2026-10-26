@@ -11,12 +11,6 @@ export default defineConfig({
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
     },
-    proxy: {
-      '/api/google-drive/media': {
-        target: 'https://fazilnagar-portal-l95o.onrender.com',
-        changeOrigin: true,
-      },
-    },
   },
   build: {
     rollupOptions: {
@@ -25,7 +19,6 @@ export default defineConfig({
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-leaflet': ['leaflet'],
           'vendor-icons': ['lucide-react'],
-          'vendor-network': ['axios', 'socket.io-client'],
         },
       },
     },

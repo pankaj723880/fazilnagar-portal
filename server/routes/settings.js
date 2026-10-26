@@ -209,9 +209,6 @@ export function sanitizeSettingsForClient(settings, targetBackend = (process.env
   if (sanitized.logoUrl) {
     sanitized.logoUrl = normalizeMediaUrl(sanitized.logoUrl, targetBackend);
   }
-  if (sanitized.seoSettings?.ogImage) {
-    sanitized.seoSettings.ogImage = normalizeMediaUrl(sanitized.seoSettings.ogImage, targetBackend);
-  }
   if (sanitized.maintenance) {
     sanitized.maintenance = {
       ...sanitized.maintenance,
@@ -263,6 +260,10 @@ router.get("/", async (req, res) => {
 // @access  Public
 router.get("/live-version", async (req, res) => {
   try {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+
     let version = 0;
     if (cachedSettings?.updatedAt) {
       version = new Date(cachedSettings.updatedAt).getTime();
@@ -271,18 +272,10 @@ router.get("/live-version", async (req, res) => {
       version = settings?.updatedAt ? new Date(settings.updatedAt).getTime() : 0;
     }
 
-    const etag = `"live_version_${version}"`;
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("ETag", etag);
-
-    if (matchesEtag(req.headers["if-none-match"], etag)) {
-      return res.status(304).end();
-    }
-
     res.status(200).json({
       success: true,
       updatedAt: version,
-      timestamp: version,
+      timestamp: Date.now(),
     });
   } catch (err) {
     res.status(500).json({ success: false, message: "Live version check failed." });

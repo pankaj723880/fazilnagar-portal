@@ -3,7 +3,6 @@ import Event from "../models/Event.js";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
 import { logAdminAction } from "../models/AuditLog.js";
 import { createBroadcastNotification } from "../utils/notify.js";
-import { matchesEtag } from "./googleDrive.js";
 
 const router = express.Router();
 
@@ -76,16 +75,8 @@ router.get("/", async (req, res) => {
     const { category, search, timeFilter } = req.query;
     const isDefaultQuery = (!category || category === "All") && (!search || !search.trim()) && !timeFilter;
 
-    if (isDefaultQuery) {
-      res.setHeader("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
-      if (cachedEvents && Date.now() - cachedEventsTime < EVENTS_CACHE_TTL_MS) {
-        const etag = `"events_${cachedEventsTime}_${cachedEvents.length}"`;
-        res.setHeader("ETag", etag);
-        if (matchesEtag(req.headers["if-none-match"], etag)) {
-          return res.status(304).end();
-        }
-        return res.status(200).json({ success: true, count: cachedEvents.length, events: cachedEvents });
-      }
+    if (isDefaultQuery && cachedEvents && Date.now() - cachedEventsTime < EVENTS_CACHE_TTL_MS) {
+      return res.status(200).json({ success: true, count: cachedEvents.length, events: cachedEvents });
     }
 
     const filter = { isPublished: true, status: "published" };
@@ -107,11 +98,6 @@ router.get("/", async (req, res) => {
     if (isDefaultQuery) {
       cachedEvents = events;
       cachedEventsTime = Date.now();
-      const etag = `"events_${cachedEventsTime}_${events.length}"`;
-      res.setHeader("ETag", etag);
-      if (matchesEtag(req.headers["if-none-match"], etag)) {
-        return res.status(304).end();
-      }
     }
 
     res.status(200).json({ success: true, count: events.length, events });

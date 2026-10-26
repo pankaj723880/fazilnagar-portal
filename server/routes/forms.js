@@ -6,7 +6,6 @@ import ContributionForm from "../models/ContributionForm.js";
 import ContributionSubmission from "../models/ContributionSubmission.js";
 import Place from "../models/Place.js";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
-import { matchesEtag } from "./googleDrive.js";
 import {
   VALID_MODULES,
   VALID_ENTITY_TYPES,
@@ -25,7 +24,6 @@ import { writeLimiter } from "../middleware/rateLimiter.js";
 import { ensureAreaDetailsForm } from "../config/db.js";
 
 const router = express.Router();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -149,22 +147,12 @@ router.get("/public/:slug", async (req, res) => {
       status: form.status,
     };
 
-    res.setHeader("Cache-Control", "public, max-age=180, stale-while-revalidate=600");
-    const updatedAtTime = form.updatedAt ? new Date(form.updatedAt).getTime() : 0;
-    const etag = `"form_${form._id || form.slug}_${updatedAtTime}"`;
-    res.setHeader("ETag", etag);
-
-    if (matchesEtag(req.headers["if-none-match"], etag)) {
-      return res.status(304).end();
-    }
-
     res.status(200).json(publicForm);
   } catch (err) {
     console.error("Fetch Public Form Error:", err);
     res.status(500).json({ message: "Failed to load public contribution form." });
   }
 });
-
 
 // @route   POST /api/forms/public/:slug/submit
 // @desc    Public citizen submission for a contribution form

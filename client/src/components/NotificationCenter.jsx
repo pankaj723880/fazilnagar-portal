@@ -52,23 +52,18 @@ export default function NotificationCenter({ lightMode = false, subtleDot = fals
       loadNotifications(false);
     }, 800);
 
-    // Poll when tab is visible, pausing background wakeups when hidden (120s window; throttled check on visibilitychange)
+    // Poll when tab is visible, pausing background wakeups when hidden (120s window; instant check on visibilitychange)
     const interval = setInterval(() => {
       if (typeof document !== "undefined" && document.hidden) return;
       fetchAndCheckNotifications({ triggerPopups: true });
     }, 120000);
 
-    let lastVisibilityCheckTime = Date.now();
     const handleVisibilityChange = () => {
       if (typeof document !== "undefined" && !document.hidden) {
-        const now = Date.now();
-        if (now - lastVisibilityCheckTime < 30000) return;
-        lastVisibilityCheckTime = now;
         fetchAndCheckNotifications({ triggerPopups: true });
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
-
 
     const handleAuthChange = () => {
       const user = getAuthUser();

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import API from "../api";
 import { getSocket, playMessageChime } from "../socket";
-import { resolveMediaUrl, getAvatarUrl } from "../utils/mediaUtils";
+import { resolveMediaUrl } from "../utils/mediaUtils";
 import ReportModal from "./ReportModal";
 import GroupDetailsModal from "./GroupDetailsModal";
 import CameraModal from "./CameraModal";
@@ -1085,7 +1085,7 @@ export default function ChatWindow({
               ) : null
             ) : otherUser.avatar ? (
               <img
-                src={getAvatarUrl(otherUser.avatar, 96)}
+                src={resolveMediaUrl(otherUser.avatar)}
                 alt={otherUser.name}
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition"
                 onError={(e) => {
@@ -1459,7 +1459,7 @@ export default function ChatWindow({
                       </div>
                       {(m.sender?.avatar || (!isGroup && otherUser.avatar)) ? (
                         <img
-                          src={getAvatarUrl(m.sender?.avatar || (!isGroup && otherUser.avatar), 64)}
+                          src={resolveMediaUrl(m.sender?.avatar || (!isGroup && otherUser.avatar))}
                           alt={m.sender?.name || otherUser.name || "Citizen"}
                           className="absolute inset-0 w-full h-full object-cover"
                           onError={(e) => {
@@ -1675,14 +1675,9 @@ export default function ChatWindow({
                                         key={getFullMediaUrl(m.mediaUrl)}
                                         src={getFullMediaUrl(m.mediaUrl)}
                                         controls
-                                        controlsList="nodownload noplaybackrate"
-                                        disablePictureInPicture
                                         playsInline
                                         preload="metadata"
-                                        draggable="false"
-                                        data-protected-media="true"
-                                        onContextMenu={(e) => e.preventDefault()}
-                                        className="rounded-xl max-h-64 max-w-full sm:max-w-xs bg-black select-none"
+                                        className="rounded-xl max-h-64 max-w-full sm:max-w-xs bg-black"
                                         onError={(e) => {
                                           console.warn("Video playback error for message:", m._id || m.id, e);
                                           setVideoErrors((prev) => ({ ...prev, [m._id || m.id]: true }));

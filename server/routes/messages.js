@@ -137,15 +137,6 @@ async function tryUploadToGoogleDrive({ filePath, originalName, mimeType, user }
 
 const router = express.Router();
 
-// Strict security cache headers: Never cache private citizen messages or chat history in shared caches
-router.use((req, res, next) => {
-  res.setHeader("Cache-Control", "private, no-cache, no-store, must-revalidate");
-  res.setHeader("Pragma", "no-cache");
-  res.setHeader("Expires", "0");
-  res.setHeader("Vary", "Authorization");
-  next();
-});
-
 // Helper to broadcast socket events safely
 function broadcastNewMessage(conversationId, message, recipientIds, updatedConv) {
   try {

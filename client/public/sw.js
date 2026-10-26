@@ -69,30 +69,16 @@ self.addEventListener('fetch', (event) => {
     return; // Pass through directly to network
   }
 
-  // Pass Range requests directly to the network/browser cache to preserve video seeking and streaming
-  if (event.request.headers.get('range')) {
-    return;
-  }
-
   // 1. Static Assets (Immutable Hashed bundles, fonts, images): Cache-First
   const isStaticAsset =
     url.pathname.startsWith('/assets/') ||
     url.pathname.startsWith('/images/') ||
     url.pathname.endsWith('.woff2') ||
-    url.pathname.endsWith('.woff') ||
     url.pathname.endsWith('.png') ||
     url.pathname.endsWith('.jpg') ||
-    url.pathname.endsWith('.jpeg') ||
     url.pathname.endsWith('.webp') ||
-    url.pathname.endsWith('.svg') ||
-    url.pathname.endsWith('.ico') ||
-    url.pathname.endsWith('.avif') ||
-    url.pathname.endsWith('.gif') ||
     url.pathname === '/icon-192.svg' ||
     url.pathname === '/icon-512.svg' ||
-    url.pathname === '/fzn.webp' ||
-    url.pathname === '/fzn.png' ||
-    url.pathname === '/og-image.jpg' ||
     url.pathname === '/manifest.json';
 
   if (isStaticAsset) {

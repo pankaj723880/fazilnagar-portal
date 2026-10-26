@@ -355,12 +355,7 @@ export function getIO() {
 export function emitPlacesUpdated(data) {
   if (io) {
     try {
-      const minimalPayload = {
-        action: data?.action || "update",
-        placeId: data?.placeId || (data?.place?._id ? String(data.place._id) : undefined),
-        timestamp: Date.now(),
-      };
-      io.emit("places_updated", minimalPayload);
+      io.emit("places_updated", data || {});
     } catch (e) {
       console.warn("[Socket.IO] Broadcast places_updated error:", e.message);
     }

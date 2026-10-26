@@ -7,15 +7,6 @@ import { searchLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
-// Strict security cache headers: Never cache user directory or account records in public caches
-router.use((req, res, next) => {
-  res.setHeader("Cache-Control", "private, no-cache, no-store, must-revalidate");
-  res.setHeader("Pragma", "no-cache");
-  res.setHeader("Expires", "0");
-  res.setHeader("Vary", "Authorization");
-  next();
-});
-
 // Helper to log administrative audit trail
 function logAdminAction(adminUser, action, targetUser, details = "") {
   const timestamp = new Date().toISOString();

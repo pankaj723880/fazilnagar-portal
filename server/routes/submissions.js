@@ -623,9 +623,6 @@ router.get("/", verifyToken, requireAdmin, async (req, res) => {
     if (type && type !== "all") query.type = type;
     if (status && status !== "all") query.status = status;
 
-    res.setHeader("Cache-Control", "private, no-cache, no-store, must-revalidate");
-    res.setHeader("Vary", "Authorization");
-
     const submissions = await Submission.find(query).sort({ createdAt: -1 });
     res.status(200).json(submissions);
   } catch (err) {

@@ -1,5 +1,4 @@
 import express from "express";
-import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import Notification from "../models/Notification.js";
 import User from "../models/User.js";
@@ -136,25 +135,12 @@ router.get("/", async (req, res) => {
       };
     });
 
-    res.setHeader("Cache-Control", "private, no-cache, must-revalidate");
-    res.setHeader("Vary", "Authorization, X-Client-Id, X-Anon-Id");
-
-    const payload = {
+    res.status(200).json({
       success: true,
       unreadCount,
       total: notifications.length,
       notifications,
-    };
-
-    const hash = crypto.createHash("md5").update(JSON.stringify(payload)).digest("hex").slice(0, 16);
-    const etag = `"notif_${hash}"`;
-    res.setHeader("ETag", etag);
-
-    if (req.headers["if-none-match"] === etag) {
-      return res.status(304).end();
-    }
-
-    res.status(200).json(payload);
+    });
   } catch (err) {
     console.error("[Notifications] Fetch Error:", err);
     res.status(500).json({ success: false, message: "Failed to fetch notifications." });

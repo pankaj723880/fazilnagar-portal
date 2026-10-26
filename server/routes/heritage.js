@@ -2,7 +2,6 @@ import express from "express";
 import HeritageSite from "../models/HeritageSite.js";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
 import { logAdminAction } from "../models/AuditLog.js";
-import { matchesEtag } from "./googleDrive.js";
 
 const router = express.Router();
 
@@ -142,21 +141,11 @@ router.get("/", async (req, res) => {
   try {
     res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
     if (cachedHeritage && Date.now() - cachedHeritageTime < HERITAGE_CACHE_TTL_MS) {
-      const etag = `"heritage_${cachedHeritageTime}_${cachedHeritage.length}"`;
-      res.setHeader("ETag", etag);
-      if (matchesEtag(req.headers["if-none-match"], etag)) {
-        return res.status(304).end();
-      }
       return res.status(200).json({ success: true, count: cachedHeritage.length, sites: cachedHeritage });
     }
     const sites = await HeritageSite.find({ isPublished: true }).sort({ displayOrder: 1, createdAt: -1 }).lean();
     cachedHeritage = sites;
     cachedHeritageTime = Date.now();
-    const etag = `"heritage_${cachedHeritageTime}_${sites.length}"`;
-    res.setHeader("ETag", etag);
-    if (matchesEtag(req.headers["if-none-match"], etag)) {
-      return res.status(304).end();
-    }
     res.status(200).json({ success: true, count: sites.length, sites });
   } catch (err) {
     console.error("[Heritage] Fetch error:", err);

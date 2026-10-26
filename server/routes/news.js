@@ -9,7 +9,7 @@ import News from "../models/News.js";
 import Like from "../models/Like.js";
 import Comment from "../models/Comment.js";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
-import { uploadMediaToDrive, matchesEtag } from "./googleDrive.js";
+import { uploadMediaToDrive } from "./googleDrive.js";
 import { createBroadcastNotification, createSubmissionNotification } from "../utils/notify.js";
 
 const router = express.Router();
@@ -213,12 +213,8 @@ function isUserAdmin(user) {
 }
 
 // ====================================================================
-// REELS-STYLE NEWS FEED (PUBLIC WITH CONDITIONAL CACHING)
+// REELS-STYLE NEWS FEED (PUBLIC)
 // ====================================================================
-
-let cachedPublicFeed = null;
-let cachedFeedTime = 0;
-const FEED_CACHE_TTL_MS = 60 * 1000;
 
 // @route   GET /api/news/feed
 // @desc    Mobile-first Reels / Shorts news feed with pagination, like statuses, and shareable link handling
@@ -230,29 +226,8 @@ router.get("/feed", async (req, res) => {
     const skip = (page - 1) * limit;
     const category = req.query.category;
     const targetStoryId = req.query.storyId || req.query.targetId;
+    const anonId = req.headers["x-anon-id"] || req.query.anonId || null;
     const user = getOptionalUser(req);
-
-    const isPublicDefault =
-      !user?.id &&
-      page === 1 &&
-      (!category || category === "All" || category === "all") &&
-      !targetStoryId;
-
-    if (isPublicDefault) {
-      res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
-      if (cachedPublicFeed && Date.now() - cachedFeedTime < FEED_CACHE_TTL_MS) {
-        const etag = `"feed_${cachedFeedTime}_${cachedPublicFeed.stories?.length || 0}_${cachedPublicFeed.total || 0}"`;
-        res.setHeader("ETag", etag);
-        if (matchesEtag(req.headers["if-none-match"], etag)) {
-          return res.status(304).end();
-        }
-        return res.status(200).json(cachedPublicFeed);
-      }
-    } else if (user?.id) {
-      // User-specific response containing personalized isLiked state: never cache publicly!
-      res.setHeader("Cache-Control", "private, no-cache, no-store, must-revalidate");
-      res.setHeader("Vary", "Authorization");
-    }
 
     // Filter: Return all published and approved stories, and live citizen reports (exclude only drafts & rejected)
     const query = {
@@ -313,26 +288,14 @@ router.get("/feed", async (req, res) => {
       };
     });
 
-    const payload = {
+    res.status(200).json({
       stories: enrichedStories,
       total,
       page,
       limit,
       totalPages: Math.ceil(total / limit) || 1,
       hasMore: skip + stories.length < total,
-    };
-
-    if (isPublicDefault) {
-      cachedPublicFeed = payload;
-      cachedFeedTime = Date.now();
-      const etag = `"feed_${cachedFeedTime}_${payload.stories.length}_${payload.total}"`;
-      res.setHeader("ETag", etag);
-      if (matchesEtag(req.headers["if-none-match"], etag)) {
-        return res.status(304).end();
-      }
-    }
-
-    res.status(200).json(payload);
+    });
   } catch (err) {
     console.error("News Feed Error:", err);
     res.status(500).json({ message: "Failed to fetch news feed." });
@@ -957,8 +920,6 @@ const NEWS_CACHE_TTL_MS = 30 * 1000;
 export function invalidateNewsCache() {
   cachedPublicNews = null;
   cachedPublicNewsTime = 0;
-  cachedPublicFeed = null;
-  cachedFeedTime = 0;
 }
 
 // @route   GET /api/news
@@ -1792,15 +1753,6 @@ router.get("/:id", async (req, res) => {
     }
 
     News.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }).exec();
-
-    const updatedAtTime = article.updatedAt ? new Date(article.updatedAt).getTime() : 0;
-    const etag = `"news_item_${article._id}_${updatedAtTime}"`;
-    res.setHeader("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
-    res.setHeader("ETag", etag);
-
-    if (matchesEtag(req.headers["if-none-match"], etag)) {
-      return res.status(304).end();
-    }
 
     const obj = article.toObject();
     const media = formatNewsMedia(obj, req);

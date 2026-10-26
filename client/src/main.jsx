@@ -4,11 +4,6 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import { ThemeProvider } from './context/ThemeContext'
 import './index.css'
-import { initMediaProtection } from './utils/mediaProtection'
-
-// Initialize site-wide media download deterrence across all routes, modals, and dynamic content
-initMediaProtection();
-
 if (typeof window !== 'undefined' && window.__STARTUP_METRICS__) {
   window.__STARTUP_METRICS__.jsInit = performance.now();
   try { performance.mark('app-js-init'); } catch (e) {}

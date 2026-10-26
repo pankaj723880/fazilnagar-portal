@@ -2,7 +2,6 @@ import express from "express";
 import PublicService from "../models/PublicService.js";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
 import { logAdminAction } from "../models/AuditLog.js";
-import { matchesEtag } from "./googleDrive.js";
 
 const router = express.Router();
 
@@ -95,15 +94,6 @@ async function seedDefaultServicesIfEmpty() {
   }
 }
 
-let cachedPublicServices = null;
-let cachedPublicServicesTime = 0;
-const SERVICES_CACHE_TTL_MS = 3 * 60 * 1000;
-
-export function invalidateServicesCache() {
-  cachedPublicServices = null;
-  cachedPublicServicesTime = 0;
-}
-
 // @route   GET /api/services
 // @desc    Get published public services for citizen portal
 // @access  Public
@@ -111,20 +101,6 @@ router.get("/", async (req, res) => {
   try {
     await seedDefaultServicesIfEmpty();
     const { category, search } = req.query;
-    const isDefaultQuery = (!category || category === "All") && (!search || !search.trim());
-
-    if (isDefaultQuery) {
-      res.setHeader("Cache-Control", "public, max-age=180, stale-while-revalidate=600");
-      if (cachedPublicServices && Date.now() - cachedPublicServicesTime < SERVICES_CACHE_TTL_MS) {
-        const etag = `"services_${cachedPublicServicesTime}_${cachedPublicServices.services?.length || 0}"`;
-        res.setHeader("ETag", etag);
-        if (matchesEtag(req.headers["if-none-match"], etag)) {
-          return res.status(304).end();
-        }
-        return res.status(200).json(cachedPublicServices);
-      }
-    }
-
     const filter = { isPublished: true };
 
     if (category && category !== "All") {
@@ -136,19 +112,7 @@ router.get("/", async (req, res) => {
     }
 
     const services = await PublicService.find(filter).sort({ displayOrder: 1, createdAt: -1 });
-    const payload = { success: true, count: services.length, services };
-
-    if (isDefaultQuery) {
-      cachedPublicServices = payload;
-      cachedPublicServicesTime = Date.now();
-      const etag = `"services_${cachedPublicServicesTime}_${services.length}"`;
-      res.setHeader("ETag", etag);
-      if (matchesEtag(req.headers["if-none-match"], etag)) {
-        return res.status(304).end();
-      }
-    }
-
-    res.status(200).json(payload);
+    res.status(200).json({ success: true, count: services.length, services });
   } catch (err) {
     console.error("[Services] Fetch error:", err);
     res.status(500).json({ message: "Failed to fetch public services." });
@@ -235,8 +199,6 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
       ipAddress: req.ip,
     });
 
-    invalidateServicesCache();
-
     res.status(201).json({ success: true, message: "Public service added successfully.", service: newService });
   } catch (err) {
     console.error("[Services] Create error:", err);
@@ -312,8 +274,6 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
       ipAddress: req.ip,
     });
 
-    invalidateServicesCache();
-
     res.status(200).json({ success: true, message: "Public service updated successfully.", service });
   } catch (err) {
     console.error("[Services] Update error:", err);
@@ -333,8 +293,6 @@ router.patch("/:id/publish", verifyToken, requireAdmin, async (req, res) => {
 
     service.isPublished = req.body.isPublished !== undefined ? req.body.isPublished : !service.isPublished;
     await service.save();
-
-    invalidateServicesCache();
 
     res.status(200).json({
       success: true,
@@ -368,8 +326,6 @@ router.delete("/:id", verifyToken, requireAdmin, async (req, res) => {
       changesSummary: `Deleted public service "${service.title}"`,
       ipAddress: req.ip,
     });
-
-    invalidateServicesCache();
 
     res.status(200).json({ success: true, message: "Public service removed successfully." });
   } catch (err) {

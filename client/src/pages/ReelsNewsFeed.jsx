@@ -280,15 +280,7 @@ function StoryMediaCover({ story, active, muted, isPaused = false }) {
           playsInline
           webkit-playsinline="true"
           preload={active ? "auto" : "none"}
-          controlsList="nodownload noplaybackrate"
-          disablePictureInPicture
-          draggable="false"
-          data-protected-media="true"
-          onContextMenu={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-          className={`absolute inset-0 w-full h-full object-cover z-10 transition-opacity duration-300 select-none ${
+          className={`absolute inset-0 w-full h-full object-cover z-10 transition-opacity duration-300 ${
             videoFailed ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
           onTimeUpdate={(e) => {
@@ -1639,18 +1631,10 @@ export default function ReelsNewsFeed() {
                         key={resolvedVideo}
                         src={resolvedVideo}
                         controls
-                        controlsList="nodownload noplaybackrate"
-                        disablePictureInPicture
                         playsInline
                         webkit-playsinline="true"
                         preload="metadata"
-                        draggable="false"
-                        data-protected-media="true"
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                        className="w-full h-full object-contain select-none"
+                        className="w-full h-full object-contain"
                       >
                         Your browser does not support video playback.
                       </video>
@@ -1664,13 +1648,7 @@ export default function ReelsNewsFeed() {
                       <img
                         src={resolvedImage}
                         alt={readingStory.title}
-                        draggable="false"
-                        data-protected-media="true"
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                        className="w-full h-full object-cover select-none"
+                        className="w-full h-full object-cover"
                         onError={(e) => {
                           if (e.currentTarget.src !== FALLBACK_COVER_IMAGE) {
                             e.currentTarget.src = FALLBACK_COVER_IMAGE;

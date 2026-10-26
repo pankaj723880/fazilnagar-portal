@@ -28,7 +28,6 @@ export default function StoryVideoPreview({
   fallbackPoster = "",
   showPlayBadge = true,
   linkToViewer = true,
-  autoPlay = false,
 }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -62,7 +61,7 @@ export default function StoryVideoPreview({
     setDuration(0);
   }, [videoUrl]);
 
-  // IntersectionObserver: Observe visibility for viewport management
+  // IntersectionObserver: Autoplay preview when visible (>35%) if user hasn't explicitly paused
   useEffect(() => {
     const el = containerRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
@@ -81,7 +80,7 @@ export default function StoryVideoPreview({
     };
   }, []);
 
-  // Manage playback lifecycle with safe Promise handling (only autoplays if explicitly requested)
+  // Manage playback lifecycle with safe Promise handling
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !videoUrl || isFailed) return;
@@ -89,7 +88,7 @@ export default function StoryVideoPreview({
     video.muted = isMuted;
     video.playsInline = true;
 
-    if (autoPlay && isVisible && !hasInteracted) {
+    if (isVisible && !hasInteracted) {
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise
@@ -105,7 +104,7 @@ export default function StoryVideoPreview({
       video.pause();
       setIsPlaying(false);
     }
-  }, [autoPlay, isVisible, videoUrl, isFailed, hasInteracted, isMuted, isFullscreen]);
+  }, [isVisible, videoUrl, isFailed, hasInteracted, isMuted, isFullscreen]);
 
   // Fullscreen change listener
   useEffect(() => {
@@ -327,16 +326,8 @@ export default function StoryVideoPreview({
             playsInline
             webkit-playsinline="true"
             loop
-            preload={autoPlay ? "metadata" : "none"}
-            controlsList="nodownload noplaybackrate"
-            disablePictureInPicture
-            draggable="false"
-            data-protected-media="true"
-            onContextMenu={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            className={`w-full h-full object-cover transition-opacity duration-200 select-none ${
+            preload="metadata"
+            className={`w-full h-full object-cover transition-opacity duration-200 ${
               isFailed ? "opacity-0 pointer-events-none absolute inset-0" : "opacity-100"
             }`}
             onTimeUpdate={handleTimeUpdate}

@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getAuthToken, getAuthUser, clearAuthSession } from "../utils/authStorage";
 import { performLogout } from "../api";
-import { resolveMediaUrl, getAvatarUrl } from "../utils/mediaUtils";
+import { resolveMediaUrl } from "../utils/mediaUtils";
 
 export default function Navbar() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -104,7 +104,7 @@ export default function Navbar() {
               >
                 {(currentUser.avatar || currentUser.profileImage) ? (
                   <img
-                    src={getAvatarUrl(currentUser.avatar || currentUser.profileImage, 64)}
+                    src={resolveMediaUrl(currentUser.avatar || currentUser.profileImage)}
                     alt={currentUser.name || "User"}
                     className="w-full h-full object-cover"
                     onError={(e) => {

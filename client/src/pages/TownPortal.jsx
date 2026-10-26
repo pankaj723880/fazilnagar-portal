@@ -1441,11 +1441,10 @@ export default function TownPortal() {
                         <div className="relative h-48 w-full bg-slate-900 overflow-hidden">
                           {evt.bannerImage ? (
                             <img
-                              src={getThumbnailUrl(evt.bannerImage, 600)}
+                              src={evt.bannerImage}
                               alt={evt.title}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                               loading="lazy"
-                              decoding="async"
                             />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-amber-900/60 via-slate-900 to-[#18232E] flex items-center justify-center">
@@ -1848,7 +1847,7 @@ export default function TownPortal() {
                       className="group relative rounded-2xl overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.06)] border border-slate-200/60 dark:border-white/8 bg-slate-900 aspect-16/10 flex flex-col justify-end h-full"
                     >
                       <img
-                        src={getThumbnailUrl(site.primaryImage, 800) || "/images/fazilnagar_pawanagar.webp"}
+                        src={site.primaryImage || "/images/fazilnagar_pawanagar.webp"}
                         alt={site.name}
                         width="800"
                         height="500"
@@ -2022,7 +2021,7 @@ export default function TownPortal() {
                       className="group relative rounded-2xl overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.06)] border border-slate-200/60 dark:border-white/8 bg-slate-900 aspect-16/10 flex flex-col justify-end h-full"
                     >
                       <img
-                        src={getThumbnailUrl(site.primaryImage, 800) || "/images/kushinagar_mahaparinirvana.webp"}
+                        src={site.primaryImage || "/images/kushinagar_mahaparinirvana.webp"}
                         alt={site.name}
                         width="800"
                         height="500"

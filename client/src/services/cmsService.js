@@ -3,6 +3,7 @@
  * Fetches dynamic website content, hero slides, settings, public services, events, and heritage sites with graceful caching and offline fallbacks.
  */
 import API from "../api";
+import seedPlaces from "../data/places.json";
 import { resolveMediaUrl } from "../utils/mediaUtils";
 
 const CACHE_TTL_MS = 60 * 1000; // 60 seconds in-memory cache to eliminate duplicate network calls on refreshes while supporting instant live updates
@@ -229,7 +230,7 @@ export const DEFAULT_SITE_SETTINGS = {
     navItems: [
       { id: "home", label: "Home", path: "/", badge: "", isExternal: false, isActive: true, displayOrder: 1 },
       { id: "explore", label: "Explore", path: "/#explore-categories", badge: "", isExternal: false, isActive: true, displayOrder: 2 },
-      { id: "directory", label: "Directory", path: "/directory", badge: "19", isExternal: false, isActive: true, displayOrder: 3 },
+      { id: "directory", label: "Directory", path: "/directory", badge: String(seedPlaces?.length || 19), isExternal: false, isActive: true, displayOrder: 3 },
       { id: "jobs", label: "Jobs", path: "/jobs", badge: "Live", isExternal: false, isActive: true, displayOrder: 4 },
       { id: "map", label: "Map", path: "/#regional-connectivity-section", badge: "", isExternal: false, isActive: true, displayOrder: 5 },
       { id: "news", label: "Local Updates", path: "/news", badge: "", isExternal: false, isActive: true, displayOrder: 6 },
@@ -600,13 +601,9 @@ const handleStorageEvent = (e) => {
     triggerAll({ source: "storage", stamp: e.newValue });
   }
 };
-let visibilityDebounceTimer = null;
 const handleVisibility = () => {
   if (typeof document !== "undefined" && document.visibilityState === "visible") {
-    if (visibilityDebounceTimer) clearTimeout(visibilityDebounceTimer);
-    visibilityDebounceTimer = setTimeout(() => {
-      checkLiveServerVersion();
-    }, 300);
+    checkLiveServerVersion();
   }
 };
 
@@ -638,18 +635,12 @@ function setupLiveListeners() {
   livePollingInterval = setInterval(checkLiveServerVersion, 180000);
 }
 
-let lastLiveVersionCheckTime = 0;
-
 async function checkLiveServerVersion() {
   if (liveSubscribers.size === 0) return;
   if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
-  // Throttle version checks so focus + visibilitychange on tab switch only trigger once every 15s
-  const now = Date.now();
-  if (now - lastLiveVersionCheckTime < 15000) return;
-  lastLiveVersionCheckTime = now;
-
   try {
     const res = await API.get("/settings/live-version", {
+      params: { _t: Date.now() },
       headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
       timeout: 8000,
     });
@@ -667,7 +658,6 @@ async function checkLiveServerVersion() {
     }
   } catch (_) {}
 }
-
 
 /**
  * Subscribes to live CMS changes across all devices and tabs without page reload.

@@ -14,8 +14,7 @@ import messagesRoutes from "./routes/messages.js";
 import jobsRoutes from "./routes/jobs.js";
 import mongoSanitize from "./middleware/mongoSanitize.js";
 import { initSocket } from "./socket.js";
-import compression from "compression";
-import bandwidthTracker from "./middleware/bandwidthTracker.js";
+import zlib from "node:zlib";
 
 dotenv.config();
 const app = express();
@@ -43,10 +42,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
-// Outbound HTTP response bandwidth & request counter (privacy-safe, zero bodies logged)
-app.use(bandwidthTracker);
-
 
 // Sensible request timeouts (30s) to protect server socket resources
 app.use((req, res, next) => {
@@ -127,18 +122,67 @@ app.use("/api", (req, res, next) => {
   next();
 });
 
-// High-efficiency gzip/deflate response compression (threshold 1KB, filters binary/video/audio)
-app.use(
-  compression({
-    threshold: 1024,
-    filter: (req, res) => {
-      if (req.headers["x-no-compression"]) {
-        return false;
+// Lightweight native gzip/deflate response compression (zero extra dependencies)
+app.use((req, res, next) => {
+  const accept = req.headers["accept-encoding"] || "";
+  const supportsGzip = accept.includes("gzip");
+  const supportsDeflate = accept.includes("deflate");
+
+  if (!supportsGzip && !supportsDeflate) {
+    return next();
+  }
+
+  const originalSend = res.send;
+  res.send = function (body) {
+    if (res.headersSent || !body) {
+      return originalSend.call(this, body);
+    }
+
+    const contentType = (res.getHeader("Content-Type") || "").toString();
+    const isCompressible =
+      contentType.includes("application/json") ||
+      contentType.includes("text/") ||
+      contentType.includes("application/javascript") ||
+      contentType.includes("application/xml");
+
+    if (!isCompressible) {
+      return originalSend.call(this, body);
+    }
+
+    let buffer;
+    if (Buffer.isBuffer(body)) {
+      buffer = body;
+    } else if (typeof body === "string") {
+      buffer = Buffer.from(body);
+    } else {
+      return originalSend.call(this, body);
+    }
+
+    if (buffer.length > 1024) {
+      try {
+        if (supportsGzip) {
+          const compressed = zlib.gzipSync(buffer, { level: 6 });
+          res.setHeader("Content-Encoding", "gzip");
+          res.setHeader("Vary", "Accept-Encoding");
+          res.removeHeader("Content-Length");
+          return originalSend.call(this, compressed);
+        } else if (supportsDeflate) {
+          const compressed = zlib.deflateSync(buffer, { level: 6 });
+          res.setHeader("Content-Encoding", "deflate");
+          res.setHeader("Vary", "Accept-Encoding");
+          res.removeHeader("Content-Length");
+          return originalSend.call(this, compressed);
+        }
+      } catch (_) {
+        return originalSend.call(this, body);
       }
-      return compression.filter(req, res);
-    },
-  })
-);
+    }
+
+    return originalSend.call(this, body);
+  };
+
+  next();
+});
 
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true, limit: "2mb" }));

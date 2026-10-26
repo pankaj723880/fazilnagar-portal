@@ -26,7 +26,7 @@ export default function AuthLayout({
     <div
       className="auth-page-bg min-h-[calc(100dvh-64px)] w-full flex-1 flex flex-col items-center justify-center py-6 sm:py-10 px-3.5 sm:px-6 relative"
       style={{
-        backgroundImage: "linear-gradient(rgba(245, 248, 252, 0.72), rgba(245, 248, 252, 0.72)), url('/fzn.webp')",
+        backgroundImage: "linear-gradient(rgba(245, 248, 252, 0.72), rgba(245, 248, 252, 0.72)), url('/fzn.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",

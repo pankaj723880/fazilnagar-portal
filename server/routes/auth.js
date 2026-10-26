@@ -30,15 +30,6 @@ import { logSecurityEvent, SecurityEventType } from "../utils/securityLogger.js"
 
 const router = express.Router();
 
-// Strict security cache headers: Never cache authentication tokens, login responses, or credentials
-router.use((req, res, next) => {
-  res.setHeader("Cache-Control", "private, no-cache, no-store, must-revalidate");
-  res.setHeader("Pragma", "no-cache");
-  res.setHeader("Expires", "0");
-  res.setHeader("Vary", "Authorization");
-  next();
-});
-
 // Helper to set secure auth cookie
 const setAuthCookie = (res, token) => {
   res.cookie("fazilnagar_auth_token", token, {
