@@ -240,6 +240,10 @@ export function resolveStoryMedia(story) {
     imageUrl = getThumbnailUrl(videoUrl, 400);
   }
 
+  const mimeType = story.mediaMeta?.mimeType || "video/mp4";
+  const fileName = story.mediaMeta?.originalName || "";
+  const fileSize = story.mediaMeta?.size || 0;
+
   return {
     hasVideo: Boolean(videoUrl),
     videoUrl,
