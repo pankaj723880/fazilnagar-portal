@@ -229,7 +229,7 @@ export const DEFAULT_SITE_SETTINGS = {
     navItems: [
       { id: "home", label: "Home", path: "/", badge: "", isExternal: false, isActive: true, displayOrder: 1 },
       { id: "explore", label: "Explore", path: "/#explore-categories", badge: "", isExternal: false, isActive: true, displayOrder: 2 },
-      { id: "directory", label: "Directory", path: "/directory", badge: String(seedPlaces?.length || 19), isExternal: false, isActive: true, displayOrder: 3 },
+      { id: "directory", label: "Directory", path: "/directory", badge: "19", isExternal: false, isActive: true, displayOrder: 3 },
       { id: "jobs", label: "Jobs", path: "/jobs", badge: "Live", isExternal: false, isActive: true, displayOrder: 4 },
       { id: "map", label: "Map", path: "/#regional-connectivity-section", badge: "", isExternal: false, isActive: true, displayOrder: 5 },
       { id: "news", label: "Local Updates", path: "/news", badge: "", isExternal: false, isActive: true, displayOrder: 6 },
