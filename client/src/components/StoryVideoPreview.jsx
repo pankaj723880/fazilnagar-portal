@@ -28,6 +28,7 @@ export default function StoryVideoPreview({
   fallbackPoster = "",
   showPlayBadge = true,
   linkToViewer = true,
+  autoPlay = false,
 }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -61,7 +62,7 @@ export default function StoryVideoPreview({
     setDuration(0);
   }, [videoUrl]);
 
-  // IntersectionObserver: Autoplay preview when visible (>35%) if user hasn't explicitly paused
+  // IntersectionObserver: Observe visibility for viewport management
   useEffect(() => {
     const el = containerRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
@@ -80,7 +81,7 @@ export default function StoryVideoPreview({
     };
   }, []);
 
-  // Manage playback lifecycle with safe Promise handling
+  // Manage playback lifecycle with safe Promise handling (only autoplays if explicitly requested)
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !videoUrl || isFailed) return;
@@ -88,7 +89,7 @@ export default function StoryVideoPreview({
     video.muted = isMuted;
     video.playsInline = true;
 
-    if (isVisible && !hasInteracted) {
+    if (autoPlay && isVisible && !hasInteracted) {
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise
@@ -104,7 +105,7 @@ export default function StoryVideoPreview({
       video.pause();
       setIsPlaying(false);
     }
-  }, [isVisible, videoUrl, isFailed, hasInteracted, isMuted, isFullscreen]);
+  }, [autoPlay, isVisible, videoUrl, isFailed, hasInteracted, isMuted, isFullscreen]);
 
   // Fullscreen change listener
   useEffect(() => {
@@ -326,7 +327,7 @@ export default function StoryVideoPreview({
             playsInline
             webkit-playsinline="true"
             loop
-            preload="metadata"
+            preload={autoPlay ? "metadata" : "none"}
             controlsList="nodownload noplaybackrate"
             disablePictureInPicture
             draggable="false"

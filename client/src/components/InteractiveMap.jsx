@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { openGoogleMapsDirections } from "../utils/directions";
+import { getThumbnailUrl } from "../utils/mediaUtils";
 
 // 17 Requested Categories
 const CATEGORIES = [
@@ -474,8 +475,10 @@ export default function InteractiveMap() {
                     {selectedLocation.photos.map((photo, i) => (
                       <img
                         key={i}
-                        src={photo}
+                        src={getThumbnailUrl(photo, 400)}
                         alt={selectedLocation.name}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-36 object-cover rounded-2xl border border-slate-100"
                       />
                     ))}

@@ -235,9 +235,10 @@ export function resolveStoryMedia(story) {
     }
   }
 
-  const mimeType = story.mediaMeta?.mimeType || "video/mp4";
-  const fileName = story.mediaMeta?.originalName || "";
-  const fileSize = story.mediaMeta?.size || 0;
+  // 5. If story has a video but no explicit poster image, derive lightweight thumbnail as poster
+  if (videoUrl && !imageUrl) {
+    imageUrl = getThumbnailUrl(videoUrl, 400);
+  }
 
   return {
     hasVideo: Boolean(videoUrl),

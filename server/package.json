@@ -8,7 +8,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "maintenance:off": "node scripts/disableMaintenance.js",
-    "test": "node --test tests/maintenanceMode.test.js tests/resendEmailDelivery.test.js tests/locationRegression.test.js tests/notificationRegression.test.js tests/notificationAndVisitorCounter.test.js tests/adminReviewDeskSecurity.test.js tests/regionalConnectivity.test.js tests/dynamicFormBuilderAndApproval.test.js tests/authPhasesFull.test.js tests/defenseSecurityArchitecture.test.js",
+    "test": "node --test --test-concurrency=1 tests/maintenanceMode.test.js tests/resendEmailDelivery.test.js tests/locationRegression.test.js tests/notificationRegression.test.js tests/notificationAndVisitorCounter.test.js tests/adminReviewDeskSecurity.test.js tests/regionalConnectivity.test.js tests/dynamicFormBuilderAndApproval.test.js tests/authPhasesFull.test.js tests/defenseSecurityArchitecture.test.js tests/bandwidthOptimization.test.js tests/googleDriveMediaOptimization.test.js",
     "test:maintenance": "node --test tests/maintenanceMode.test.js",
     "test:security": "node --test tests/defenseSecurityArchitecture.test.js",
     "test:email": "node --test tests/resendEmailDelivery.test.js",
