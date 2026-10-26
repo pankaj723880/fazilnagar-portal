@@ -52,6 +52,7 @@ router.get("/map-entities", async (req, res) => {
       latitude: { $ne: null },
       longitude: { $ne: null },
     })
+      .select("sno id name hindiName entityType category subcategory latitude longitude mapsUrl verificationStatus townBoundaryStatus block district state locality addressFull distanceKm roadLink slug description connectivityNotes")
       .sort({ sno: 1, name: 1 })
       .lean();
 
@@ -178,7 +179,7 @@ router.get("/", async (req, res) => {
     if (sort === "newest") sortOption = { createdAt: -1 };
     if (sort === "category") sortOption = { category: 1, name: 1 };
 
-    const places = await Place.find(query).sort(sortOption).lean();
+    const places = await Place.find(query).select("-__v -reviewNotes -sourceUrls").sort(sortOption).lean();
 
     if (isDefaultQuery) {
       cachedPublicPlaces = places;
@@ -236,7 +237,13 @@ router.all("/sync", verifyToken, requireAdmin, async (req, res) => {
 // @access  Public
 router.get("/stats/summary", async (req, res) => {
   try {
+    res.setHeader("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
     if (cachedStatsSummary && Date.now() - cachedStatsSummaryTime < PLACES_CACHE_TTL_MS) {
+      const etag = `"places_stats_${cachedStatsSummaryTime}_${cachedStatsSummary.total || 0}_${cachedStatsSummary.published || 0}"`;
+      res.setHeader("ETag", etag);
+      if (matchesEtag(req.headers["if-none-match"], etag)) {
+        return res.status(304).end();
+      }
       return res.status(200).json(cachedStatsSummary);
     }
 
@@ -277,6 +284,12 @@ router.get("/stats/summary", async (req, res) => {
 
     cachedStatsSummary = statsPayload;
     cachedStatsSummaryTime = Date.now();
+    const etag = `"places_stats_${cachedStatsSummaryTime}_${statsPayload.total}_${statsPayload.published}"`;
+    res.setHeader("ETag", etag);
+
+    if (matchesEtag(req.headers["if-none-match"], etag)) {
+      return res.status(304).end();
+    }
 
     res.status(200).json(statsPayload);
   } catch (err) {
@@ -467,6 +480,15 @@ router.get("/:id", async (req, res) => {
 
     if (!place) {
       return res.status(404).json({ message: "Establishment not found." });
+    }
+
+    res.setHeader("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
+    const updatedAtTime = place.updatedAt ? new Date(place.updatedAt).getTime() : 0;
+    const etag = `"place_${place._id}_${updatedAtTime}"`;
+    res.setHeader("ETag", etag);
+
+    if (matchesEtag(req.headers["if-none-match"], etag)) {
+      return res.status(304).end();
     }
 
     res.status(200).json(place);

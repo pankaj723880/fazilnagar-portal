@@ -60,20 +60,54 @@
       ]
     },
     {
+      "source": "/api/google-drive/media/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=86400, immutable"
+        },
+        {
+          "key": "Accept-Ranges",
+          "value": "bytes"
+        }
+      ]
+    },
+    {
+      "source": "/uploads/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=86400, immutable"
+        },
+        {
+          "key": "Accept-Ranges",
+          "value": "bytes"
+        }
+      ]
+    },
+    {
       "source": "/images/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "public, max-age=2592000, stale-while-revalidate=86400"
+        },
+        {
+          "key": "Accept-Ranges",
+          "value": "bytes"
         }
       ]
     },
     {
-      "source": "/(.*\\.(?:svg|png|jpg|jpeg|webp|ico))",
+      "source": "/(.*\\.(?:svg|png|jpg|jpeg|webp|gif|ico|avif|mp4|webm|mov|ogg|m4v|mp3|wav|m4a|aac|woff|woff2|ttf|eot))",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "public, max-age=2592000, stale-while-revalidate=86400"
+        },
+        {
+          "key": "Accept-Ranges",
+          "value": "bytes"
         }
       ]
     },
@@ -108,7 +142,7 @@
       ]
     },
     {
-      "source": "/((?!assets/|images/|.*\\.(?:svg|png|jpg|jpeg|webp|ico|woff2|xml|txt|js|css|json)$).*)",
+      "source": "/((?!assets/|images/|api/google-drive/media/|.*\\.(?:svg|png|jpg|jpeg|webp|gif|ico|avif|mp4|webm|mov|ogg|m4v|mp3|wav|m4a|aac|woff|woff2|ttf|eot|xml|txt|js|css|json|webmanifest)$).*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -139,6 +173,10 @@
     {
       "source": "/api/google-drive/media/:id*",
       "destination": "https://fazilnagar-portal-l95o.onrender.com/api/google-drive/media/:id*"
+    },
+    {
+      "source": "/uploads/:path*",
+      "destination": "https://fazilnagar-portal-l95o.onrender.com/uploads/:path*"
     },
     {
       "source": "/google4f0808f0811c4245.html",

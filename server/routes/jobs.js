@@ -12,6 +12,7 @@ import Notification from "../models/Notification.js";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
 import { writeLimiter, searchLimiter } from "../middleware/rateLimiter.js";
 import { getIO } from "../socket.js";
+import { matchesEtag } from "./googleDrive.js";
 
 const router = express.Router();
 
@@ -98,10 +99,38 @@ async function getOrCreateDirectConversation(senderId, recipientId) {
 }
 
 // -------------------------------------------------------------
+// In-Memory Caching for Public Jobs & Categories
+// -------------------------------------------------------------
+let cachedJobCategories = null;
+let cachedJobCategoriesTime = 0;
+const JOB_CATEGORIES_CACHE_TTL_MS = 3 * 60 * 1000;
+
+let cachedPublicJobs = null;
+let cachedPublicJobsTime = 0;
+const PUBLIC_JOBS_CACHE_TTL_MS = 60 * 1000;
+
+export function invalidateJobsCache() {
+  cachedJobCategories = null;
+  cachedJobCategoriesTime = 0;
+  cachedPublicJobs = null;
+  cachedPublicJobsTime = 0;
+}
+
+// -------------------------------------------------------------
 // GET /api/jobs/categories - Category counts summary
 // -------------------------------------------------------------
 router.get("/categories", async (req, res) => {
   try {
+    res.setHeader("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
+    if (cachedJobCategories && Date.now() - cachedJobCategoriesTime < JOB_CATEGORIES_CACHE_TTL_MS) {
+      const etag = `"jobs_cats_${cachedJobCategoriesTime}_${cachedJobCategories.totalOpenJobs || 0}_${cachedJobCategories.totalSeekers || 0}"`;
+      res.setHeader("ETag", etag);
+      if (matchesEtag(req.headers["if-none-match"], etag)) {
+        return res.status(304).end();
+      }
+      return res.json(cachedJobCategories);
+    }
+
     const jobStats = await JobListing.aggregate([
       { $match: { type: "job", status: "open" } },
       { $group: { _id: "$category", count: { $sum: 1 } } },
@@ -117,13 +146,23 @@ router.get("/categories", async (req, res) => {
     const totalOpenJobs = await JobListing.countDocuments({ type: "job", status: "open" });
     const totalSeekers = await JobListing.countDocuments({ type: "job_seeker", status: "looking_for_work" });
 
-    res.json({
+    const payload = {
       success: true,
       totalOpenJobs,
       totalSeekers,
       jobCategories: jobStats,
       seekerCategories: seekerStats,
-    });
+    };
+
+    cachedJobCategories = payload;
+    cachedJobCategoriesTime = Date.now();
+    const etag = `"jobs_cats_${cachedJobCategoriesTime}_${payload.totalOpenJobs}_${payload.totalSeekers}"`;
+    res.setHeader("ETag", etag);
+    if (matchesEtag(req.headers["if-none-match"], etag)) {
+      return res.status(304).end();
+    }
+
+    res.json(payload);
   } catch (err) {
     console.error("Jobs categories error:", err);
     res.status(500).json({ success: false, message: "Failed to load job categories." });
@@ -153,6 +192,32 @@ router.get("/", searchLimiter, async (req, res) => {
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
     const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 12));
     const skip = (pageNum - 1) * limitNum;
+
+    const isDefaultQuery =
+      (!category || category === "All") &&
+      (!employmentType || employmentType === "All") &&
+      !location &&
+      !fresherOnly &&
+      !minSalary &&
+      !maxSalary &&
+      (!search || !search.trim()) &&
+      sort === "recent" &&
+      pageNum === 1 &&
+      includeClosed !== "true";
+
+    if (isDefaultQuery && type === "job") {
+      res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
+      if (cachedPublicJobs && Date.now() - cachedPublicJobsTime < PUBLIC_JOBS_CACHE_TTL_MS) {
+        const etag = `"jobs_feed_${cachedPublicJobsTime}_${cachedPublicJobs.listings?.length || 0}_${cachedPublicJobs.total || 0}"`;
+        res.setHeader("ETag", etag);
+        if (matchesEtag(req.headers["if-none-match"], etag)) {
+          return res.status(304).end();
+        }
+        return res.json(cachedPublicJobs);
+      }
+    } else {
+      res.setHeader("Cache-Control", "public, max-age=30, stale-while-revalidate=60");
+    }
 
     const query = {
       type: type === "job_seeker" ? "job_seeker" : "job",
@@ -228,8 +293,10 @@ router.get("/", searchLimiter, async (req, res) => {
       sortOptions = { views: -1, createdAt: -1 };
     }
 
+    // Optimize payload size: exclude heavy application instructions and screening questions from summary listings
     const [listings, total] = await Promise.all([
       JobListing.find(query)
+        .select("-applicationInstructions -screeningQuestions -__v")
         .sort(sortOptions)
         .skip(skip)
         .limit(limitNum)
@@ -248,13 +315,25 @@ router.get("/", searchLimiter, async (req, res) => {
       return item;
     });
 
-    res.json({
+    const payload = {
       success: true,
       listings: sanitizedListings,
       total,
       page: pageNum,
       totalPages: Math.ceil(total / limitNum) || 1,
-    });
+    };
+
+    if (isDefaultQuery && type === "job") {
+      cachedPublicJobs = payload;
+      cachedPublicJobsTime = Date.now();
+      const etag = `"jobs_feed_${cachedPublicJobsTime}_${payload.listings.length}_${payload.total}"`;
+      res.setHeader("ETag", etag);
+      if (matchesEtag(req.headers["if-none-match"], etag)) {
+        return res.status(304).end();
+      }
+    }
+
+    res.json(payload);
   } catch (err) {
     console.error("List jobs error:", err);
     res.status(500).json({ success: false, message: "Failed to load listings." });
@@ -470,6 +549,8 @@ router.patch("/admin/:id/status", verifyToken, requireAdmin, async (req, res) =>
       return res.status(404).json({ success: false, message: "Listing not found." });
     }
 
+    invalidateJobsCache();
+
     res.json({
       success: true,
       message: `Listing status updated to ${status}.`,
@@ -501,6 +582,8 @@ router.patch("/admin/:id/verify", verifyToken, requireAdmin, async (req, res) =>
       return res.status(404).json({ success: false, message: "Listing not found." });
     }
 
+    invalidateJobsCache();
+
     res.json({
       success: true,
       message: `Listing verification status updated to ${Boolean(isVerified)}.`,
@@ -527,6 +610,7 @@ router.delete("/admin/:id", verifyToken, requireAdmin, async (req, res) => {
 
     // Cleanup associated applications
     await JobApplication.deleteMany({ listing: id });
+    invalidateJobsCache();
 
     res.json({
       success: true,
@@ -547,7 +631,6 @@ router.get("/:id", async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: "Invalid listing ID." });
     }
-
     // Atomically increment view count
     const listing = await JobListing.findByIdAndUpdate(
       id,
@@ -559,6 +642,15 @@ router.get("/:id", async (req, res) => {
 
     if (!listing) {
       return res.status(404).json({ success: false, message: "Job listing not found." });
+    }
+
+    res.setHeader("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
+    const updatedAtTime = listing.updatedAt ? new Date(listing.updatedAt).getTime() : 0;
+    const etag = `"job_${listing._id}_${updatedAtTime}"`;
+    res.setHeader("ETag", etag);
+
+    if (matchesEtag(req.headers["if-none-match"], etag)) {
+      return res.status(304).end();
     }
 
     // Hide phone for job seekers unless allowed
@@ -725,6 +817,8 @@ router.post("/", verifyToken, writeLimiter, async (req, res) => {
         companyLogo: (companyLogo || "").trim(),
       });
 
+      invalidateJobsCache();
+
       return res.status(201).json({
         success: true,
         message: "Job vacancy published successfully!",
@@ -764,6 +858,8 @@ router.post("/", verifyToken, writeLimiter, async (req, res) => {
       phone: showPhone ? (phone || "").trim().slice(0, 20) : "",
       avatar: (avatar || "").trim(),
     });
+
+    invalidateJobsCache();
 
     res.status(201).json({
       success: true,
@@ -867,6 +963,7 @@ router.put("/:id", verifyToken, writeLimiter, async (req, res) => {
     }
 
     await listing.save();
+    invalidateJobsCache();
 
     res.json({
       success: true,
@@ -918,6 +1015,7 @@ router.patch("/:id/status", verifyToken, async (req, res) => {
 
     listing.status = status;
     await listing.save();
+    invalidateJobsCache();
 
     res.json({
       success: true,
@@ -955,6 +1053,7 @@ router.delete("/:id", verifyToken, writeLimiter, async (req, res) => {
     await JobListing.findByIdAndDelete(id);
     // Remove or archive related applications
     await JobApplication.deleteMany({ listing: id });
+    invalidateJobsCache();
 
     res.json({ success: true, message: "Listing and related applications deleted successfully." });
   } catch (err) {

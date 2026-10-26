@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import API from "../api";
 import { Search, X, Loader2, UserPlus, MapPin, Shield, MessageCircle } from "lucide-react";
-import { resolveMediaUrl } from "../utils/mediaUtils";
+import { resolveMediaUrl, getAvatarUrl } from "../utils/mediaUtils";
 
 export default function UserSearch({ onSelectUser }) {
   const [query, setQuery] = useState("");
@@ -176,7 +176,7 @@ export default function UserSearch({ onSelectUser }) {
                     </div>
                     {u.avatar ? (
                       <img
-                        src={resolveMediaUrl(u.avatar)}
+                        src={getAvatarUrl(u.avatar, 72)}
                         alt={u.name}
                         className="absolute inset-0 w-full h-full object-cover"
                         onError={(e) => { e.currentTarget.style.display = "none"; }}

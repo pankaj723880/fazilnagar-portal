@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import API from "../api";
-import { resolveMediaUrl } from "../utils/mediaUtils";
+import { resolveMediaUrl, getAvatarUrl } from "../utils/mediaUtils";
 import {
   X,
   Shield,
@@ -306,7 +306,7 @@ export default function ConversationInfoPanel({
               ) : null
             ) : otherUser.avatar ? (
               <img
-                src={resolveMediaUrl(otherUser.avatar)}
+                src={getAvatarUrl(otherUser.avatar, 96)}
                 alt={displayName}
                 className="absolute inset-0 w-full h-full object-cover"
                 onError={(e) => {
@@ -485,7 +485,12 @@ export default function ConversationInfoPanel({
                         preload="metadata"
                         playsInline
                         controls
-                        className="w-full h-full object-contain"
+                        controlsList="nodownload noplaybackrate"
+                        disablePictureInPicture
+                        draggable="false"
+                        data-protected-media="true"
+                        onContextMenu={(e) => e.preventDefault()}
+                        className="w-full h-full object-contain select-none"
                       >
                         <source src={fullUrl} type={m.mimeType || "video/mp4"} />
                       </video>

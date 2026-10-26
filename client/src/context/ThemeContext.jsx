@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useMemo, useRef, useCal
 import { flushSync } from "react-dom";
 import { useLocation } from "react-router-dom";
 import API from "../api";
+import { getSiteSettings } from "../services/cmsService";
 import { getAuthToken, getAuthUser, isUserAdmin } from "../utils/authStorage";
 import { THEMES, getThemeById, DEFAULT_THEME_ID, DEFAULT_THEME_MODE } from "../constants/themes";
 
@@ -294,9 +295,9 @@ export function ThemeProvider({ children }) {
     let isMounted = true;
     async function fetchGlobalTheme() {
       try {
-        const res = await API.get("/settings");
-        if (res.data?.success && res.data?.settings?.themeConfig && isMounted) {
-          const serverConfig = res.data.settings.themeConfig;
+        const settings = await getSiteSettings();
+        if (settings?.themeConfig && isMounted) {
+          const serverConfig = settings.themeConfig;
           const serverThemeId = serverConfig.themeId || DEFAULT_THEME_ID;
           const serverBg = mergeBgAnimations(serverConfig.bgAnimations);
 

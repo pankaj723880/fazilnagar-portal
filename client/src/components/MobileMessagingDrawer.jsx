@@ -14,7 +14,7 @@ import {
   Loader2,
   Filter,
 } from "lucide-react";
-import { resolveMediaUrl } from "../utils/mediaUtils";
+import { resolveMediaUrl, getAvatarUrl } from "../utils/mediaUtils";
 
 export default function MobileMessagingDrawer({
   isOpen,
@@ -158,7 +158,7 @@ export default function MobileMessagingDrawer({
             <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden shrink-0 border border-slate-300/80">
               {profile?.avatar ? (
                 <img
-                  src={resolveMediaUrl(profile.avatar)}
+                  src={getAvatarUrl(profile.avatar, 96)}
                   alt={displayName}
                   className="w-full h-full object-cover"
                   onError={(e) => { e.currentTarget.style.display = "none"; }}
@@ -368,7 +368,7 @@ export default function MobileMessagingDrawer({
                           ) : null
                         ) : other.avatar ? (
                           <img
-                            src={resolveMediaUrl(other.avatar)}
+                            src={getAvatarUrl(other.avatar, 72)}
                             alt={other.name}
                             className="absolute inset-0 w-full h-full object-cover"
                             onError={(e) => { e.currentTarget.style.display = "none"; }}
@@ -468,7 +468,7 @@ export default function MobileMessagingDrawer({
                         </div>
                         {u.avatar ? (
                           <img
-                            src={resolveMediaUrl(u.avatar)}
+                            src={getAvatarUrl(u.avatar, 64)}
                             alt={u.name}
                             className="absolute inset-0 w-full h-full object-cover"
                             onError={(e) => { e.currentTarget.style.display = "none"; }}

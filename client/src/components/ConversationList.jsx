@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { resolveMediaUrl } from "../utils/mediaUtils";
+import { resolveMediaUrl, getAvatarUrl } from "../utils/mediaUtils";
 import {
   MessageSquare,
   UserPlus,
@@ -230,7 +230,7 @@ export default function ConversationList({
                     ) : null
                   ) : other.avatar ? (
                     <img
-                      src={resolveMediaUrl(other.avatar)}
+                      src={getAvatarUrl(other.avatar, 72)}
                       alt={other.name}
                       className="absolute inset-0 w-full h-full object-cover"
                       onError={(e) => {

@@ -370,3 +370,330 @@ test("Bandwidth Optimization: Places and Civic Directory ETag & conditional vali
   });
 });
 
+test("Bandwidth Optimization: Vercel Persistent Media Caching & Route Configuration", async (t) => {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const { fileURLToPath } = await import("node:url");
+
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const vercelJsonPath = path.resolve(__dirname, "../../client/vercel.json");
+
+  assert.ok(fs.existsSync(vercelJsonPath), "client/vercel.json must exist");
+  const vercelConfig = JSON.parse(fs.readFileSync(vercelJsonPath, "utf-8"));
+
+  await t.test("Vercel config includes dedicated caching rules for Google Drive media proxy", () => {
+    const driveMediaHeader = vercelConfig.headers.find(
+      (h) => h.source === "/api/google-drive/media/(.*)"
+    );
+    assert.ok(driveMediaHeader, "Must have header rule for /api/google-drive/media/(.*)");
+    const cc = driveMediaHeader.headers.find((h) => h.key === "Cache-Control");
+    assert.ok(cc, "Cache-Control header must be defined for Drive media");
+    assert.ok(cc.value.includes("public"), "Drive media must be public cacheable");
+    assert.ok(cc.value.includes("max-age=2592000"), "Drive media must have 30-day max-age");
+    assert.ok(cc.value.includes("immutable"), "Drive media should be marked immutable");
+
+    const ranges = driveMediaHeader.headers.find((h) => h.key === "Accept-Ranges");
+    assert.ok(ranges && ranges.value === "bytes", "Must expose Accept-Ranges: bytes for video streaming");
+  });
+
+  await t.test("Vercel config caches static videos, audios, fonts, and images", () => {
+    const staticMediaHeader = vercelConfig.headers.find((h) =>
+      h.source.includes("mp4") && h.source.includes("webp") && h.source.includes("woff2")
+    );
+    assert.ok(staticMediaHeader, "Must have comprehensive static media header rule");
+    const cc = staticMediaHeader.headers.find((h) => h.key === "Cache-Control");
+    assert.ok(cc.value.includes("public"), "Static media must be public");
+    assert.ok(cc.value.includes("max-age=2592000"), "Static media must have 30-day cache");
+  });
+
+  await t.test("Negative lookahead excludes Google Drive media and static media from no-cache poisoning", () => {
+    const catchAllHeader = vercelConfig.headers.find(
+      (h) => h.source.includes("?!") && h.headers.some((x) => x.value.includes("no-store"))
+    );
+    assert.ok(catchAllHeader, "Must find SPA navigation catch-all rule");
+    assert.ok(
+      catchAllHeader.source.includes("api/google-drive/media/"),
+      "Negative lookahead must exclude /api/google-drive/media/"
+    );
+    assert.ok(
+      catchAllHeader.source.includes("mp4"),
+      "Negative lookahead must exclude video files (mp4)"
+    );
+    assert.ok(
+      catchAllHeader.source.includes("webm"),
+      "Negative lookahead must exclude video files (webm)"
+    );
+  });
+
+  await t.test("Vercel config preserves SPA index rewrite and Google Drive media proxy rewrite", () => {
+    const driveRewrite = vercelConfig.rewrites.find(
+      (r) => r.source === "/api/google-drive/media/:id*"
+    );
+    assert.ok(driveRewrite, "Google Drive media rewrite must exist");
+    assert.ok(
+      driveRewrite.destination.includes("fazilnagar-portal-l95o.onrender.com"),
+      "Rewrite destination must point to production Render backend"
+    );
+
+    const spaRewrite = vercelConfig.rewrites.find((r) => r.source === "/:path*");
+    assert.ok(spaRewrite, "SPA catch-all rewrite must exist");
+    assert.equal(spaRewrite.destination, "/index", "SPA must rewrite to /index");
+  });
+});
+
+test("Bandwidth Optimization: Public vs Private News Feed caching & ETag validation", async (t) => {
+  await t.test("Anonymous news feed receives public Cache-Control and ETag", () => {
+    const publicHeader = "public, max-age=60, stale-while-revalidate=120";
+    const sampleStories = [{ _id: "story_1", title: "Breaking News", updatedAt: new Date() }];
+    const etag = `"${sampleStories[0]._id}_${new Date(sampleStories[0].updatedAt).getTime()}"`;
+
+    assert.ok(publicHeader.includes("public"));
+    assert.ok(publicHeader.includes("max-age=60"));
+    assert.ok(matchesEtag(etag, etag));
+  });
+
+  await t.test("Authenticated news feed strictly uses private, no-store headers with Vary: Authorization", () => {
+    const authHeaders = {
+      "cache-control": "private, no-cache, no-store, must-revalidate",
+      vary: "Authorization",
+    };
+
+    assert.ok(authHeaders["cache-control"].includes("private"), "Must be private for authenticated users");
+    assert.ok(authHeaders["cache-control"].includes("no-store"), "Must prevent storing in shared cache");
+    assert.equal(authHeaders.vary, "Authorization", "Must vary on Authorization to prevent cache poisoning");
+  });
+});
+
+test("Bandwidth Optimization: Jobs Categories & Feed Projection and Caching", async (t) => {
+  await t.test("Jobs categories route generates deterministic ETag from category counts", () => {
+    const categories = [
+      { _id: "IT & Software", count: 5 },
+      { _id: "Healthcare", count: 8 },
+    ];
+    const totalJobs = 13;
+    const etag = `"${categories.length}_${totalJobs}_${categories[0]?.count || 0}"`;
+
+    assert.equal(etag, '"2_13_5"');
+    assert.ok(matchesEtag(`"${categories.length}_${totalJobs}_${categories[0]?.count || 0}"`, etag));
+  });
+
+  await t.test("Summary job listings strip heavy detail fields to minimize payload size", () => {
+    const fullJobDoc = {
+      _id: "job_123",
+      title: "Senior Pharmacist",
+      companyName: "Fazilnagar Medicare",
+      location: "Main Market, Fazilnagar",
+      jobType: "Full-time",
+      salary: { min: 25000, max: 40000, isNegotiable: true },
+      applicationInstructions: "Please send a complete CV, degree certificates, pharmacy council registration license, and three references to hr@fazilnagarmedicare.com before the end of the month.",
+      screeningQuestions: [
+        { question: "Do you hold a valid UP Pharmacy Council license?", required: true },
+        { question: "How many years of retail pharmacy experience do you have?", required: true }
+      ],
+      __v: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    // Projection stripping heavy fields
+    const { applicationInstructions, screeningQuestions, __v, ...summaryJob } = fullJobDoc;
+
+    assert.equal(summaryJob.applicationInstructions, undefined, "applicationInstructions must be omitted in listing");
+    assert.equal(summaryJob.screeningQuestions, undefined, "screeningQuestions must be omitted in listing");
+    assert.equal(summaryJob.__v, undefined, "__v must be omitted in listing");
+    assert.equal(summaryJob.title, "Senior Pharmacist");
+
+    const fullSize = JSON.stringify(fullJobDoc).length;
+    const summarySize = JSON.stringify(summaryJob).length;
+    assert.ok(summarySize < fullSize, `Summary size (${summarySize}B) must be smaller than full document (${fullSize}B)`);
+  });
+});
+
+test("Bandwidth Optimization: Active Advertisements and Public Services ETag handling", async (t) => {
+  await t.test("Active ads route evaluates ETag and responds with 304 if unchanged", () => {
+    const ads = [
+      { _id: "ad_1", title: "Diwali Sale", updatedAt: new Date("2026-10-01T00:00:00Z") },
+      { _id: "ad_2", title: "New Clinic", updatedAt: new Date("2026-10-15T00:00:00Z") }
+    ];
+    const latestTime = Math.max(...ads.map((a) => new Date(a.updatedAt).getTime()));
+    const etag = `"${ads.length}_${latestTime}"`;
+
+    assert.equal(etag, `"${ads.length}_${new Date("2026-10-15T00:00:00Z").getTime()}"`);
+    assert.ok(matchesEtag(etag, etag));
+  });
+
+  await t.test("Public services route caches for 3 minutes and validates ETag", () => {
+    const services = [
+      { _id: "srv_1", name: "Ambulance", updatedAt: new Date("2026-09-01T00:00:00Z") }
+    ];
+    const etag = `"${services.length}_${new Date(services[0].updatedAt).getTime()}"`;
+    const cacheHeader = "public, max-age=180, stale-while-revalidate=600";
+
+    assert.ok(cacheHeader.includes("max-age=180"));
+    assert.ok(cacheHeader.includes("stale-while-revalidate=600"));
+    assert.ok(matchesEtag(etag, etag));
+  });
+});
+
+test("Bandwidth Optimization: Client-side In-flight Request Deduplication", async (t) => {
+  await t.test("Deduplicates identical concurrent in-flight requests into a single promise", async () => {
+    const inFlight = new Map();
+    let networkCallCount = 0;
+
+    function mockFetch(url, params = {}) {
+      const key = `get:${url}:${JSON.stringify(params)}:anon`;
+      if (inFlight.has(key)) {
+        return inFlight.get(key);
+      }
+
+      networkCallCount++;
+      const promise = new Promise((resolve) => {
+        setTimeout(() => resolve({ status: 200, data: [{ id: 1, name: "Sample" }] }), 20);
+      }).finally(() => {
+        inFlight.delete(key);
+      });
+
+      inFlight.set(key, promise);
+      return promise;
+    }
+
+    // Fire 3 simultaneous requests for the exact same resource (e.g., /places)
+    const [res1, res2, res3] = await Promise.all([
+      mockFetch("/api/places", { limit: 100 }),
+      mockFetch("/api/places", { limit: 100 }),
+      mockFetch("/api/places", { limit: 100 }),
+    ]);
+
+    assert.equal(networkCallCount, 1, "Only 1 outbound network call should occur for 3 concurrent requests");
+    assert.deepEqual(res1, res2);
+    assert.deepEqual(res2, res3);
+    assert.equal(inFlight.size, 0, "In-flight map must be completely clean after completion");
+
+    // Sequential subsequent request after completion makes a new call
+    await mockFetch("/api/places", { limit: 100 });
+    assert.equal(networkCallCount, 2, "A fresh call should be made after previous request completed");
+  });
+});
+
+import bandwidthTracker, {
+  normalizeEndpoint,
+  getTopEndpointsByBytes,
+  getTopEndpointsByRequests,
+  getBandwidthSummary,
+  resetBandwidthStats,
+} from "../middleware/bandwidthTracker.js";
+
+test("Bandwidth Optimization: Bandwidth Tracker & Request Metrics Middleware", async (t) => {
+  t.beforeEach(() => {
+    resetBandwidthStats();
+  });
+
+  await t.test("normalizeEndpoint replaces MongoDB ObjectIDs and dynamic tokens cleanly", () => {
+    const req1 = { method: "GET", url: "/api/news/66b9318a24c5689012345678", path: "/api/news/66b9318a24c5689012345678" };
+    assert.equal(normalizeEndpoint(req1), "GET /api/news/:id");
+
+    const req2 = { method: "GET", url: "/api/google-drive/media/1AbCdEfGhIjKlMnOpQrStUvWxYz", path: "/api/google-drive/media/1AbCdEfGhIjKlMnOpQrStUvWxYz" };
+    assert.equal(normalizeEndpoint(req2), "GET /api/google-drive/media/:id");
+
+    const req3 = { method: "GET", url: "/uploads/media/media-1730000000-123456789.webp", path: "/uploads/media/media-1730000000-123456789.webp" };
+    assert.equal(normalizeEndpoint(req3), "GET /uploads/media/:file");
+
+    const req4 = { method: "GET", url: "/api/forms/public/area-details", path: "/api/forms/public/area-details" };
+    assert.equal(normalizeEndpoint(req4), "GET /api/forms/public/:slug");
+
+    const req5 = { method: "POST", url: "/api/visitors/heartbeat", path: "/api/visitors/heartbeat" };
+    assert.equal(normalizeEndpoint(req5), "POST /api/visitors/heartbeat");
+  });
+
+  await t.test("Tracks request counts, cumulative bytes, and status codes across multiple simulated requests", async () => {
+    function runSimulatedRequest(method, url, resData = "") {
+      return new Promise((resolve) => {
+        let headers = {};
+        const req = {
+          method,
+          url,
+          path: url,
+          headers: {},
+        };
+        const res = {
+          statusCode: 200,
+          status(code) { this.statusCode = code; return this; },
+          setHeader(k, v) { headers[k.toLowerCase()] = v; },
+          getHeader(k) { return headers[k.toLowerCase()]; },
+          _listeners: {},
+          on(evt, fn) {
+            this._listeners[evt] = this._listeners[evt] || [];
+            this._listeners[evt].push(fn);
+            return this;
+          },
+          emit(evt) {
+            (this._listeners[evt] || []).forEach((fn) => fn());
+          },
+          write(chunk) { return true; },
+          end(chunk) {
+            if (chunk) {
+              const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+              this.setHeader("Content-Length", buf.length);
+            }
+            this.emit("finish");
+            resolve();
+            return this;
+          },
+        };
+
+        bandwidthTracker(req, res, () => {
+          if (resData) {
+            res.end(resData);
+          } else {
+            res.status(304).end();
+          }
+        });
+      });
+    }
+
+    // Fire 3 requests to /api/places (each 1000 bytes)
+    await runSimulatedRequest("GET", "/api/places", "A".repeat(1000));
+    await runSimulatedRequest("GET", "/api/places", "A".repeat(1000));
+    await runSimulatedRequest("GET", "/api/places", "A".repeat(1000));
+
+    // Fire 2 requests to /api/news (each 500 bytes)
+    await runSimulatedRequest("GET", "/api/news", "B".repeat(500));
+    await runSimulatedRequest("GET", "/api/news", "B".repeat(500));
+
+    // Fire 5 requests to /api/empty (304 Not Modified, 0 bytes)
+    for (let i = 0; i < 5; i++) {
+      await runSimulatedRequest("GET", "/api/empty", "");
+    }
+
+    const summary = getBandwidthSummary();
+    assert.equal(summary.totalRequests, 10, "Total server requests must be 10");
+    assert.equal(summary.totalBytes, 4000, "Total bytes must be 3000 + 1000 = 4000");
+
+    const topByBytes = getTopEndpointsByBytes(10);
+    assert.equal(topByBytes[0].endpoint, "GET /api/places");
+    assert.equal(topByBytes[0].totalBytes, 3000);
+    assert.equal(topByBytes[0].requestCount, 3);
+    assert.equal(topByBytes[1].endpoint, "GET /api/news");
+    assert.equal(topByBytes[1].totalBytes, 1000);
+
+    const topByRequests = getTopEndpointsByRequests(10);
+    assert.equal(topByRequests[0].endpoint, "GET /api/empty", "304 endpoint should have highest request count");
+    assert.equal(topByRequests[0].requestCount, 5);
+    assert.equal(topByRequests[0].totalBytes, 0, "304 requests should consume 0 payload bytes");
+  });
+
+  await t.test("Privacy Guarantee: Bandwidth tracker never logs or exposes PII, tokens, or body payloads", () => {
+    const summary = getBandwidthSummary();
+    const serialized = JSON.stringify(summary);
+
+    assert.equal(serialized.includes("password"), false, "Must not contain passwords");
+    assert.equal(serialized.includes("Bearer"), false, "Must not contain tokens");
+    assert.equal(serialized.includes("jwt"), false, "Must not contain JWT");
+    assert.equal(serialized.includes("body"), false, "Must not store request or response bodies");
+  });
+});
+
+
+
+

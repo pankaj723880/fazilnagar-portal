@@ -53,6 +53,46 @@ const API = axios.create({
   validateStatus: (status) => (status >= 200 && status < 300) || status === 304,
 });
 
+// In-flight GET/HEAD request deduplication to eliminate concurrent redundant roundtrips to Render
+const inFlightRequests = new Map();
+const originalRequest = API.request.bind(API);
+
+API.request = function (configOrUrl, maybeConfig) {
+  let config;
+  if (typeof configOrUrl === "string") {
+    config = maybeConfig ? { ...maybeConfig, url: configOrUrl } : { url: configOrUrl };
+  } else {
+    config = configOrUrl ? { ...configOrUrl } : {};
+  }
+
+  const method = (config.method || "get").toLowerCase();
+  // Only deduplicate idempotent read requests (GET and HEAD)
+  if (method !== "get" && method !== "head") {
+    return originalRequest(config);
+  }
+
+  // Allow explicit bypass if requested
+  if (config.bypassDedup) {
+    return originalRequest(config);
+  }
+
+  // Generate deduplication key using method, url, query params, and auth presence
+  const token = getAuthToken();
+  const serializedParams = config.params ? JSON.stringify(config.params) : "";
+  const dedupKey = `${method}:${config.url || ""}:${serializedParams}:${token ? "auth" : "anon"}`;
+
+  if (inFlightRequests.has(dedupKey)) {
+    return inFlightRequests.get(dedupKey);
+  }
+
+  const promise = originalRequest(config).finally(() => {
+    inFlightRequests.delete(dedupKey);
+  });
+
+  inFlightRequests.set(dedupKey, promise);
+  return promise;
+};
+
 // Attach Authorization token & persistent client identifier
 API.interceptors.request.use((config) => {
   const token = getAuthToken();

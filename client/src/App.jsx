@@ -41,10 +41,10 @@ import AdminRoute from "./components/AdminRoute";
 import RequireMessagingAuth from "./components/RequireMessagingAuth";
 import InstallButton from "./components/InstallButton";
 import ThemeToggle from "./components/ThemeToggle";
-import MaintenancePage from "./components/MaintenancePage";
+const MaintenancePage = lazy(() => import("./components/MaintenancePage"));
 import { useTheme } from "./context/ThemeContext";
 import BackgroundAnimations from "./components/BackgroundAnimations";
-import EditProfileModal from "./components/EditProfileModal";
+const EditProfileModal = lazy(() => import("./components/EditProfileModal"));
 import SplashScreen from "./components/SplashScreen";
 import ErrorBoundary from "./components/ErrorBoundary";
 import LiveVisitorCounter from "./components/LiveVisitorCounter";
@@ -55,7 +55,8 @@ const GlobalFloatingAndStickyAds = lazy(() =>
 );
 import { Home, Compass, PhoneCall, Newspaper, Menu, X, ShieldAlert, MessageSquare, Music, Briefcase } from "lucide-react";
 import { prefetchRoute } from "./utils/routePrefetch";
-import { resolveMediaUrl } from "./utils/mediaUtils";
+import { resolveMediaUrl, getAvatarUrl } from "./utils/mediaUtils";
+import { initMediaProtection } from "./utils/mediaProtection";
 
 const VERIFIED_DIRECTORY_COUNT = "37";
 
@@ -294,6 +295,8 @@ export default function App() {
 
   // Coordinated launch transition: notify HTML overlay that React app is mounted
   useEffect(() => {
+    const cleanupMediaProtection = initMediaProtection();
+
     if (typeof window !== "undefined") {
       if (typeof window.__dismissSplash === "function") {
         window.__dismissSplash();
@@ -303,6 +306,12 @@ export default function App() {
         try { performance.mark("app-interactive"); } catch (e) {}
       }
     }
+
+    return () => {
+      if (typeof cleanupMediaProtection === "function") {
+        cleanupMediaProtection();
+      }
+    };
   }, []);
 
   // Splash Screen State: Show once on initial homepage launch, never restart on route changes
@@ -340,7 +349,9 @@ export default function App() {
         data-public-theme={isDark ? "dark" : "light"}
         className="min-h-screen w-full flex flex-col font-sans transition-colors duration-200"
       >
-        <MaintenancePage maintenance={siteSettings?.maintenance} siteSettings={siteSettings} />
+        <Suspense fallback={null}>
+          <MaintenancePage maintenance={siteSettings?.maintenance} siteSettings={siteSettings} />
+        </Suspense>
       </div>
     );
   }
@@ -680,7 +691,7 @@ export default function App() {
                 >
                   {(user.avatar || user.profileImage) ? (
                     <img
-                      src={resolveMediaUrl(user.avatar || user.profileImage)}
+                      src={getAvatarUrl(user.avatar || user.profileImage, 72)}
                       alt={user.name || "User"}
                       className="w-full h-full object-cover"
                       onError={(e) => {
@@ -1529,10 +1540,14 @@ export default function App() {
       </Suspense>
 
       {/* Global Edit Profile Modal (Popup Tab) */}
-      <EditProfileModal
-        isOpen={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
-      />
+      {isProfileModalOpen && (
+        <Suspense fallback={null}>
+          <EditProfileModal
+            isOpen={isProfileModalOpen}
+            onClose={() => setIsProfileModalOpen(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

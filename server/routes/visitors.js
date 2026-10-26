@@ -172,6 +172,13 @@ router.get("/count", async (req, res) => {
     const realCount = await getRealActiveVisitorCount();
     const displayCount = config.mode === "simulated" ? calculateSimulatedCount(config) : realCount;
 
+    res.setHeader("Cache-Control", "public, max-age=15, stale-while-revalidate=30");
+    const etag = `"vc_${displayCount}_${config.mode}"`;
+    res.setHeader("ETag", etag);
+    if (req.headers["if-none-match"] === etag) {
+      return res.status(304).end();
+    }
+
     res.status(200).json({
       success: true,
       count: displayCount,

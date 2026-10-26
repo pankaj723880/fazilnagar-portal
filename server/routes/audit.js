@@ -1,8 +1,46 @@
 import express from "express";
 import AuditLog from "../models/AuditLog.js";
 import verifyToken, { requireAdmin } from "../middleware/auth.js";
+import { getBandwidthSummary, resetBandwidthStats } from "../middleware/bandwidthTracker.js";
 
 const router = express.Router();
+
+// Strict security cache headers: Never cache admin audit logs in public or shared caches
+router.use((req, res, next) => {
+  res.setHeader("Cache-Control", "private, no-cache, no-store, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Vary", "Authorization");
+  next();
+});
+
+// @route   GET /api/audit/bandwidth
+// @desc    Get request bandwidth accounting metrics, cumulative bytes, and top 10 endpoints
+// @access  Private (Admin)
+router.get("/bandwidth", verifyToken, requireAdmin, (req, res) => {
+  try {
+    const summary = getBandwidthSummary();
+    res.status(200).json({
+      success: true,
+      summary,
+    });
+  } catch (err) {
+    console.error("[Audit] Bandwidth metric error:", err);
+    res.status(500).json({ success: false, message: "Failed to retrieve bandwidth metrics." });
+  }
+});
+
+// @route   POST /api/audit/bandwidth/reset
+// @desc    Reset bandwidth stats counter
+// @access  Private (Admin)
+router.post("/bandwidth/reset", verifyToken, requireAdmin, (req, res) => {
+  try {
+    resetBandwidthStats();
+    res.status(200).json({ success: true, message: "Bandwidth counters reset successfully." });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to reset bandwidth counters." });
+  }
+});
 
 // @route   GET /api/audit
 // @desc    Get audit trail of administrator content modifications
@@ -39,3 +77,4 @@ router.get("/", verifyToken, requireAdmin, async (req, res) => {
 });
 
 export default router;
+

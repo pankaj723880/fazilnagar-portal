@@ -497,9 +497,14 @@ export default function UploadForm() {
                     key={mediaPreviewUrl}
                     src={mediaPreviewUrl}
                     controls
+                    controlsList="nodownload noplaybackrate"
+                    disablePictureInPicture
                     playsInline
                     preload="metadata"
-                    className="w-full h-full object-contain"
+                    draggable="false"
+                    data-protected-media="true"
+                    onContextMenu={(e) => e.preventDefault()}
+                    className="w-full h-full object-contain select-none"
                   >
                     <source src={mediaPreviewUrl} type={selectedFile?.type || "video/mp4"} />
                   </video>
@@ -507,7 +512,10 @@ export default function UploadForm() {
                   <img
                     src={mediaPreviewUrl}
                     alt="Preview"
-                    className="w-full h-full object-contain"
+                    draggable="false"
+                    data-protected-media="true"
+                    onContextMenu={(e) => e.preventDefault()}
+                    className="w-full h-full object-contain select-none"
                   />
                 )}
                 <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-semibold text-white">

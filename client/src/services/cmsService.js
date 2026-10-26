@@ -3,7 +3,6 @@
  * Fetches dynamic website content, hero slides, settings, public services, events, and heritage sites with graceful caching and offline fallbacks.
  */
 import API from "../api";
-import seedPlaces from "../data/places.json";
 import { resolveMediaUrl } from "../utils/mediaUtils";
 
 const CACHE_TTL_MS = 60 * 1000; // 60 seconds in-memory cache to eliminate duplicate network calls on refreshes while supporting instant live updates
@@ -601,9 +600,13 @@ const handleStorageEvent = (e) => {
     triggerAll({ source: "storage", stamp: e.newValue });
   }
 };
+let visibilityDebounceTimer = null;
 const handleVisibility = () => {
   if (typeof document !== "undefined" && document.visibilityState === "visible") {
-    checkLiveServerVersion();
+    if (visibilityDebounceTimer) clearTimeout(visibilityDebounceTimer);
+    visibilityDebounceTimer = setTimeout(() => {
+      checkLiveServerVersion();
+    }, 300);
   }
 };
 
@@ -635,12 +638,18 @@ function setupLiveListeners() {
   livePollingInterval = setInterval(checkLiveServerVersion, 180000);
 }
 
+let lastLiveVersionCheckTime = 0;
+
 async function checkLiveServerVersion() {
   if (liveSubscribers.size === 0) return;
   if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+  // Throttle version checks so focus + visibilitychange on tab switch only trigger once every 15s
+  const now = Date.now();
+  if (now - lastLiveVersionCheckTime < 15000) return;
+  lastLiveVersionCheckTime = now;
+
   try {
     const res = await API.get("/settings/live-version", {
-      params: { _t: Date.now() },
       headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
       timeout: 8000,
     });
@@ -658,6 +667,7 @@ async function checkLiveServerVersion() {
     }
   } catch (_) {}
 }
+
 
 /**
  * Subscribes to live CMS changes across all devices and tabs without page reload.

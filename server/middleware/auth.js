@@ -47,6 +47,11 @@ const verifyToken = async (req, res, next) => {
 
     req.user = verified;
     req.token = token;
+
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+
     next();
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired token." });

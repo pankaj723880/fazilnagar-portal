@@ -327,7 +327,15 @@ export default function StoryVideoPreview({
             webkit-playsinline="true"
             loop
             preload="metadata"
-            className={`w-full h-full object-cover transition-opacity duration-200 ${
+            controlsList="nodownload noplaybackrate"
+            disablePictureInPicture
+            draggable="false"
+            data-protected-media="true"
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            className={`w-full h-full object-cover transition-opacity duration-200 select-none ${
               isFailed ? "opacity-0 pointer-events-none absolute inset-0" : "opacity-100"
             }`}
             onTimeUpdate={handleTimeUpdate}

@@ -77,10 +77,15 @@ export default function NewsDetail() {
               src={videoUrl}
               poster={imageUrl || undefined}
               controls
+              controlsList="nodownload noplaybackrate"
+              disablePictureInPicture
               playsInline
               webkit-playsinline="true"
               preload="metadata"
-              className="w-full max-h-96 object-contain bg-black rounded-2xl"
+              draggable="false"
+              data-protected-media="true"
+              onContextMenu={(e) => e.preventDefault()}
+              className="w-full max-h-96 object-contain bg-black rounded-2xl select-none"
             >
               Your browser does not support the video tag.
             </video>
@@ -91,7 +96,10 @@ export default function NewsDetail() {
             <img
               src={imageUrl}
               alt={article.title}
-              className="w-full h-80 object-cover rounded-2xl"
+              draggable="false"
+              data-protected-media="true"
+              onContextMenu={(e) => e.preventDefault()}
+              className="w-full h-80 object-cover rounded-2xl select-none"
               onError={(e) => {
                 e.currentTarget.style.display = "none";
               }}
